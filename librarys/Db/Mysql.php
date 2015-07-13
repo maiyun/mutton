@@ -35,7 +35,7 @@ class L_Db_Mysql {
     }
 
     function getError() {
-        if(isset($this->link->error))
+        if(@isset($this->link->error))
             return $this->link->error;
         else
             return $this->link->connect_error;
