@@ -43,17 +43,14 @@ class L_Db_Mysql {
 
     function connect($host, $user, $pwd, $dbname, $charset) {
         if($this->link = @new mysqli($host, $user, $pwd, $dbname)) {
-            if(mysqli_connect_errno()) {
-                $this->link = NULL;
+            if(mysqli_connect_errno())
                 return false;
-            } else {
+            else {
                 $this->link->set_charset($charset);
                 return true;
             }
-        } else {
-            $this->link = NULL;
+        } else
             return false;
-        }
     }
 
     function getInsertID() {
