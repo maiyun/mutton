@@ -72,7 +72,7 @@ class LC {
 
 class MC {
 
-    function load($path) {
+    function load($path, $auto = true) {
 
         global $_M;
         if(strpos($path, '/') !== false) $name = substr($path, strrpos($path, '/') + 1);
@@ -80,8 +80,10 @@ class MC {
         if (!isset($_M->$name)) {
             if(is_file(ROOT_PATH . 'models/' . $path . '.php')) {
                 require(ROOT_PATH . 'models/' . $path . '.php');
-                $mname = 'M_'.$name;
-                $_M->$name = new $mname;
+                if($auto) {
+                    $mname = 'M_' . $name;
+                    $_M->$name = new $mname;
+                }
             } else
                 logs('M(load)', 'Models not found.', $path);
         }
