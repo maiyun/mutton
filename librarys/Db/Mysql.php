@@ -35,7 +35,10 @@ class L_Db_Mysql {
     }
 
     function getError() {
-        return $this->link->error;
+        if(isset($this->link->error))
+            return $this->link->error;
+        else
+            return $this->link->connect_error;
     }
 
     function connect($host, $user, $pwd, $dbname, $charset) {
