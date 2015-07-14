@@ -99,6 +99,8 @@ function __autoload($className) {
     require(MOD_PATH.$cn.'.php');
 }
 
+
+
 // --- 加载模拟器 ---
 
 if(EMULATOR_MEMCACHED === true && !class_exists('Memcached', false)) require(LIB_PATH.'Memcached/Emulator.php');

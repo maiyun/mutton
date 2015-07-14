@@ -8,3 +8,4 @@
     * Fix instanceof BUG
     * Fix can not use M()->load to load Module BUG
     * Add "__autoload" for load Model
+    * 新增 model 的主模型
