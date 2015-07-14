@@ -3,3 +3,7 @@
 	* Improve speed by removing useless judgements
 	* Fixed the Memcached engine
 	* Add "add" method for Lib.Memcached and Lib.Memcached.Emulator
+    * Update "my_PhpStorm.php"
+    * Remove config file's namespace
+    * Fix instanceof BUG
+    * Fix can not use M()->load to load Module BUG
