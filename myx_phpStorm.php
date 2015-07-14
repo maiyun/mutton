@@ -1,10 +1,10 @@
 <?php  die('This file is not really here!');
 
 /**
- * @property L_Db $Db
- * @property L_String $String
- * @property L_Sql $Sql
- * @property L_Session $Session
+ * @property \Chameleon\Library\Db $Db
+ * @property \Chameleon\Library\String $String
+ * @property \Chameleon\Library\Sql $Sql
+ * @property \Chameleon\Library\Session $Session
  * @property \Chameleon\Library\Memcached $Memcached
  */
 class LI{
