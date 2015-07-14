@@ -80,7 +80,7 @@ class MC {
             if(is_file(ROOT_PATH . 'models/' . $path . '.php')) {
                 require(ROOT_PATH . 'models/' . $path . '.php');
                 if($auto) {
-                    $mname = 'M_' . $name;
+                    $mname = '\\Chameleon\\Module\\' . $name;
                     $_M->$name = new $mname;
                 }
             } else
