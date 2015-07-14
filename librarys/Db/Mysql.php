@@ -6,7 +6,9 @@
  * Time: 下午5:59
  */
 
-class L_Db_Mysql {
+namespace Chameleon\Library\Db;
+
+class Mysql {
 
     /** @var mysqli $link */
     var $link = NULL;

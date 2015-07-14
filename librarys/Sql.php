@@ -6,7 +6,9 @@
  * Time: 18:55
  */
 
-class L_Sql {
+namespace Chameleon\Library;
+
+class Sql {
 
     var $sql = [
         '0' => [

@@ -6,12 +6,14 @@
  * Time: 19:56
  */
 
+namespace Chameleon\Library;
+
 /*
  * 若使用 Db 模式，则需要手动载入 Db 类
  * 若使用 Memcached 模式，则需要手动载入 Memcached 类
  */
 
-class L_Session {
+class Session {
 
     var $key = '';
 

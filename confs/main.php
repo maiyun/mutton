@@ -38,9 +38,8 @@ date_default_timezone_set('Asia/Shanghai');
 // --- 处理异常中断错误，写入文件 ---
 
 function exception_handler() {
-    if($e = error_get_last()) {
+    if($e = error_get_last())
         logs('SHUTDOWN', $e['message'].' in <b>'.$e['file'].'</b> on line <b>'.$e['line'].'</b>', false);
-    }
 }
 register_shutdown_function('exception_handler');
 
@@ -60,7 +59,7 @@ class LC {
             if (is_file(ROOT_PATH . 'librarys/' . $path . '.php')) {
                 require(ROOT_PATH . 'librarys/' . $path . '.php');
                 if($auto) {
-                    $cname = 'L_' . $name;
+                    $cname = '\\Chameleon\\Library\\' . $name;
                     $_L->$name = new $cname;
                 }
             } else

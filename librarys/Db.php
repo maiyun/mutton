@@ -6,7 +6,9 @@
  * Time: 下午1:51
  */
 
-class L_Db {
+namespace Chameleon\Library;
+
+class Db {
 
     var $queries = 0;
     var $source = NULL;
@@ -71,7 +73,7 @@ class L_Db {
 
         if($mod == 'Mysql') {
             require(LIB_PATH.'Db/Mysql.php');
-            $this->source = new L_Db_Mysql();
+            $this->source = new \Chameleon\Library\Db\Mysql();
             return $this->source->connect($this->host, $this->user, $pwd, $this->dbname, $this->charset);
         }
     }

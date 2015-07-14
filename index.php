@@ -22,12 +22,13 @@ if($_CONTROLFOLDER != '') {
 
 }
 
-$c = new $_CONTROLLER();
+$c =  '\\Chameleon\\Controller\\'.$_CONTROLLER;
+$c = new $c();
 
 if(method_exists($c, '__remap')) {
     $c->__remap();
 } else {
     if (method_exists($c, $_ACTION)) $c->$_ACTION();
-    else header('Location: ' . SITE_PATH . '?action-not-found-'.$_ACTION);
+    else header('Location: ' . SITE_PATH . '?'.$_ACTION);
 }
 

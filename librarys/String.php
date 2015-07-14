@@ -6,7 +6,9 @@
  * Time: 13:50
  */
 
-class L_String {
+namespace Chameleon\Library;
+
+class String {
 
     public function random($length = 8, $s = ['L', 'N']) {
         static $a = ['U' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'L' => 'abcdefghijklmnopqrstuvwxyz', 'N' => '0123456789'];

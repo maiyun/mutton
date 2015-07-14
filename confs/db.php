@@ -1,4 +1,7 @@
 <?php
+
+namespace Chameleon;
+
 define('DBHOST', 'localhost');
 define('DBUSER', 'root');
 define('DBPW', 'DashAdmin');
