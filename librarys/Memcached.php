@@ -14,6 +14,10 @@ if (!defined('USING_SYSTEM')) exit;
 
 class Memcached {
 
+	/**
+	 * 
+	 * @var \Memcached
+	 */
     var $link = NULL;
 
     // --- 可修改变量 ---
@@ -29,9 +33,9 @@ class Memcached {
 
         $this->pool = $pool == '' ? MCPOOL : $pool;
         if($pool === NULL)
-            $this->link = new Memcached();
+            $this->link = new \Memcached();
         else
-            $this->link = new Memcached($pool);
+            $this->link = new \Memcached($pool);
 
     }
 
@@ -53,12 +57,18 @@ class Memcached {
             $pwd = $this->pwd == '' ? MCPW : $this->pwd;
             $this->pre = $this->pre == '' ? MCPRE : $this->pre;
 
-            $this->link->setOption(Memcached::OPT_COMPRESSION, false);
-            $this->link->setOption(Memcached::OPT_BINARY_PROTOCOL, true);
+            $this->link->setOption(\Memcached::OPT_COMPRESSION, false);
+            $this->link->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
             $this->link->addServer($this->host, $this->port);
             if ($this->user != '' && $pwd != '')
                 $this->link->setSaslAuthData($this->user, $pwd);
         }
+
+    }
+
+    function add($key, $val, $exp = 0) {
+
+        $this->link->add($key, $val, $exp);
 
     }
 

@@ -61,6 +61,17 @@ class Memcached {
 
     }
 
+    function add($key, $val, $exp) {
+
+    	$fn = ROOT_PATH . 'data/Memcached/items/' . $key . '.txt';
+        if (file_exists($fn))
+        	return false;
+        if($exp != 0) $exp = $exp < 2592000 ? time() + $exp : $exp;
+        $content = ['exp' => $exp, 'data' => $val];
+        return file_put_contents($fn, serialize($content));
+
+    }
+
     function get($key) {
 
         if(is_file(ROOT_PATH.'data/Memcached/items/'.$key.'.txt')) {

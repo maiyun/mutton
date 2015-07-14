@@ -5,7 +5,7 @@
  * @property L_String $String
  * @property L_Sql $Sql
  * @property L_Session $Session
- * @property L_Memcached $Memcached
+ * @property \Chameleon\Library\Memcached $Memcached
  */
 class LI{
 

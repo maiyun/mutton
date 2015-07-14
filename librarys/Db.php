@@ -31,20 +31,18 @@ class Db {
     }
 
     function isConnected() {
-        if($this->source !== NULL)
-            return $this->source->isConnected();
+        return $this->source? $this->source->isConnected(): false;
     }
 
     function quit() {
-        if ($this->source !== NULL) {
+        if ($this->source) {
             $this->queries = 0;
             $this->source = null;
         }
     }
 
     function escape($str) {
-        if ($this->source !== NULL)
-            return $this->source->escape($str);
+        return $this->source->escape($str);
     }
 
     function query($sql, $error = true) {

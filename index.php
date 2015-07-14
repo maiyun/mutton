@@ -4,10 +4,10 @@ require('confs/main.php');
 
 $c = NULL;
 
-if($_CONTROLFOLDER != '') {
+if($_CONTROLFOLDER) {
 
     $ac = ucfirst($_ACTION);
-    if(is_file(CONTROL_PATH.$_CONTROLFOLDER.'Controller.php')) {
+    if(is_file(CONTROL_PATH . $_CONTROLFOLDER . 'Controller.php')) {
         require(CONTROL_PATH . $_CONTROLFOLDER . 'Controller.php');
         if(is_file(CONTROL_PATH . $_CONTROLFOLDER . $_CONTROLLER . '.php'))
             require(CONTROL_PATH . $_CONTROLFOLDER . $_CONTROLLER . '.php');
@@ -18,17 +18,17 @@ if($_CONTROLFOLDER != '') {
 
 } else {
 
-    require(CONTROL_PATH.$_CONTROLLER.'.php');
+    require(CONTROL_PATH . $_CONTROLLER . '.php');
 
 }
 
-$c =  '\\Chameleon\\Controller\\'.$_CONTROLLER;
+$c =  '\\Chameleon\\Controller\\' . $_CONTROLLER;
 $c = new $c();
 
 if(method_exists($c, '__remap')) {
     $c->__remap();
 } else {
     if (method_exists($c, $_ACTION)) $c->$_ACTION();
-    else header('Location: ' . SITE_PATH . '?'.$_ACTION);
+    else header('Location: ' . SITE_PATH . '?' . $_ACTION);
 }
 

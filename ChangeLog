@@ -1,0 +1,5 @@
+2015-07-14
+	* Add Chinese supports to the JSON encoder
+	* Improve speed by removing useless judgements
+	* Fixed the Memcached engine
+	* Add "add" method for Lib.Memcached and Lib.Memcached.Emulator

@@ -153,7 +153,7 @@ Class Main {
     function echoJson() {
 
         header('Content-type: application/json; charset=utf-8');
-        echo json_encode($this->json);
+        echo json_encode($this->json, JSON_UNESCAPED_UNICODE);
 
     }
 
