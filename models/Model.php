@@ -27,7 +27,11 @@ class Model {
         foreach($this->_updates as $k => $v)
             $updates[$k] = $this->$k;
         $primary = $this->_primary;
-        return L()->Db->query(L()->Sql->update($this->_table, $updates)->where($this->_primary, $this->$primary)->get());
+        if($r = L()->Db->query(L()->Sql->update($this->_table, $updates)->where($this->_primary, $this->$primary)->get())) {
+            $this->_updates = [];
+            return $r;
+        } else
+            return false;
     }
 
 }

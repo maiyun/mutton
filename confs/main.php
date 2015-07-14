@@ -99,7 +99,7 @@ function __autoload($className) {
     require(MOD_PATH.$cn.'.php');
 }
 
-
+require(MOD_PATH.'Model.php');
 
 // --- 加载模拟器 ---
 
