@@ -33,9 +33,9 @@ class Session {
 
     function __destruct() {
 
-        if($this->source instanceof L_Db)
+        if($this->source instanceof \Chameleon\Library\Db)
             $this->source->query('UPDATE `' . $this->source->pre . 'session` SET `data` = "' . $this->source->escape(serialize($_SESSION)) . '",`time` = "' . time() . '" WHERE `key` = "' . $this->key . '"');
-        else if($this->source instanceof L_Memcached) {
+        else if($this->source instanceof \Chameleon\Library\Memcached) {
             $_SESSION['sess']['time'] = time();
             $this->source->set('sess_'.$this->key, $_SESSION, $this->exp);
         }
@@ -44,7 +44,7 @@ class Session {
 
     function gc() {
 
-        if($this->source instanceof L_Db)
+        if($this->source instanceof \Chameleon\Library\Db)
             L()->Db->query('DELETE'.' FROM `' . $this->source->pre . 'session` WHERE `time` < "'.(time() - $this->exp).'"');
 
     }
@@ -52,7 +52,7 @@ class Session {
     function start() {
 
         $_SESSION = [];
-        if($this->source instanceof L_Db) {
+        if($this->source instanceof \Chameleon\Library\Db) {
             if($this->source->isConnected()) {
                 if($this->key != '')
                     $r = $this->source->query('SELECT' . ' * FROM `' . $this->source->pre . 'session` WHERE `key` = "' . $this->key . '";');
@@ -78,7 +78,7 @@ class Session {
             } else {
                 logs('L(Session)', 'Db not connect', true);
             }
-        } else if($this->source instanceof L_Memcached) {
+        } else if($this->source instanceof \Chameleon\Library\Memcached) {
             if($this->source->isConnect()) {
                 $s = $this->source->get('sess_'.$this->key);
                 if($s === false) {

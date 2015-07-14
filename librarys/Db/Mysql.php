@@ -20,7 +20,7 @@ class Mysql {
     }
 
     function isConnected() {
-        if ($this->link instanceof mysqli) return true;
+        if ($this->link instanceof \mysqli) return true;
         return false;
     }
 
@@ -44,7 +44,7 @@ class Mysql {
     }
 
     function connect($host, $user, $pwd, $dbname, $charset) {
-        if($this->link = @new mysqli($host, $user, $pwd, $dbname)) {
+        if($this->link = @new \mysqli($host, $user, $pwd, $dbname)) {
             if(mysqli_connect_errno())
                 return false;
             else {
