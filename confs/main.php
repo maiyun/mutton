@@ -77,14 +77,14 @@ class MC {
         if(strpos($path, '/') !== false) $name = substr($path, strrpos($path, '/') + 1);
         else $name = $path;
         if (!isset($_M->$name)) {
-            if(is_file(ROOT_PATH . 'models/' . $path . '.php')) {
-                require(ROOT_PATH . 'models/' . $path . '.php');
+            if(is_file(ROOT_PATH . 'modules/' . $path . '.php')) {
+                require(ROOT_PATH . 'modules/' . $path . '.php');
                 if($auto) {
                     $mname = '\\Chameleon\\Module\\' . $name;
                     $_M->$name = new $mname;
                 }
             } else
-                logs('M(load)', 'Models not found.', $path);
+                logs('M(load)', 'Modules not found.', $path);
         }
 
     }
