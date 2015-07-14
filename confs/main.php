@@ -43,7 +43,7 @@ function exception_handler() {
 }
 register_shutdown_function('exception_handler');
 
-// --- 实现加载类库、模块 ---
+// --- 实现加载类库、模块、模型 ---
 
 $_L = NULL;
 $_M = NULL;
@@ -93,6 +93,10 @@ class MC {
 
 $_L = new LC();
 $_M = new MC();
+
+function __autoload($className) {
+    require(MOD_PATH.$className.'.php');
+}
 
 // --- 加载模拟器 ---
 

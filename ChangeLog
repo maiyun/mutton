@@ -7,3 +7,4 @@
     * Remove config file's namespace
     * Fix instanceof BUG
     * Fix can not use M()->load to load Module BUG
+    * Add "__autoload" for load Model
