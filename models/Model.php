@@ -39,4 +39,17 @@ class Model {
             return false;
     }
 
+    public function create() {
+        $updates = [];
+        foreach($this->_updates as $k => $v)
+            $updates[$k] = $this->$k;
+        $sql = L()->Sql->insert($this->_table, $updates)->get();
+        if($r = L()->Db->query($sql)) {
+            if($this->_primary == 'id') $this->id = L()->Db->getInsertID();
+            return $r;
+        } else
+            return false;
+
+    }
+
 }
