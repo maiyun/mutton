@@ -22,12 +22,17 @@ class Model {
         return $this->$n;
     }
 
+    public function __get($n){
+        return $this->$n;
+    }
+
     public function update() {
         $updates = [];
         foreach($this->_updates as $k => $v)
             $updates[$k] = $this->$k;
         $primary = $this->_primary;
-        if($r = L()->Db->query(L()->Sql->update($this->_table, $updates)->where($this->_primary, $this->$primary)->get())) {
+        $sql = L()->Sql->update($this->_table, $updates)->where($this->_primary, $this->$primary)->get();
+        if($r = L()->Db->query($sql, false)) {
             $this->_updates = [];
             return $r;
         } else
