@@ -17,7 +17,7 @@ class Model {
 
     public function set($n, $v, $condition = null) {
         // @todo: check for debug
-        if (!isset($this->$n))
+        if (!property_exists(get_called_class(), $n))
             throw new \Exception("Accessed an non-existent property.");
         if ($this->$n != $v) {
             $this->_updates[$n] = true;
@@ -41,13 +41,13 @@ class Model {
 
     public function __get($n) {
         // @todo: check for debug
-        if (!isset($this->$n))
+        if (!property_exists(get_called_class(), $n))
             throw new \Exception("Accessed an non-existent property.");
         return $this->$n;
     }
 
     public function __isset($n) {
-        return isset($this->$n);
+        return property_exists(get_called_class(), $n);
     }
 
     public function update() {
