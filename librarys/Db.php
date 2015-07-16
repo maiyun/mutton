@@ -13,6 +13,8 @@ class Db {
     var $queries = 0;
     var $source = NULL;
 
+    const ERROR_DUP = 1062;
+
     // --- 可编辑变量 ---
 
     var $host = '';

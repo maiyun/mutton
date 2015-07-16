@@ -1,3 +1,10 @@
+2015-07-15
+
+    * 添加 Model::set 方法，可以根据条件设置属性。
+    * 修改 Model::update 方法，添加对多条件的支持。
+    * 修改 Model::create 方法，将之定为专用于 auto_increment 表的插入方法。
+    * 引入 trait ModelWithPKey，用于取代 Model::create。
+
 2015-07-14
 	* Add Chinese supports to the JSON encoder
 	* Improve speed by removing useless judgements

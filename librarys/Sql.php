@@ -98,7 +98,7 @@ class Sql {
     function where($s, $v = '', $v2 = '') {
         $sql = '';
         if(is_array($s)) {
-            if(count($s) > 0) {
+            if(count($s)) {
                 $sql = ' WHERE ';
                 foreach ($s as $k => $i) {
                     if (is_string($i))
