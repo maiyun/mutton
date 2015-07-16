@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="main.css">
+<title>常量</title>
+</head>
+<body>
+<div class="title">全局常量</div>
+<strong>ROOT_PATH</strong>
+<pre>
+程序的根路径，用于在服务端包含 PHP 等文件时使用。
+ROOT_PATH 的内容形如 D:\www\htdocs\maiyun.net\www\
+</pre>
+<strong>LIB_PATH</strong>
+<pre>
+LIB_PATH 相当于 ROOT_PATH + 'librarys/'
+</pre>
+<strong>MOD_PATH</strong>
+<pre>
+MOD_PATH 相当于 ROOT_PATH + 'models/'
+</pre>
+<strong>CONTROL_PATH</strong>
+<pre>
+CONTROL_PATH 相当于 ROOT_PATH + 'controllers/'
+</pre>
+<strong>AJAX</strong>
+<pre>
+若本次请求来自 Ajax，则此变量为 true，否则为 false。
+通常这么使用 if(AJAX) {} else {};
+</pre>
+<strong>SITE_PATH</strong>
+<pre>
+对于客户来说程序的网站根，通常用于引入 JS、CSS 等静态文件，你完全无需考虑你的网站是在根还是二级目录，SITE_PATH 都能准确识别。
+如果根目录就是网站所在目录，那么 SITE_PATH 则为 /，如果网站不再根目录，在多级目录下，SITE_PATH 则类似为 /website/maiyun.net/
+引用 JS 形如：&lt;script src="&lt;?php echo SITE_PATH ?&gt;images/main.js"&gt;&lt;/script&gt;
+使用可更新缓存常量则形如 &lt;script src="&lt;?php echo SITE_PATH ?&gt;images/main.js?&lt;?php echo IMAGE_VER ?&gt;"&gt;&lt;/script&gt;
+</pre>
+<strong>IMAGES_PATH</strong>
+<pre>
+性质和 SITE_PATH 类似，唯一不同的是比 SITE_PATH 多了一个 images/，相当于 IMAGES_PATH = SITE_PATH + "images/"，用于快速的构建引入 JS 等静态文件的前缀路径。
+IMAGES_PATH 的值形如 /images/、/websit/maiyun.net/images/
+</pre>
+<strong>HTTP_PATH</strong>
+<pre>
+性质和 SITE_PATH 类似，唯一不同的是比 SITE_PATH 多了前缀域名，相当于 HTTP_PATH = "http://www.xxx.com" + SITE_PATH，主要用于传递回调、跳转之用。
+HTTP_PATH 的值形如 http://www.maiyun.net/、http://127.0.0.1/website/maiyun.net/
+</pre>
+<strong>PAGE_START_TIME</strong>
+<pre>
+页面开始的时间，有很长的小数点，通常用来计算页面总执行时间所用。
+PAGE_START_TIME 的值形如 1436353310.7302629947662
+<strong>注意：</strong>受限于 PHP 对数字的显示原因，若您直接输出的话小数点可能只有 4 位，但实际上其他位可以参与运算。
+</pre>
+</body>
+</html>

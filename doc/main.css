@@ -1,0 +1,21 @@
+@charset "utf-8";
+body,html{font-family:"Microsoft Yahei",Tahoma,'宋体',Arial,STHeiti,sans-serif;margin:20px;}
+body,td,th{font-size:12px;line-height:25px;}
+pre{border:1px dotted #785;background-color:#f5f5f5;padding:10px;margin:10px 0;font-family:Verdana, Tahoma, '宋体', sans-serif;overflow:auto;white-space:pre-wrap !important;word-wrap:break-word !important;}
+p{text-indent:24px;margin:10px 0;}
+a{color:#f2413d;text-decoration:none;}
+a:hover{text-decoration:underline;}
+
+#left{width:300px;background-color:#efefef;padding:20px;font-size:14px;}
+#left strong,#left a,#left span{display:block;}
+#left a{color:#000000;text-decoration:none;}
+#left a:hover{color:#f2413d;}
+#right{flex:1;display:flex;}
+#right iframe{flex:1;}
+#bottom{text-align:center;margin:20px 0;}
+
+.title{font-size:24px;text-align:center;padding-bottom:25px;}
+.table{border:1px solid #aaa;border-top:none;border-left:none;margin:10px 0;}
+.table th{background-color:#d5d5d5;}
+.table td{background-color:#efefef;}
+.table td,.table th{border:1px solid #aaa;border-bottom:none;border-right:none;padding:0 5px;}

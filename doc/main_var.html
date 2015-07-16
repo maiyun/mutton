@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="main.css">
+<title>全局变量</title>
+</head>
+<body>
+<div class="title">全局变量</div>
+<strong>$_GET</strong><sup> 1.0新增</sup>
+<pre>
+获取 URL 当中 ? 以后的部分，如：
+/Admin/Login?type=shop
+则
+$_GET['type'] 为 shop
+$_GET 为不被推荐的，您应当尽量使用 $this->param 来传参，除非需要可能的跳转必须以 ? get 的形式。
+</pre>
+<strong>$_POST</strong>
+<pre>
+获取 POST 数据，在 Ajax 操作中这真真是极好的。
+</pre>
+</body>
+</html>

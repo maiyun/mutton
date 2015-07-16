@@ -1,0 +1,644 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="main.css">
+<title>Sql</title>
+</head>
+<body>
+<div class="title">Sql 类</div>
+<pre>本类是 1.0 新增的。</pre>
+<pre>Sql 类需要使用常量 DBTABLEPRE，一般在 confs/db.php 中定义，DBTABLEPRE 会自动加在 form 的前面。</pre>
+<div id="left">
+  <strong>简介</strong>
+  <span>此类在于简单的生成一段 SQL 字符串。</span><br>
+  <strong>设定</strong>
+  <a href="#into">防注入</a>
+  <a href="#rewrite">重写</a><br>
+  <strong>方法</strong>
+  <a href="#on">on</a>
+  <a href="#insert">insert</a>
+  <a href="#select">select</a>
+  <a href="#update">update</a>
+  <a href="#delete">delete</a>
+  <a href="#where">where</a>
+  <a href="#by">by</a>
+  <a href="#limit">limit</a>
+  <a href="#append">append</a>
+  <a href="#remove">remove</a>
+  <a href="#escape">escape</a>
+  <a href="#get">get</a>
+</div><br>
+<div class="title" id="into">防注入</div>
+<strong>描述：</strong>
+<pre>若您使用的是 Db 类，请代入 Db 类对象，保证防 Sql 注入的代码更加有效（不传入时也会进行一些防注入处理，但可能会有风险）。</pre>
+<strong>定义：</strong>
+<pre>L()->Sql->db = Db类对象;
+您也可以根据情况随时更换此类对象，譬如一个页面有多个连接的情况下。</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="rewrite">重写</div>
+<strong>描述：</strong>
+<pre>多次调用本类的构建方法会发生重写行为，而不是追加行为，追加只能使用 append Sql 字符串。
+<strong>我想追加数组怎么办？</strong>其实本例子本手册不该写，因为你完全可以变通做到，参见例子当中下半部分。</pre>
+<strong>例子：</strong>
+<pre>echo L()->Sql->select('*', 'user')-&gt;where('name', 'yunboo')-&gt;get(true) . '&lt;br&gt;';
+echo L()->Sql-&gt;where('id', '1')-&gt;get() . '&lt;br&gt;';
+// --- 下半部部分开始 ---
+$where = [];
+$where['name'] = 'yunboo';
+echo L()->Sql->select('*', 'user')-&gt;where($where)-&gt;get(true) . '&lt;br&gt;';
+$where['id'] = '1';
+echo L()->Sql-&gt;where($where)-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` WHERE `name` = "yunboo"
+SELECT * FROM `user` WHERE `id` = "1"
+SELECT * FROM `user` WHERE `name` = "yunboo"
+SELECT * FROM `user` WHERE `name` = "yunboo" AND `id` = "1"
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="on">on</div>
+<strong>描述：</strong><br>
+<pre>Sql 类支持同时构建多条 Sql 语句，并使用 on 进行选择。</pre>
+<strong>定义：</strong>
+<pre>on()</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>N/A</td>
+      <td>使 Sql 类选择默认的条数等待后续操作</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<pre>on(string $key)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>key</td>
+      <td>跳转到自定义条目 key，若 key 不存在则自动创建</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;get(true) . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;on('test')-&gt;select('COUNT(0)', 'order')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;on()-&gt;get(); // 此时返回默认 Sql 字符串
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user`
+SELECT COUNT(0) FROM `order`
+SELECT * FROM `user`
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="insert">insert</div>
+<strong>描述：</strong><br>
+<pre>构建 SQL 语句的前半部分为 insert。</pre>
+<strong>定义：</strong>
+<pre>insert(string $form, &lt;string&gt;array $kvs)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>要插入的表明</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>kvs</td>
+      <td>数组的 key 为字段名，value 为要插入的字段对应的字符串</td>
+    </tr>
+  </tbody>
+</table>
+<pre>insert(string $form, &lt;string&gt;array $keys, &lt;string&gt;array $vals)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>同上</td>
+      <td rowspan="3"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>keys</td>
+      <td>直接书写字段名的序列</td>
+    </tr>
+    <tr>
+      <td>vals</td>
+      <td>和 keys 数目相对应的字符串值</td>
+    </tr>
+  </tbody>
+</table>
+<pre>insert(string $form, &lt;string&gt;array $keys, &lt;array&gt;array $vals)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>同上</td>
+      <td rowspan="3"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>keys</td>
+      <td>直接书写字段名的序列</td>
+    </tr>
+    <tr>
+      <td>vals</td>
+      <td>此 vals 的值均为数组，每一个值与上面的 vals 结构相同，可用来构建同时插入多条数据的 Sql</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;insert('user', ['name' => 'yunboo', 'city' => '济南'])-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;insert('user', ['name', 'city'], ['yunboo', '济南'])-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;insert('user', ['name', 'city'], [['yunboo', '济南'], ['maiyun', '北京']])-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+INSERT INTO `user` (`name`, `city`) VALUES ('yunboo', '济南')
+INSERT INTO `user` (`name`, `city`) VALUES ('yunboo', '济南')
+INSERT INTO `user` (`name`, `city`) VALUES ('yunboo', '济南'), ('maiyun', '北京')
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="select">select</div>
+<strong>描述：</strong><br>
+<pre>构建 SQL 语句的前半部分为 select。</pre>
+<strong>定义：</strong>
+<pre>select(string $field, string $form)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>field</td>
+      <td>要筛选的条件字符串直接放置在 select 不做处理</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>要查询的表名</td>
+    </tr>
+  </tbody>
+</table>
+<pre>select(&lt;string&gt;array $field, string $form)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>field</td>
+      <td>要筛选的字段字符串列表</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>同上</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select(['name', 'city'], 'user')-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user`
+SELECT `name`, `city` FROM `user`
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="update">update</div>
+<strong>描述：</strong><br>
+<pre>构建 SQL 语句的前半部分为 update。</pre>
+<strong>定义：</strong>
+<pre>update(string $form, string $kvs)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>要更新的表名</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>kvs</td>
+      <td>字段名与相应对应的值的列表</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;update('user', ['name' => 'yunboo'])-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+UPDATE `user` SET `name` = "yunboo"
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="delete">delete</div>
+<strong>描述：</strong><br>
+<pre>构建 SQL 语句的前半部分为 delete。</pre>
+<strong>定义：</strong>
+<pre>delete(string $form)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>form</td>
+      <td>要删除某个表的数据的表名</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;delete('user')-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+DELETE FROM `user`
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="where">where</div>
+<strong>描述：</strong><br>
+<pre>对 Sql 语句添加 where 筛选器，并用 AND 进行连接。</pre>
+<strong>定义：</strong>
+<pre>where(string $field, string $val)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>field</td>
+      <td>要筛选的字段名</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>val</td>
+      <td>与字段名对应的字段内容</td>
+    </tr>
+  </tbody>
+</table>
+<pre>where(string $field, string $opera, string $val)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>field</td>
+      <td>同上</td>
+      <td rowspan="3"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>opera</td>
+      <td>非 = 号的运算符需要在此传入</td>
+    </tr>
+    <tr>
+      <td>val</td>
+      <td>同上</td>
+    </tr>
+  </tbody>
+</table>
+<pre>where(&lt;string | array&gt;array $kvs)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>kvs</td>
+      <td>要筛选的字段与值的键值对或包含 opera 结构的数组</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;where('name', 'yunboo')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;where('name', '!=', 'yunboo')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;delete('user')-&gt;where(['type' => 'admin'])-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;update('user', ['name' => 'yunboo'])-&gt;where([['city', '!=', 'jn'], ['type', '!=', 'admin']])-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;where([['city', '!=', 'jn'], 'type' => 'admin'])-&gt;select('*', 'user')-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` WHERE `name` = "yunboo"
+SELECT * FROM `user` WHERE `name` != "yunboo"
+DELETE FROM `user` WHERE `type` = "admin"
+UPDATE `user` SET `name` = "yunboo" WHERE `city` != "jn" AND `type` != "admin"
+SELECT * FROM `user` WHERE `city` != "jn" AND `type` = "admin"
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="by">by</div>
+<strong>描述：</strong><br>
+<pre>构建 SQL 语句中的 order by。</pre>
+<strong>定义：</strong>
+<pre>by(string $field)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>field</td>
+      <td>要根据排序的字段名，得到的是倒序 DESC</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<pre>by(string $field, string $by)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>field</td>
+      <td>要根据排序的字段名</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>by</td>
+      <td>正序为 ASC，倒序为 DESC</td>
+    </tr>
+  </tbody>
+</table>
+<pre>by(array $fields)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>fields</td>
+      <td>要根据排序的字段名的数组列以倒序 DESC</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<pre>by(array $fields, string $by)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>fields</td>
+      <td>要根据排序的字段名的数组列</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>by</td>
+      <td>正序为 ASC，倒序为 DESC</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;by('id')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;by('id', 'ASC')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;by(['id', 'time'], 'ASC')-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` ORDER BY `id` DESC
+SELECT * FROM `user` ORDER BY `id` ASC
+SELECT * FROM `user` ORDER BY `id`,`time` ASC
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="limit">limit</div>
+<strong>描述：</strong><br>
+<pre>设置 Sql 的截取 limit 部分。</pre>
+<strong>定义：</strong>
+<pre>limit(string $from, string $len)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>from</td>
+      <td>截取开始的位置</td>
+      <td rowspan="2"><a href="lib_sql.html">Sql</a></td>
+    </tr>
+    <tr>
+      <td>len</td>
+      <td>要截取的长度</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;limit('10', '10')-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` LIMIT 10, 10
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="append">append</div>
+<strong>描述：</strong><br>
+<pre>追加 Sql 字符串到上一个任意拼接方法当中。</pre>
+<strong>定义：</strong>
+<pre>append(string $sql)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>sql</td>
+      <td>要追加的字符串</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;where('type', 'admin')-&gt;append(' OR `type` = "citymanager"')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;by('time')-&gt;append(', `id` ASC')-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` WHERE `type` = "admin" OR `type` = "citymanager"
+SELECT * FROM `user` ORDER BY `time` DESC, `id` ASC
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="remove">remove</div>
+<strong>描述：</strong><br>
+<pre>移除某个拼接方法。</pre>
+<strong>定义：</strong>
+<pre>remove(string $key)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>key</td>
+      <td>将 Sql 的某个部分移除，参数可为 where、limit、by 以及 above</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;where('type', 'admin')-&gt;get(true) . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;remove('where')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select('COUNT(0)', 'user')-&gt;where('type', 'admin')-&gt;get(true) . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;remove('above')-&gt;select('*', 'user')-&gt;limit('0', '10')-&gt;get();
+//echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;limit('0', '10')-&gt;get();
+//再次调用 select 会发生重写效果，所以可以无需写 remove('above')
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` WHERE `type` = "admin"
+SELECT * FROM `user`
+SELECT COUNT(0) FROM `user` WHERE `type` = "admin"
+SELECT * FROM `user` WHERE `type` = "admin" LIMIT 0, 10
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="escape">escape</div>
+<strong>描述：</strong><br>
+<pre>对插入查询的字符串进行安全转义，更安全的解释参见<a href="#into">防注入</a>一节。
+此方法通常在 append 当中使用。</pre>
+<strong>定义：</strong>
+<pre>escape(string $val)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>val</td>
+      <td>需要进行防注入转义的字符串</td>
+      <td><a href="lib_sql.html">Sql</a></td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;where('type', 'admin')-&gt;append(' AND `name` = "'.L()->Sql->escape($_POST['name']).'"')-&gt;get();
+// 假设 $_POST['name'] 的值为 yun" OR "
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user` WHERE `type` = "admin" AND `name` = "yun\" OR \""
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="get">get</div>
+<strong>描述：</strong><br>
+<pre>大功告成，根据您传入的各种方法，生成最终的 Sql 字符串。</pre>
+<strong>定义：</strong>
+<pre>get()</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>N/A</td>
+      <td>获取 Sql 字符串，并且清空当前 on 的定义。</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
+<pre>get(bool $hold)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>hold</td>
+      <td>获取 Sql 字符串，若值为 true，则保留定义，您仍可以透过 get 获取到，并且可以 remove 或者重写某个筛选，为 false 清空定义。</td>
+      <td>string</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;get() . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;select('*', 'user')-&gt;get(true) . '&lt;br&gt;';
+echo L()-&gt;Sql-&gt;get();
+</pre>
+<strong>输出：</strong>
+<pre>
+SELECT * FROM `user`
+
+SELECT * FROM `user`
+SELECT * FROM `user`
+</pre>
+<a href="#">返回导航</a><br><br>
+</body>
+</html>
