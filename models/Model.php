@@ -22,7 +22,7 @@ class Model {
         return $this->$n;
     }
 
-    public function __get($n){
+    public function __get($n) {
         return $this->$n;
     }
 
