@@ -30,7 +30,7 @@ class Model {
 
     public function __set($n, $v) {
         // @todo: check for debug
-        if (!isset($this->$n))
+        if (!property_exists(get_called_class(), $n))
             throw new \Exception("Accessed an non-existent property.");
         if ($this->$n != $v) {
             $this->_updates[$n] = true;
