@@ -228,15 +228,10 @@ function logs($title, $message, $enmsg = '', $exit = true) {
         mkdir($path, 0777);
         chmod($path, 0777);
     }
-    $path .= $d . '/';
-    if(!is_dir($path)) {
-        mkdir($path, 0777);
-        chmod($path, 0777);
-    }
-    $path .= date('H') . '.html';
+    $path .= $d . '.html';
 
     file_put_contents($path, '<b>' . date('H:i:s') . '</b>: <b>'.$title.'</b> '.$message.(($enmsg != '')?'<br>Security string: <b>'.$enmsg.'</b>':'').'<br><br>'."\r\n", FILE_APPEND);
-    if($exit) exit('<b>'.$title.'</b> ' . $message . (($enmsg != '')?' Please see <b>'.str_replace(ROOT_PATH,'',$path).'</b>.':''));
+    if($exit) exit('<b>'.$title.'</b> ' . $message . (($enmsg != '') ? ' Please see <b>'.str_replace(ROOT_PATH, '', $path).'</b>.' : ''));
 
 }
 
