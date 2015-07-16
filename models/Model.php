@@ -46,6 +46,10 @@ class Model {
         return $this->$n;
     }
 
+    public function __isset($n) {
+        return isset($this->$n);
+    }
+
     public function update() {
         $updates = [];
         foreach($this->_updates as $k => $v)
