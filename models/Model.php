@@ -39,11 +39,15 @@ class Model {
         return $this->$n;
     }
 
-    public function __get($n){
+    public function __get($n) {
         // @todo: check for debug
         if (!isset($this->$n))
             throw new \Exception("Accessed an non-existent property.");
         return $this->$n;
+    }
+
+    public function __isset($n) {
+        return isset($this->$n);
     }
 
     public function update() {

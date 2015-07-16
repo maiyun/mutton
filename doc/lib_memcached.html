@@ -1,0 +1,75 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="main.css">
+<title>Sql</title>
+</head>
+<body>
+<div class="title">Memcached 类</div>
+<pre>本类是 1.0 新增的。</pre>
+<div id="left">
+  <strong>简介</strong>
+  <span>此类在于创建 Memcached 连接并进行操作，支持连接池，支持 SASL。</span><br>
+  <strong>设定</strong>
+  <a href="#const">预定义</a>
+  <a href="#construct">构造</a><br>
+  <strong>方法</strong>
+  <a href="#on">on</a>
+</div><br>
+<div class="title" id="const">预定义</div>
+<strong>描述：</strong>
+<pre>使用 Memcached 您需要进行预定义一些常量，通常放置在 confs/db.php 文件当中。
+当然，您也可以不定义常量，而在每个方法需要使用常量的地方自行传入参数即可。</pre>
+<strong>列表：</strong>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>类型</th>
+      <th>常量</th>
+      <th>描述</th>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>MCHOST</td>
+      <td>服务器名</td>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>MCPRE</td>
+      <td>存储的 key 前缀</td>
+    </tr>
+    <tr>
+      <td>int</td>
+      <td>MCPORT</td>
+      <td>服务器端口号</td>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>MCUSER</td>
+      <td>SASL 用户名</td>
+    </tr>
+    <tr>
+      <td>string</td>
+      <td>MCPW</td>
+      <td>SASL 密码</td>
+    </tr>
+    <tr>
+      <td>string | NULL</td>
+      <td>MCPOOL</td>
+      <td>连接池别名，为 NULL 则不使用连接池</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+define('MCHOST', '127.0.0.1');
+define('MCPRE', 'pre_');
+define('MCPORT', 11211);
+define('MCUSER', 'user');
+define('MCPW', '123456');
+define('MCPOOL', 'BSL');
+</pre>
+<a href="#">返回导航</a><br><br>
+</body>
+</html>

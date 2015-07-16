@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="main.css">
+<title>类库</title>
+</head>
+<body>
+<div class="title">类库</div>
+<div id="left">
+  <strong>目录</strong>
+  <a href="#load">加载</a>
+  <a href="#use">使用</a>
+  <a href="#var">定义</a>
+</div><br>
+<div class="title" id="load">加载</div>
+<strong>描述：</strong><br>
+<pre>一句代码加载您编写的，或者第三方提供的类库。</pre>
+<strong>定义：</strong>
+<pre>L()->load(string $name)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>直接传入类库的名字，允许带目录，不带 L_ 前缀，并自动初始化</td>
+      <td>void</td>
+    </tr>
+  </tbody>
+</table>
+<pre>L()->load(string $name, bool $autoinit)</pre>
+<table width="100%" border="0" cellspacing="0" cellpadding="0" class="table">
+  <tbody>
+    <tr>
+      <th>参数</th>
+      <th>描述</th>
+      <th>返回值</th>
+    </tr>
+    <tr>
+      <td>name</td>
+      <td>同上，但根据 autoinit 的值决定是否自动初始化</td>
+      <td rowspan="2">void</td>
+    </tr>
+    <tr>
+      <td>autoinit</td>
+      <td>为 true 则自动初始化，为 false 不进行初始化</td>
+    </tr>
+  </tbody>
+</table>
+<strong>例子：</strong>
+<pre>
+L()-&gt;load('Sql'); // Sql 类被装载，并且已经自动初始化
+L()-&gt;load('Mysql', false); // Mysql 类被装载，但没有进行初始化
+$mysql = new L_Mysql(); // 手动初始化
+</pre>
+<pre>小提示：手动初始化可能应用在当前页面需要使用同个类多实例，譬如多条同时存在的数据库连接。</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="use">使用</div>
+<strong>描述：</strong><br>
+<pre>若是您自己实例化的，直接那么用就行，初始化的适用本条。</pre>
+<strong>定义：</strong>
+<pre>L()-&gt;类名-&gt;方法();</pre>
+<strong>例子：</strong>
+<pre>
+L()-&gt;load('Sql');
+L()-&gt;Sql-&gt;get(); // get 是 Sql 类的一个方法
+</pre>
+<a href="#">返回导航</a><br><br>
+<div class="title" id="var">定义</div>
+<pre>类的名字必须包含 L_ 前缀，必须放置在 librarys 目录下。</pre>
+<strong>例子：</strong>
+<pre>
+class L_Sql {
+
+    function get() {
+    
+    	return '啥也没有';
+        
+    }
+    
+}
+</pre>
+<a href="#">返回导航</a><br><br>
+</body>
+</html>

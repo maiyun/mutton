@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<link rel="stylesheet" href="main.css">
+<title>目录树</title>
+</head>
+<body>
+<div class="title">目录树</div>
+变色龙的目录结构为下面的部分：<br>
+标注为 <strong>核心</strong> 的为不可被删除且不可被修改的核心文件。<br>
+其余凡是列出来的文件和目录，您都不可以删除，且目录不可改名，文件可以编辑其内容。
+<pre>
+confs/ 存放一些配置文件
+--db.php 一些数据库信息
+--kv.php 一些自定义的常量和变量
+--main.php [核心] 框架核心处理内容
+controllers/ 存放控制器文件
+--Index.php 主要控制器
+images/ 存放一些静态文件，此目录内容不做重定向
+librarys/ 存放类库文件，根据您的实际需要向其中添加类库
+logs/ 存放系统错误日志，需要将权限设置为可写，如 0777
+models/ 存放您编写的模块类
+views/ 存放视图
+--index.php 主控制器使用的视图文件
+.htaccess [核心] 定义重定向规则
+index.php [核心] 程序的单入口文件
+</pre>
+</body>
+</html>
