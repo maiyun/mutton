@@ -80,17 +80,33 @@ class Model {
 
     }
 
+    public function toArray() {
+        $rtn = [];
+        foreach ($this as $key => $v)
+            if ($key[0] != '_')
+                $rtn[$key] = $v;
+        return $rtn;
+    }
+
+    /**
+     * 需要数据库支持 is_remove、time_remove 字段
+     */
+    public function softRemove() {
+        L()->Db->query(L()->Sql->delete($this->_table)->where([$this->_primary => $this->{$this->_primary}])->get());
+        if(L()->Db->getAffectRows() > 0) return true;
+        else return false;
+    }
+
 }
 
 trait ModelWithPKey {
 
     /**
-     *   This method insert a new row into table with a non-numerical
+     * This method insert a new row into table with a non-numerical
      * primary key.
      * @return bool
      */
-    public function create()
-    {
+    public function create() {
         $updates = [];
 
         foreach ($this->_updates as $k => $v)
@@ -99,7 +115,7 @@ trait ModelWithPKey {
         do {
             $updates[$this->_primary] = $this->createPKey();
             $sql = L()->Sql->insert($this->_table, $updates)->get();
-        } while (!($r = L()->Db->query($sql)) && L()->Db->getError() == 1062);
+        } while (!($r = L()->Db->query($sql, false)) && L()->Db->getError() == 1062);
 
         if ($r) {
             $this->{$this->_primary} = $updates[$this->_primary];

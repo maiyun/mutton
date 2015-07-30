@@ -8,6 +8,8 @@ ob_start();
 
 // --- 定义常量 ---
 
+define('CHAMELEON_VERSION', '1.0.0');
+
 define('ROOT_PATH', substr(dirname(__FILE__), 0, -5));
 define('LIB_PATH', ROOT_PATH . 'librarys/');
 define('MOD_PATH', ROOT_PATH . 'models/');
@@ -96,7 +98,10 @@ $_M = new MC();
 
 function __autoload($className) {
     $cn = substr($className, strrpos($className, '\\') + 1);
-    require(MOD_PATH.$cn.'.php');
+    if(is_file(MOD_PATH.$cn.'.php'))
+        require(MOD_PATH.$cn.'.php');
+    else
+        logs('Main', 'autoload failed. can not load '.$className);
 }
 
 require(MOD_PATH.'Model.php');
