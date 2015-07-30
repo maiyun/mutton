@@ -92,7 +92,7 @@ class Model {
      * 需要数据库支持 is_remove、time_remove 字段
      */
     public function softRemove() {
-        L()->Db->query(L()->Sql->delete($this->_table)->where([$this->_primary => $this->{$this->_primary}])->get());
+        L()->Db->query(L()->Sql->update($this->_table, ['is_remove'=>'1','time_remove'=>time()])->where([$this->_primary => $this->{$this->_primary},'is_remove'=>'0'])->get());
         if(L()->Db->getAffectRows() > 0) return true;
         else return false;
     }
