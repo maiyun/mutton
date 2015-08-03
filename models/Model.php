@@ -99,7 +99,7 @@ class Model {
 
 }
 
-trait ModelWithPKey {
+trait Model_PKey {
 
     /**
      * This method insert a new row into table with a non-numerical
