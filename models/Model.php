@@ -72,7 +72,7 @@ class Model {
         foreach($this->_updates as $k => $v)
             $updates[$k] = $this->$k;
         $sql = L()->Sql->insert($this->_table, $updates)->get();
-        if($r = L()->Db->query($sql)) {
+        if($r = L()->Db->query($sql, false)) {
             $this->{$this->_primary} = L()->Db->getInsertID();
             return $r;
         } else
