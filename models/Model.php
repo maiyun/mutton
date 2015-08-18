@@ -16,9 +16,6 @@ class Model {
     protected $_updateConditions = [];
 
     public function set($n, $v, $condition = null) {
-        // @todo: check for debug
-        if (!property_exists(get_called_class(), $n))
-            throw new \Exception("Accessed an non-existent property.");
         if ($this->$n != $v) {
             $this->_updates[$n] = true;
             if ($condition !== null)
@@ -29,9 +26,6 @@ class Model {
     }
 
     public function __set($n, $v) {
-        // @todo: check for debug
-        if (!property_exists(get_called_class(), $n))
-            throw new \Exception("Accessed an non-existent property.");
         if ($this->$n != $v) {
             $this->_updates[$n] = true;
             return $this->$n = $v;
@@ -40,9 +34,6 @@ class Model {
     }
 
     public function __get($n) {
-        // @todo: check for debug
-        if (!property_exists(get_called_class(), $n))
-            throw new \Exception("Accessed an non-existent property.");
         return $this->$n;
     }
 
