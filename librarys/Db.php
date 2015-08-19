@@ -62,6 +62,10 @@ class Db {
         return $this->source->getError();
     }
 
+    function getErrno() {
+        return $this->source->getErrno();
+    }
+
     function connect($mod = 'Mysql') {
 
         $this->host = $this->host == '' ? DBHOST : $this->host;

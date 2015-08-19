@@ -43,6 +43,13 @@ class Mysql {
             return $this->link->connect_error;
     }
 
+    function getErrno() {
+        if(@isset($this->link->errno))
+            return $this->link->errno;
+        else
+            return $this->link->connect_errno;
+    }
+
     function connect($host, $user, $pwd, $dbname, $charset) {
         if($this->link = @new \mysqli($host, $user, $pwd, $dbname)) {
             if(mysqli_connect_errno())

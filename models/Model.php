@@ -66,10 +66,10 @@ class Model {
         if($r = L()->Db->query($sql, false)) {
             $this->{$this->_primary} = L()->Db->getInsertID();
             return $r;
-        } else if(L()->Db->getError() == 1062)
+        } else if(L()->Db->getErrno() == 1062)
             return false;
         else {
-            echo '[Db]' . L()->Db->getError();
+            echo '[Db]' . L()->Db->getError() . '(' . L()->Db->getErrno() .  ')';
             return false;
         }
 
