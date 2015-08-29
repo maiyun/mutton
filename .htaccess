@@ -1,0 +1,4 @@
+ErrorDocument 404 /error.html
+RewriteEngine on
+RewriteRule ^images/(.*) images/$1 [L]
+RewriteRule ^(.*)$ index.php?$1 [L,QSA]
