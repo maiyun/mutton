@@ -15,16 +15,6 @@ class Model {
     protected $_updates = [];
     protected $_updateConditions = [];
 
-    public function set($n, $v, $condition = null) {
-        if ($this->$n != $v) {
-            $this->_updates[$n] = true;
-            if ($condition !== null)
-                $this->_updateConditions[$n] = $condition;
-            return $this->$n = $v;
-        }
-        return $this->$n;
-    }
-
     public function __set($n, $v) {
         if ($this->$n != $v) {
             $this->_updates[$n] = true;
