@@ -25,17 +25,15 @@ class Session {
 
     function __construct() {
 
-        if(isset($_POST['SESSIONKEY'])) $this->key = $_POST['SESSIONKEY'];
-        else if(isset($_COOKIE['SESSIONKEY'])) $this->key = $_COOKIE['SESSIONKEY'];
-        if(!ctype_alnum($this->key)) $this->key = '';
+
 
     }
 
     function __destruct() {
 
-        if($this->source instanceof \Chameleon\Library\Db)
+        if($this->source instanceof Db)
             $this->source->query('UPDATE `' . $this->source->pre . 'session` SET `data` = "' . $this->source->escape(serialize($_SESSION)) . '",`time` = "' . time() . '" WHERE `key` = "' . $this->key . '"');
-        else if($this->source instanceof \Chameleon\Library\Memcached) {
+        else if($this->source instanceof Memcached) {
             $_SESSION['sess']['time'] = time();
             $this->source->set('sess_'.$this->key, $_SESSION, $this->exp);
         }
@@ -44,15 +42,19 @@ class Session {
 
     function gc() {
 
-        if($this->source instanceof \Chameleon\Library\Db)
+        if($this->source instanceof Db)
             L()->Db->query('DELETE'.' FROM `' . $this->source->pre . 'session` WHERE `time` < "'.(time() - $this->exp).'"');
 
     }
 
     function start() {
 
+        if(isset($_POST[$this->cookie])) $this->key = $_POST[$this->cookie];
+        else if(isset($_COOKIE[$this->cookie])) $this->key = $_COOKIE[$this->cookie];
+        if(!ctype_alnum($this->key)) $this->key = '';
+
         $_SESSION = [];
-        if($this->source instanceof \Chameleon\Library\Db) {
+        if($this->source instanceof Db) {
             if($this->source->isConnected()) {
                 if($this->key != '')
                     $r = $this->source->query('SELECT' . ' * FROM `' . $this->source->pre . 'session` WHERE `key` = "' . $this->key . '";');
@@ -78,7 +80,7 @@ class Session {
             } else {
                 logs('L(Session)', 'Db not connect', true);
             }
-        } else if($this->source instanceof \Chameleon\Library\Memcached) {
+        } else if($this->source instanceof Memcached) {
             if($this->source->isConnect()) {
                 $s = $this->source->get('sess_'.$this->key);
                 if($s === false) {
