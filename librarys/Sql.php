@@ -101,7 +101,7 @@ class Sql {
             if(count($s)) {
                 $sql = ' WHERE ';
                 foreach ($s as $k => $i) {
-                    if (is_string($i))
+                    if (is_string($i) || is_numeric($i))
                         $sql .= '`' . $k . '` = "' . $this->escape($i) . '" AND ';
                     else if (is_array($i))
                         $sql .= '`' . $i[0] . '` ' . $i[1] . ' "' . $this->escape($i[2]) . '" AND ';
