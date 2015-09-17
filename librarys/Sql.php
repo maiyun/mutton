@@ -108,7 +108,7 @@ class Sql {
                             $sql .= '`' . $k . '` = "' . $this->escape($i) . '" AND ';
                     } else if (is_array($i)) {
                         if(strtolower($i[1]) == 'in') {
-                            $sql .= '`' . $i[0] . '` IN (' . $this->escape($i[2]);
+                            $sql .= '`' . $i[0] . '` IN (';
                             foreach($i[2] as $v)
                                 $sql .= '"'.$this->escape($v).'", ';
                             $sql = substr($sql, 0, -2) . ') AND ';
