@@ -101,11 +101,20 @@ class Sql {
             if(count($s)) {
                 $sql = ' WHERE ';
                 foreach ($s as $k => $i) {
-                    if (is_string($i))
-                        $sql .= '`' . $k . '` = "' . $this->escape($i) . '" AND ';
-                    else if (is_array($i))
-                        $sql .= '`' . $i[0] . '` ' . $i[1] . ' "' . $this->escape($i[2]) . '" AND ';
-                    else exit('[MyX - L(Mysql) Error] only support string or array, but yours type is ' . gettype($i));
+                    if (is_string($i) || is_numeric($i)) {
+                        if(substr($i, 0, 1) == '`')
+                            $sql .= $i . ' AND ';
+                        else
+                            $sql .= '`' . $k . '` = "' . $this->escape($i) . '" AND ';
+                    } else if (is_array($i)) {
+                        if(strtolower($i[1]) == 'in') {
+                            $sql .= '`' . $i[0] . '` IN (' . $this->escape($i[2]);
+                            foreach($i[2] as $v)
+                                $sql .= '"'.$this->escape($v).'", ';
+                            $sql = substr($sql, 0, -2) . ') AND ';
+                        } else
+                            $sql .= '`' . $i[0] . '` ' . $i[1] . ' "' . $this->escape($i[2]) . '" AND ';
+                    } else exit('[MyX - L(Mysql) Error] only support string or array, but yours type is ' . gettype($i));
                 }
                 $sql = substr($sql, 0, -5);
             }
