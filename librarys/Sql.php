@@ -82,7 +82,12 @@ class Sql {
     function update($f, $s = array()) {
         $sql = 'UPDATE `'.DBPRE.$f.'` SET ';
         foreach($s as $k => $i) {
-            $sql .= '`' . $k . '` = "' . $this->escape($i) . '",';
+            if(is_string($i))
+                $sql .= '`' . $k . '` = "' . $this->escape($i) . '",';
+            else if(is_array($i)) {
+                if($i[1] == '+' || $i[1] == '-')
+                    $sql .= '`' . $i[0] . '` = `' . $i[0] . '` ' . $i[1] . ' "' . $this->escape($i[2]) . '",';
+            }
         }
         $this->sql[$this->on]['above'] = substr($sql, 0, -1);
         return $this;
