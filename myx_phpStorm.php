@@ -15,11 +15,7 @@ class LI{
 
 }
 
-/**
- * @property M_Home Home
- * @property M_Shop Shop
- */
-class MI{
+class DI{
 
     function load($name = '') {
 

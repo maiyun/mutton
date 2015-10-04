@@ -196,11 +196,11 @@ Class Main {
 }
 
 /**
- * @return MI
+ * @return DI
  */
-function M() {
-    global $_M;
-    return $_M;
+function D() {
+    global $_D;
+    return $_D;
 }
 
 /**
