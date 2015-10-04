@@ -13,7 +13,6 @@ class Model {
     protected $_primary = '';
     protected $_table = '';
     protected $_updates = [];
-    protected $_updateConditions = [];
 
     public function __set($n, $v) {
         if ($this->$n != $v) {
@@ -35,14 +34,9 @@ class Model {
         $updates = [];
         foreach($this->_updates as $k => $v)
             $updates[$k] = $this->$k;
-        if ($this->_updateConditions) {
-            $this->_updateConditions[$this->_primary] = $this->{$this->_primary};
-            $sql = L()->Sql->update($this->_table, $updates)->where($this->_updateConditions)->get();
-        } else
-            $sql = L()->Sql->update($this->_table, $updates)->where($this->_primary, $this->{$this->_primary})->get();
+        $sql = L()->Sql->update($this->_table, $updates)->where($this->_primary, $this->{$this->_primary})->get();
         if($r = L()->Db->query($sql, false)) {
             $this->_updates = [];
-            $this->_updateConditions && ($this->_updateConditions = []);
             return $r;
         } else
             return false;
