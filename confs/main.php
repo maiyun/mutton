@@ -48,7 +48,7 @@ register_shutdown_function('exception_handler');
 // --- 实现加载类库、模块、模型 ---
 
 $_L = NULL;
-$_M = NULL;
+$_D = NULL;
 
 class LC {
 
@@ -71,22 +71,22 @@ class LC {
     }
 }
 
-class MC {
+class DC {
 
     function load($path, $auto = true) {
 
-        global $_M;
+        global $_D;
         if(strpos($path, '/') !== false) $name = substr($path, strrpos($path, '/') + 1);
         else $name = $path;
-        if (!isset($_M->$name)) {
-            if(is_file(ROOT_PATH . 'modules/' . $path . '.php')) {
-                require(ROOT_PATH . 'modules/' . $path . '.php');
+        if (!isset($_D->$name)) {
+            if(is_file(ROOT_PATH . 'drives/' . $path . '.php')) {
+                require(ROOT_PATH . 'drives/' . $path . '.php');
                 if($auto) {
-                    $mname = '\\Chameleon\\Module\\' . $name;
-                    $_M->$name = new $mname;
+                    $dname = '\\Chameleon\\Drive\\' . $name;
+                    $_D->$name = new $dname;
                 }
             } else
-                logs('M(load)', 'Modules not found.', $path);
+                logs('D(load)', 'Drive not found.', $path);
         }
 
     }
@@ -94,7 +94,7 @@ class MC {
 }
 
 $_L = new LC();
-$_M = new MC();
+$_D = new DC();
 
 function __autoload($className) {
     $cn = substr($className, strrpos($className, '\\') + 1);
