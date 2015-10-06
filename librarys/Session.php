@@ -49,8 +49,8 @@ class Session {
 
     function start() {
 
-        if(isset($_POST[$this->cookie])) $this->key = $_POST[$this->cookie];
-        else if(isset($_COOKIE[$this->cookie])) $this->key = $_COOKIE[$this->cookie];
+        if(isset($_POST[$this->cookie]) && $_POST[$this->cookie]) $this->key = $_POST[$this->cookie];
+        else if(isset($_COOKIE[$this->cookie]) && $_COOKIE[$this->cookie]) $this->key = $_COOKIE[$this->cookie];
         if(!ctype_alnum($this->key)) $this->key = '';
 
         $_SESSION = [];
