@@ -106,10 +106,6 @@ function __autoload($className) {
 
 require(MOD_PATH.'Model.php');
 
-// --- 加载模拟器 ---
-
-if(EMULATOR_MEMCACHED === true && !class_exists('Memcached', false)) require(LIB_PATH.'Memcached/Emulator.php');
-
 // --- 获取 CONTROLLER、ACTION 和 PARAM 数组 ---
 
 $_PATH = isset($_SERVER['REDIRECT_QUERY_STRING']) ? $_SERVER['REDIRECT_QUERY_STRING'] : '';

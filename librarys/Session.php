@@ -22,6 +22,8 @@ class Session {
     var $exp = 1209600;
     var $source = NULL;
     var $cookie = 'SESSIONKEY';
+    var $code = '';
+    var $first = false;
 
     function __construct() {
 
@@ -62,7 +64,9 @@ class Session {
                 if ($this->key =='' || $this->source->getAffectRows() == 0) {
                     $this->key = date('Ymd') . $this->random();
                     $time = time();
-                    while (!$this->source->query('INSERT' . ' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '")', false))
+                    $this->code = $this->random();
+                    $this->first = true;
+                    while (!$this->source->query('INSERT' . ' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`, `code`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '", "'.$this->code.'")', false))
                         $this->key = date('Ymd') . $this->random();
                 } else {
                     $s = $r->fetch_assoc();
@@ -70,16 +74,16 @@ class Session {
                         // --- 进行 Session KEY 置换 ---
                         $this->key = date('Ymd') . $this->random();
                         $time = time();
-                        while (!$this->source->query('INSERT'.' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","' . $this->source->escape(serialize($_SESSION)) . '","' . $time . '","' . $time . '")', false))
+                        $this->code = $s['code'];
+                        while (!$this->source->query('INSERT'.' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`, `code`) VALUES ("' . $this->key . '","' . $this->source->escape(serialize($_SESSION)) . '","' . $time . '","' . $time . '", "' . $this->code . '")', false))
                             $this->key = date('Ymd') . $this->random();
                         $this->source->query('DELETE'.' FROM `' . $this->source->pre . 'session` WHERE `key` = "'.$s['key'].'"');
                     }
                     $_SESSION = unserialize($s['data']);
                 }
-                setcookie($this->cookie, $this->key, time() + $this->exp, '/');
-            } else {
+                if(!isset($_POST[$this->cookie])) setcookie($this->cookie, $this->key, time() + $this->exp, '/');
+            } else
                 logs('L(Session)', 'Db not connect', true);
-            }
         } else if($this->source instanceof Memcached) {
             if($this->source->isConnect()) {
                 $s = $this->source->get('sess_'.$this->key);
@@ -87,14 +91,18 @@ class Session {
                     // --- 没有 session ---
                     $this->key = date('Ymd') . $this->random();
                     $time = time();
+                    $this->code = $this->random();
+                    $this->first = true;
                     $_SESSION['sess'] = [
                         'time' => $time,
-                        'time_add' => $time
+                        'time_add' => $time,
+                        'code' => $this->code
                     ];
                     while($this->source->get('sess_'.$this->key) !== false)
                         $this->key = date('Ymd') . $this->random();
                     $this->source->set('sess_'.$this->key, $_SESSION, $this->exp);
                 } else {
+                    // --- $s 是 session 的信息，此时只有 $this->key 被赋值了 ---
                     if ($s['sess']['time_add'] < time() - 10800) {
                         // --- 进行 Session KEY 置换 ---
                         $oldKey = $this->key;
@@ -104,14 +112,15 @@ class Session {
                             $this->key = date('Ymd') . $this->random();
                         $s['sess'] = [
                             'time' => $time,
-                            'time_add' => $time
+                            'time_add' => $time,
+                            'code' => $s['sess']['code']
                         ];
                         $this->source->set('sess_'.$this->key, $s, $this->exp);
                         $this->source->delete('sess_'.$oldKey);
                     }
                     $_SESSION = $s;
                 }
-                setcookie($this->cookie, $this->key, time() + $this->exp, '/');
+                if(!isset($_POST[$this->cookie])) setcookie($this->cookie, $this->key, time() + $this->exp, '/');
             } else
                 logs('L(Session)', 'Memcached not connect');
         } else
