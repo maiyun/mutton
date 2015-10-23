@@ -19,7 +19,7 @@ class Session {
 
     // --- 可编辑变量 ---
 
-    var $exp = 1209600;
+    var $exp = 432000; // --- 5 天 ---
     var $source = NULL;
     var $cookie = 'SESSIONKEY';
     var $code = '';
