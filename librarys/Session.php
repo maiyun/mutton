@@ -22,8 +22,6 @@ class Session {
     var $exp = 432000; // --- 5 天 ---
     var $source = NULL;
     var $cookie = 'SESSIONKEY';
-    var $code = '';
-    var $first = false;
 
     function __construct() {
 
@@ -64,9 +62,7 @@ class Session {
                 if ($this->key =='' || $this->source->getAffectRows() == 0) {
                     $this->key = date('Ymd') . $this->random();
                     $time = time();
-                    $this->code = $this->random();
-                    $this->first = true;
-                    while (!$this->source->query('INSERT' . ' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`, `code`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '", "'.$this->code.'")', false))
+                    while (!$this->source->query('INSERT' . ' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '")', false))
                         $this->key = date('Ymd') . $this->random();
                 } else {
                     $s = $r->fetch_assoc();
@@ -74,8 +70,7 @@ class Session {
                         // --- 进行 Session KEY 置换 ---
                         $this->key = date('Ymd') . $this->random();
                         $time = time();
-                        $this->code = $s['code'];
-                        while (!$this->source->query('INSERT'.' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`, `code`) VALUES ("' . $this->key . '","' . $this->source->escape(serialize($_SESSION)) . '","' . $time . '","' . $time . '", "' . $this->code . '")', false))
+                        while (!$this->source->query('INSERT'.' INTO `' . $this->source->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","' . $this->source->escape(serialize($_SESSION)) . '","' . $time . '","' . $time . '")', false))
                             $this->key = date('Ymd') . $this->random();
                         $this->source->query('DELETE'.' FROM `' . $this->source->pre . 'session` WHERE `key` = "'.$s['key'].'"');
                     }
@@ -91,12 +86,9 @@ class Session {
                     // --- 没有 session ---
                     $this->key = date('Ymd') . $this->random();
                     $time = time();
-                    $this->code = $this->random();
-                    $this->first = true;
                     $_SESSION['sess'] = [
                         'time' => $time,
-                        'time_add' => $time,
-                        'code' => $this->code
+                        'time_add' => $time
                     ];
                     while($this->source->get('sess_'.$this->key) !== false)
                         $this->key = date('Ymd') . $this->random();
@@ -112,8 +104,7 @@ class Session {
                             $this->key = date('Ymd') . $this->random();
                         $s['sess'] = [
                             'time' => $time,
-                            'time_add' => $time,
-                            'code' => $s['sess']['code']
+                            'time_add' => $time
                         ];
                         $this->source->set('sess_'.$this->key, $s, $this->exp);
                         $this->source->delete('sess_'.$oldKey);
