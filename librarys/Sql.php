@@ -82,12 +82,13 @@ class Sql {
     function update($f, $s = array()) {
         $sql = 'UPDATE `'.DBPRE.$f.'` SET ';
         foreach($s as $k => $i) {
-            if(is_string($i))
+            if(is_string($i) || is_numeric($i))
                 $sql .= '`' . $k . '` = "' . $this->escape($i) . '",';
             else if(is_array($i)) {
                 if($i[1] == '+' || $i[1] == '-')
                     $sql .= '`' . $i[0] . '` = `' . $i[0] . '` ' . $i[1] . ' "' . $this->escape($i[2]) . '",';
-            }
+            } else
+                exit('Error, Sql, Update, '.gettype($i));
         }
         $this->sql[$this->on]['above'] = substr($sql, 0, -1);
         return $this;
@@ -127,8 +128,15 @@ class Sql {
             $sql = ' WHERE ';
             if($v2 == '')
                 $sql .= '`' . $s . '` = "' . $this->escape($v) . '" ';
-            else
-                $sql .= '`' . $s . '` '.$v.' "' . $this->escape($v2) . '" ';
+            else {
+                if(strtolower($v) == 'in') {
+                    $sql .= '`' . $s . '` IN (';
+                    foreach($v2 as $vv)
+                        $sql .= '"'.$this->escape($vv).'", ';
+                    $sql = substr($sql, 0, -2) . ') ';
+                } else
+                    $sql .= '`' . $s . '` ' . $v . ' "' . $this->escape($v2) . '"';
+            }
         }
         $this->sql[$this->on]['where'] = $sql;
         return $this;
