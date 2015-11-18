@@ -46,9 +46,11 @@ class Session {
 
 	function start() {
 
-		if(isset($_POST[$this->cookie]) && $_POST[$this->cookie]) $this->key = $_POST[$this->cookie];
-		else if(isset($_COOKIE[$this->cookie]) && $_COOKIE[$this->cookie]) $this->key = $_COOKIE[$this->cookie];
-		if(!ctype_alnum($this->key)) $this->key = '';
+        if($this->key == '') {
+            if (isset($_POST[$this->cookie]) && $_POST[$this->cookie]) $this->key = $_POST[$this->cookie];
+            else if (isset($_COOKIE[$this->cookie]) && $_COOKIE[$this->cookie]) $this->key = $_COOKIE[$this->cookie];
+            if (!ctype_alnum($this->key)) $this->key = '';
+        }
 
         // --- 初始化 Session 数组 ---
 		$_SESSION = [];
@@ -110,7 +112,7 @@ class Session {
                 $this->key = date('Ymd') . $this->random();
             // --- 如果内存加速了则在页面结束时再写入内存 ---
         }
-        if(!isset($_POST[$this->cookie])) setcookie($this->cookie, $this->key, time() + $this->exp, '/');
+        if(!$this->long) if(!isset($_POST[$this->cookie])) setcookie($this->cookie, $this->key, time() + $this->exp, '/');
         return true;
 
 	}
