@@ -10,6 +10,7 @@ namespace Chameleon\Library;
 class Rsa {
 
     /**
+     * 用公钥加密一段任意长的字符串
      * @param $original
      * @param string $public_key 文件地址或 key 的内容，以第一个字符为 @ 则为文件地址
      * @return bool|string
@@ -32,6 +33,12 @@ class Rsa {
 
     }
 
+    /**
+     * 用私钥解密一段密文
+     * @param $encrypt
+     * @param string $private_key 文件地址或 key 的内容，以第一个字符为 @ 则为文件地址
+     * @return bool|string
+     */
     public function decrypt($encrypt, $private_key = '@') {
 
         $original = '';
