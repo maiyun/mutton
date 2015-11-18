@@ -20,8 +20,10 @@ class Session {
 	// --- 可编辑变量 ---
 
 	var $exp = 432000; // --- 5 天 ---
+    var $longExp = 2592000; // --- 30 天 ---
 	var $mem = true; // --- 内存加速 ---
 	var $cookie = 'SESSIONKEY';
+    var $long = false; // --- 长期、仅适用于本地且 RSA 加密时使用 ---
 
 	function __construct() {
 
@@ -37,7 +39,8 @@ class Session {
 
 	function gc() {
 
-		L()->Db->query('DELETE'.' FROM `' . L()->Db->pre . 'session` WHERE `time` < "'.(time() - $this->exp).'"');
+		L()->Db->query('DELETE'.' FROM `' . L()->Db->pre . 'session` WHERE `time` < "'.(time() - $this->exp).'" ADN `long` = "0";');
+        L()->Db->query('DELETE'.' FROM `' . L()->Db->pre . 'session` WHERE `time` < "'.(time() - $this->longExp).'" ADN `long` = "1";');
 
 	}
 
@@ -70,9 +73,24 @@ class Session {
             // --- 在内存里没找到的也在数据库里找 ---
             if($findOnDb) {
                 $r = L()->Db->query('SELECT' . ' * FROM `' . L()->Db->pre . 'session` WHERE `key` = "' . $this->key . '";');
-                // --- 影响 0 行代表之前没有 Session，一会儿添加个 ---
+                // --- 影响 0 行代表之前没有 Session ---
                 if (L()->Db->getAffectRows() == 0) {
-                    $needInsert = true;
+                    // --- 持久性 Session 的 key 由客户端产生，符合标准即可 ---
+                    if($this->long == true) {
+                        // --- 看客户给的 key 是否可靠有效 ---
+                        if((strlen($this->key) == 16) && (substr($this->key, 0, 8) == date('Ymd')) && ctype_alnum($this->key)) {
+                            $this->key = strtolower($this->key);
+                            $time = time();
+                            // --- 如果添加失败直接返回错误，让终端重新提交 key ---
+                            if(!L()->Db->query('INSERT' . ' INTO `' . L()->Db->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '")', false))
+                                return false;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        // --- 正常流程添加 Session ---
+                        $needInsert = true;
+                    }
                 } else {
                     // --- 数据库里有 Session 直接读出 ---
                     $s = $r->fetch_assoc();
@@ -93,6 +111,7 @@ class Session {
             // --- 如果内存加速了则在页面结束时再写入内存 ---
         }
         if(!isset($_POST[$this->cookie])) setcookie($this->cookie, $this->key, time() + $this->exp, '/');
+        return true;
 
 	}
 
