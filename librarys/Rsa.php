@@ -1,19 +1,25 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: admin
- * Date: 2015/11/18
- * Time: 11:12
+ * Chameleon 框架
+ * User: 韩国帅
+ * Github: https://github.com/yunbookf/Chameleon
  */
 
 namespace Chameleon\Library;
 
 class Rsa {
 
-    public function encrypt($original) {
+    /**
+     * @param $original
+     * @param string $public_key 文件地址或 key 的内容，以第一个字符为 @ 则为文件地址
+     * @return bool|string
+     */
+    public function encrypt($original, $public_key = '@') {
 
         $encrypt = '';
-        $publicKey = openssl_pkey_get_public(file_get_contents('rsa_public_key.pem'));
+        $public_key = $public_key == '@' ? '@'.RSA_PUBLIC_KEY : $public_key;
+        $publicKey = substr($public_key, 0, 1) == '@' ? file_get_contents(substr($public_key, 1)) : $public_key;
+        $publicKey = openssl_pkey_get_public($publicKey);
         while($original != '') {
             $originalLine = substr($original, 0, 117);
             $encryptLine = '';
@@ -26,10 +32,12 @@ class Rsa {
 
     }
 
-    public function decrypt($encrypt) {
+    public function decrypt($encrypt, $private_key = '@') {
 
         $original = '';
-        $privateKey = openssl_pkey_get_private(file_get_contents('rsa_private_key.pem'));
+        $private_key = $private_key == '@' ? '@'.RSA_PRIVATE_KEY : $private_key;
+        $privateKey = substr($private_key, 0, 1) == '@' ? file_get_contents(substr($private_key, 1)) : $private_key;
+        $privateKey = openssl_pkey_get_private($privateKey);
         $encrypt = explode('&', $encrypt);
         foreach($encrypt as $encryptLine) {
             $originalTmp = '';
