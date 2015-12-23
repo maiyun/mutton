@@ -10,8 +10,6 @@ namespace Chameleon\Library;
 
 // --- Memcached 为长连接进城池 ---
 
-if (!defined('USING_SYSTEM')) exit;
-
 class Memcached {
 
 	/**

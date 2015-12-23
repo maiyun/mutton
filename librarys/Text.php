@@ -8,7 +8,7 @@
 
 namespace Chameleon\Library;
 
-class String {
+class Text {
 
     public function random($length = 8, $s = ['L', 'N']) {
         static $a = ['U' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'L' => 'abcdefghijklmnopqrstuvwxyz', 'N' => '0123456789'];
@@ -37,3 +37,4 @@ class String {
     }
 
 }
+

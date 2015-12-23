@@ -11,23 +11,8 @@ namespace Chameleon\Library;
 class Sql {
 
     var $sql = [
-        '0' => [
-            'above' => ''
-        ]
+        'above' => ''
     ];
-
-    var $on = '0';
-    var $db = NULL;
-
-    // --- 可以随时切换多个 SQL 对象 ---
-
-    function on($key = '0') {
-
-        if (!isset($this->sql[$key])) $this->sql[$key] = ['above' => ''];
-        $this->on = $key;
-        return $this;
-
-    }
 
     // --- above 类 ---
 
@@ -64,7 +49,7 @@ class Sql {
             }
             $sql = substr($sql, 0, -1) . ') VALUES (' . substr($values, 0, -1) . ')';
         }
-        $this->sql[$this->on]['above'] = $sql;
+        $this->sql['above'] = $sql;
         return $this;
     }
 
@@ -75,7 +60,7 @@ class Sql {
             foreach($c as $i) $sql .= '`'.$i.'`, ';
             $sql = substr($sql, 0, -2);
         }
-        $this->sql[$this->on]['above'] = $sql . ' FROM `'.DBPRE.$f.'`';
+        $this->sql['above'] = $sql . ' FROM `'.DBPRE.$f.'`';
         return $this;
     }
 
@@ -90,12 +75,12 @@ class Sql {
             } else
                 exit('Error, Sql, Update, '.gettype($i));
         }
-        $this->sql[$this->on]['above'] = substr($sql, 0, -1);
+        $this->sql['above'] = substr($sql, 0, -1);
         return $this;
     }
 
     function delete($f) {
-        $this->sql[$this->on]['above'] = 'DELETE '.'FROM `'.DBPRE.$f.'`';
+        $this->sql['above'] = 'DELETE '.'FROM `'.DBPRE.$f.'`';
         return $this;
     }
 
@@ -138,7 +123,7 @@ class Sql {
                     $sql .= '`' . $s . '` ' . $v . ' "' . $this->escape($v2) . '"';
             }
         }
-        $this->sql[$this->on]['where'] = $sql;
+        $this->sql['where'] = $sql;
         return $this;
     }
 
@@ -151,48 +136,48 @@ class Sql {
             }
             $sql = substr($sql, 0, -1) . ' '.$d;
         }
-        $this->sql[$this->on]['by'] = $sql;
+        $this->sql['by'] = $sql;
         return $this;
     }
 
     function limit($a, $b) {
-        $this->sql[$this->on]['limit'] = ' LIMIT '.$a.', '.$b;
+        $this->sql['limit'] = ' LIMIT '.$a.', '.$b;
         return $this;
     }
 
     // --- 特殊方法 ---
 
     function append($sql) {
-        end($this->sql[$this->on]);
-        $key = key($this->sql[$this->on]);
-        $this->sql[$this->on][$key] .= $sql;
+        end($this->sql);
+        $key = key($this->sql);
+        $this->sql[$key] .= $sql;
         return $this;
     }
 
     function remove($key) {
-        if(isset($this->sql[$this->on][$key])) unset($this->sql[$this->on][$key]);
+        if(isset($this->sql[$key])) unset($this->sql[$key]);
         return $this;
     }
 
     function escape($str) {
-        if($this->db === NULL)
+        if(!isset(L()->Db))
             return addslashes($str);
         else
-            return $this->db->escape($str);
+            return L()->Db->escape($str);
     }
 
     // --- 拼接 sql ---
 
     function get($hold = false) {
-        $sql = $this->sql[$this->on]['above'];
-        if(isset($this->sql[$this->on]['where'])) $sql .= $this->sql[$this->on]['where'];
-        if(isset($this->sql[$this->on]['by'])) $sql .= $this->sql[$this->on]['by'];
-        if(isset($this->sql[$this->on]['limit'])) $sql .= $this->sql[$this->on]['limit'];
+        $sql = $this->sql['above'];
+        if(isset($this->sql['where'])) $sql .= $this->sql['where'];
+        if(isset($this->sql['by'])) $sql .= $this->sql['by'];
+        if(isset($this->sql['limit'])) $sql .= $this->sql['limit'];
         if(!$hold) {
-            if($this->on=='0') $this->sql[$this->on] = ['above' => ''];
-            else unset($this->sql[$this->on]);
+            $this->sql = ['above' => ''];
         }
         return $sql;
     }
 
 }
+

@@ -11,6 +11,7 @@ namespace Chameleon\Library;
 /*
  * 若使用 Db 模式，则需要手动载入 Db 类
  * 若使用默认模式，则需要同时手动载入  Memcached 类和 Db 类
+ * Key 区分大小写
  */
 
 class Session {
@@ -31,9 +32,11 @@ class Session {
 
 	function __destruct() {
 
-		L()->Db->query('UPDATE `' . L()->Db->pre . 'session` SET `data` = "' . L()->Db->escape(serialize($_SESSION)) . '",`time` = "' . time() . '" WHERE `key` = "' . $this->key . '"');
-		if($this->mem)
-			L()->Memcached->set('__sess_'.$this->key, $_SESSION, 43200); // 内存只保留 1 天的加速
+        if($this->key != '') {
+            L()->Db->query('UPDATE `' . L()->Db->pre . 'session` SET `data` = "' . L()->Db->escape(serialize($_SESSION)) . '",`time` = "' . time() . '" WHERE `key` = "' . $this->key . '"');
+            if ($this->mem)
+                L()->Memcached->set('__sess_' . $this->key, $_SESSION, 43200); // 内存只保留 1 天的加速
+        }
 
 	}
 
@@ -46,7 +49,7 @@ class Session {
 
 	function start() {
 
-        if($this->key == '') {
+        if(!$this->long && $this->key == '') {
             if (isset($_POST[$this->cookie]) && $_POST[$this->cookie]) $this->key = $_POST[$this->cookie];
             else if (isset($_COOKIE[$this->cookie]) && $_COOKIE[$this->cookie]) $this->key = $_COOKIE[$this->cookie];
             if (!ctype_alnum($this->key)) $this->key = '';
@@ -77,22 +80,8 @@ class Session {
                 $r = L()->Db->query('SELECT' . ' * FROM `' . L()->Db->pre . 'session` WHERE `key` = "' . $this->key . '";');
                 // --- 影响 0 行代表之前没有 Session ---
                 if (L()->Db->getAffectRows() == 0) {
-                    // --- 持久性 Session 的 key 由客户端产生，符合标准即可 ---
-                    if($this->long == true) {
-                        // --- 看客户给的 key 是否可靠有效 ---
-                        if((strlen($this->key) == 16) && (substr($this->key, 0, 8) == date('Ymd')) && ctype_alnum($this->key)) {
-                            $this->key = strtolower($this->key);
-                            $time = time();
-                            // --- 如果添加失败直接返回错误，让终端重新提交 key ---
-                            if(!L()->Db->query('INSERT' . ' INTO `' . L()->Db->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '")', false))
-                                return false;
-                        } else {
-                            return false;
-                        }
-                    } else {
-                        // --- 正常流程添加 Session ---
-                        $needInsert = true;
-                    }
+                    // --- 正常流程添加 Session ---
+                    $needInsert = true;
                 } else {
                     // --- 数据库里有 Session 直接读出 ---
                     $s = $r->fetch_assoc();
@@ -105,6 +94,7 @@ class Session {
         }
         // --- 本来就该添加个新 Session ---
         // --- 内存和数据库里没找到的也该添加个新 Session ---
+        // --- 如果不存在不允许加新则返回错误 ---
         if($needInsert) {
             $this->key = date('Ymd') . $this->random();
             $time = time();
@@ -118,7 +108,7 @@ class Session {
 	}
 
 	protected function random() {
-		$s = 'abcdefghijklmnopqrstuvwxyz0123456789';
+		$s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 		$sl= strlen($s);
 		$t = '';
 		for ($i = 8; $i; $i--)
@@ -127,3 +117,4 @@ class Session {
 	}
 
 }
+
