@@ -10,19 +10,15 @@ ob_start();
 
 define('CHAMELEON_VERSION', '1.0.0');
 
-// --- 主要用于 PHP 端的绝对路径 ---
 define('ROOT_PATH', substr(dirname(__FILE__), 0, -5));
 define('LIB_PATH', ROOT_PATH . 'librarys/');
 define('MOD_PATH', ROOT_PATH . 'models/');
 define('CONTROL_PATH', ROOT_PATH . 'controllers/');
-
-// --- 主要用于前端展示的网站根路径 ---
+define('USING_SYSTEM', true);
+define('AJAX', (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"])=="xmlhttprequest") ? true : false);
 define('SITE_PATH', substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/') + 1));
 define('IMAGES_PATH', SITE_PATH . 'images/');
 define('HTTP_PATH', 'http://' . $_SERVER['HTTP_HOST'] . SITE_PATH);
-
-define('AJAX', (isset($_SERVER["HTTP_X_REQUESTED_WITH"]) && strtolower($_SERVER["HTTP_X_REQUESTED_WITH"])=="xmlhttprequest") ? true : false);
-
 define('PAGE_START_TIME', microtime(true));
 
 // --- 禁用普通页面的浏览器缓存 ---
@@ -43,21 +39,16 @@ date_default_timezone_set('Asia/Shanghai');
 
 // --- 处理异常中断错误，写入文件 ---
 
-/*
-error_reporting(E_ALL);
-ini_set('display_errors', '1');
-//*/
-
 function exception_handler() {
     if($e = error_get_last())
-        logs('ERROR', $e['message'].' in '.$e['file'].' on line '.$e['line'], false);
+        logs('SHUTDOWN', $e['message'].' in <b>'.$e['file'].'</b> on line <b>'.$e['line'].'</b>', false);
 }
 register_shutdown_function('exception_handler');
 
 // --- 实现加载类库、模块、模型 ---
 
 $_L = NULL;
-$_D = NULL;
+$_M = NULL;
 
 class LC {
 
@@ -80,22 +71,22 @@ class LC {
     }
 }
 
-class DC {
+class MC {
 
     function load($path, $auto = true) {
 
-        global $_D;
+        global $_M;
         if(strpos($path, '/') !== false) $name = substr($path, strrpos($path, '/') + 1);
         else $name = $path;
-        if (!isset($_D->$name)) {
-            if(is_file(ROOT_PATH . 'drives/' . $path . '.php')) {
-                require(ROOT_PATH . 'drives/' . $path . '.php');
+        if (!isset($_M->$name)) {
+            if(is_file(ROOT_PATH . 'modules/' . $path . '.php')) {
+                require(ROOT_PATH . 'modules/' . $path . '.php');
                 if($auto) {
-                    $dname = '\\Chameleon\\Drive\\' . $name;
-                    $_D->$name = new $dname;
+                    $mname = '\\Chameleon\\Module\\' . $name;
+                    $_M->$name = new $mname;
                 }
             } else
-                logs('D(load)', 'Drive not found.', $path);
+                logs('M(load)', 'Modules not found.', $path);
         }
 
     }
@@ -103,7 +94,7 @@ class DC {
 }
 
 $_L = new LC();
-$_D = new DC();
+$_M = new MC();
 
 function __autoload($className) {
     $cn = substr($className, strrpos($className, '\\') + 1);
@@ -115,17 +106,20 @@ function __autoload($className) {
 
 require(MOD_PATH.'Model.php');
 
+// --- 加载模拟器 ---
+
+if(EMULATOR_MEMCACHED === true && !class_exists('Memcached', false)) require(LIB_PATH.'Memcached/Emulator.php');
+
 // --- 获取 CONTROLLER、ACTION 和 PARAM 数组 ---
 
-$_PATH_STR = isset($_SERVER['REDIRECT_QUERY_STRING']) ? $_SERVER['REDIRECT_QUERY_STRING'] : '';
-$pos = strpos($_PATH_STR, '&');
+$_PATH = isset($_SERVER['REDIRECT_QUERY_STRING']) ? $_SERVER['REDIRECT_QUERY_STRING'] : '';
+$pos = strpos($_PATH, '&');
 if($pos !== false) {
-    $_GET_STR = substr($_PATH_STR, $pos+1);
-    parse_str($_GET_STR, $_GET);
-    $_PATH_STR = substr($_PATH_STR, 0, $pos);
+    parse_str(substr($_PATH, $pos+1), $_GET);
+    $_PATH = substr($_PATH, 0, $pos);
 }
 unset($pos);
-$_PATH = explode('/', $_PATH_STR);
+$_PATH = explode('/', $_PATH);
 
 $_CONTROLFOLDER = '';
 $_CONTROLLER = ($_PATH[0] == '') ? 'Index' : ucfirst($_PATH[0]);
@@ -137,10 +131,6 @@ if(is_dir(CONTROL_PATH.$_CONTROLLER)) {
 $_ACTION = isset($_PATH[1]) ? $_PATH[1] : 'index';
 $_ACTION = ($_ACTION=='') ? 'index' : $_ACTION;
 $_PARAM = array_slice($_PATH, 2);
-
-// --- 写入普通访问日志 ---
-
-logs('VISIT', 'NONE', false);
 
 // --- 开始主控制器 ---
 
@@ -206,11 +196,11 @@ Class Main {
 }
 
 /**
- * @return DI
+ * @return MI
  */
-function D() {
-    global $_D;
-    return $_D;
+function M() {
+    global $_M;
+    return $_M;
 }
 
 /**
@@ -225,8 +215,6 @@ function L() {
 
 // --- 日志 ---
 function logs($title, $message, $enmsg = '', $exit = true) {
-
-    global $_PATH_STR, $_GET_STR;
 
     // --- 重构 logs(string $title, string $message, bool $exit = true) ---
     if(is_bool($enmsg)) {
@@ -245,10 +233,9 @@ function logs($title, $message, $enmsg = '', $exit = true) {
         mkdir($path, 0777);
         chmod($path, 0777);
     }
-    $path .= $d . '.csv';
+    $path .= $d . '.html';
 
-    if(!is_file($path)) file_put_contents($path, 'TIME,URL,POST,COOKIE,TITLE,MESSAGE'."\n");
-    file_put_contents($path, '"' . date('H:i:s') . '","'.HTTP_PATH.$_PATH_STR.(isset($_GET_STR)?'?'.$_GET_STR:'').'","'.str_replace('"','""',http_build_query($_POST)).'","'.str_replace('"','""',http_build_query($_COOKIE)).'","'.str_replace('"','""',$title).'","'.str_replace('"','""',$message).(($enmsg != '')?',Security string: '.str_replace('"','""',$enmsg):'').'"'."\n", FILE_APPEND);
+    file_put_contents($path, '<b>' . date('H:i:s') . '</b>: <b>'.$title.'</b> '.$message.(($enmsg != '')?'<br>Security string: <b>'.$enmsg.'</b>':'').'<br><br>'."\r\n", FILE_APPEND);
     if($exit) exit('<b>'.$title.'</b> ' . $message . (($enmsg != '') ? ' Please see <b>'.str_replace(ROOT_PATH, '', $path).'</b>.' : ''));
 
 }
