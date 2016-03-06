@@ -1,34 +1,25 @@
 <?php
 
-require('confs/main.php');
+// --- 自动加载类、模型 ---
 
-$c = NULL;
+function __autoload($name) {
 
-if($_CONTROLFOLDER) {
-
-    $ac = ucfirst($_ACTION);
-    if(is_file(CONTROL_PATH . $_CONTROLFOLDER . 'Controller.php')) {
-        require(CONTROL_PATH . $_CONTROLFOLDER . 'Controller.php');
-        if(is_file(CONTROL_PATH . $_CONTROLFOLDER . $_CONTROLLER . '.php'))
-            require(CONTROL_PATH . $_CONTROLFOLDER . $_CONTROLLER . '.php');
-        else
-            header('Location: ' . SITE_PATH . '?controller-not-found');
-    } else
-        header('Location: ' . SITE_PATH . '?controller-head-not-found');
-
-} else {
-
-    require(CONTROL_PATH . $_CONTROLLER . '.php');
+	$type = substr($name, 0, 5);
+	$cn = substr($name, 6);
+	switch($type) {
+		case 'C\\lib': {
+			require LIB_PATH . $cn.'.php';
+			break;
+		}
+	}
 
 }
 
-$c =  '\\Chameleon\\Controller\\' . $_CONTROLLER;
-$c = new $c();
+require 'sys/boot.php';
 
-if(method_exists($c, '__remap')) {
-    $c->__remap();
-} else {
-    if (method_exists($c, $_ACTION)) $c->$_ACTION();
-    else header('Location: ' . SITE_PATH . '?' . $_ACTION);
-}
+C\Boot::run();
+
+require SYS_PATH.'uri.php';
+
+C\Uri::run($_GET['__uri']);
 
