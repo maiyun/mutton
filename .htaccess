@@ -1,12 +1,5 @@
 RewriteEngine on
 
-ErrorDocument 400           view/common/400.html
-ErrorDocument 401           view/common/401.html
-ErrorDocument 402           view/common/402.html
-ErrorDocument 403           view/common/403.html
-ErrorDocument 404           view/common/404.html
-ErrorDocument 503           view/common/503.html
-
 RewriteRule ^img/(.*)       img/$1 [L]
 RewriteRule ^([a-z0-9/]+?)$ index.php?__uri=$1 [L,QSA]
 

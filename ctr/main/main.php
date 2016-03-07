@@ -4,18 +4,18 @@ namespace main {
 
 	use C\ctr;
 	use C\lib\Mysql;
+	use C\lib\Sql;
 
 	class main extends ctr {
 
 		public function main() {
 
+			$sqlObj = new Sql();
+			$sqlObj->lib = NULL;
 			echo '【' . $this->getRunTime() . '】';
-			if(Mysql::connect()) {
-				var_dump(Mysql::isConnected());
-			} else {
-				var_dump(Mysql::getError());
-			}
+				echo $sqlObj->escape('sd\'sd"sadf');
 			echo '【' . $this->getRunTime() . '】';
+			//*/
 
 		}
 

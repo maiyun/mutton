@@ -11,6 +11,9 @@ namespace C\lib {
 	class Mysql {
 
 		private static $r = NULL;
+		/**
+		 * @var \mysqli
+		 */
 		private static $w = NULL;
 
         private static $queries = [0 , 0];
@@ -24,10 +27,15 @@ namespace C\lib {
             self::$$t = NULL;
 		}
 
-        public static function escape($str, $t = 'w') {
-			return self::$$t->real_escape_string($str);
+        public static function escape($str) {
+			return self::$w ? self::$w->real_escape_string($str) : self::$r->real_escape_string($str);
 		}
 
+		/**
+		 * @param string $sql
+		 * @param string $t
+		 * @return \mysqli_result
+		 */
         public static function query($sql, $t = 'w') {
             ++self::$queries[$t == 'w' ? 0 : 1];
 			return self::$$t->query($sql);

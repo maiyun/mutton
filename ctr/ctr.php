@@ -21,6 +21,20 @@ namespace C {
 			return microtime(true) - START_TIME;
 		}
 
+		function loadView($path, $data = array(), $return = false) {
+
+			// --- 重构 loadView(string $path, boolen $return) ---
+			if(is_array($data)) extract($data);
+			else $return = $data;
+
+			if($return) ob_start();
+
+			require VIEW_PATH . $path . '.php';
+
+			if($return) return ob_get_clean();
+
+		}
+
 	}
 
 }

@@ -32,31 +32,6 @@ require(MOD_PATH.'Model.php');
 
 // --- 开始主控制器 ---
 
-$_VIEW = '';
-
-Class Main {
-
-    function loadView($path, $data = array(), $return = false) {
-
-        global $_VIEW;
-        $_VIEW .= ob_get_clean();
-        ob_start();
-
-        // --- 重构 loadView(string $path, boolen $return) ---
-        if(is_array($data)) extract($data);
-        else $return = $data;
-
-        require(ROOT_PATH . 'views/' . $path . '.php');
-
-        $v = ob_get_clean();
-        ob_start();
-        if($return) return $v ;
-        else $_VIEW .= $v;
-
-    }
-	
-}
-
 /**
  * @return DI
  */

@@ -66,15 +66,14 @@ namespace C {
 
 	}
 
-	trait Model_PKey {
+	trait modPKey {
 
 		/**
 		 * This method insert a new row into table with a non-numerical
 		 * primary key.
 		 * @return bool
 		 */
-		public function create()
-		{
+		public function create() {
 			$updates = [];
 
 			foreach ($this->_updates as $k => $v)
