@@ -8,18 +8,20 @@
 
 namespace C\lib {
 
-	class Mysql {
+	class Db {
 
 		private static $r = NULL;
 		/**
-		 * @var \mysqli
+		 * @var \PDO
 		 */
 		private static $w = NULL;
 
         private static $queries = [0 , 0];
+		private static $executions = [0 , 0];
+		private static $affectRows = [0, 0];
 
 		public static function isConnected($t = 'w') {
-			if (self::$$t instanceof \mysqli) return true;
+			if (self::$$t instanceof \PDO) return true;
 			return false;
 		}
 
@@ -27,32 +29,31 @@ namespace C\lib {
             self::$$t = NULL;
 		}
 
-        public static function escape($str) {
-			return self::$w ? self::$w->real_escape_string($str) : self::$r->real_escape_string($str);
+        public static function quote($str) {
+			return self::$w ? self::$w->quote($str) : self::$r->quote($str);
 		}
 
 		/**
 		 * @param string $sql
 		 * @param string $t
-		 * @return \mysqli_result
+		 * @return \PDOStatement
 		 */
         public static function query($sql, $t = 'w') {
             ++self::$queries[$t == 'w' ? 0 : 1];
 			return self::$$t->query($sql);
 		}
 
-        public static function getError($t = 'w') {
-			if (@isset(self::$$t->error))
-				return self::$$t->error;
-			else
-				return self::$$t->connect_error;
+		public static function exec($sql, $t = 'w') {
+			++self::$executions[$t == 'w' ? 0 : 1];
+			return self::$affectRows[$t == 'w' ? 0 : 1] = self::$$t->exec ($sql);
 		}
 
-        public static function getErrno($t = 'w') {
-			if (@isset(self::$$t->errno))
-				return self::$$t->errno;
-			else
-				return self::$$t->connect_errno;
+        public static function getErrorInfo($t = 'w') {
+			return self::$$t->errorInfo();
+		}
+
+        public static function getErrorCode($t = 'w') {
+			return self::$$t->errorCode();
 		}
 
         public static function connect($host = NULL, $user = NULL, $pwd = NULL, $dbName = NULL, $charset = NULL, $port = NULL, $t = 'w') {
@@ -63,28 +64,28 @@ namespace C\lib {
             $charset = $charset ? $charset : DB_CHARSET;
             $port = $port ? $port : DB_PORT;
 
-			if (self::$$t = @new \mysqli($host, $user, $pwd, $dbName, $port)) {
-				if (mysqli_connect_errno())
-					return false;
-				else {
-                    self::$$t->set_charset($charset);
-					return true;
-				}
+			if(self::$$t = new \PDO('mysql:host='.$host.'; port='.$port.'; dbname='.$dbName, $user, $pwd)) {
+				self::$$t->exec('SET NAMES "' . $charset . '";');
+				return true;
 			} else
 				return false;
 		}
 
         public static function getInsertID($t = 'w') {
-			return self::$$t->insert_id;
+			return self::$$t->lastInsertId();
 		}
 
         public static function getAffectRows($t = 'w') {
-			return self::$$t->affected_rows;
+			return self::$affectRows[$t == 'w' ? 0 : 1];
 		}
 
         function getQueries($t = 'w') {
             return self::$queries[$t == 'w' ? 0 : 1];
         }
+
+		function getExecutions($t = 'w') {
+			return self::$executions[$t == 'w' ? 0 : 1];
+		}
 
 	}
 

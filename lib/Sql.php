@@ -18,7 +18,6 @@ namespace C\lib {
 		// --- 实例化 ---
 		public function __construct() {
 			$this->pre = DB_PRE;
-			$this->lib = DB_LIB;
 		}
 
 		// --- 前导 ---

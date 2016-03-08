@@ -6,101 +6,88 @@
  * Time: 22:48
  */
 
-namespace Chameleon\Library;
+namespace C\lib {
 
 // --- Memcached 为长连接进城池 ---
 
-class Memcached {
+	class Memcached {
 
-	/**
-	 * 
-	 * @var \Memcached
-	 */
-    var $link = NULL;
+		/**
+		 *
+		 * @var \Memcached
+		 */
+		private static $link = NULL;
 
-    // --- 可修改变量 ---
+		public static function isConnect() {
 
-    var $host = '';
-    var $pre = '';
-    var $port = '';
-    var $user = '';
-    var $pwd = '';
-    var $pool = '';
+			if (!count(self::$link->getServerList()))
+				return false;
+			else
+				return true;
 
-    function __construct($pool = '') {
+		}
 
-        $this->pool = $pool == '' ? MCPOOL : $pool;
-        if($pool === NULL)
-            $this->link = new \Memcached();
-        else
-            $this->link = new \Memcached($pool);
+		public static function connect($host = NULL, $user = NULL, $pwd = NULL, $pool = NULL, $port = NULL) {
 
-    }
+			$host = $host ? $host : MC_HOST;
+			$user = $user ? $user : MC_USERNAME;
+			$pwd = $pwd ? $pwd : MC_PASSWORD;
+			$port = $port ? $port : MC_PORT;
+			$pool = $pool ? $pool : MC_POOL;
 
-    function isConnect() {
+			if ($pool)
+				self::$link = new \Memcached();
+			else
+				self::$link = new \Memcached($pool);
 
-        if (!count($this->link->getServerList()))
-            return false;
-        else
-            return true;
+			self::$link->setOption(\Memcached::OPT_COMPRESSION, false);
+			self::$link->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
+			self::$link->addServer($host, $port);
+			if (($user && $user != '') && ($pwd && $pwd != ''))
+				self::$link->setSaslAuthData($user, $pwd);
 
-    }
+		}
 
-    function connect() {
+		public static function add($key, $val, $exp = 0) {
 
-        if(!$this->isConnect()) {
-            $this->host = $this->host == '' ? MCHOST : $this->host;
-            $this->port = $this->port == 0 ? MCPORT : $this->port;
-            $this->user = $this->user == '' ? MCUSER : $this->user;
-            $pwd = $this->pwd == '' ? MCPW : $this->pwd;
-            $this->pre = $this->pre == '' ? MCPRE : $this->pre;
+			self::$link->add($key, $val, $exp);
 
-            $this->link->setOption(\Memcached::OPT_COMPRESSION, false);
-            $this->link->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
-            $this->link->addServer($this->host, $this->port);
-            if ($this->user != '' && $pwd != '')
-                $this->link->setSaslAuthData($this->user, $pwd);
-        }
+		}
 
-    }
+        public static function set($key, $val, $exp = 0) {
 
-    function add($key, $val, $exp = 0) {
+			self::$link->set($key, $val, $exp);
 
-        $this->link->add($key, $val, $exp);
+		}
 
-    }
+        public static function get($key) {
 
-    function set($key, $val, $exp = 0) {
+			return self::$link->get($key);
 
-        $this->link->set($key, $val, $exp);
+		}
 
-    }
+        public static function quit() {
 
-    function get($key) {
+			self::$link->quit();
+			self::$link = NULL;
 
-        return $this->link->get($key);
+		}
 
-    }
+        public static function delete($key) {
 
-    function quit() {
+			self::$link->delete($key);
 
-        $this->link->quit();
-        $this->link = NULL;
+		}
 
-    }
+        public static function getServerList() {
 
-    function delete($key) {
+			if (self::$link !== NULL)
+				return self::$link->getServerList();
+			else return [];
 
-        $this->link->delete($key);
+		}
 
-    }
-
-    function getServerList() {
-
-        if($this->link !== NULL)
-            return $this->link->getServerList();
-        else return [];
-
-    }
+	}
 
 }
+
