@@ -10,7 +10,11 @@ namespace main {
 
 		public function main() {
 
-			Db::connect();
+			//$sql = new Sql();
+			//$sql->db = false;
+			echo $this->getRunTime();
+			//echo $sql->select('*', 'user')->where(['city', ['type', '>', 'r']])->sql;
+			echo $this->getRunTime();
 			//*/
 
 		}

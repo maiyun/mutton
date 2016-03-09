@@ -13,7 +13,6 @@ namespace C\lib {
 	class Memcached {
 
 		/**
-		 *
 		 * @var \Memcached
 		 */
 		private static $link = NULL;
@@ -50,7 +49,7 @@ namespace C\lib {
 
 		public static function add($key, $val, $exp = 0) {
 
-			self::$link->add($key, $val, $exp);
+			return self::$link->add($key, $val, $exp);
 
 		}
 

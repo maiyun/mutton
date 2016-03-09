@@ -79,12 +79,16 @@ namespace C\lib {
 			return self::$affectRows[$t == 'w' ? 0 : 1];
 		}
 
-        function getQueries($t = 'w') {
+        public static function getQueries($t = 'w') {
             return self::$queries[$t == 'w' ? 0 : 1];
         }
 
-		function getExecutions($t = 'w') {
+		public static function getExecutions($t = 'w') {
 			return self::$executions[$t == 'w' ? 0 : 1];
+		}
+
+		public static function prepare($sql, $t = 'w') {
+			return self::$$t->prepare($sql);
 		}
 
 	}
