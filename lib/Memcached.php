@@ -16,6 +16,7 @@ namespace C\lib {
 		 * @var \Memcached
 		 */
 		private static $link = NULL;
+		public static $pre = NULL;
 
 		public static function isConnect() {
 
@@ -33,6 +34,7 @@ namespace C\lib {
 			$pwd = $pwd ? $pwd : MC_PASSWORD;
 			$port = $port ? $port : MC_PORT;
 			$pool = $pool ? $pool : MC_POOL;
+			self::$pre = MC_PRE;
 
 			if ($pool)
 				self::$link = new \Memcached();
@@ -49,19 +51,19 @@ namespace C\lib {
 
 		public static function add($key, $val, $exp = 0) {
 
-			return self::$link->add($key, $val, $exp);
+			return self::$link->add(self::$pre.$key, $val, $exp);
 
 		}
 
         public static function set($key, $val, $exp = 0) {
 
-			self::$link->set($key, $val, $exp);
+			self::$link->set(self::$pre.$key, $val, $exp);
 
 		}
 
         public static function get($key) {
 
-			return self::$link->get($key);
+			return self::$link->get(self::$pre.$key);
 
 		}
 
@@ -74,7 +76,7 @@ namespace C\lib {
 
         public static function delete($key) {
 
-			self::$link->delete($key);
+			self::$link->delete(self::$pre.$key);
 
 		}
 

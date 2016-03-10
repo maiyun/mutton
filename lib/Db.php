@@ -87,6 +87,11 @@ namespace C\lib {
 			return self::$executions[$t == 'w' ? 0 : 1];
 		}
 
+		/**
+		 * @param string $sql
+		 * @param string $t
+		 * @return \PDOStatement
+		 */
 		public static function prepare($sql, $t = 'w') {
 			return self::$$t->prepare($sql);
 		}

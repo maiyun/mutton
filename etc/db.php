@@ -21,3 +21,7 @@ define('MC_PRE', 'wn_');
 define('MC_USERNAME', 'root');
 define('MC_PASSWORD', '');
 
+// --- Session ---
+
+define('SE_NAME', 'SESSKEY');
+
