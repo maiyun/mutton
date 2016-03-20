@@ -21,5 +21,5 @@ C\Boot::run();
 
 require SYS_PATH.'uri.php';
 
-C\Uri::run($_GET['__uri']);
+C\Uri::run(isset($_GET['__uri']) ? $_GET['__uri'] : '');
 

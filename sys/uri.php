@@ -24,7 +24,7 @@ namespace C {
 
 			// --- 加载相关的控制器文件并运行 ---
 
-			require CTR_PATH.'ctr.php';
+			require SYS_PATH.'ctr.php';
 
 			require CTR_PATH.$app.'/'.$bin.'.php';
 			$ctrName = '\\'.$app.'\\'.$bin;
