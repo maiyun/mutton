@@ -2,5 +2,4 @@
 .project
 .buildpath
 .settings/
-data/Memcached/*.txt
-logs/20*
+sys/logs/20*
