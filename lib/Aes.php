@@ -19,7 +19,12 @@ namespace C\lib {
 		public static function decrypt($encrypt, $key) {
 
 			if ($rtn = mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, base64_decode($encrypt), MCRYPT_MODE_ECB)) {
-				return substr($rtn, 0, strrpos($rtn, '}') + 1);
+				$sp = strrpos($rtn, '}');
+				if($sp === false)
+					return trim($rtn);
+				else
+					// --- 解密后是个 JSON, 最后一位是 }, 后面会有 AES 的填充, 都通通不要.
+					return substr($rtn, 0, strrpos($rtn, '}') + 1);
 			} else
 				return false;
 

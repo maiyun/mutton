@@ -9,87 +9,74 @@
 namespace C\lib {
 
 	/*
-	 * 模式分为：1:db, 2:mem, 3:both
+	 * 模式分为：1:db, 2:mem
 	 * 默认为 2
 	 */
 
 	class Session {
 
-		public static $key = '';
+		public static $token = '';
 
 		// --- 可编辑变量 ---
 
-		public static $exp = 432000; // --- 5 天 ---
-		public static $name = 'SESSIONKEY';
-		public static $mode = 2;
+		public static $exp = 1209600; // --- 14 天 ---
+		public static $cookie = NULL;
+		public static $useMem = NULL;
 
 		public static function update() {
 
-			if(self::$mode == 1 || self::$mode == 3) {
-				// --- DB ---
-				$r = Db::prepare('UPDATE ' . DB_PRE . 'session SET data = :data, time_update = :time_update WHERE key = :key');
+			if(self::$useMem)
+				Redis::set('se_'.self::$token, $_SESSION, self::$exp);
+			else {
+				$r = Db::prepare('UPDATE ' . DB_PRE . 'session SET data = :data, time_update = :time_update WHERE token = :token');
 				$r->execute([
 					':data' => serialize($_SESSION),
 					':time_update' => $_SERVER['REQUEST_TIME'],
-					':key' => self::$key
+					':token' => self::$token
 				]);
 			}
-			if(self::$mode == 2 || self::$mode == 3) {
-				// --- MEM ---
-				Memcached::set('__se_'.self::$key, $_SESSION, self::$exp >= 86400 ? 86400 : self::$exp);
-			}
 
 		}
 
-		function gc() {
+		public static function gc() {
 
-			if(self::$mode == 1 || self::$mode == 3)
-				L()->Db->query('DELETE' . ' FROM ' . DB_PRE . 'session WHERE `time_update` < ' . Db::quote($_SERVER['REQUEST_TIME'] - self::$exp) . ';');
+			if(!self::$useMem)
+				Db::exec('DELETE' . ' FROM ' . DB_PRE . 'session WHERE `time_update` < ' . ($_SERVER['REQUEST_TIME'] - self::$exp));
 
 		}
 
-		function start($name = NULL) {
+		public static function start($cookie = NULL) {
 
-			self::$name = $name ? $name : SESSKEY;
+			self::$cookie = $cookie ? $cookie : SESSION_NAME;
+			self::$useMem = SESSION_MEM;
 
-			if (!$this->long && $this->key == '') {
-				if (isset($_POST[$this->cookie]) && $_POST[$this->cookie]) $this->key = $_POST[$this->cookie];
-				else if (isset($_COOKIE[$this->cookie]) && $_COOKIE[$this->cookie]) $this->key = $_COOKIE[$this->cookie];
-				if (!ctype_alnum($this->key)) $this->key = '';
-			}
+			if (isset($_POST[self::$cookie]) && $_POST[self::$cookie]) self::$token = $_POST[self::$cookie];
+			else if (isset($_COOKIE[self::$cookie]) && $_COOKIE[self::$cookie]) self::$token = $_COOKIE[self::$cookie];
 
+			// --- 判断 Redis 是否已经连接 ---
+			if(self::$useMem)
+				if(!Redis::isConnect()) Redis::connect();
 			// --- 初始化 Session 数组 ---
 			$_SESSION = [];
-			// --- 有 key 则查看 key 的信息是否存在
-			$findOnDb = false;
 			$needInsert = false;
-			if ($this->key != '') {
-				// --- 如果启用了内存加速则先在内存找 ---
-				if ($this->mem) {
-					$s = L()->Memcached->get('__sess_' . $this->key);
-					// --- 内存没有，一会儿去数据库再找找 ---
-					if ($s === false) {
-						$findOnDb = true;
-					} else {
-						// --- 内存有直接读出 ---
-						$_SESSION = $s;
-					}
-				} else {
-					$findOnDb = true;
-				}
-				// --- 本来就该在数据库里找 ---
-				// --- 在内存里没找到的也在数据库里找 ---
-				if ($findOnDb) {
-					$r = L()->Db->query('SELECT' . ' * FROM `' . L()->Db->pre . 'session` WHERE `key` = "' . $this->key . '";');
-					// --- 影响 0 行代表之前没有 Session ---
-					if (L()->Db->getAffectRows() == 0) {
-						// --- 正常流程添加 Session ---
+			// --- 有 token 则查看 token 的信息是否存在
+			if (self::$token != '') {
+				// --- 如果启用了内存加速则在内存找 ---
+				if (self::$useMem) {
+					if(($data = Redis::get('se_'.self::$token)) === false)
 						$needInsert = true;
-					} else {
-						// --- 数据库里有 Session 直接读出 ---
-						$s = $r->fetch_assoc();
-						$_SESSION = unserialize($s['data']);
-					}
+					else
+						$_SESSION = $data;
+				// --- 在数据库找 ---
+				} else {
+					$p = Db::prepare('SELECT' . ' * FROM ' . DB_PRE . 'session WHERE token = :token', 'r');
+					$p->execute([
+						':token' => self::$token
+					]);
+					if($data = $p->fetch(\PDO::FETCH_ASSOC)) {
+						$_SESSION = unserialize($data['data']);
+					} else
+						$needInsert = true;
 				}
 			} else {
 				// --- 全新的机子 ---
@@ -99,25 +86,39 @@ namespace C\lib {
 			// --- 内存和数据库里没找到的也该添加个新 Session ---
 			// --- 如果不存在不允许加新则返回错误 ---
 			if ($needInsert) {
-				$this->key = date('Ymd') . $this->random();
-				$time = time();
-				while (!L()->Db->query('INSERT' . ' INTO `' . L()->Db->pre . 'session` (`key`,`data`,`time`,`time_add`) VALUES ("' . $this->key . '","a:0:{}","' . $time . '","' . $time . '")', false))
-					$this->key = date('Ymd') . $this->random();
-				// --- 如果内存加速了则在页面结束时再写入内存 ---
+				self::$token = self::random();
+				if(self::$useMem) {
+					while(!Redis::set('se_'.self::$token, [], self::$exp, 'nx'))
+						self::$token = self::random();
+				} else {
+					$p = Db::prepare('INSERT' . ' INTO ' . DB_PRE . 'session (token,data,time_update,time_add) VALUES (:token,:data,:time_update,:time_add)');
+					while(!$p->execute([
+						':token' => self::$token,
+						':data' => serialize([]),
+						':time_update' => $_SERVER['REQUEST_TIME'],
+						':time_add' => $_SERVER['REQUEST_TIME']
+					]))
+						self::$token = self::random();
+				}
 			}
-			if (!$this->long) if (!isset($_POST[$this->cookie])) setcookie($this->cookie, $this->key, time() + $this->exp, '/');
+
+			setcookie(self::$cookie, self::$token, $_SERVER['REQUEST_TIME'] + self::$exp, '/');
+
+			register_shutdown_function(function() {
+				Session::update();
+			});
+
 			return true;
 
 		}
 
-		protected function random()
-		{
+		protected static function random() {
 			$s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 			$sl = strlen($s);
 			$t = '';
 			for ($i = 8; $i; $i--)
 				$t .= $s[rand(0, $sl - 1)];
-			return $t;
+			return date('Ymd').$t;
 		}
 
 	}

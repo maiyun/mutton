@@ -8,10 +8,11 @@ define('TIMEZONE', 'Asia/Shanghai');
 define('DEFAULT_APP', 'main');
 define('DEFAULT_BIN', 'main');
 define('DEFAULT_ACT', 'main');
-define('SINGLE_APP', true);
+define('SINGLE_APP', false);
 
 // --- RSA ---
 
 define('RSA_PUBLIC_KEY', '');
 define('RSA_PRIVATE_KEY', '');
+define('RSA_VERSION', '1');
 

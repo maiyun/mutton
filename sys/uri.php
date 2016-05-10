@@ -4,12 +4,13 @@ namespace C {
 
 	class Uri {
 
-		public static function run($uri) {
+		public static function run() {
 
 			unset($_GET['__uri']);
 
 			// --- 组成默认的 uri 字符串 ---
 
+			$uri = URI;
 			if($uri == '')
 				$uri = DEFAULT_APP.'/'.DEFAULT_BIN.'/'.DEFAULT_ACT;
 			else

@@ -39,10 +39,16 @@ namespace C\lib {
 		 * @return \PDOStatement
 		 */
         public static function query($sql, $t = 'w') {
+			if($t == 'r' && self::$r === NULL) $t = 'w';
             ++self::$queries[$t == 'w' ? 0 : 1];
 			return self::$$t->query($sql);
 		}
 
+		/**
+		 * @param string $sql
+		 * @param string $t
+		 * @return int
+		 */
 		public static function exec($sql, $t = 'w') {
 			++self::$executions[$t == 'w' ? 0 : 1];
 			return self::$affectRows[$t == 'w' ? 0 : 1] = self::$$t->exec ($sql);
@@ -64,8 +70,7 @@ namespace C\lib {
             $charset = $charset ? $charset : DB_CHARSET;
             $port = $port ? $port : DB_PORT;
 
-			if(self::$$t = new \PDO('mysql:host='.$host.'; port='.$port.'; dbname='.$dbName, $user, $pwd)) {
-				self::$$t->exec('SET NAMES "' . $charset . '";');
+			if(self::$$t = new \PDO('mysql:host='.$host.'; port='.$port.'; charset='.$charset.'; dbname='.$dbName, $user, $pwd)) {
 				return true;
 			} else
 				return false;
@@ -76,6 +81,7 @@ namespace C\lib {
 		}
 
         public static function getAffectRows($t = 'w') {
+			if($t == 'r' && self::$r === NULL) $t = 'w';
 			return self::$affectRows[$t == 'w' ? 0 : 1];
 		}
 
@@ -86,6 +92,18 @@ namespace C\lib {
 		public static function getExecutions($t = 'w') {
 			return self::$executions[$t == 'w' ? 0 : 1];
 		}
+		
+		public static function beginTransaction($t = 'w') {
+			return self::$$t->beginTransaction();
+		}
+		
+		public static function commit($t = 'w') {
+			return self::$$t->commit();
+		}
+
+		public static function rollBack($t = 'w') {
+			return self::$$t->rollBack();
+		}
 
 		/**
 		 * @param string $sql
@@ -93,7 +111,18 @@ namespace C\lib {
 		 * @return \PDOStatement
 		 */
 		public static function prepare($sql, $t = 'w') {
+			if($t == 'r' && self::$r === NULL) $t = 'w';
 			return self::$$t->prepare($sql);
+		}
+		
+		public static function bindPrepare($arr, $split = ', ') {
+			$rtn = ['sql' => '', 'arr' => []];
+			foreach ($arr as $key => $val) {
+				$rtn['sql'] .= $key . ' = :' . $key . $split;
+				$rtn['arr'][':'.$key] = $val;
+			}
+			$rtn['sql'] = substr($rtn['sql'], 0, -strlen($split));
+			return $rtn;
 		}
 
 	}

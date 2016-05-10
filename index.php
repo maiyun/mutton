@@ -11,6 +11,15 @@ function __autoload($name) {
 			require LIB_PATH . $cn.'.php';
 			break;
 		}
+		case 'C\\mod': {
+			require MOD_PATH . $cn.'.php';
+			break;
+		}
+		default: {
+			$name = str_replace('\\', '/', $name);
+			require CTR_PATH . $name . '.php';
+			break;
+		}
 	}
 
 }
@@ -21,5 +30,10 @@ C\Boot::run();
 
 require SYS_PATH.'uri.php';
 
-C\Uri::run(isset($_GET['__uri']) ? $_GET['__uri'] : '');
+define('URI', isset($_GET['__uri']) ? $_GET['__uri'] : '');
+unset($_GET['__uri']);
+
+C\Uri::run();
+
+\C\log('visited');
 

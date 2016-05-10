@@ -3,8 +3,6 @@
 namespace main {
 
 	use C\ctr;
-	use C\lib\Db;
-	use C\lib\Sql;
 
 	class main extends ctr {
 
