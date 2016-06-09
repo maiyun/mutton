@@ -8,12 +8,7 @@ namespace main {
 
 		public function main() {
 
-			//$sql = new Sql();
-			//$sql->db = false;
-			echo $this->getRunTime();
-			//echo $sql->select('*', 'user')->where(['city', ['type', '>', 'r']])->sql;
-			echo $this->getRunTime();
-			//*/
+			echo 'Hello world! Welcome to use Chameleon ' . VER;
 
 		}
 
