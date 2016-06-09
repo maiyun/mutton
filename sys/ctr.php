@@ -20,25 +20,27 @@ namespace C {
 			echo json_encode($this->json);
 			// 别用 JSON_UNESCAPED_UNICODE 啊,Android 可能解不了
 		}
-		
+
 		protected function writeAesJson($result, $data = []) {
 			header('Content-type: application/json; charset=utf-8');
 			$this->json['result'] = $result + 0;
-			if($result <= 0)
-				$this->json['msg'] = $data;
-			else
+			if($result <= 0) {
+				if(is_array($data))
+					$this->json = array_merge($this->json, $data);
+				else
+					$this->json['msg'] = $data;
+			} else
 				$this->json = array_merge($this->json, $data);
 			$this->json['cookie'] = [
 				'name' => Session::$cookie,
-				'token'=>Session::$token
+				'token' => Session::$token
 			];
-			$this->json['userId'] = isset($_SESSION['user.id']) ? $_SESSION['user.id'] : 0;
-			if($aes = Aes::encrypt(json_encode($this->json), $_SESSION['aes_key']))
+			if($aes = Aes::encrypt(json_encode($this->json), $_SESSION['aes_key'])) {
 				echo json_encode([
 					'result' => 1,
 					'aes' => $aes
 				]);
-			else
+			} else
 				echo json_encode([
 					'result' => 0,
 					'msg' => 'Aes 加密失败'

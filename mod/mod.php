@@ -42,14 +42,17 @@ namespace C\mod {
 			foreach ($this->__updates as $k => $v)
 				$updates[$k] = $this->$k;
 
-			$pre = Db::bindPrepare($updates);
-			$r = Db::prepare('UPDATE ' . DB_PRE . $this->__table . ' SET '.$pre['sql'].' WHERE '.$this->__primary.' = :'.$this->__primary);
-			$pre['arr'][':'.$this->__primary] = $this->{$this->__primary};
-			if ($r->execute($pre['arr'])) {
-				$this->__updates = [];
-				return $r;
+			if(count($updates) > 0) {
+				$pre = Db::bindPrepare($updates);
+				$r = Db::prepare('UPDATE ' . DB_PRE . $this->__table . ' SET ' . $pre['sql'] . ' WHERE ' . $this->__primary . ' = :' . $this->__primary);
+				$pre['arr'][':' . $this->__primary] = $this->{$this->__primary};
+				if ($r->execute($pre['arr'])) {
+					$this->__updates = [];
+					return $r;
+				} else
+					return false;
 			} else
-				return false;
+				return true;
 		}
 
 		public function remove() {
@@ -91,7 +94,7 @@ namespace C\mod {
 			} else if (Db::getErrorCode() == 1062)
 				return false;
 			else {
-				echo '[Db]' . print_r(Db::getErrorInfo(), true) . '(' . Db::getErrorCode() . ')';
+				\C\log('[Db]' . print_r(Db::getErrorInfo(), true) . '(' . Db::getErrorCode() . ')');
 				return false;
 			}
 
@@ -132,8 +135,18 @@ namespace C\mod {
 			} else
 				return false;
 		}
+
+		// --- 添加一个序列 ---
+		public static function insert($cs, $vs) {
+
+			$sql = new Sql();
+			$sql->insert(static::$__table_s, $cs, $vs);
+			$r = Db::exec($sql->sql);
+			return $r == 0 ? false : true;
+
+		}
 		
-		public static function getList($where, $limit = [0, 100],$by = NULL) {
+		public static function getList($where, $limit = NULL, $by = NULL) {
 
 			$mod = static::class;
 			$sql = new Sql();
@@ -143,7 +156,7 @@ namespace C\mod {
 			else
 				$sql->append(' WHERE '.$where);
 			if($by !== NULL) $sql->by($by[0],$by[1]);
-			$sql->limit($limit[0], $limit[1]);
+			if($limit !== NULL) $sql->limit($limit[0], $limit[1]);
 			$ps = Db::query($sql->sql);
 			$list = [];
 			while($obj = $ps->fetchObject($mod))

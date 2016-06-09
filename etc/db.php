@@ -38,6 +38,6 @@ define('OSS_BUCKET', '');
 
 // --- Session ---
 
-define('SESSION_NAME', 'CCD_SESSION');
+define('SESSION_NAME', 'CHA_SESSION');
 define('SESSION_MEM', false);
 

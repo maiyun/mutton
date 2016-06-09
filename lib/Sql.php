@@ -28,7 +28,7 @@ namespace C\lib {
 			if (count($vs) > 0) {
 				// --- "shop", ['name', 'address'], ['猎云酒店', '云之路29号'] ---
 				foreach ($cs as $i)
-					$this->sql .= '`' . $i . '`,';
+					$this->sql .= $i . ',';
 				$this->sql = substr($this->sql, 0, -1) . ') VALUES ';
 				// --- 判断插入单条记录还是多条记录 ---
 				if (is_array($vs[0])) {
@@ -110,16 +110,17 @@ namespace C\lib {
 		// --- 3.['city', ['type', '>']] ---
 		// --- 4.['city' => 'bj', ['type', '>', '1']] ---
 		// --- 5.[['city', '='], ['type', '>', '1']] ---
+		// --- 6.['type', '>=', '3'] --- 此条和 1 冲突暂无法实现 ---
 		public function where($s) {
 			$this->sql .= ' WHERE ';
 			foreach ($s as $k => $i) {
-				// --- 1, 3 ---
+				// --- 1, 3(前1) ---
 				if(is_int($k) && is_string($i))
 					$this->sql .= $i . ' = :' . $i . ' AND ';
-				// --- 2, 4 ---
+				// --- 2, 4(前1) ---
 				else if (is_string($i) || is_numeric($i))
 					$this->sql .= $k . ' = ' . $this->quote($i) . ' AND ';
-				// --- 3, 4, 5 ---
+				// --- 3(后1), 4(后1), 5 ---
 				else if (is_array($i)) {
 					if (strtolower($i[1]) == 'in') {
 						$this->sql .= $i[0] . ' IN (';
@@ -151,7 +152,7 @@ namespace C\lib {
 		}
 
 		public function groupBy($c) {
-			$this->sql .= ' GROUP BY `' . $c . '`';
+			$this->sql .= ' GROUP BY ' . $c;
 			return $this;
 		}
 
