@@ -8,6 +8,7 @@ namespace C {
 	class ctr {
 
 		var $param = [];
+		var $action = "";
 		var $json = ['result' => '1'];
 
 		protected function writeJson($result, $data = []) {
