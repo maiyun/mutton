@@ -1,5 +1,5 @@
 RewriteEngine on
 
-RewriteRule ^img/(.*)       img/$1 [L]
-RewriteRule ^([a-z0-9/]+?)$ index.php?__uri=$1 [L,QSA]
+RewriteCond $1 !^(img|favicon)
+RewriteRule ^([a-z0-9\-/]+?)$ index.php?__uri=$1 [L,QSA]
 

@@ -31,6 +31,7 @@ namespace C {
 			$ctrName = '\\'.$app.'\\'.$bin;
 			$ctr = new $ctrName;
 			$ctr->param = $param;
+			$ctr->action = $act;
 			if(method_exists($ctr, '__remap')) {
 				$ctr->__remap();
 			} else {
