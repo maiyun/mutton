@@ -1,6 +1,6 @@
 <?php
 
-define('VER', '2.3');
+define('VER', '2.4');
 
 define('START_TIME', microtime(true));
 

@@ -16,3 +16,8 @@ define('RSA_PUBLIC_KEY', '');
 define('RSA_PRIVATE_KEY', '');
 define('RSA_VERSION', '1');
 
+// --- STATIC ---
+
+// define('STATIC_PATH', 'http://static.maiyun.net/');
+define('STATIC_PATH', IMG_PATH);
+
