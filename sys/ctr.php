@@ -22,32 +22,6 @@ namespace C {
 			// 别用 JSON_UNESCAPED_UNICODE 啊,Android 可能解不了
 		}
 
-		protected function writeAesJson($result, $data = []) {
-			header('Content-type: application/json; charset=utf-8');
-			$this->json['result'] = $result + 0;
-			if($result <= 0) {
-				if(is_array($data))
-					$this->json = array_merge($this->json, $data);
-				else
-					$this->json['msg'] = $data;
-			} else
-				$this->json = array_merge($this->json, $data);
-			$this->json['cookie'] = [
-				'name' => Session::$cookie,
-				'token' => Session::$token
-			];
-			if($aes = Aes::encrypt(json_encode($this->json), $_SESSION['aes_key'])) {
-				echo json_encode([
-					'result' => 1,
-					'aes' => $aes
-				]);
-			} else
-				echo json_encode([
-					'result' => 0,
-					'msg' => 'Aes 加密失败'
-				]);
-
-		}
 
 		protected function getRunTime() {
 			return microtime(true) - START_TIME;
@@ -65,6 +39,30 @@ namespace C {
 
 			if($return) return ob_get_clean();
 
+		}
+
+		protected function mustHttps() {
+			if ($this->isHttps()) {
+				return true;
+			} else {
+				$redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+				header('HTTP/1.1 301 Moved Permanently');
+				header('Location: ' . $redirect);
+				return false;
+			}
+		}
+
+		protected function isHttps() {
+			if(!isset($_SERVER['HTTPS']))
+				return false;
+			if($_SERVER['HTTPS'] === 1) {  //Apache
+				return true;
+			} elseif($_SERVER['HTTPS'] === 'on'){ //IIS
+				return true;
+			} elseif($_SERVER['SERVER_PORT'] === 443){ //其他
+				return true;
+			}
+			return false;
 		}
 
 	}

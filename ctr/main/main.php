@@ -10,6 +10,8 @@ namespace main {
 
 			echo 'Hello world! Welcome to use Chameleon ' . VER;
 
+			echo '<br><br>https: ' . ($this->isHttps() ? 'true' : 'false') . '.';
+
 		}
 
 		public function action() {
