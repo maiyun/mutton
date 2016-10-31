@@ -35,5 +35,3 @@ unset($_GET['__uri']);
 
 C\Uri::run();
 
-\C\log('visited');
-

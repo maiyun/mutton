@@ -2,14 +2,12 @@
 
 namespace C {
 
-	use C\lib\Aes;
-	use C\lib\Session;
-
 	class ctr {
 
 		var $param = [];
 		var $action = "";
 		var $json = ['result' => '1'];
+		var $sql = NULL; // 可以将 sql 类创建到全局
 
 		protected function writeJson($result, $data = []) {
 			header('Content-type: application/json; charset=utf-8');

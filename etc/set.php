@@ -12,6 +12,6 @@ define('SINGLE_APP', false);
 
 // --- STATIC ---
 
-// define('STATIC_PATH', 'http://oss.hanguoshuai.com/');
+// define('STATIC_PATH', 'http://static.hanguoshuai.com/');
 define('STATIC_PATH', IMG_PATH);
 

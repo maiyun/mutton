@@ -145,8 +145,9 @@ namespace C\mod {
 			return $r == 0 ? false : true;
 
 		}
-		
-		public static function getList($where, $limit = NULL, $by = NULL) {
+
+		// --- 获取列表, 数组里面是 mod 对象 ---
+		public static function getList($where, $limit = NULL, $by = NULL, $array = false) {
 
 			$mod = static::class;
 			$sql = new Sql();
@@ -154,13 +155,18 @@ namespace C\mod {
 			if(is_array($where))
 				$sql->where($where);
 			else
-				$sql->append(' WHERE '.$where);
-			if($by !== NULL) $sql->by($by[0],$by[1]);
+				$sql->append(' WHERE ' . $where);
+			if($by !== NULL) $sql->by($by[0], $by[1]);
 			if($limit !== NULL) $sql->limit($limit[0], $limit[1]);
 			$ps = Db::query($sql->sql);
 			$list = [];
-			while($obj = $ps->fetchObject($mod))
-				$list[] = $obj;
+			if ($array) {
+				while ($obj = $ps->fetch(\PDO::FETCH_ASSOC))
+					$list[] = $obj;
+			} else {
+				while ($obj = $ps->fetchObject($mod))
+					$list[] = $obj;
+			}
 			return $list;
 		}
 

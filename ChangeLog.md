@@ -1,3 +1,12 @@
+## 2016-10-31 (2.6)
+* 完全移除 RSA 支持，删除 sys/rsa 目录，删除 lib/Rsa 类。
+* ctr 新增默认 sql 属性，用于全局使用 sql 类 (需自行初始化)。
+* 若类的方法不存在时，才进行 __remap 方法判断，若存在则交给 __remap 方法。
+* mod 基类 getList 方法新增参数 array，可设置返回为数组而不是对象。
+* const 新增 HTTPS\_PATH 表示安全的 HTTPS 链接（对应 HTTP_PATH）。
+* URL 路径新增下划线（\_）的识别。
+* 默认关闭访问写入访问日志，推荐您使用 Apache 的访问日志。
+
 ## 2016-09-14 (2.5)
 * set 移除 RSA 相关支持，您需要用更优秀的 https 方案作为替代方案。
 * ctr 类移除 writeAesJson() 方法，您需要用更优秀的 https 方案作为替代方案。

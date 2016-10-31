@@ -1,6 +1,6 @@
 <?php
 
-define('VER', '2.5');
+define('VER', '2.6');
 
 define('START_TIME', microtime(true));
 
@@ -20,5 +20,6 @@ define('VIEW_PATH', ROOT_PATH . 'view/');
 
 define('SITE_PATH', substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/') + 1));
 define('HTTP_PATH', 'http://' . $_SERVER['HTTP_HOST'] . SITE_PATH);
+define('HTTPS_PATH', 'https://' . $_SERVER['HTTP_HOST'] . SITE_PATH);
 define('IMG_PATH', SITE_PATH . 'img/');
 

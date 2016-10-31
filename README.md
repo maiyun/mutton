@@ -6,7 +6,7 @@ Chameleon PHP framework a very simple PHP framework, we used only to understand 
 完整项目仅有 320K 大小，却包含了平时使用当中的全部常用功能。  
 Complete item only 320K sizes, includes the usual features common to all of them.  
 ### 库列表 / libs
-Aes, Db, Memcached, Net, Oss (Need OSS PHP SDK), Redis, Rsa, Session, Sql, Text
+Aes, Db, Memcached, Net, Oss (Need OSS PHP SDK), Redis, Session, Sql, Text
 
 ## 使用 https 效果极佳 / Using HTTPS with excellent results
 我们更推荐您部署了 https 协议，保护数据传输的安全，部署 SSL 后使用 ctr 基类的 mustHttps() 方法来保证用户访问的一定是安全链接。  
