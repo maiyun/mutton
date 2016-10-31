@@ -15,3 +15,7 @@ define('SINGLE_APP', false);
 // define('STATIC_PATH', 'http://static.hanguoshuai.com/');
 define('STATIC_PATH', IMG_PATH);
 
+// --- SETTING ---
+
+define('MUST_HTTPS', false);
+

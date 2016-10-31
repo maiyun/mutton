@@ -39,7 +39,7 @@ namespace C {
 
 		}
 
-		protected function mustHttps() {
+		public function mustHttps() {
 			if ($this->isHttps()) {
 				return true;
 			} else {
@@ -51,13 +51,13 @@ namespace C {
 		}
 
 		protected function isHttps() {
-			if(!isset($_SERVER['HTTPS']))
+			if (!isset($_SERVER['HTTPS']))
 				return false;
-			if($_SERVER['HTTPS'] === 1) {  //Apache
+			if ($_SERVER['HTTPS'] === 1) {  //Apache
 				return true;
-			} elseif($_SERVER['HTTPS'] === 'on'){ //IIS
+			} elseif($_SERVER['HTTPS'] === 'on') { //IIS
 				return true;
-			} elseif($_SERVER['SERVER_PORT'] === 443){ //其他
+			} elseif($_SERVER['SERVER_PORT'] === 443) { //其他
 				return true;
 			}
 			return false;

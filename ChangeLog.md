@@ -6,6 +6,7 @@
 * const 新增 HTTPS\_PATH 表示安全的 HTTPS 链接（对应 HTTP_PATH）。
 * URL 路径新增下划线（\_）的识别。
 * 默认关闭访问写入访问日志，推荐您使用 Apache 的访问日志。
+* set.php 新增 MUST_HTTPS 常量，设置为 true 后保证全站仅支持 https 访问。
 
 ## 2016-09-14 (2.5)
 * set 移除 RSA 相关支持，您需要用更优秀的 https 方案作为替代方案。

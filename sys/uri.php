@@ -33,16 +33,22 @@ namespace C {
 			$ctr->param = $param;
 			$ctr->action = $act;
 
-			if (method_exists($ctr, $act))
-				$ctr->$act();
-			else {
-				// --- 如果控制器方法不存在,则查看 remap 是否存在 ---
-				// --- remap 存在则交给 remap ---
-				if(method_exists($ctr, '__remap')) {
-					$ctr->__remap();
-				} else {
-					header('Location: '.SITE_PATH);
+			// --- 强制 HTTPS ---
+
+			if ((MUST_HTTPS && $ctr->mustHttps()) || !MUST_HTTPS) {
+
+				if (method_exists($ctr, $act))
+					$ctr->$act();
+				else {
+					// --- 如果控制器方法不存在,则查看 remap 是否存在 ---
+					// --- remap 存在则交给 remap ---
+					if (method_exists($ctr, '__remap')) {
+						$ctr->__remap();
+					} else {
+						header('Location: ' . SITE_PATH);
+					}
 				}
+
 			}
 
 		}
