@@ -74,7 +74,7 @@ namespace C\mod {
 			} else
 				return false;
 		}
-		
+
 		public function create() {
 			$updates = [];
 			foreach ($this->__updates as $k => $v)
@@ -172,7 +172,7 @@ namespace C\mod {
 
 	}
 
-	trait modPKey {
+	trait modKey {
 
 		/**
 		 * This method insert a new row into table with a non-numerical
@@ -184,16 +184,18 @@ namespace C\mod {
 			foreach ($this->__updates as $k => $v)
 				$updates[$k] = $this->$k;
 
+			$column = isset($this->__key) ? $this->__key : $this->__primary;
+
 			do {
-				$updates[$this->__primary] = $this->createPKey();
+				$updates[$column] = $this->createKey();
 				$pre = Db::bindPrepare($updates);
 				$r = Db::prepare('INSERT'.' INTO ' . DB_PRE . $this->__table . ' SET '. $pre['sql']);
 			} while (!($r->execute($pre['arr'])) && Db::getErrorCode() == 1062);
 
 			if ($r) {
-				$this->{$this->__primary} = $updates[$this->__primary];
-				$p = Db::prepare('SELECT *'.' FROM '.DB_PRE.$this->__table.' WHERE '.$this->__primary.' = :'.$this->__primary);
-				$p->execute([':'.$this->__primary=>$this->{$this->__primary}]);
+				$this->{$column} = $updates[$column];
+				$p = Db::prepare('SELECT *'.' FROM '.DB_PRE.$this->__table.' WHERE '.$column.' = :'.$column);
+				$p->execute([':'.$column=>$this->{$column}]);
 				$a = $p->fetch(\PDO::FETCH_ASSOC);
 				foreach($a as $k => $v)
 					$this->$k = $v;
@@ -203,7 +205,7 @@ namespace C\mod {
 			return false;
 		}
 
-		abstract public function createPKey();
+		abstract public function createKey();
 	}
 
 }

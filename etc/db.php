@@ -5,11 +5,11 @@
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', 3306);
 define('DB_CHARSET', 'utf8');
-define('DB_DBNAME', 'com.caocaod.serv');
-define('DB_PRE', 'cd_');
+define('DB_DBNAME', 'net.maiyun.os');
+define('DB_PRE', 'test_');
 
 define('DB_USERNAME', 'root');
-define('DB_PASSWORD', '');
+define('DB_PASSWORD', 'root');
 
 // --- Memcached ---
 
