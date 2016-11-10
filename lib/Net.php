@@ -22,12 +22,12 @@ namespace C\lib {
 
 		}
 
-		public static function post($url, $data = []) {
+		public static function post($url, $data = [], $upload = false) {
 
 			$ch = curl_init($url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $upload ? $data : http_build_query($data));
 			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 			$output = curl_exec($ch);
 			curl_close($ch);

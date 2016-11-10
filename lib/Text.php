@@ -40,8 +40,62 @@ namespace C\lib {
 			else return false;
 
 		}
+
+		// --- 返回手机号是中国哪家运营商 ---
+
+		public static function phoneSP($p) {
+
+			$list = [
+				// --- 移动 ---
+				['^13[4|5|6|7|8|9]\d{8}$', 0],
+				['^15[0|1|2|7|8|9]\d{8}$', 0],
+				['^18[2|3|4|7|8]\d{8}$', 0],
+				['^147\d{8}$', 0],
+				['^1705\d{7}$', 0],
+				['^178\d{8}$', 0],
+				// --- 联通 ---
+				['^13[0|1|2]\d{8}$', 1],
+				['^15[5|6]\d{8}$', 1],
+				['^18[5|6]\d{8}$', 1],
+				['^145\d{8}$', 1],
+				['^1709\d{7}$', 1],
+				['^1708\d{7}$', 1],
+				['^1707\d{7}$', 1],
+				['^176\d{8}$', 1],
+				// --- 电信 ---
+				['^133\d{8}$', 2],
+				['^153\d{8}$', 2],
+				['^18[0|1|9]\d{8}$', 2],
+				['^1700\d{7}$', 2],
+				['^177\d{8}$', 2]
+			];
+			foreach($list as $item) {
+				if (preg_match('/'.$item[0].'/', $p))
+					return $item[1];
+			}
+			return false;
+
+		}
+
+		// --- 根据中国手机号运营商分组 ---
+
+		public static function phoneSPGroup($pList) {
+			$list = ['0' => [], '1' => [], '2' => [], '-1' => []];
+			foreach ($pList as $p) {
+				if (($r = self::phoneSP($p)) !== false) {
+					$list[(string)$r][] = $p;
+				} else {
+					$list['-1'][] = $p;
+				}
+			}
+			$list = array_filter($list, function($v) {
+				if (count($v) === 0 || $v === '') return false;
+				return true;
+			});
+			return $list;
+		}
 		
-		// --- 是否是
+		// --- 是否是中国大陆身份证 ---
 		
 		public static function isIdCard($idcard) {
 			
