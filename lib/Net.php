@@ -22,27 +22,38 @@ namespace C\lib {
 
 		}
 
-		public static function post($url, $data = [], $upload = false) {
+		public static function post($url, $data = []) {
 
-			$ch = curl_init($url);
-			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt($ch, CURLOPT_POST, true);
-			curl_setopt($ch, CURLOPT_POSTFIELDS, $upload ? $data : http_build_query($data));
-			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-			$output = curl_exec($ch);
-			curl_close($ch);
-			if ($output) return $output;
-			else return false;
+            $upload = false;
+            foreach ($data as $i) {
+                if ($i[0] === '@') {
+                    $upload = true;
+                    break;
+                }
+            }
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS,
+                $upload ? $data : http_build_query($data));
+            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            $output = curl_exec($ch);
+            curl_close($ch);
+            if ($output) {
+                return $output;
+            } else {
+                return false;
+            }
 
 		}
 
 		public static function getIP() {
 
-			if(getenv('HTTP_CLIENT_IP'))
+			if (getenv('HTTP_CLIENT_IP')) {
 				return getenv('HTTP_CLIENT_IP');
-			elseif(getenv('HTTP_X_FORWARDED_FOR'))
-				return getenv('HTTP_X_FORWARDED_FOR');
-			else
+            } else if (getenv('HTTP_X_FORWARDED_FOR')) {
+                return getenv('HTTP_X_FORWARDED_FOR');
+            } else
 				return getenv('REMOTE_ADDR');
 
 		}

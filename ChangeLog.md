@@ -11,6 +11,9 @@
 * Net::post 新增 $upload 参数（默认 false），当需要上传文件时设置为 true。
 * Text 类新增 phoneSP 方法，用来判断是联通、电信还是移动的手机号。
 * Text 类新增 phoneSPGroup 方法，用来将不同运营商的电话列表重新分组，同一个运营商的放在同一个数组。
+* Aes 类将支持字符串类型的加密，而不仅仅是数组，需要加密数组请用 json_encode 或者序列化。
+* Net 的 post 将自动识别是文件上传还是非普通 post。
+* log 增加对 HTTP_USER_AGENT 的记录。
 
 ## 2016-09-14 (2.5)
 * set 移除 RSA 相关支持，您需要用更优秀的 https 方案作为替代方案。
