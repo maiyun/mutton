@@ -28,10 +28,10 @@ require 'sys/boot.php';
 
 C\Boot::run();
 
-require SYS_PATH.'uri.php';
+require SYS_PATH.'route.php';
 
 define('URI', isset($_GET['__uri']) ? $_GET['__uri'] : '');
 unset($_GET['__uri']);
 
-C\Uri::run();
+C\Route::run();
 

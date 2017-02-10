@@ -5,7 +5,6 @@ namespace C {
 	class ctr {
 
 		var $param = [];
-		var $action = "";
 		var $json = ['result' => '1'];
 		var $sql = NULL; // 可以将 sql 类创建到全局
 

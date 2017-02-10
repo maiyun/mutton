@@ -1,7 +1,6 @@
 ## 2016-11-10 (2.6)
 * 完全移除 RSA 支持，删除 sys/rsa 目录，删除 lib/Rsa 类。
 * ctr 新增默认 sql 属性，用于全局使用 sql 类 (需自行初始化)。
-* 若类的方法不存在时，才进行 __remap 方法判断，若存在则交给 __remap 方法。
 * mod 基类 getList 方法新增参数 array，可设置返回为数组而不是对象。
 * const 新增 HTTPS\_PATH 表示安全的 HTTPS 链接（对应 HTTP_PATH）。
 * URL 路径新增下划线（\_）的识别。
@@ -14,6 +13,7 @@
 * Aes 类将支持字符串类型的加密，而不仅仅是数组，需要加密数组请用 json_encode 或者序列化。
 * Net 的 post 将自动识别是文件上传还是非普通 post。
 * log 增加对 HTTP_USER_AGENT 的记录。
+* 【重大更新】采用全新的路由机制，在 set.php 当中定义路由。
 
 ## 2016-09-14 (2.5)
 * set 移除 RSA 相关支持，您需要用更优秀的 https 方案作为替代方案。

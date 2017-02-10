@@ -1,21 +1,28 @@
 <?php
 
-define('STATIC_VER', '20160914012753');
-define('TIMEZONE', 'Asia/Shanghai');
+// --- ROUTE ---
 
-// --- APP ---
+const ROUTE = [
+    '@' => [
+        'path' => 'main',
+        'class' => '\\main\\main',
+        'action' => 'main'
+    ],
+    'article/*' => [
+        'path' => 'main',
+        'class' => '\\main\\main',
+        'action' => 'article'
+    ]
+];
 
-define('DEFAULT_APP', 'main');
-define('DEFAULT_BIN', 'main');
-define('DEFAULT_ACT', 'main');
-define('SINGLE_APP', false);
+// --- BASE ---
+
+const STATIC_VER = '20170205121132';
+const TIMEZONE = 'Asia/Shanghai';
+const MUST_HTTPS = false;
 
 // --- STATIC ---
 
-// define('STATIC_PATH', 'http://static.hanguoshuai.com/');
-define('STATIC_PATH', IMG_PATH);
-
-// --- SETTING ---
-
-define('MUST_HTTPS', false);
+// const STATIC_PATH = 'http://static.hanguoshuai.com/';
+const STATIC_PATH = IMG_PATH;
 
