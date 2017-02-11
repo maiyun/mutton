@@ -19,7 +19,6 @@ define('VIEW_PATH', ROOT_PATH . 'view/');
 // --- 前端用户的路径 ---
 
 define('SITE_PATH', substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/') + 1));
-define('HTTP_PATH', 'http://' . $_SERVER['HTTP_HOST'] . SITE_PATH);
-define('HTTPS_PATH', 'https://' . $_SERVER['HTTP_HOST'] . SITE_PATH);
+define('HTTP_PATH', '//' . $_SERVER['HTTP_HOST'] . SITE_PATH);
 define('IMG_PATH', SITE_PATH . 'img/');
 
