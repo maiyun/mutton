@@ -15,6 +15,8 @@ namespace main {
 
             echo '<br><br><a href="'.HTTP_PATH.'article/123">View "article/123"</a>';
 
+            echo '<br><br>Processed in '.$this->getRunTime().' second(s)';
+
 		}
 
 		public function article() {
