@@ -58,17 +58,42 @@ namespace C\lib {
 
 		}
 
-		public static function getCityByIP($ip = NULL) {
+		public static function mail($server, $from, $nickname, $to, $title, $content) {
 
-			$ip = $ip === NULL ? self::getIP() : $ip;
-			$r = self::get('http://int.dpool.sina.com.cn/iplookup/iplookup.php?format=js&ip='.$ip);
-			if(strlen($r) > 10) {
-				$j = json_decode(substr($r, strpos($r, '{'), -1));
-				return $j->city;
-			} else
-				return '';
+            if (!preg_match('/\w[a-zA-Z0-9\.\-\+]*\@(\w+[a-zA-Z0-9\-\.]+\w)/i', $to, $ms)) {
+                return ['success' => false, 'error' => 'Email address invalid'];
+            }
+            if (!getmxrr($ms[1], $mx)) {
+                return ['success' => false, 'error' => 'MX record of host not found!'];
+            }
+            $mx = $mx[0];
 
-		}
+            $commands = ['HELO '.$server, 'MAIL FROM:<'.$from.'@'.$server.'>', 'RCPT TO:<'.$to.'>', 'DATA', 'content', 'QUIT'];
+            $contents = [
+                'MIME-Version: 1.0',
+                'Delivered-To: '.$to,
+                'Subject: =?UTF-8?B?'.base64_encode($title).'?=',
+                'From: '.base64_encode($nickname).' <'.$from.'@'.$server.'>',
+                'To: '.$to,
+                'Content-Type: text/plain; charset=UTF-8',
+                'Content-Transfer-Encoding: base64',
+                '',
+                base64_encode($content)
+            ];
+            $fp = fsockopen($mx, 25);
+            foreach($commands as $c) {
+                if ($c == 'content') {
+                    $content = join("\r\n", $contents)."\r\n.\r\n";
+                    fwrite($fp, $content);
+                } else {
+                    fwrite($fp, $c."\r\n");
+                }
+                $r = fgets($fp);
+            }
+            fclose($fp);
+            return ['success' => true];
+
+        }
 
 	}
 

@@ -4,7 +4,7 @@ namespace main {
 
 	use C\ctr;
 
-	class main extends ctr {
+    class main extends ctr {
 
 		public function main() {
 
