@@ -41,3 +41,9 @@ define('OSS_BUCKET', '');
 define('SESSION_NAME', 'CHA_SESSION');
 define('SESSION_MEM', false);
 
+// --- Mail ---
+
+define('MAIL_HOST', 'smtp.xxx.com');
+define('MAIL_USER', 'chameleon@xxx.com');
+define('MAIL_PWD', 'xxxxxx');
+

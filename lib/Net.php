@@ -73,7 +73,7 @@ namespace C\lib {
                 'MIME-Version: 1.0',
                 'Delivered-To: '.$to,
                 'Subject: =?UTF-8?B?'.base64_encode($title).'?=',
-                'From: '.base64_encode($nickname).' <'.$from.'@'.$server.'>',
+                'From: =?UTF-8?B?'.base64_encode($nickname).'?= <'.$from.'@'.$server.'>',
                 'To: '.$to,
                 'Content-Type: text/plain; charset=UTF-8',
                 'Content-Transfer-Encoding: base64',

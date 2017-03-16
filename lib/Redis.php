@@ -90,6 +90,12 @@ namespace C\lib {
             return true;
         }
 
+        // --- 删除某个 key ---
+        public static function del($key) {
+            self::$link->delete($key);
+            return true;
+        }
+
         // --- 底层方法 ---
 
         public static function ping() {
