@@ -47,3 +47,9 @@ define('MAIL_HOST', 'smtp.xxx.com');
 define('MAIL_USER', 'chameleon@xxx.com');
 define('MAIL_PWD', 'xxxxxx');
 
+// --- AliyunMNS ---
+
+define('MNS_ACCESS_ID', '');
+define('MNS_ACCESS_KEY', '');
+define('MNS_ENDPOINT', '');  // eg. http://1234567890123456.mns.cn-shenzhen.aliyuncs.com
+
