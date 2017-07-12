@@ -14,7 +14,7 @@ namespace C\mod {
 		// --- 不可编辑 ---
 		public $__primary = '';
 		public $__table = '';
-		protected $__updates = [];
+		public $__updates = [];
 
 		public function __construct() {
 			$this->__table = static::$__table_s;
@@ -147,32 +147,88 @@ namespace C\mod {
 		}
 
 		// --- 获取列表, 数组里面是 mod 对象 ---
-		public static function getList($where, $limit = NULL, $by = NULL, $array = false) {
+        public static function getList($where = NULL, $limit = NULL, $by = NULL, $array = false, $keyIsId = false) {
 
-			$mod = static::class;
-			$sql = new Sql();
-			$sql->select('*', static::$__table_s);
-			if(is_array($where))
-				$sql->where($where);
-			else
-				$sql->append(' WHERE ' . $where);
-			if($by !== NULL) $sql->by($by[0], $by[1]);
-			if($limit !== NULL) $sql->limit($limit[0], $limit[1]);
-			$ps = Db::query($sql->sql);
-			$list = [];
-			if ($array) {
-				while ($obj = $ps->fetch(\PDO::FETCH_ASSOC))
-					$list[] = $obj;
-			} else {
-				while ($obj = $ps->fetchObject($mod))
-					$list[] = $obj;
-			}
-			return $list;
-		}
+            $mod = static::class;
+            $sql = new Sql();
+            $sql->select('*', static::$__table_s);
+            if ($where !== NULL) {
+                if (is_array($where))
+                    $sql->where($where);
+                else
+                    $sql->append(' WHERE ' . $where);
+            }
+            if($by !== NULL) $sql->by($by[0], $by[1]);
+            $total = NULL;
+            if($limit !== NULL) {
+                if(isset($limit[2])) {
+                    // --- 分页 ---
+                    $ps = Db::query(str_replace(' * ', ' COUNT(0) AS count ', $sql->sql));
+                    $obj = $ps->fetch(\PDO::FETCH_ASSOC);
+                    $total = $obj['count'];
+                    // --- 计算完整 ---
+                    $sql->limit($limit[1] * ($limit[2] - 1), $limit[1]);
+                } else {
+                    $sql->limit($limit[0], $limit[1]);
+                }
+            }
+            $ps = Db::query($sql->sql);
+            $list = [];
+            if ($array) {
+                while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
+                    if ($keyIsId)
+                        $list[$obj['id']] = $obj;
+                    else
+                        $list[] = $obj;
+                }
+            } else {
+                while ($obj = $ps->fetchObject($mod)) {
+                    if ($keyIsId)
+                        $list[$obj->id] = $obj;
+                    else
+                        $list[] = $obj;
+                }
+            }
+            // --- 有分页和无分页返回的不同 ---
+            if($total === NULL) {
+                return $list;
+            } else {
+                return [
+                    'total' => $total,
+                    'list' => $list
+                ];
+            }
+        }
 
-	}
+        // --- 判断某一条记录是否存在/个数 ---
+
+        public static function count($where) {
+
+            $sql = new Sql();
+            $sql->select('COUNT(0) AS count', static::$__table_s);
+            if(is_array($where))
+                $sql->where($where);
+            else
+                $sql->append(' WHERE ' . $where);
+            $ps = Db::query($sql->sql);
+            $obj = $ps->fetch(\PDO::FETCH_ASSOC);
+            return $obj['count'] + 0;
+
+        }
+
+    }
 
 	trait modKey {
+
+        // --- 不可编辑 ---
+        public $__key = '';
+
+        public function __construct() {
+            $this->__table = static::$__table_s;
+            $this->__primary = static::$__primary_s;
+
+            $this->__key = (isset(static::$__key_s) && (static::$__key_s !== '')) ? static::$__key_s : static::$__primary_s;
+        }
 
 		/**
 		 * This method insert a new row into table with a non-numerical
@@ -184,7 +240,7 @@ namespace C\mod {
 			foreach ($this->__updates as $k => $v)
 				$updates[$k] = $this->$k;
 
-			$column = isset($this->__key) ? $this->__key : $this->__primary;
+			$column = (isset($this->__key) && ($this->__key !== '')) ? $this->__key : $this->__primary;
 
 			do {
 				$updates[$column] = $this->createKey();

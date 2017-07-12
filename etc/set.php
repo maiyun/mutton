@@ -3,8 +3,8 @@
 // --- ROUTE ---
 
 const ROUTE = [
-    '@'         => ['path' => 'main', 'class' => '\\main\\main', 'action' => 'main'],
-    'article/*' => ['path' => 'main', 'class' => '\\main\\main', 'action' => 'article']
+    '@'                             => 'main/main',
+    'article/([0-9]+?)'             => 'main/article'
 ];
 
 // --- BASE ---

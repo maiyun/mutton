@@ -6,15 +6,14 @@ namespace C {
 
 		public static function run() {
 
-            $routeKey = '';
-            $param = [];
+            $routeKey = ''; // --- 如果在 ROUTE 表中匹配到，则以 ROUTE 表为准 ---
+            $param = []; // --- 传入的参数 ---
             if (URI === '') {
                 $routeKey = '@';
             } else {
                 foreach (ROUTE as $key => $val) {
                     if ($key !== '@') {
-                        $tmpKey = preg_quote($key, '/');
-                        $reg = str_replace('\*', '(.+?)', $tmpKey);
+                        $reg = str_replace('/', '\\/', $key);
                         preg_match('/^' . $reg . '$/', URI, $matches);
                         if (!empty($matches)) {
                             array_splice($matches, 0, 1);
@@ -26,34 +25,45 @@ namespace C {
                 }
             }
 
-            if ($routeKey !== '') {
-                require SYS_PATH . 'ctr.php';
+            // --- 如果没有在路由表中找到相对应的解析，那么，则将 URI 直接当作值来处理 ---
+            $routeVal = ($routeKey !== '') ? ROUTE[$routeKey] : URI;
 
-                if (is_file(CTR_PATH . ROUTE[$routeKey]['path'] . '.php')) {
-                    require CTR_PATH . ROUTE[$routeKey]['path'] . '.php';
+            require SYS_PATH . 'ctr.php';
 
-                    $ctrName = ROUTE[$routeKey]['class'];
-                    $ctr = new $ctrName;
-                    $ctr->param = $param;
+            $routeArray = explode('/', $routeVal);
+            // $filePath = '';
+            // $className = '';
+            $routeCount = count($routeArray);
+            if($routeCount == 2) {
+                $filePath = $routeArray[0];
+                $className = '\\main\\' . $routeArray[0];
+                $action = $routeArray[1];
+            } else {
+                $filePath = implode('/', array_slice($routeArray, 0, $routeCount - 1));
+                $className = '\\' . implode('\\', array_slice($routeArray, 0, $routeCount - 1));
+                $action = $routeArray[$routeCount - 1];
+            }
 
-                    // --- 强制 HTTPS ---
+            if (is_file(CTR_PATH . $filePath . '.php')) {
+                require CTR_PATH . $filePath . '.php';
 
-                    if ((MUST_HTTPS && $ctr->mustHttps()) || !MUST_HTTPS) {
+                $ctr = new $className;
+                $ctr->param = $param;
 
-                        if (method_exists($ctr, ROUTE[$routeKey]['action'])) {
-                            $act = ROUTE[$routeKey]['action'];
-                            $ctr->$act();
-                        } else {
-                            echo '【错误】指定的控制器不存在';
-                        }
+                // --- 强制 HTTPS ---
 
+                if ((MUST_HTTPS && $ctr->mustHttps()) || !MUST_HTTPS) {
+
+                    if (method_exists($ctr, $action)) {
+                        $ctr->$action();
+                    } else {
+                        echo '【错误】指定的控制器 action 不存在';
                     }
-                } else {
-                    // --- 指定的控制器不存在 ---
-                    echo '【错误】指定的控制器不存在';
+
                 }
             } else {
-                header('Location: ' . SITE_PATH);
+                // --- 指定的控制器不存在 ---
+                echo '【错误】指定的控制器不存在';
             }
 
         }
