@@ -1,10 +1,11 @@
 <?php
 
-define('VER', '2.6');
+define('VER', '3.0');
 
 define('START_TIME', microtime(true));
 
 define('MOBILE', strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile') !== false ? true : false);
+define('WECHAT', strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'micromessenger') === false ? false : true);
 
 // --- 服务端用的路径 ---
 
@@ -20,5 +21,6 @@ define('VIEW_PATH', ROOT_PATH . 'view/');
 
 define('SITE_PATH', substr($_SERVER['PHP_SELF'], 0, strrpos($_SERVER['PHP_SELF'], '/') + 1));
 define('HTTP_PATH', '//' . $_SERVER['HTTP_HOST'] . SITE_PATH);
+define('HTTP_HOST', $_SERVER['HTTP_HOST']);
 define('IMG_PATH', SITE_PATH . 'img/');
 

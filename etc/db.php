@@ -47,9 +47,14 @@ define('MAIL_HOST', 'smtp.xxx.com');
 define('MAIL_USER', 'chameleon@xxx.com');
 define('MAIL_PWD', 'xxxxxx');
 
-// --- AliyunMNS ---
+// --- Sms ---
 
-define('MNS_ACCESS_ID', '');
-define('MNS_ACCESS_KEY', '');
-define('MNS_ENDPOINT', '');  // eg. http://1234567890123456.mns.cn-shenzhen.aliyuncs.com
+define('SMS_SERV', 'www.qingmu.mobi');
+define('SMS_USER', '');
+define('SMS_PWD', '');
+
+// --- Wechat ---
+
+define('WECHAT_APPID', '');
+define('WECHAT_SECRET', '');
 

@@ -22,6 +22,16 @@ namespace C {
 			// 别用 JSON_UNESCAPED_UNICODE 啊,Android 可能解不了
 		}
 
+        protected function getPostByJSON() {
+
+            $post = file_get_contents('php://input');
+            if(($post = json_decode($post, true)) !== false) {
+                return $post;
+            } else {
+                return [];
+            }
+
+        }
 
 		protected function getRunTime() {
 			return microtime(true) - START_TIME;
