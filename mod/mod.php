@@ -147,15 +147,16 @@ namespace C\mod {
 		}
 
 		// --- 获取列表, 数组里面是 mod 对象 ---
-        public static function getList($where = NULL, $limit = NULL, $by = NULL, $array = false, $keyIsId = false) {
+        public static function getList($where = NULL, $limit = NULL, $by = NULL, $array = false, $keyIsId = '') {
 
             $mod = static::class;
             $sql = new Sql();
             $sql->select('*', static::$__table_s);
             if ($where !== NULL) {
-                if (is_array($where))
-                    $sql->where($where);
-                else
+                if (is_array($where)) {
+                    if(count($where) > 0)
+                        $sql->where($where);
+                } else
                     $sql->append(' WHERE ' . $where);
             }
             if($by !== NULL) $sql->by($by[0], $by[1]);
@@ -176,15 +177,15 @@ namespace C\mod {
             $list = [];
             if ($array) {
                 while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
-                    if ($keyIsId)
-                        $list[$obj['id']] = $obj;
+                    if ($keyIsId != '')
+                        $list[$obj[$keyIsId]] = $obj;
                     else
                         $list[] = $obj;
                 }
             } else {
                 while ($obj = $ps->fetchObject($mod)) {
-                    if ($keyIsId)
-                        $list[$obj->id] = $obj;
+                    if ($keyIsId != '')
+                        $list[$obj->$keyIsId] = $obj;
                     else
                         $list[] = $obj;
                 }

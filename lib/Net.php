@@ -26,7 +26,7 @@ namespace C\lib {
 
             $upload = false;
             foreach ($data as $i) {
-                if ($i[0] === '@') {
+                if (isset($i[0]) && ($i[0] === '@')) {
                     $upload = true;
                     break;
                 }
