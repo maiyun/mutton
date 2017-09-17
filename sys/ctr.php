@@ -63,13 +63,13 @@ namespace C {
 		}
 
 		protected function isHttps() {
-			if (!isset($_SERVER['HTTPS']))
-				return false;
-			if ($_SERVER['HTTPS'] === 1) {  //Apache
-				return true;
-			} elseif($_SERVER['HTTPS'] === 'on') { //IIS
-				return true;
-			} elseif($_SERVER['SERVER_PORT'] === 443) { //其他
+			if (isset($_SERVER['HTTPS'])) {
+                if ($_SERVER['HTTPS'] === 1) {  //Apache
+                    return true;
+                } else if ($_SERVER['HTTPS'] === 'on') { //IIS
+                    return true;
+                }
+            } else if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] === 443) { //其他
 				return true;
 			}
 			return false;

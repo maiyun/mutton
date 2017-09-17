@@ -13,6 +13,7 @@ namespace C\lib {
         public static function login($url, $appid = NULL) {
 
             $appid = $appid ? $appid : WECHAT_APPID;
+            $url = 'http'.(self::isHttps() ? 's':'').'://'.HTTP_HOST.'/' . $url;
             header('Location: //open.weixin.qq.com/connect/oauth2/authorize?appid='.$appid.'&redirect_uri=' . urlencode($url) . '&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect');
 
         }
@@ -38,6 +39,19 @@ namespace C\lib {
                 return false;
             }
 
+        }
+
+        private function isHttps() {
+            if (isset($_SERVER['HTTPS'])) {
+                if ($_SERVER['HTTPS'] === 1) {  //Apache
+                    return true;
+                } else if ($_SERVER['HTTPS'] === 'on') { //IIS
+                    return true;
+                }
+            } else if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] === 443) { //其他
+                return true;
+            }
+            return false;
         }
 
     }
