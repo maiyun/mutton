@@ -16,6 +16,7 @@ define('LIB_PATH', ROOT_PATH . 'lib/');
 define('MOD_PATH', ROOT_PATH . 'mod/');
 define('CTR_PATH', ROOT_PATH . 'ctr/');
 define('VIEW_PATH', ROOT_PATH . 'view/');
+define('SET_PATH', ROOT_PATH . 'set/');
 
 // --- 前端用户的路径 ---
 

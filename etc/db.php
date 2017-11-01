@@ -28,6 +28,7 @@ define('RD_PORT', 6379);
 define('RD_USER', 'root');
 define('RD_PWD', 'pwd');
 define('RD_INDEX', 0);
+define('RD_SIMULATOR', false);
 
 // --- OSS ---
 
@@ -57,4 +58,7 @@ define('SMS_PWD', '');
 
 define('WECHAT_APPID', '');
 define('WECHAT_SECRET', '');
+// --- Wehcat pay ---
+define('WECHAT_MCHID', '');
+define('WECHAT_KEY', '');
 

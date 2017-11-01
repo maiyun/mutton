@@ -203,17 +203,21 @@ namespace C\mod {
 
         // --- 判断某一条记录是否存在/个数 ---
 
-        public static function count($where) {
+        public static function count($where, $c = 'COUNT(0) AS count') {
 
             $sql = new Sql();
-            $sql->select('COUNT(0) AS count', static::$__table_s);
+            $sql->select($c, static::$__table_s);
             if(is_array($where))
                 $sql->where($where);
             else
                 $sql->append(' WHERE ' . $where);
             $ps = Db::query($sql->sql);
             $obj = $ps->fetch(\PDO::FETCH_ASSOC);
-            return $obj['count'] + 0;
+            if ($c == 'COUNT(0) AS count') {
+                return $obj['count'] + 0;
+            } else {
+                return $obj;
+            }
 
         }
 

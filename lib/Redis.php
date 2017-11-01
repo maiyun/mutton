@@ -21,7 +21,11 @@ namespace C\lib {
             $port = $port ? $port : RD_PORT;
             self::$index = RD_INDEX;
 
-            self::$link = new \Redis();
+            if(RD_SIMULATOR) {
+                self::$link = new RedisSimulator();
+            } else {
+                self::$link = new \Redis();
+            }
             if($link = self::$link->connect($host, $port)) {
                 if(self::$link->auth($user.':'.$pwd)) {
                     self::$link->select(self::$index);

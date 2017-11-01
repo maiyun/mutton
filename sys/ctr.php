@@ -2,25 +2,25 @@
 
 namespace C {
 
-	class ctr {
+    class ctr {
 
-		var $param = [];
-		var $json = ['result' => '1'];
-		var $sql = NULL; // 可以将 sql 类创建到全局
+        var $param = [];
+        var $json = ['result' => '1'];
+        var $sql = NULL; // 可以将 sql 类创建到全局
 
-		protected function writeJson($result, $data = []) {
-			header('Content-type: application/json; charset=utf-8');
-			$this->json['result'] = $result + 0;
-			if($result <= 0) {
+        protected function writeJson($result, $data = []) {
+            header('Content-type: application/json; charset=utf-8');
+            $this->json['result'] = $result + 0;
+            if($result <= 0) {
                 if (is_array($data))
                     $this->json = array_merge($this->json, $data);
                 else
                     $this->json['msg'] = $data;
             } else
-				$this->json = array_merge($this->json, $data);
-			echo json_encode($this->json);
-			// 别用 JSON_UNESCAPED_UNICODE 啊,Android 可能解不了
-		}
+                $this->json = array_merge($this->json, $data);
+            echo json_encode($this->json);
+            // 别用 JSON_UNESCAPED_UNICODE 啊,Android 可能解不了
+        }
 
         protected function getPostByJSON() {
 
@@ -33,49 +33,53 @@ namespace C {
 
         }
 
-		protected function getRunTime() {
-			return microtime(true) - START_TIME;
-		}
+        protected function getRunTime() {
+            return microtime(true) - START_TIME;
+        }
 
-		protected function loadView($path, $data = array(), $return = false) {
+        protected function loadView($path, $data = array(), $return = false) {
 
-			// --- 重构 loadView(string $path, boolen $return) ---
-			if(is_array($data)) extract($data);
-			else $return = $data;
+            // --- 重构 loadView(string $path, boolen $return) ---
+            if(is_array($data)) extract($data);
+            else $return = $data;
 
-			if($return) ob_start();
+            if($return) ob_start();
 
-			require VIEW_PATH . $path . '.php';
+            require VIEW_PATH . $path . '.php';
 
-			if($return) return ob_get_clean();
+            if($return) return ob_get_clean();
 
-		}
+        }
 
-		public function mustHttps() {
-			if ($this->isHttps()) {
-				return true;
-			} else {
-				$redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-				header('HTTP/1.1 301 Moved Permanently');
-				header('Location: ' . $redirect);
-				return false;
-			}
-		}
+        protected function loadSet($path) {
+            return json_decode(file_get_contents(SET_PATH . $path . '.json'));
+        }
 
-		protected function isHttps() {
-			if (isset($_SERVER['HTTPS'])) {
+        public function mustHttps() {
+            if ($this->isHttps()) {
+                return true;
+            } else {
+                $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+                header('HTTP/1.1 301 Moved Permanently');
+                header('Location: ' . $redirect);
+                return false;
+            }
+        }
+
+        protected function isHttps() {
+            if (isset($_SERVER['HTTPS'])) {
                 if ($_SERVER['HTTPS'] === 1) {  //Apache
                     return true;
                 } else if ($_SERVER['HTTPS'] === 'on') { //IIS
                     return true;
                 }
             } else if (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] === 443) { //其他
-				return true;
-			}
-			return false;
-		}
+                return true;
+            }
+            return false;
+        }
 
-	}
+    }
 
 }
 

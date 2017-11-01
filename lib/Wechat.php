@@ -41,7 +41,44 @@ namespace C\lib {
 
         }
 
-        private function isHttps() {
+        public static function createPay($opt = []) {
+
+            require LIB_PATH . 'WxpayAPI/lib/WxPay.Api.php';
+            require LIB_PATH . 'WxpayAPI/lib/WxPay.JsApiPay.php';
+
+            $input = new \WxPayUnifiedOrder();
+            $input->SetBody($opt['body']);
+            $input->SetAttach($opt['attach']);
+            $input->SetOut_trade_no($opt['out_trade_no']);
+            $input->SetTotal_fee($opt['total_fee'] * 100);
+            $input->SetTime_start(date("YmdHis"));
+            // --- 20 分钟内（预留30秒）支付完毕 ---
+            $input->SetTime_expire(date("YmdHis", $_SERVER['REQUEST_TIME'] + 1200 + 30));
+            $input->SetGoods_tag('test');
+            $input->SetNotify_url($opt['notify_url']);
+            $input->SetTrade_type("JSAPI");
+            $input->SetOpenid($opt['openid']);
+            $wxOrder = \WxPayApi::unifiedOrder($input);
+
+            $tools = new \JsApiPay();
+            $jsApiParameters = $tools->GetJsApiParameters($wxOrder);
+
+            // --- 要 decode 一下否则是个字符串而不是 json 对象就呵呵哒了 ---
+            return json_decode($jsApiParameters, true);
+
+        }
+
+        public static function payCallback() {
+
+            require LIB_PATH . 'WxpayAPI/lib/WxPay.Notify.php';
+            require LIB_PATH . 'WxpayAPI/lib/WxPay.NotifyCallBack.php';
+
+            $notify = new \WxPayNotifyCallBack();
+            $notify->Handle(false);
+
+        }
+
+        public static  function isHttps() {
             if (isset($_SERVER['HTTPS'])) {
                 if ($_SERVER['HTTPS'] === 1) {  //Apache
                     return true;
