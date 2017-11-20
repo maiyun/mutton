@@ -35,6 +35,7 @@ define('RD_SIMULATOR', false);
 define('OSS_ACCESS_KEY_ID', '');
 define('OSS_ACCESS_KEY_SECRET', '');
 define('OSS_ENDPOINT', '');
+define('OSS_ENDPOINT_NI', '');
 define('OSS_BUCKET', '');
 
 // --- Session ---

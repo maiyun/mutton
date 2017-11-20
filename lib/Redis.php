@@ -58,7 +58,7 @@ namespace C\lib {
          * @param string $key 设置 Redis 的 key
          * @param string $value 设置 Redis 的值
          * @param int $ttl 设置有效期,0为永久有效
-         * @param string $mod 设置模式,空,nx,xx
+         * @param string $mod 设置模式,空,nx（key不存在才建立）,xx（key存在才修改）
          * @return bool
          */
         public static function set($key = '', $value = '', $ttl = 0, $mod = '') {

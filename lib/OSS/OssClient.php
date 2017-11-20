@@ -1,4 +1,5 @@
 <?php
+/* v - 2.2.4 - 2017-11-06 15:17:13 update */
 namespace OSS;
 
 use OSS\Core\MimeTypes;
@@ -987,6 +988,12 @@ class OssClient
             $options[self::OSS_CONTENT_LENGTH] = $options[self::OSS_LENGTH];
         }
 
+        $is_check_md5 = $this->isCheckMD5($options);
+        if ($is_check_md5) {
+        	$content_md5 = base64_encode(md5($content, true));
+        	$options[self::OSS_CONTENT_MD5] = $content_md5;
+        }
+        
         if (!isset($options[self::OSS_CONTENT_TYPE])) {
             $options[self::OSS_CONTENT_TYPE] = $this->getMimeType($object);
         }
@@ -1064,6 +1071,12 @@ class OssClient
             $options[self::OSS_CONTENT_LENGTH] = strlen($options[self::OSS_CONTENT]);
         } else {
             $options[self::OSS_CONTENT_LENGTH] = $options[self::OSS_LENGTH];
+        }
+        
+        $is_check_md5 = $this->isCheckMD5($options);
+        if ($is_check_md5) {
+        	$content_md5 = base64_encode(md5($content, true));
+        	$options[self::OSS_CONTENT_MD5] = $content_md5;
         }
 
         if (!isset($options[self::OSS_CONTENT_TYPE])) {
@@ -2508,8 +2521,8 @@ class OssClient
     );
     // OssClient版本信息
     const OSS_NAME = "aliyun-sdk-php";
-    const OSS_VERSION = "2.2.2";
-    const OSS_BUILD = "20170118";
+    const OSS_VERSION = "2.2.4";
+    const OSS_BUILD = "20170425";
     const OSS_AUTHOR = "";
     const OSS_OPTIONS_ORIGIN = 'Origin';
     const OSS_OPTIONS_REQUEST_METHOD = 'Access-Control-Request-Method';

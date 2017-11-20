@@ -12,12 +12,19 @@ namespace C {
 
             //ob_start();
 
-            // --- 禁用普通页面的浏览器缓存 ---
+            // --- 设置页面缓存 ---
 
-            header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+            if (CACHE_TTL > 0) {
+                header('Expires: ' . gmdate('D, d M Y H:i:s', $_SERVER['REQUEST_TIME'] + CACHE_TTL) . ' GMT');
+                header('Cache-Control: max-age=' . CACHE_TTL);
+            } else {
+                header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
+                header('Cache-Control: no-cache, must-revalidate');
+            }
+            /*
             header('Last-Modified: '.gmdate("D, d M Y H:i:s").' GMT');
-            header('Cache-Control: no-cache, must-revalidate');
             header('Pramga: no-cache');
+            */
 
             // --- 设置时区 ---
 

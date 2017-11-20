@@ -1,5 +1,13 @@
 <?php
 
+if ($_GET['__uri'] == 'index.html' || $_GET['__uri'] == 'index.htm') {
+    header('Location: ./');
+    exit;
+}
+if ($_GET['__uri'] == 'index.php') {
+    $_GET['__uri'] = '';
+}
+
 // --- 自动加载类、模型 ---
 
 spl_autoload_register(function ($name) {

@@ -10,11 +10,14 @@ namespace C\lib {
 
 	class Net {
 
-		public static function get($url) {
+		public static function get($url, $data = false, $opt = []) {
 
-			$ch = curl_init($url);
+			$ch = curl_init($url . (($data !== false) ? '?' . http_build_query($data) : ''));
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            if (isset($opt['headers'])) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $opt['headers']);
+            }
 			$output = curl_exec($ch);
 			curl_close($ch);
 			if ($output) return $output;
@@ -22,11 +25,12 @@ namespace C\lib {
 
 		}
 
-		public static function post($url, $data = []) {
+		public static function post($url, $data, $opt = []) {
+            $opt['json'] = isset($opt['json']) ? $opt['json'] : false;
 
             $upload = false;
             foreach ($data as $i) {
-                if (isset($i[0]) && ($i[0] === '@')) {
+                if (isset($i[0]) && ($i[0] == '@')) {
                     $upload = true;
                     break;
                 }
@@ -35,8 +39,11 @@ namespace C\lib {
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_POST, true);
             curl_setopt($ch, CURLOPT_POSTFIELDS,
-                $upload ? $data : http_build_query($data));
+                $upload ? $data : ($opt['json'] ? json_encode($data) : http_build_query($data)));
             curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+            if (isset($opt['headers'])) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $opt['headers']);
+            }
             $output = curl_exec($ch);
             curl_close($ch);
             if ($output) {

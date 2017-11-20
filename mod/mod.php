@@ -24,10 +24,10 @@ namespace C\mod {
 		public function set($n, $v = '') {
 			if(is_array($n)) {
 				foreach ($n as $k => $v) {
-					if ((isset($this->$k) && ($this->$k != $v)) || !isset($this->$k)) {
-						$this->__updates[$k] = true;
-						$this->$k = $v;
-					}
+					// if ((isset($this->$k) && ($this->$k != $v)) || !isset($this->$k)) {
+                    $this->__updates[$k] = true;
+                    $this->$k = $v;
+					// }
 				}
 			} else {
 				if ((isset($this->$n) && ($this->$n != $v)) || !isset($this->$n)) {
@@ -100,6 +100,14 @@ namespace C\mod {
 
 		}
 
+		// --- 立即执行的自增 ---
+		public function increase($col, $num = 1) {
+            Db::exec('UPDATE ' . DB_PRE . $this->__table .' SET '.$col.' = '.$col.' + '.$num.' WHERE ' . $this->__primary . ' = ' . $this->{$this->__primary});
+            if (Db::getAffectRows() > 0) {
+                return true;
+            } else return false;
+        }
+
 		public function toArray() {
 			$rtn = [];
 			foreach ($this as $key => $v)
@@ -147,16 +155,15 @@ namespace C\mod {
 		}
 
 		// --- 获取列表, 数组里面是 mod 对象 ---
-        public static function getList($where = NULL, $limit = NULL, $by = NULL, $array = false, $keyIsId = '') {
+        public static function getList($where = NULL, $limit = NULL, $by = NULL, $array = false, $keyIsId = false) {
 
             $mod = static::class;
             $sql = new Sql();
             $sql->select('*', static::$__table_s);
             if ($where !== NULL) {
-                if (is_array($where)) {
-                    if(count($where) > 0)
-                        $sql->where($where);
-                } else
+                if (is_array($where))
+                    $sql->where($where);
+                else
                     $sql->append(' WHERE ' . $where);
             }
             if($by !== NULL) $sql->by($by[0], $by[1]);
@@ -177,15 +184,15 @@ namespace C\mod {
             $list = [];
             if ($array) {
                 while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
-                    if ($keyIsId != '')
-                        $list[$obj[$keyIsId]] = $obj;
+                    if ($keyIsId)
+                        $list[$obj['id']] = $obj;
                     else
                         $list[] = $obj;
                 }
             } else {
                 while ($obj = $ps->fetchObject($mod)) {
-                    if ($keyIsId != '')
-                        $list[$obj->$keyIsId] = $obj;
+                    if ($keyIsId)
+                        $list[$obj->id] = $obj;
                     else
                         $list[] = $obj;
                 }
@@ -203,7 +210,7 @@ namespace C\mod {
 
         // --- 判断某一条记录是否存在/个数 ---
 
-        public static function count($where, $c = 'COUNT(0) AS count') {
+        public static function count($where, $c = 'COUNT(0) AS count', $group = '', $groupKey = '') {
 
             $sql = new Sql();
             $sql->select($c, static::$__table_s);
@@ -211,12 +218,29 @@ namespace C\mod {
                 $sql->where($where);
             else
                 $sql->append(' WHERE ' . $where);
+            if ($group != '') $sql->groupBy($group);
             $ps = Db::query($sql->sql);
             $obj = $ps->fetch(\PDO::FETCH_ASSOC);
             if ($c == 'COUNT(0) AS count') {
                 return $obj['count'] + 0;
             } else {
-                return $obj;
+                if ($group == '') {
+                    return $obj;
+                } else {
+                    $list = [];
+                    if ($groupKey == '') {
+                        $list[] = $obj;
+                        while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
+                            $list[] = $obj;
+                        }
+                    } else {
+                        $list[$obj[$groupKey]] = $obj;
+                        while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
+                            $list[$obj[$groupKey]] = $obj;
+                        }
+                    }
+                    return $list;
+                }
             }
 
         }
