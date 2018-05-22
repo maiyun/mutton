@@ -81,10 +81,11 @@ namespace C\lib {
         public static function getSignature($opt = []) {
             $opt['dir'] = isset($opt['dir']) ? $opt['dir'] : '';
             $opt['size'] = isset($opt['size']) ? $opt['size'] : 3145728; // 3M
+            $opt['data'] = isset($opt['data']) ? ['data' => $opt['data']] : false;
 
             $callback_param = [
                 'callbackUrl' => $opt['callback'],
-                'callbackBody' => 'filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}',
+                'callbackBody' => 'filename=${object}&size=${size}&mimeType=${mimeType}&height=${imageInfo.height}&width=${imageInfo.width}' . ($opt !== false ? '&' . http_build_query($opt['data']) : ''),
                 'callbackBodyType' => "application/x-www-form-urlencoded"
             ];
             $callback_string = json_encode($callback_param);

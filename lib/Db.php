@@ -70,10 +70,15 @@ namespace C\lib {
             $charset = $charset ? $charset : DB_CHARSET;
             $port = $port ? $port : DB_PORT;
 
-			if(self::$$t = new \PDO('mysql:host='.$host.'; port='.$port.'; charset='.$charset.'; dbname='.$dbName, $user, $pwd)) {
-				return true;
-			} else
-				return false;
+            try {
+                if (self::$$t = new \PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $dbName, $user, $pwd)) {
+                    return true;
+                } else {
+                    return false;
+                }
+            } catch (\Exception $exception) {
+                exit('Co Er');
+            }
 		}
 
         public static function getInsertID($t = 'w') {
@@ -118,7 +123,7 @@ namespace C\lib {
 		public static function bindPrepare($arr, $split = ', ') {
 			$rtn = ['sql' => '', 'arr' => []];
 			foreach ($arr as $key => $val) {
-				$rtn['sql'] .= $key . ' = :' . $key . $split;
+				$rtn['sql'] .= '`'.$key.'`' . ' = :' . $key . $split;
 				$rtn['arr'][':'.$key] = $val;
 			}
 			$rtn['sql'] = substr($rtn['sql'], 0, -strlen($split));

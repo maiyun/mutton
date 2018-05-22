@@ -4,33 +4,33 @@
 
 namespace C\lib {
 
+    require LIB_PATH.'qmsms-sdk/qmsms.php';
+
     class Sms {
 
-        public static function send($msg, $mb, $user = NULL, $pwd = NULL, $serv = NULL) {
+        private $_qmsms = false;
 
-            $user = $user ? $user : SMS_USER;
-            $pwd = $pwd ? $pwd : SMS_PWD;
-            $serv = $serv ? $serv : SMS_SERV;
-            if(is_array($mb)) $mb = implode(',', $mb);
+        public function __construct($srv = NULL, $usr = NULL, $tok = NULL) {
+            $srv = $srv === NULL ? SMS_SRV : $srv;
+            $usr = $usr === NULL ? SMS_USER : $usr;
+            $tok = $tok === NULL ? SMS_TOKEN : $tok;
 
-            $time = date('YmdHis');
-            $data = [
-                'uid' => $user,
-                'pw' => md5($pwd . $time),
-                'mb' => $mb,
-                'ms' => $msg,
-                'tm' => $time
-            ];
-            $r = Net::post('http://'.$serv.':18002/send.do', $data);
-            $ra = explode(',', $r);
-            if($ra[0] == '0') {
-                return true;
-            } else {
-                return false;
-            }
+            $this->_qmsms = new \QmSms($srv, $usr, $tok);
+        }
 
+        public function send($phone, $body, $sign = '0', $template = '0') {
+            return $this->_qmsms->send($phone, $body, $sign, $template);
+        }
+
+        public function sendMarket($phone, $sign, $template) {
+            return $this->_qmsms->sendMarket($phone, $sign, $template);
+        }
+
+        public function task($name, $phone, $sign, $template) {
+            return $this->_qmsms->task($name, $phone, $sign, $template);
         }
 
     }
 
 }
+

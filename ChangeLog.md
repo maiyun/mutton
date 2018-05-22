@@ -1,3 +1,42 @@
+## 2018-05-22 (改名正式发布前的最后版本)
+[*] 修复 MOBILE 和 WECHAT 常量检测时可能因为 SERVER 相关信息不存在而报错的 BUG。  
+[*] 修改 SMS 配置信息的常量关键词。  
+[+] 增加轻木 SMS 通讯 SDK 以及 Sms 类的胶水代码。  
+[*] 修复 Db 类的连接报错问题。  
+[*] 优化 Net 类，增加更强大的 request 方法，统一访问数据。  
+[+] Net 类新增真 SSL 访问握手验证而不是仅仅简单屏蔽 HTTPS   证书验证，保障 HTTPS 网址的访问安全。  
+[+] Net 类新增 Json 格式的 Post 请求。  
+[+] Net 类新增 Cookie 变量式留存，可存放在诸如 MySQL、Redis 等任何场景。  
+[+] Alibaba Cloud OSS 类 opt 新增 data 参数，可以传递任意参数。  
+[+] Redis 模拟器新增 delete 方法。  
+[+] Text 类新增 sizeFormat 方法用于格式化显示文件大小信息。  
+[*] 优化 Wechat 类 login 方法的 url 传入参数。  
+[+] Wechat 类新增 getUserInfo 通过公众号获取用户信息方法。  
+[+] Wechat 类新增 loginMS 方法用以小程序登录。  
+[+] Wechat 类新增 getWXConfig 方法用以获取相关 JS SDK 操作权限。  
+[+] mod 模型基类的 get 方法新增 lock 参数，在开启事务后设置为 true 可保证在事物结束前此条不可再被篡改。  
+[+] mod 模型基类新增 getListOpt 方法，可设置更多参数。  
+[+] mod 模型基类新增 removeByWhere 静态方法，根据 where 移除相关条。  
+[+] mod 模型基类新增 updateByWhere 静态方法，根据 where 更新相关条数据。  
+[*] 修复 mod 模型基类 trait modKey 中，创建完后更新数据没有清空的 BUG。  
+[*] 优化 .htaccess。
+
+## 2017-11-20 (3.0 正式版)
+* 新增 OSS_ENDPOINT_NI 常量，对应 OSS 内网地址。
+* 新增 CACHE_TTL 常量，可定义页面缓存。
+* 更新 OSS 官方库到 2.2.4。
+* AES 类更新加密方式由 mcrypt 为 openssl，因为 PHP 7 不建议 mcrypt。
+* NET 类 get/pust 支持 headers 设置，get 支持 data 设置，post 支持提交 JSON 格式。
+* OSS 新增浏览器直传支持。
+* mod 模型只要调用 set 就必须得进行修改，而再判断是否变了。
+* 优化 .htaccess，支持获取 HTTP 认证头。
+* 优化 index.php，如果是 index.htm(l) 入口，则跳转到首页不再显示 404。
+* 新增 Redis 模拟器类库，可在 etc/db.php RD_SIMULATOR 配置为 true 开启。
+* 微信类库新增微信支付相关。
+* mod 中 count 方法可以自定义前缀。
+* 优化 tab 为空格。
+* 增加微信登录、微信支付类库。
+
 ## 2017-07-12 (3.0)
 * 3.0 即将发布，更高效率，更灵活，更轻更小。
 

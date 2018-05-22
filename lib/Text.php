@@ -129,6 +129,23 @@ namespace C\lib {
 				return false;
 		}
 
+		// --- 显示文件大小格式化 ---
+        public static function sizeFormat($size, $spliter = ' ') {
+            static $units = array(
+                'Bytes',
+                'KB',
+                'MB',
+                'GB',
+                'TB',
+                'PB'
+            );
+            $i = 0;
+            for (; $i < 6 && $size >= 1024.0; ++$i) {
+                $size /= 1024.0;
+            }
+            return round($size, 2) . $spliter . $units[$i];
+        }
+
 	}
 
 }

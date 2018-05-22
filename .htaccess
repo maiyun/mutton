@@ -1,5 +1,5 @@
 RewriteEngine on
 
-RewriteCond $1 !^(img|favicon|doc|txt)
+RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+RewriteCond $1 !(img/|favicon/|.doc|.txt|_fc_[a-zA-Z0-9]+?\.php)
 RewriteRule ^([a-zA-Z0-9\-/_.]+?)$ index.php?__uri=$1 [L,QSA]
-RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization},last]

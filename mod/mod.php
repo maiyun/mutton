@@ -129,7 +129,7 @@ namespace C\mod {
 		}
 
 		// --- 静态方法 ---
-		public static function get($where) {
+		public static function get($where, $lock = false) {
 			$mod = static::class;
 			$sql = new Sql();
 			$sql->select('*', static::$__table_s);
@@ -137,6 +137,9 @@ namespace C\mod {
 				$sql->where($where);
 			else
 				$sql->append(' WHERE '.$where);
+			if ($lock) {
+			    $sql->append(' FOR UPDATE');
+            }
 			$ps = Db::query($sql->sql);
 			if($obj = $ps->fetchObject($mod)) {
 				return $obj;
@@ -146,52 +149,68 @@ namespace C\mod {
 
 		// --- 添加一个序列 ---
 		public static function insert($cs, $vs) {
-
 			$sql = new Sql();
 			$sql->insert(static::$__table_s, $cs, $vs);
 			$r = Db::exec($sql->sql);
 			return $r == 0 ? false : true;
-
 		}
 
 		// --- 获取列表, 数组里面是 mod 对象 ---
         public static function getList($where = NULL, $limit = NULL, $by = NULL, $array = false, $keyIsId = false) {
-
+		    return self::getListOpt([
+		        'where' => $where,
+                'limit' => $limit,
+                'by' => $by,
+                'array' => $array,
+                'keyIsId' => $keyIsId
+            ]);
+        }
+        public static function getListOpt($opt = []) {
+		    $opt['where'] = isset($opt['where']) ? $opt['where'] : NULL;
+            $opt['limit'] = isset($opt['limit']) ? $opt['limit'] : NULL;
+            $opt['by'] = isset($opt['by']) ? $opt['by'] : NULL;
+            $opt['array'] = isset($opt['array']) ? $opt['array'] : false;
+            $opt['keyIsId'] = isset($opt['keyIsId']) ? $opt['keyIsId'] : false;
+            $opt['lock'] = isset($opt['lock']) ? $opt['lock'] : false;
+            // --- 原 ---
             $mod = static::class;
             $sql = new Sql();
             $sql->select('*', static::$__table_s);
-            if ($where !== NULL) {
-                if (is_array($where))
-                    $sql->where($where);
+            if ($opt['where'] !== NULL) {
+                if (is_array($opt['where']))
+                    $sql->where($opt['where']);
                 else
-                    $sql->append(' WHERE ' . $where);
+                    $sql->append(' WHERE ' . $opt['where']);
             }
-            if($by !== NULL) $sql->by($by[0], $by[1]);
+            if($opt['by'] !== NULL) $sql->by($opt['by'][0], $opt['by'][1]);
             $total = NULL;
-            if($limit !== NULL) {
-                if(isset($limit[2])) {
+            if($opt['limit'] !== NULL) {
+                if(isset($opt['limit'][2])) {
                     // --- 分页 ---
                     $ps = Db::query(str_replace(' * ', ' COUNT(0) AS count ', $sql->sql));
                     $obj = $ps->fetch(\PDO::FETCH_ASSOC);
                     $total = $obj['count'];
                     // --- 计算完整 ---
-                    $sql->limit($limit[1] * ($limit[2] - 1), $limit[1]);
+                    $sql->limit($opt['limit'][1] * ($opt['limit'][2] - 1), $opt['limit'][1]);
                 } else {
-                    $sql->limit($limit[0], $limit[1]);
+                    $sql->limit($opt['limit'][0], $opt['limit'][1]);
                 }
+            }
+            if ($opt['lock']) {
+                $sql->append(' FOR UPDATE');
             }
             $ps = Db::query($sql->sql);
             $list = [];
-            if ($array) {
+            if ($opt['array']) {
                 while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
-                    if ($keyIsId)
+                    if ($opt['keyIsId'])
                         $list[$obj['id']] = $obj;
                     else
                         $list[] = $obj;
                 }
             } else {
                 while ($obj = $ps->fetchObject($mod)) {
-                    if ($keyIsId)
+                    if ($opt['keyIsId'])
                         $list[$obj->id] = $obj;
                     else
                         $list[] = $obj;
@@ -245,6 +264,34 @@ namespace C\mod {
 
         }
 
+        // --- 满足条件则移除 ---
+        public static function removeByWhere($where) {
+            $sql = new Sql();
+            $sql->delete(static::$__table_s);
+            if(is_array($where))
+                $sql->where($where);
+            else
+                $sql->append(' WHERE ' . $where);
+            $r = Db::exec($sql->sql);
+            if ($r > 0)
+                return true;
+            else return false;
+        }
+
+        // --- 满足条件则更新 ---
+        public static function updateByWhere($data, $where) {
+            $sql = new Sql();
+            $sql->update(static::$__table_s, $data);
+            if(is_array($where))
+                $sql->where($where);
+            else
+                $sql->append(' WHERE ' . $where);
+            $r = Db::exec($sql->sql);
+            if ($r > 0)
+                return true;
+            else return false;
+        }
+
     }
 
 	trait modKey {
@@ -279,11 +326,12 @@ namespace C\mod {
 
 			if ($r) {
 				$this->{$column} = $updates[$column];
-				$p = Db::prepare('SELECT *'.' FROM '.DB_PRE.$this->__table.' WHERE '.$column.' = :'.$column);
+				$p = Db::prepare('SELECT *'.' FROM '.DB_PRE.$this->__table.' WHERE `'.$column.'` = :'.$column);
 				$p->execute([':'.$column=>$this->{$column}]);
 				$a = $p->fetch(\PDO::FETCH_ASSOC);
 				foreach($a as $k => $v)
 					$this->$k = $v;
+                $this->__updates = [];
 				return true;
 			}
 

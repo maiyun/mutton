@@ -51,9 +51,9 @@ define('MAIL_PWD', 'xxxxxx');
 
 // --- Sms ---
 
-define('SMS_SERV', 'www.qingmu.mobi');
+define('SMS_SRV', 'www.qingmu.mobi');
 define('SMS_USER', '');
-define('SMS_PWD', '');
+define('SMS_TOKEN', '');
 
 // --- Wechat ---
 
@@ -62,4 +62,10 @@ define('WECHAT_SECRET', '');
 // --- Wehcat pay ---
 define('WECHAT_MCHID', '');
 define('WECHAT_KEY', '');
+
+// --- Alipay ---
+
+define('ALIPAY_APPID', '');
+define('ALIPAY_RSA_PUBLIC', '');
+define('ALIPAY_RSA_PRIVATE', '');
 

@@ -45,6 +45,12 @@ class RedisSimulator {
             return false;
     }
 
+    public function delete($key) {
+        $this->_gc();
+        Db::exec('DELETE FROM `'.DB_PRE.'redis` WHERE `tag` = '.Db::quote($this->_index . '_' . $key));
+        return true;
+    }
+
     public function set($key, $value, $opt) {
         $this->_gc();
         if($opt['ex'] == 0) {
