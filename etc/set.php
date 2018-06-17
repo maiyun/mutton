@@ -16,6 +16,6 @@ const CACHE_TTL = 0;
 
 // --- STATIC ---
 
-// const STATIC_PATH = 'http://static.hanguoshuai.com/';
-const STATIC_PATH = IMG_PATH;
+// const STATIC_PATH = 'http://static.xxx.com/';
+const STATIC_PATH = STC_PATH;
 

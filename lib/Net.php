@@ -1,23 +1,38 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Han Guoshuai
- * Date: 2015/10/26
- * Time: 14:23
+ * User: JianSuoQiYue
+ * Date: 2015/10/26 14:23
+ * Last: 2018-6-16 00:42
  */
+declare(strict_types = 1);
 
-namespace C\lib {
+namespace M\lib {
 
 	class Net {
 
-		public static function get($url, $opt = [], &$cookie = false) {
+        /**
+         * @param string $url
+         * @param array $opt
+         * @param array|null $cookie
+         * @return array|bool|string
+         * @throws \Exception
+         */
+		public static function get(string $url, array $opt = [], ?array &$cookie = NULL) {
 
 		    $opt['url'] = $url;
             return self::request($opt, $cookie);
 
 		}
 
-		public static function post($url, $data, $opt = [], &$cookie = false) {
+        /**
+         * @param string $url
+         * @param array|string $data
+         * @param array $opt
+         * @param array|null $cookie
+         * @return array|bool|string
+         * @throws \Exception
+         */
+		public static function post(string $url, $data, array $opt = [], ?array &$cookie = NULL) {
 
             $opt['url'] = $url;
             $opt['data'] = $data;
@@ -28,12 +43,19 @@ namespace C\lib {
 		}
 
 		// --- GET, POST 基函数 ---
-		public static function request($opt, &$cookie = false) {
+
+        /**
+         * @param array $opt
+         * @param array|null $cookie
+         * @return bool|string|array
+         * @throws \Exception
+         */
+		public static function request(array $opt, ?array &$cookie = NULL) {
 	        $method = isset($opt['method']) && strtoupper($opt['method']) == 'POST' ? 'POST' : 'GET';
 	        $url = isset($opt['url']) ? $opt['url'] : '';
-            if ($cookie !== false) {
+            if ($cookie !== NULL) {
                 if (!is_array($cookie)) {
-                    return false;
+                    throw new \Exception('[Error] cookie type not support.');
                 }
             }
 
@@ -78,12 +100,12 @@ namespace C\lib {
                     curl_setopt($ch, CURLOPT_HTTPHEADER, $opt['headers']);
                 }
                 // --- cookie 托管 ---
-                if ($cookie !== false) {
+                if ($cookie !== NULL) {
                     curl_setopt($ch, CURLOPT_HEADER, true);
                     curl_setopt($ch, CURLOPT_COOKIE, self::_cookieBuildQuery($cookie));
                 }
                 // --- 返回头部 ---
-                if (isset($opt['resHeader']) && $opt['resHeader'] && $cookie === false) {
+                if (isset($opt['resHeader']) && $opt['resHeader'] && $cookie === NULL) {
                     curl_setopt($ch, CURLOPT_HEADER, true);
                 }
                 // --- 执行 ---
@@ -91,11 +113,11 @@ namespace C\lib {
                 curl_close($ch);
                 // --- 处理返回值 ---
                 if ($output !== false) {
-                    if (($cookie !== false) || (isset($opt['resHeader']) && $opt['resHeader'])) {
+                    if (($cookie !== NULL) || (isset($opt['resHeader']) && $opt['resHeader'])) {
                         $sp = strpos($output, "\r\n\r\n");
                         $header = substr($output, 0, $sp);
                         $content = substr($output, $sp + 4);
-                        if ($cookie !== false) {
+                        if ($cookie !== NULL) {
                             // --- 提取 cookie ---
                             preg_match_all('/Set-Cookie:(.+?);/i', $header, $matchList);
                             foreach ($matchList[1] as $match) {
@@ -131,7 +153,7 @@ namespace C\lib {
                     return false;
                 }
             } else {
-	            return false;
+                return false;
             }
         }
 
@@ -141,8 +163,9 @@ namespace C\lib {
 				return getenv('HTTP_CLIENT_IP');
             } else if (getenv('HTTP_X_FORWARDED_FOR')) {
                 return getenv('HTTP_X_FORWARDED_FOR');
-            } else
-				return getenv('REMOTE_ADDR');
+            } else {
+                return getenv('REMOTE_ADDR');
+            }
 
 		}
 
@@ -176,7 +199,7 @@ namespace C\lib {
                 } else {
                     fwrite($fp, $c."\r\n");
                 }
-                $r = fgets($fp);
+                //$r = fgets($fp);
             }
             fclose($fp);
             return ['success' => true];

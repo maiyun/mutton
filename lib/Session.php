@@ -1,118 +1,171 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Admin2
- * Date: 2015/5/25
- * Time: 19:56
- */
+/*
+CREATE TABLE `session` (
+`id` int(10) UNSIGNED NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `data` text NOT NULL,
+  `time_update` int(10) UNSIGNED NOT NULL,
+  `time_add` int(10) UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-namespace C\lib {
+ALTER TABLE `session`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `token` (`token`);
+
+ALTER TABLE `session`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+*/
+
+/**
+ * User: JianSuoQiYue
+ * Date: 2015/05/25 19:56
+ * Last: 22018-6-16 15:20
+ */
+declare(strict_types = 1);
+
+namespace M\lib {
+
+    require ETC_PATH.'session.php';
 
 	/*
-	 * 模式分为：1:db, 2:mem
+	 * 模式分为：1:db, 2:redis
 	 * 默认为 2
 	 */
 
 	class Session {
 
-		public static $token = '';
+	    /* @var $_redis Redis */
+		private static $_redis = NULL;
+        /* @var $_redis Db */
+		private static $_db = NULL;
+		/* @var $_sql Sql */
+		private static $_sql = NULL;
 
-		// --- 可编辑变量 ---
+		private static $_token = '';
+		private static $_exp = 0;
 
-		public static $exp = 1209600; // --- 14 天 ---
-		public static $cookie = NULL;
-		public static $useMem = NULL;
+        /**
+         * @param Redis|Db $link
+         * @param array $opt
+         */
+        public static function start($link, array $opt = []): void {
 
-		public static function update() {
+            $name = isset($opt['name']) ? $opt['name'] : SESSION_NAME;
+            self::$_exp = isset($opt['exp']) ? $opt['exp'] : SESSION_EXP;
 
-			if(self::$useMem)
-				Redis::set('se_'.self::$token, $_SESSION, self::$exp);
-			else {
-				$r = Db::prepare('UPDATE ' . DB_PRE . 'session SET data = :data, time_update = :time_update WHERE token = :token');
-				$r->execute([
-					':data' => serialize($_SESSION),
-					':time_update' => $_SERVER['REQUEST_TIME'],
-					':token' => self::$token
-				]);
+            if (isset($_POST[$name])) {
+                self::$_token = $_POST[$name];
+            } else if (isset($_COOKIE[$name])) {
+                self::$_token = $_COOKIE[$name];
+            }
+
+            if ($link instanceof Redis) {
+                self::$_redis = $link;
+            } else {
+                self::$_db = $link;
+                self::$_sql = Sql::get('__session', isset($opt['pre']) ? $opt['pre'] : (SESSION_DB_PRE === NULL ? SQL_PRE : RDS_DB_PRE));
+            }
+
+            // --- 初始化 Session 数组 ---
+            $_SESSION = [];
+            $needInsert = false;
+            // --- 有 token 则查看 token 的信息是否存在
+            if (self::$_token != '') {
+                // --- 如果启用了内存加速则在内存找 ---
+                if (self::$_redis !== NULL) {
+                    if(($data = self::$_redis->getValue('se_'.self::$_token)) === false) {
+                        $needInsert = true;
+                    } else {
+                        $_SESSION = $data;
+                    }
+                } else {
+                    // --- 数据库 ---
+                    try {
+                        self::$_sql->select('*', 'session')->where([
+                            'token' => self::$_token
+                        ]);
+                        $ps = self::$_db->prepare(self::$_sql->getSql());
+                        $ps->execute(self::$_sql->getData());
+                        if ($data = $ps->fetch(\PDO::FETCH_ASSOC)) {
+                            $_SESSION = unserialize($data['data']);
+                        } else {
+                            $needInsert = true;
+                        }
+                    } catch (\Exception $e) {
+                        exit($e->getMessage());
+                    }
+                }
+            } else {
+                // --- 全新的机子 ---
+                $needInsert = true;
+            }
+            // --- 本来就该添加个新 Session ---
+            // --- 内存和数据库里没找到的也该添加个新 Session ---
+            // --- 如果不存在不允许加新则返回错误 ---
+            if ($needInsert) {
+                self::$_token = self::_random();
+                if(self::$_redis !== NULL) {
+                    while(!self::$_redis->setValue('se_'.self::$_token, [], self::$_exp, 'nx')) {
+                        self::$_token = self::_random();
+                    }
+                } else {
+                    self::$_sql->insert('session', [
+                        'token' => self::$_token,
+                        'data' => serialize([]),
+                        'time_update' => $_SERVER['REQUEST_TIME'],
+                        'time_add' => $_SERVER['REQUEST_TIME']
+                    ]);
+                    $ps = self::$_db->prepare(self::$_sql->getSql());
+                    while(!$ps->execute(self::$_sql->getData())) {
+                        self::$_token = self::_random();
+                    }
+                }
+            }
+
+            setcookie($name, self::$_token, $_SERVER['REQUEST_TIME'] + self::$_exp, '/');
+
+            register_shutdown_function(function() {
+                Session::update();
+            });
+
+        }
+
+        /**
+         * @throws \Exception
+         */
+		public static function update(): void {
+
+			if(self::$_redis !== NULL) {
+			    self::$_redis->setValue('se_' . self::$_token, $_SESSION, self::$_exp);
+            } else {
+			    self::$_sql->update('session', [
+			        'data' => serialize($_SESSION),
+                    'time_update' => $_SERVER['REQUEST_TIME']
+                ])->where([
+                    'token' => self::$_token
+                ]);
+			    $ps = self::$_db->prepare(self::$_sql->getSql());
+				$ps->execute(self::$_sql->getData());
 			}
 
 		}
 
-		public static function gc() {
+        /**
+         * @throws \Exception
+         */
+		public static function gc(): void {
 
-			if(!self::$useMem)
-				Db::exec('DELETE' . ' FROM ' . DB_PRE . 'session WHERE `time_update` < ' . ($_SERVER['REQUEST_TIME'] - self::$exp));
-
-		}
-
-		public static function start($cookie = NULL) {
-
-			self::$cookie = $cookie ? $cookie : SESSION_NAME;
-			self::$useMem = SESSION_MEM;
-
-			if (isset($_POST[self::$cookie]) && $_POST[self::$cookie]) self::$token = $_POST[self::$cookie];
-			else if (isset($_COOKIE[self::$cookie]) && $_COOKIE[self::$cookie]) self::$token = $_COOKIE[self::$cookie];
-
-			// --- 判断 Redis 是否已经连接 ---
-			if(self::$useMem)
-				if(!Redis::isConnect()) Redis::connect();
-			// --- 初始化 Session 数组 ---
-			$_SESSION = [];
-			$needInsert = false;
-			// --- 有 token 则查看 token 的信息是否存在
-			if (self::$token != '') {
-				// --- 如果启用了内存加速则在内存找 ---
-				if (self::$useMem) {
-					if(($data = Redis::get('se_'.self::$token)) === false)
-						$needInsert = true;
-					else
-						$_SESSION = $data;
-				// --- 在数据库找 ---
-				} else {
-					$p = Db::prepare('SELECT' . ' * FROM ' . DB_PRE . 'session WHERE token = :token', 'r');
-					$p->execute([
-						':token' => self::$token
-					]);
-					if($data = $p->fetch(\PDO::FETCH_ASSOC)) {
-						$_SESSION = unserialize($data['data']);
-					} else
-						$needInsert = true;
-				}
-			} else {
-				// --- 全新的机子 ---
-				$needInsert = true;
-			}
-			// --- 本来就该添加个新 Session ---
-			// --- 内存和数据库里没找到的也该添加个新 Session ---
-			// --- 如果不存在不允许加新则返回错误 ---
-			if ($needInsert) {
-				self::$token = self::random();
-				if(self::$useMem) {
-					while(!Redis::set('se_'.self::$token, [], self::$exp, 'nx'))
-						self::$token = self::random();
-				} else {
-					$p = Db::prepare('INSERT' . ' INTO ' . DB_PRE . 'session (token,data,time_update,time_add) VALUES (:token,:data,:time_update,:time_add)');
-					while(!$p->execute([
-						':token' => self::$token,
-						':data' => serialize([]),
-						':time_update' => $_SERVER['REQUEST_TIME'],
-						':time_add' => $_SERVER['REQUEST_TIME']
-					]))
-						self::$token = self::random();
-				}
-			}
-
-			setcookie(self::$cookie, self::$token, $_SERVER['REQUEST_TIME'] + self::$exp, '/');
-
-			register_shutdown_function(function() {
-				Session::update();
-			});
-
-			return true;
+			if(self::$_redis === NULL) {
+			    self::$_sql->delete('session')->where([
+			        ['time_update', '<', $_SERVER['REQUEST_TIME'] - self::$_exp]
+                ]);
+                $ps = self::$_db->prepare(self::$_sql->getSql());
+                $ps->execute(self::$_sql->getData());
+            }
 
 		}
 
-		protected static function random() {
+		private static function _random(): string {
 			$s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 			$sl = strlen($s);
 			$t = '';

@@ -1,5 +1,10 @@
 <?php
+declare(strict_types = 1);
 
+define('START_TIME', microtime(true));
+define('START_MEMORY', memory_get_usage());
+
+// --- 处理 uri ---
 if ($_GET['__uri'] == 'index.html' || $_GET['__uri'] == 'index.htm') {
     header('Location: ./');
     exit;
@@ -7,32 +12,12 @@ if ($_GET['__uri'] == 'index.html' || $_GET['__uri'] == 'index.htm') {
 if ($_GET['__uri'] == 'index.php') {
     $_GET['__uri'] = '';
 }
-
-// --- 自动加载类、模型 ---
-
-spl_autoload_register(function ($name) {
-    $type = substr($name, 0, 5);
-    $cn = substr($name, 6);
-    switch($type) {
-        case 'C\\lib': {
-            require LIB_PATH . $cn.'.php';
-            break;
-        }
-        case 'C\\mod': {
-            require MOD_PATH . $cn.'.php';
-            break;
-        }
-    }
-}, true);
-
-require 'sys/boot.php';
-
-C\Boot::run();
-
-require SYS_PATH.'route.php';
-
 define('URI', isset($_GET['__uri']) ? $_GET['__uri'] : '');
 unset($_GET['__uri']);
 
-C\Route::run();
+require 'sys/Boot.php';
+M\Boot::run();
+
+require SYS_PATH.'Route.php';
+M\Route::run();
 

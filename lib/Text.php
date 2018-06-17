@@ -1,49 +1,49 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Admin2
- * Date: 2015/5/7
- * Time: 13:50
+ * User: JianSuoQiYue
+ * Date: 2015/05/07 13:50
+ * Last: 2018-6-17 10:44
  */
+declare(strict_types = 1);
 
-namespace C\lib {
+namespace M\lib {
 
 	class Text {
 
-		public static function random($length = 8, $s = ['L', 'N']) {
+	    // --- 随机 ---
+        const RANDOM_N = '0123456789';
+        const RANDOM_U = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const RANDOM_L = 'abcdefghijklmnopqrstuvwxyz';
+        const RANDOM_UN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const RANDOM_LN = 'abcdefghijklmnopqrstuvwxyz0123456789';
+        const RANDOM_LU = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        const RANDOM_LUN = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        const RANDOM_V = 'ABCEFGHJKLMNPRSTWXYZ23456789';
 
-			static $a = ['U' => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'L' => 'abcdefghijklmnopqrstuvwxyz', 'N' => '0123456789'];
-			$source = '';
-			foreach ($s as $i) {
-				switch ($i) {
-					case 'U':
-					case 'L':
-					case 'N':
-						$source .= $a[$i];
-						break;
-					default:
-						$source .= $i;
-				}
-			}
-			$sourceLength = strlen($source);
-			$temp = '';
-			for ($i = $length; $i; $i--)
-				$temp .= $source[rand(0, $sourceLength - 1)];
-			return $temp;
+		public static function random(int $length = 8, string $source = self::RANDOM_LUN): string {
+
+            $len = strlen($source);
+            $temp = '';
+            for ($i = $length; --$i;) {
+                $temp .= $source[rand(0, $len - 1)];
+            }
+            return $temp;
+
 		}
 		
 		// --- 是否是中国大陆的手机号 ---
+		public static function isPhone(string $p): bool {
 
-		public static function isPhone($p) {
-
-			if (preg_match('/^1[0-9]{10}$/', $p)) return true;
-			else return false;
+			if (preg_match('/^1[0-9]{10}$/', $p)) {
+			    return true;
+            } else {
+			    return false;
+            }
 
 		}
 
 		// --- 返回手机号是中国哪家运营商 ---
-
-		public static function phoneSP($p) {
+		public static function phoneSP(string $p): int {
 
 			$list = [
 				// --- 移动 ---
@@ -70,16 +70,16 @@ namespace C\lib {
 				['^177\d{8}$', 2]
 			];
 			foreach($list as $item) {
-				if (preg_match('/'.$item[0].'/', $p))
-					return $item[1];
+				if (preg_match('/'.$item[0].'/', $p)) {
+                    return $item[1];
+                }
 			}
-			return false;
+			return -1;
 
 		}
 
 		// --- 根据中国手机号运营商分组 ---
-
-		public static function phoneSPGroup($pList) {
+		public static function phoneSPGroup(array $pList): array {
 			$list = ['0' => [], '1' => [], '2' => [], '-1' => []];
 			foreach ($pList as $p) {
 				if (($r = self::phoneSP($p)) !== false) {
@@ -97,40 +97,36 @@ namespace C\lib {
 		
 		// --- 是否是中国大陆身份证 ---
 		
-		public static function isIdCard($idcard) {
+		public static function isIdCard(string $idcard): bool {
 			
-			if(strlen($idcard) != 18)
-				return false;
-
-			// 取出本体码  
+			if(strlen($idcard) != 18) {
+                return false;
+            }
+			// --- 取出本码 ---
 			$idcardBase = substr($idcard, 0, 17);
-
-			// 取出校验码  
+			// --- 取出校验码 ---
 			$verifyCode = substr($idcard, 17, 1);
-
-			// 加权因子  
-			$factor = array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
-
-			// 校验码对应值  
-			$verifyCodeList = array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
-
-			// 根据前17位计算校验码  
+			// --- 加权因子 ---
+			$factor = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2];
+			// --- 校验码对应值 ---
+			$verifyCodeList = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
+			// --- 根据前17位计算校验码 ---
 			$total = 0;
-			for($i=0; $i<17; $i++)
-				$total += substr($idcardBase, $i, 1)*$factor[$i];
-
-			// 取模  
+			for ($i=0; $i<17; $i++) {
+                $total += substr($idcardBase, $i, 1) * $factor[$i];
+            }
+			// --- 取模 ---
 			$mod = $total % 11;
-
-			// 比较校验码  
-			if($verifyCode == $verifyCodeList[$mod])
-				return true;
-			else
-				return false;
+			// --- 比较校验码 ---
+			if($verifyCode == $verifyCodeList[$mod]) {
+                return true;
+            } else {
+                return false;
+            }
 		}
 
 		// --- 显示文件大小格式化 ---
-        public static function sizeFormat($size, $spliter = ' ') {
+        public static function sizeFormat(float $size, string $spliter = ' '): string {
             static $units = array(
                 'Bytes',
                 'KB',
@@ -144,6 +140,16 @@ namespace C\lib {
                 $size /= 1024.0;
             }
             return round($size, 2) . $spliter . $units[$i];
+        }
+
+        // --- 是否是邮件 ---
+        public static function isEMail(string $email): bool {
+            return preg_match('/^[-_\w\.]+\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
+        }
+
+        // --- 是否是 IP ---
+        public static function isIPv4(string $ip): bool {
+            return preg_match('/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/', $ip) ? true : false;
         }
 
 	}

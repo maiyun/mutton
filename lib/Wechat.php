@@ -1,17 +1,21 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Admin2
- * Date: 2015/5/7
- * Time: 13:50
- */
+// SDK https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=11_1
 
-namespace C\lib {
+/**
+ * User: JianSuoQiYue
+ * Date: 2015/5/7 13:50
+ * Last: 2018-6-17 10:57
+ */
+declare(strict_types = 1);
+
+namespace M\lib {
+
+    require ETC_PATH.'wechat.php';
 
     class Wechat {
 
         // --- 公众号登录 ---
-        public static function login($url, $appid = NULL) {
+        public static function login(string $url, ?string $appid = NULL): void {
 
             $appid = $appid ? $appid : WECHAT_APPID;
             $lenUrl = substr($url, 0, 6);
@@ -22,13 +26,26 @@ namespace C\lib {
 
         }
 
-        // --- 公众号获取用户信息 ---
-        public static function getUserInfo($access_token, $openid) {
+        /**
+         * --- 获取用户信息 ---
+         * @param string $access_token
+         * @param string $openid
+         * @return object
+         * @throws \Exception
+         */
+        public static function getUserInfo(string $access_token, string $openid): object {
             return json_decode(Net::get('https://api.weixin.qq.com/sns/userinfo?access_token='.$access_token.'&openid='.$openid));
         }
 
-        // --- 小程序登录 ---
-        public static function loginMS($code, $appid = NULL, $secret = NULL) {
+        /**
+         * --- 小程序登录 ---
+         * @param string $code
+         * @param null|string $appid
+         * @param null|string $secret
+         * @return object
+         * @throws \Exception
+         */
+        public static function loginMS(string $code, ?string $appid = NULL, ?string $secret = NULL): object {
             $appid = $appid ? $appid : WECHAT_APPID;
             $secret = $secret ? $secret : WECHAT_SECRET;
 
@@ -37,8 +54,14 @@ namespace C\lib {
             return $j;
         }
 
-        // --- 登录回跳处理 ---
-        public static function redirect($appid = NULL, $secret = NULL) {
+        /**
+         * --- 登录回跳处理 ---
+         * @param null|string $appid
+         * @param null|string $secret
+         * @return bool|object
+         * @throws \Exception
+         */
+        public static function redirect(?string $appid = NULL, ?string $secret = NULL) {
             $appid = $appid ? $appid : WECHAT_APPID;
             $secret = $secret ? $secret : WECHAT_SECRET;
             if(isset($_GET['code']) && $_GET['code'] != '') {
@@ -60,11 +83,16 @@ namespace C\lib {
 
         }
 
-        // --- 创建支付 ---
-        public static function createPay($opt = []) {
+        /**
+         * --- 创建支付 ---
+         * @param array $opt
+         * @return object
+         * @throws \WxPayException
+         */
+        public static function createPay(array $opt = []): object {
 
-            require LIB_PATH . 'WxpayAPI/lib/WxPay.Api.php';
-            require LIB_PATH . 'WxpayAPI/lib/WxPay.JsApiPay.php';
+            require LIB_PATH . 'Wechat/WxpayAPI/lib/WxPay.Api.php';
+            require LIB_PATH . 'Wechat/WxpayAPI/lib/WxPay.JsApiPay.php';
 
             $input = new \WxPayUnifiedOrder();
             $input->SetBody($opt['body']);
@@ -89,20 +117,35 @@ namespace C\lib {
         }
 
         // --- 支付回调 ---
-        public static function payCallback() {
+
+        /**
+         * @param callable $callback
+         */
+        public static function payCallback(callable $callback = NULL): void {
 
             require LIB_PATH . 'WxpayAPI/lib/WxPay.Api.php';
             require LIB_PATH . 'WxpayAPI/lib/WxPay.Notify.php';
             require LIB_PATH . 'WxpayAPI/lib/WxPay.NotifyCallBack.php';
 
             $notify = new \WxPayNotifyCallBack();
+            if ($callback !== NULL) {
+                $notify->setCallback($callback);
+            }
             $notify->Handle(false);
 
         }
 
         // --- 获取服务器 Signature (7200秒刷新一次) ---
         // --- ['onMenuShareTimeline', 'onMenuShareAppMessage'] ---
-        public static function getWXConfig($apiList, $tokenTicket, $appid = NULL, $secret = NULL) {
+        /**
+         * @param array $apiList
+         * @param string $tokenTicket
+         * @param null|string $appid
+         * @param null|string $secret
+         * @return array
+         * @throws \Exception
+         */
+        public static function getWXConfig(array $apiList, string $tokenTicket, ?string $appid = NULL, ?string $secret = NULL): array {
             $appid = $appid ? $appid : WECHAT_APPID;
             $secret = $secret ? $secret : WECHAT_SECRET;
 
@@ -116,14 +159,14 @@ namespace C\lib {
             } else {
                 list($token, $ticket) = explode(',', $tokenTicket);
             }
-            $noncestr = Text::random(16, ['L', 'U', 'N']);
+            $noncestr = Text::random(16);
             $time = $_SERVER['REQUEST_TIME'];
             $string = 'jsapi_ticket='.$ticket.'&noncestr='.$noncestr.'&timestamp='.$time.'&url=http' . ((self::isHttps() ? 's' : '') . '://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
             return [$tokenTicket, 'wx.config({debug:false,appId:"'.$appid.'",timestamp:"'.$time.'",nonceStr:"'.$noncestr.'",signature:"'.sha1($string).'",jsApiList:'.json_encode($apiList).'});'];
         }
 
         // --- 判断是否是 HTTPS ---
-        public static function isHttps() {
+        public static function isHttps(): bool {
             if (isset($_SERVER['HTTPS'])) {
                 if ($_SERVER['HTTPS'] === 1) {  //Apache
                     return true;

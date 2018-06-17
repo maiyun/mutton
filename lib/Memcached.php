@@ -1,90 +1,130 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Admin2
- * Date: 2015/7/4
- * Time: 22:48
+ * User: JianSuoQiYue
+ * Date: 2017/07/04 22:48
+ * Last: 2018/06/15
  */
+declare(strict_types = 1);
 
-namespace C\lib {
+// --- 其实更建议使用 Redis，为了 Mutton 的发布还是做了一些优化 ---
 
-// --- Memcached 为长连接进城池 ---
+namespace M\lib {
+
+    // --- Memcached 为长连接进程池 ---
+
+    require ETC_PATH.'memcached.php';
 
 	class Memcached {
 
-		/**
-		 * @var \Memcached
-		 */
-		private static $link = NULL;
-		public static $pre = NULL;
+        private static $_poll = [];
 
-		public static function isConnect() {
+		/* @var $_link \Memcached */
+		private $_link = NULL;
 
-			if (!count(self::$link->getServerList()))
+		private $_pre = '';
+
+        /**
+         * @param string $name
+         * @param array $opt
+         * @return Memcached
+         * @throws \Exception
+         */
+        public static function get(string $name = 'main', array $opt = []): Memcached {
+            if (isset(self::$_poll[$name])) {
+                return self::$_poll[$name];
+            } else {
+                $link = new Memcached();
+                try {
+                    $link->connect($opt);
+                    self::$_poll[$name] = $link;
+                    return self::$_poll[$name];
+                } catch (\Exception $e) {
+                    throw $e;
+                }
+            }
+        }
+
+		public function isConnect() {
+
+			if (!count($this->_link->getServerList()))
 				return false;
 			else
 				return true;
 
 		}
 
-		public static function connect($host = NULL, $user = NULL, $pwd = NULL, $pool = NULL, $port = NULL) {
+        /**
+         * @param array $opt
+         * @return bool
+         * @throws \Exception
+         */
+		public function connect(array $opt = []): bool {
 
-			$host = $host ? $host : MC_HOST;
-			$user = $user ? $user : MC_USERNAME;
-			$pwd = $pwd ? $pwd : MC_PASSWORD;
-			$port = $port ? $port : MC_PORT;
-			$pool = $pool ? $pool : MC_POOL;
-			self::$pre = MC_PRE;
+            $host = isset($opt['host']) ? $opt['host'] : MC_HOST;
+            $user = isset($opt['user']) ? $opt['user'] : MC_USER;
+            $pwd = isset($opt['pwd']) ? $opt['pwd'] : MC_PWD;
+            $pool = isset($opt['pool']) ? $opt['pool'] : MC_POOL;
+            $port = isset($opt['port']) ? $opt['port'] : MC_PORT;
+            $this->_pre = isset($opt['pre']) ? $opt['pre'] : MC_PRE;
 
-			if ($pool)
-				self::$link = new \Memcached();
-			else
-				self::$link = new \Memcached($pool);
+			if ($pool != '') {
+                $this->_link = new \Memcached();
+            } else {
+                $this->_link = new \Memcached($pool);
+            }
 
-			self::$link->setOption(\Memcached::OPT_COMPRESSION, false);
-			self::$link->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
-			self::$link->addServer($host, $port);
-			if (($user && $user != '') && ($pwd && $pwd != ''))
-				self::$link->setSaslAuthData($user, $pwd);
+			$this->_link->setOption(\Memcached::OPT_COMPRESSION, false);
+			$this->_link->setOption(\Memcached::OPT_BINARY_PROTOCOL, true);
 
-		}
-
-		public static function add($key, $val, $exp = 0) {
-
-			return self::$link->add(self::$pre.$key, $val, $exp);
-
-		}
-
-        public static function set($key, $val, $exp = 0) {
-
-			self::$link->set(self::$pre.$key, $val, $exp);
-
-		}
-
-        public static function get($key) {
-
-			return self::$link->get(self::$pre.$key);
+			if ($this->_link->addServer($host, $port)) {
+                if (($user != '') && ($pwd != '')) {
+                    $this->_link->setSaslAuthData($user, $pwd);
+                }
+                return true;
+            } else {
+			    throw new \Exception('[Error] Connect failed.');
+            }
 
 		}
 
-        public static function quit() {
+		public function addValue(string $key, $val, int $exp = 0): bool {
 
-			self::$link->quit();
-			self::$link = NULL;
-
-		}
-
-        public static function delete($key) {
-
-			self::$link->delete(self::$pre.$key);
+			return $this->_link->add($this->_pre.$key, $val, $exp);
 
 		}
 
-        public static function getServerList() {
+        public function setValue(string $key, string $val, int $exp = 0): void {
 
-			if (self::$link !== NULL)
-				return self::$link->getServerList();
-			else return [];
+			$this->_link->set($this->_pre . $key, $val, $exp);
+
+		}
+
+        public function getValue(string $key) {
+
+            return $this->_link->get($this->_pre . $key);
+
+		}
+
+        public function quit(): void {
+
+            $this->_link->quit();
+			$this->_link = NULL;
+
+		}
+
+        public function delete(string $key): void {
+
+			$this->_link->delete($this->_pre . $key);
+
+		}
+
+        public function getServerList() {
+
+			if ($this->_link !== NULL) {
+                return $this->_link->getServerList();
+            } else {
+			    return [];
+            }
 
 		}
 

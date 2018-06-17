@@ -1,71 +1,11 @@
 <?php
-
-// --- Db ---
+// --- MySQL ---
 
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', 3306);
 define('DB_CHARSET', 'utf8');
-define('DB_DBNAME', 'net.maiyun.os');
-define('DB_PRE', 'test_');
+define('DB_NAME', 'mutton');
 
-define('DB_USERNAME', 'root');
-define('DB_PASSWORD', 'root');
-
-// --- Memcached ---
-
-define('MC_HOST', '127.0.0.1');
-define('MC_PORT', 3306);
-define('MC_POOL', '');
-define('MC_PRE', 'cd_');
-
-define('MC_USERNAME', 'root');
-define('MC_PASSWORD', '');
-
-// --- Redis ---
-
-define('RD_HOST', '127.0.0.1');
-define('RD_PORT', 6379);
-define('RD_USER', 'root');
-define('RD_PWD', 'pwd');
-define('RD_INDEX', 0);
-define('RD_SIMULATOR', false);
-
-// --- OSS ---
-
-define('OSS_ACCESS_KEY_ID', '');
-define('OSS_ACCESS_KEY_SECRET', '');
-define('OSS_ENDPOINT', '');
-define('OSS_ENDPOINT_NI', '');
-define('OSS_BUCKET', '');
-
-// --- Session ---
-
-define('SESSION_NAME', 'CHA_SESSION');
-define('SESSION_MEM', false);
-
-// --- Mail ---
-
-define('MAIL_HOST', 'smtp.xxx.com');
-define('MAIL_USER', 'chameleon@xxx.com');
-define('MAIL_PWD', 'xxxxxx');
-
-// --- Sms ---
-
-define('SMS_SRV', 'www.qingmu.mobi');
-define('SMS_USER', '');
-define('SMS_TOKEN', '');
-
-// --- Wechat ---
-
-define('WECHAT_APPID', '');
-define('WECHAT_SECRET', '');
-// --- Wehcat pay ---
-define('WECHAT_MCHID', '');
-define('WECHAT_KEY', '');
-
-// --- Alipay ---
-
-define('ALIPAY_APPID', '');
-define('ALIPAY_RSA_PUBLIC', '');
-define('ALIPAY_RSA_PRIVATE', '');
+define('DB_USERNAME', 'mutton');
+define('DB_PASSWORD', 'tUUIAhfBsp6If4Bi');
 

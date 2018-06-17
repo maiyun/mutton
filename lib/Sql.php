@@ -1,184 +1,359 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Admin2
- * Date: 2015/6/24
- * Time: 18:55
+ * User: JianSuoQiYue
+ * Date: 2015/6/24 18:55
+ * Last: 2018/06/11 16:48
  */
+declare(strict_types = 1);
 
-namespace C\lib {
+namespace M\lib {
 
-	class Sql {
+    require ETC_PATH.'sql.php';
 
-		public $sql = '';
+    class Sql {
 
-		public $pre = NULL;
-		public $db = true;
+        private static $_poll = [];
+
+	    // --- 组合成功的 sql ---
+		private $_sql = [];
+		private $_pre = '';
+		private $_single = false;
+		private $_data = [];
+
+        /* @var $_db Db */
+		private $_db = NULL;
+
+		// --- 获取 Sql 实例 ---
+		public static function get(string $name = 'main', ?string $pre = NULL): Sql {
+            if (isset(self::$_poll[$name])) {
+                return self::$_poll[$name];
+            } else {
+                self::$_poll[$name] = new Sql($pre);
+                return self::$_poll[$name];
+            }
+        }
 
 		// --- 实例化 ---
-		public function __construct() {
-			$this->pre = DB_PRE;
+		public function __construct(?string $pre = NULL) {
+			$this->_pre = $pre ? $pre : SQL_PRE;
 		}
+
+		// --- 配置项 ---
+		public function setSingle(bool $single): Sql {
+		    $this->_single = $single;
+		    return $this;
+        }
+        public function setDb(Db $db): Sql {
+		    $this->_db = $db;
+		    return $this;
+        }
+        public function getPre(): string {
+		    return $this->_pre;
+        }
+        public function setPre(string $pre): void {
+		    $this->_pre = $pre;
+        }
 
 		// --- 前导 ---
 
-		public function insert($f, $cs = array(), $vs = array()) {
-			$this->sql = 'INSERT' . ' INTO ';
-			if (is_string($f)) $this->sql .= $this->pre . $f . ' (';
+		public function insert(string $f, array $cs = [], array $vs = []): Sql {
+		    $this->_data = [];
+		    $sql = 'INSERT' . ' INTO ' . $this->_pre . $f . ' (';
 			if (count($vs) > 0) {
-				// --- "shop", ['name', 'address'], ['猎云酒店', '云之路29号'] ---
-				foreach ($cs as $i)
-					$this->sql .= $i . ',';
-				$this->sql = substr($this->sql, 0, -1) . ') VALUES ';
+                // --- 'xx', ['id', 'name'], [['1', 'wow'], ['2', 'oh']] ---
+				// --- 'xx', ['id', 'name'], ['1', 'wow'] ---
+				foreach ($cs as $i) {
+                    $sql .= $i . ',';
+                }
+				$sql = substr($sql, 0, -1) . ') VALUES ';
 				// --- 判断插入单条记录还是多条记录 ---
 				if (is_array($vs[0])) {
 					// --- 多条记录 ---
-					foreach ($vs as $is) {
-						$this->sql .= '(';
-						foreach ($is as $i)
-							$this->sql .= $this->quote($i) . ',';
-						$this->sql = substr($this->sql, 0, -1) . '), ';
-					}
-					$this->sql = substr($this->sql, 0, -2);
+                    if ($this->_single) {
+                        // --- INSERT INTO xx (id, name) VALUES ('1', 'wow'), ('2', 'oh') ---
+                        foreach ($vs as $is) {
+                            $sql .= '(';
+                            foreach ($is as $i => $v) {
+                                $sql .= $this->quote($v.'') . ',';
+                            }
+                            $sql = substr($sql, 0, -1) . '),';
+                        }
+                        $sql = substr($sql, 0, -1);
+                    } else {
+                        // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
+                        $sql .= '(';
+                        foreach ($vs[0] as $i => $v) {
+                            $sql .= ':p_' . $cs[$i] . ',';
+                        }
+                        $sql = substr($sql, 0, -1) . ')';
+                        foreach ($vs as $is) {
+                            $line = [];
+                            foreach ($is as $i => $v) {
+                                $line[':p_'.$cs[$i]] = $v;
+                            }
+                            $this->_data[] = $line;
+                        }
+                    }
 				} else {
 					// --- 单条记录 ---
-					$this->sql .= '(';
-					foreach ($vs as $i)
-						$this->sql .= $this->quote($i) . ',';
-					$this->sql = substr($this->sql, 0, -1) . ')';
+					$sql .= '(';
+                    if ($this->_single) {
+                        // --- INSERT INTO xx (id, name) VALUES ('1', 'wow') ---
+                        foreach ($vs as $i => $v) {
+                            $sql .= $this->quote($v.'') . ',';
+                        }
+                    } else {
+                        // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
+                        foreach ($vs as $i => $v) {
+                            $sql .= ':p_' . $cs[$i] . ',';
+                            $this->_data[':p_' . $cs[$i]] = $v;
+                        }
+                    }
+					$sql = substr($sql, 0, -1) . ')';
 				}
 			} else {
-				$values = '';
-				if(is_int(key($cs))) {
-					// --- "shop", ['name', 'address'] ---
-					// --- prepare ---
-					foreach ($cs as $val) {
-						$this->sql .= $val . ',';
-						$values .= ':'.$val.',';
-					}
-				} else {
-					// --- "shop", ['name' => '猎云酒店', 'address' => '云之路29号'] ---
-					foreach ($cs as $key => $val) {
-						$this->sql .= $key . ',';
-						$values .= $this->quote($val) . ',';
-					}
-				}
-				$this->sql = substr($this->sql, 0, -1) . ') VALUES (' . substr($values, 0, -1) . ')';
+                // --- 'xx', ['id' => '1', 'name' => 'wow'] ---
+                $values = '';
+                if ($this->_single) {
+                    // --- INSERT INTO xx (id, name) VALUES ('1', 'wow') ---
+                    foreach ($cs as $k => $v) {
+                        $sql .= $k . ',';
+                        $values .= $this->quote($v.'') . ',';
+                    }
+                } else {
+                    // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
+                    foreach ($cs as $k => $v) {
+                        $sql .= $k . ',';
+                        $values .= ':p_' . $k . ',';
+                        $this->_data[':p_' . $k] = $v;
+                    }
+                }
+                $sql = substr($sql, 0, -1) . ') VALUES (' . substr($values, 0, -1) . ')';
 			}
+			$this->_sql = [$sql];
 			return $this;
 		}
 
-		public function select($c, $f) {
-			$this->sql = 'SELECT ';
-			if (is_string($c)) $this->sql .= $c;
+        // --- '*', 'xx' ---
+		public function select(string $c, string $f): Sql {
+            $this->_data = [];
+			$sql = 'SELECT ';
+			if (is_string($c)) $sql .= $c;
 			else if (is_array($c)) {
-				foreach ($c as $i) $this->sql .= $i . ',';
-				$this->sql = substr($this->sql, 0, -1);
+				foreach ($c as $i) $sql .= $i . ',';
+				$sql = substr($sql, 0, -1);
 			}
-			$this->sql .= ' FROM ' . $this->pre . $f;
+			$sql .= ' FROM ' . $this->_pre . $f;
+            $this->_sql = [$sql];
 			return $this;
 		}
 
-		public function update($f, $s = array()) {
-			$this->sql = 'UPDATE ' . $this->pre . $f . ' SET ';
-			foreach ($s as $k => $i) {
-				if(is_int($k) && is_string($i))
-					$this->sql .= $i . ' = :'.$i.',';
-				else if (is_string($i) || is_numeric($i))
-					$this->sql .= $k . ' = ' . $this->quote($i) . ',';
-				else if (is_array($i)) {
-					if (isset($i[2]))
-						$this->sql .= $i[0] . ' = ' . $i[0] . ' ' . $i[1] . ' ' . $this->quote($i[2]) . ',';
-					else
-						$this->sql .= $i[0] . ' = ' . $i[0] . ' ' . $i[1] . ' :' . $i[0] . ',';
-				} else
-					throw new \Exception('Error, Sql, Update, ' . gettype($i));
+		public function update(string $f, array $s = []): Sql {
+            $this->_data = [];
+			$sql = 'UPDATE ' . $this->_pre . $f . ' SET ';
+            if ($this->_single) {
+                foreach ($s as $k => $v) {
+                    if (is_array($v)) {
+                        // --- xx, [['total', '+', '1']] ---
+                        $sql .= $v[0] . ' = ' . $v[0] . ' ' . $v[1] . ' ' . $this->quote($v[2].'') . ',';
+                    } else {
+                        // --- xx, ['name' => 'oh'] ---
+                        $sql .= $k . ' = ' . $this->quote($v.'') . ',';
+                    }
+                }
+            } else {
+                foreach ($s as $k => $v) {
+                    if (is_array($v)) {
+                        $sql .= $v[0] . ' = ' . $v[0] . ' ' . $v[1] . ' :p_' . $v[0] . ',';
+                        $this->_data[':p_'.$v[0]] = $v[2];
+                    } else {
+                        $sql .= $k . ' = :p_'.$k.',';
+                        $this->_data[':p_'.$k] = $v;
+                    }
+                }
 			}
-			$this->sql = substr($this->sql, 0, -1);
+			$sql = substr($sql, 0, -1);
+
+            $this->_sql = [$sql];
 			return $this;
 		}
 
-		public function delete($f) {
-			$this->sql = 'DELETE ' . 'FROM ' . $this->pre . $f;
+        // --- 'xx' ---
+		public function delete(string $f): Sql {
+            $this->_data = [];
+			$this->_sql = ['DELETE ' . 'FROM ' . $this->_pre . $f];
 			return $this;
 		}
 
-		// --- 筛选器 ---
-
-		// --- 1.['city', 'type'] ---
-		// --- 2.['city' => 'bj', 'type' => '2'] ---
-		// --- 3.['city', ['type', '>']] ---
-		// --- 4.['city' => 'bj', ['type', '>', '1']] ---
-		// --- 5.[['city', '='], ['type', '>', '1']] ---
-		// --- 6.['type', '>=', '3'] --- 此条和 1 冲突暂无法实现 ---
-		public function where($s) {
-			$this->sql .= ' WHERE ';
-			foreach ($s as $k => $i) {
-				// --- 1, 3(前1) ---
-				if(is_int($k) && is_string($i))
-					$this->sql .= $i . ' = :' . $i . ' AND ';
-				// --- 2, 4(前1) ---
-				else if (is_string($i) || is_numeric($i))
-					$this->sql .= $k . ' = ' . $this->quote($i) . ' AND ';
-				// --- 3(后1), 4(后1), 5 ---
-				else if (is_array($i)) {
-					if (strtolower($i[1]) == 'in') {
-						$this->sql .= $i[0] . ' IN (';
-						foreach ($i[2] as $v)
-							$this->sql .= $this->quote($v) . ', ';
-						$this->sql = substr($this->sql, 0, -2) . ') AND ';
-					} else
-						if(isset($i[2]))
-							$this->sql .= $i[0] . ' ' . $i[1] . ' ' . $this->quote($i[2]) . ' AND ';
-						else
-							$this->sql .= $i[0] . ' ' . $i[1] . ' :' . $i[0] . ' AND ';
-				} else
-					throw new \Exception('[MyX - L(Mysql) Error] only support string or array, but yours type is ' . gettype($i));
-			}
-			$this->sql = substr($this->sql, 0, -5);
+        /**
+         * --- 筛选器 ---
+         * --- 1.['city' => 'bj', 'type' => '2'] ---
+         * --- 2.['city' => 'bj', ['type', '>', '1']] ---
+         * --- 3.['city' => 'bj', ['type', 'in', ['1', '2']]] ---
+         * --- 4.['city' => 'bj', 'type' => ['1', '2']] ---
+         * --- 试验性 ---
+         * --- 5.
+         *  [
+         *      'list' => [
+         *          ['type', 'in', ['1', '2']]
+         *      ]
+         *  ],
+         *  [
+         *      'bound' => 'or',
+         *      'list' => [
+         *          ['type' => '5']
+         *      ]
+         * ] ---
+         * @param array $s
+         * @return Sql
+         * @throws \Exception
+         */
+		public function where(array $s): Sql {
+            if (count($s) > 0) {
+                try {
+                    $sql = $this->_whereSub($s);
+                    $this->_sql[] = ' WHERE ' . $sql;
+                } catch (\Exception $ex) {
+                    throw $ex;
+                }
+            }
+            $this->_wsc = 0;
 			return $this;
 		}
 
-		public function by($c, $d = 'DESC') {
-			$this->sql .= ' ORDER BY ';
-			if (is_string($c)) $this->sql .= $c . ' ' . $d;
-			else if (is_array($c)) {
+		private $_wsc = 0;
+        /**
+         * --- 筛选器子过程 ---
+         * @param array $s
+         * @param string $type
+         * @param int $lev
+         * @return string
+         * @throws \Exception
+         */
+		private function _whereSub(array $s, string $type = 'AND', int $lev = 0): string {
+            $sql = '';
+            if (count($s) > 0) {
+                foreach ($s as $k => $i) {
+                    if (is_string($k)) {
+                        if (is_array($i)) {
+                            // --- 4, IN ---
+                            $sql .= 'AND ' . $k . ' IN (';
+                            if ($this->_single) {
+                                foreach ($i as $v) {
+                                    $sql .= $this->quote($v.'') . ',';
+                                }
+                                $sql = substr($sql, 0, -1) . ') ';
+                            } else {
+                                foreach ($i as $k2 => $v) {
+                                    $sql .= ':w_'.$k . '_' . $k2.($this->_wsc>0?'_'.$this->_wsc:'') . ',';
+                                    $this->_data[':w_'.$k . '_' . $k2.($this->_wsc>0?'_'.$this->_wsc:'')] = $v;
+                                }
+                                $sql = substr($sql, 0, -1) . ') ';
+                            }
+                        } else {
+                            // --- 1 ---
+                            if ($this->_single) {
+                                $sql .= 'AND ' . $k . ' = ' . $this->quote($i.'') . ' ';
+                            } else {
+                                $sql .= 'AND ' . $k . ' = :w_' . $k.($this->_wsc>0?'_'.$this->_wsc:'') . ' ';
+                                $this->_data[':w_'.$k.($this->_wsc>0?'_'.$this->_wsc:'')] = $i;
+                            }
+                        }
+                    } else {
+                        if (isset($i['list']) && is_array($i['list'])) {
+                            // --- 5 ---
+                            $bound = isset($i['bound']) ? strtoupper($i['bound']) : 'AND';
+                            if ($bound == 'AND' || $bound == 'OR') {
+                                ++$this->_wsc;
+                                $sql .= $this->_whereSub($i['list'], $bound, $lev + 1);
+                            } else {
+                                throw new \Exception('[Error] Bound not support.');
+                            }
+                        } else if (is_array($i[2])) {
+                            // --- 3, IN ---
+                            $sql .= 'AND ' . $i[0] . ' IN (';
+                            if ($this->_single) {
+                                foreach ($i[2] as $v) {
+                                    $sql .= $this->quote($v.'') . ',';
+                                }
+                                $sql = substr($sql, 0, -1) . ') ';
+                            } else {
+                                foreach ($i[2] as $k2 => $v) {
+                                    $sql .= ':w_'.$i[0] . '_' . $k2.($this->_wsc>0?'_'.$this->_wsc:'') . ',';
+                                    $this->_data[':w_'.$i[0] . '_' . $k2.($this->_wsc>0?'_'.$this->_wsc:'')] = $v;
+                                }
+                                $sql = substr($sql, 0, -1) . ') ';
+                            }
+                        } else {
+                            // --- 2, > < = ---
+                            if ($this->_single) {
+                                $sql .= 'AND ' . $i[0] . ' ' . $i[1] . ' ' . $this->quote($i[2].'') . ' ';
+                            } else {
+                                $sql .= 'AND ' . $i[0] . ' ' . $i[1] . ' :w_' . $i[0].($this->_wsc>0?'_'.$this->_wsc:'') . ' ';
+                                $this->_data[':w_'.$i[0].($this->_wsc>0?'_'.$this->_wsc:'')] = $i[2];
+                            }
+                        }
+                    }
+                }
+                $sql = substr($sql, strpos($sql, ' ') + 1, -1);
+                if ($lev > 0) {
+                    return $type . ' (' . $sql . ') ';
+                } else {
+                    return $sql;
+                }
+            } else {
+                return $sql;
+            }
+        }
+
+		public function by(string $c, string $d = 'DESC'): Sql {
+			$sql = ' ORDER BY ';
+			if (is_string($c)) {
+			    $sql .= $c . ' ' . $d;
+            } else if (is_array($c)) {
 				foreach ($c as $k => $v) {
-					$this->sql .= $v . ',';
+					$sql .= $v . ',';
 				}
-				$this->sql = substr($this->sql, 0, -1) . ' ' . $d;
+				$sql = substr($sql, 0, -1) . ' ' . $d;
 			}
+
+            $this->_sql[] = $sql;
 			return $this;
 		}
 
-		public function groupBy($c) {
-			$this->sql .= ' GROUP BY ' . $c;
+		public function groupBy(string $c): Sql {
+			$this->_sql[] = ' GROUP BY ' . $c;
 			return $this;
 		}
 
-		public function limit($a, $b) {
-			$this->sql .= ' LIMIT ' . $a . ', ' . $b;
+		public function limit(int $a, int $b): Sql {
+			$this->_sql[] = ' LIMIT ' . $a . ', ' . $b;
 			return $this;
 		}
+
+		// --- 操作 ---
+
+        public function getSql(): string  {
+		    return implode('', $this->_sql);
+        }
+
+        public function getData(): array {
+            return $this->_data;
+        }
 
 		// --- 特殊方法 ---
 
-		public function append($sql) {
-			$this->sql .= $sql;
+		public function append(string $sql): Sql {
+			$this->_sql[] = $sql;
 			return $this;
 		}
 
-		// --- 此方法暂时作废 ---
-		public function remove($key) {
-			//if (isset($this->sql[$key])) unset($this->sql[$key]);
-			return $this;
-		}
-
-		public function quote($str) {
-			if($this->db)
-				return Db::quote($str);
-			else
-				return "'".addslashes($str)."'";
+		public function quote(string $str): string {
+			if($this->_db) {
+                return $this->_db->quote($str);
+            } else {
+                return "'" . addslashes($str) . "'";
+            }
 		}
 
 	}

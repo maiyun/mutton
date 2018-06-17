@@ -1,133 +1,181 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: root
- * Date: 15-7-7
- * Time: 下午5:59
+ * User: JianSuoQiYue
+ * Date: 2015/7/7 17:59
+ * Last: 2018/06/11 16:48
  */
+declare(strict_types = 1);
 
-namespace C\lib {
+namespace M\lib {
+
+    require ETC_PATH.'db.php';
 
 	class Db {
 
-		private static $r = NULL;
-		/**
-		 * @var \PDO
-		 */
-		private static $w = NULL;
+	    private static $_poll = [];
 
-        private static $queries = [0 , 0];
-		private static $executions = [0 , 0];
-		private static $affectRows = [0, 0];
+        private $_queries = 0; // --- query 次数 ---
+		private $_executions = 0; // --- exec 次数 ---
+		private $_affectRows = 0; // --- 影响行数 ---
+        private $_opt = []; // --- 连接数据 ---
 
-		public static function isConnected($t = 'w') {
-			if (self::$$t instanceof \PDO) return true;
+        /* @var $link \PDO */
+        private $_link;
+
+        /**
+         * --- 获取数据库连接对象 ---
+         * @param string $name
+         * @param array $opt
+         * @return Db
+         * @throws \Exception
+         */
+        public static function get(string $name = 'main', array $opt = []): Db {
+            if (isset(self::$_poll[$name])) {
+                return self::$_poll[$name];
+            } else {
+                $db = new Db();
+                try {
+                    $db->connect($opt);
+                    self::$_poll[$name] = $db;
+                    return self::$_poll[$name];
+                } catch (\Exception $e) {
+                    throw $e;
+                }
+            }
+        }
+
+        // --- 判断 poll 中是否已经连接 ---
+        public static function checkPool(string $name): bool {
+            if (isset(self::$_poll[$name])) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        // --- 判断是否创建了链接 ---
+		public function isConnected(): bool {
+			if ($this->_link instanceof \PDO) {
+			    return true;
+            }
 			return false;
 		}
 
-		public static function quit($t = 'w') {
-            self::$$t = NULL;
+		// --- 关闭连接 ---
+		public function quit(): void {
+            $this->_link = NULL;
 		}
 
-        public static function quote($str) {
-			return self::$w ? self::$w->quote($str) : self::$r->quote($str);
+		// --- 转义 ---
+        public function quote(string $str): string {
+			return $this->_link->quote($str);
+		}
+
+        /**
+         * 执行一个 query，有返回列表
+         * @param string $sql
+         * @return \PDOStatement
+         */
+        public function query(string $sql): \PDOStatement {
+            ++$this->_queries;
+			return $this->query($sql);
 		}
 
 		/**
+         * 执行一个 exec，只返回影响行数
 		 * @param string $sql
-		 * @param string $t
-		 * @return \PDOStatement
-		 */
-        public static function query($sql, $t = 'w') {
-			if($t == 'r' && self::$r === NULL) $t = 'w';
-            ++self::$queries[$t == 'w' ? 0 : 1];
-			return self::$$t->query($sql);
-		}
-
-		/**
-		 * @param string $sql
-		 * @param string $t
 		 * @return int
 		 */
-		public static function exec($sql, $t = 'w') {
-			++self::$executions[$t == 'w' ? 0 : 1];
-			return self::$affectRows[$t == 'w' ? 0 : 1] = self::$$t->exec ($sql);
+		public function exec(string $sql): int {
+			++$this->_executions;
+			return $this->_affectRows = $this->exec($sql);
 		}
 
-        public static function getErrorInfo($t = 'w') {
-			return self::$$t->errorInfo();
+		// --- 返回错误信息 ---
+        public function getErrorInfo(): array {
+			return $this->_link->errorInfo();
 		}
 
-        public static function getErrorCode($t = 'w') {
-			return self::$$t->errorCode();
+		// --- 返回错误代码 ---
+        public function getErrorCode(): string {
+			return $this->_link->errorCode();
 		}
 
-        public static function connect($host = NULL, $user = NULL, $pwd = NULL, $dbName = NULL, $charset = NULL, $port = NULL, $t = 'w') {
-            $host = $host ? $host : DB_HOST;
-            $user = $user ? $user : DB_USERNAME;
-            $pwd = $pwd ? $pwd : DB_PASSWORD;
-            $dbName = $dbName ? $dbName : DB_DBNAME;
-            $charset = $charset ? $charset : DB_CHARSET;
-            $port = $port ? $port : DB_PORT;
+		// --- 连接数据库 ---
+
+        /**
+         * @param array $opt
+         * @return bool
+         * @throws \Exception
+         */
+        public function connect(array $opt = []): bool {
+            $host = isset($opt['host']) ? $opt['host'] : DB_HOST;
+            $user = isset($opt['user']) ? $opt['user'] : DB_USERNAME;
+            $pwd = isset($opt['pwd']) ? $opt['pwd'] : DB_PASSWORD;
+            $name = isset($opt['name']) ? $opt['name'] : DB_NAME;
+            $charset = isset($opt['charset']) ? $opt['charset'] : DB_CHARSET;
+            $port = isset($opt['port']) ? $opt['port'] : DB_PORT;
+
+            $this->_opt = [
+                'host' => $host,
+                'user' => $user,
+                'pwd' => $pwd,
+                'name' => $name,
+                'charset' => $charset,
+                'port' => $port
+            ];
 
             try {
-                if (self::$$t = new \PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $dbName, $user, $pwd)) {
+                if ($this->_link = new \PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
                     return true;
                 } else {
                     return false;
                 }
             } catch (\Exception $exception) {
-                exit('Co Er');
+                throw new \Exception('[Error] Can not connect to MySQL server on '.$host.'.');
             }
 		}
 
-        public static function getInsertID($t = 'w') {
-			return self::$$t->lastInsertId();
-		}
-
-        public static function getAffectRows($t = 'w') {
-			if($t == 'r' && self::$r === NULL) $t = 'w';
-			return self::$affectRows[$t == 'w' ? 0 : 1];
-		}
-
-        public static function getQueries($t = 'w') {
-            return self::$queries[$t == 'w' ? 0 : 1];
+		// --- 获取连接数据 ---
+        public function getOpt(string $name) {
+		    return isset($this->_opt[$name]) ? $this->_opt[$name] : '';
         }
 
-		public static function getExecutions($t = 'w') {
-			return self::$executions[$t == 'w' ? 0 : 1];
-		}
-		
-		public static function beginTransaction($t = 'w') {
-			return self::$$t->beginTransaction();
-		}
-		
-		public static function commit($t = 'w') {
-			return self::$$t->commit();
+		// --- 获取最后插入的 id ---
+        public function getInsertID(): string {
+			return $this->_link->lastInsertId();
 		}
 
-		public static function rollBack($t = 'w') {
-			return self::$$t->rollBack();
+        public function getAffectRows(): int {
+		    return $this->_affectRows;
+		}
+
+        public function getQueries(): int {
+            return $this->_queries;
+        }
+
+		public function getExecutions(): int {
+			return $this->_executions;
+		}
+
+		// --- 事物操作 ---
+		public function beginTransaction(): bool {
+		    return $this->_link->beginTransaction();
+		}
+		public function commit(): bool {
+			return $this->_link->commit();
+		}
+		public function rollBack() {
+			return $this->_link->rollBack();
 		}
 
 		/**
+         * PDO 组装与绑定
 		 * @param string $sql
-		 * @param string $t
 		 * @return \PDOStatement
 		 */
-		public static function prepare($sql, $t = 'w') {
-			if($t == 'r' && self::$r === NULL) $t = 'w';
-			return self::$$t->prepare($sql);
-		}
-		
-		public static function bindPrepare($arr, $split = ', ') {
-			$rtn = ['sql' => '', 'arr' => []];
-			foreach ($arr as $key => $val) {
-				$rtn['sql'] .= '`'.$key.'`' . ' = :' . $key . $split;
-				$rtn['arr'][':'.$key] = $val;
-			}
-			$rtn['sql'] = substr($rtn['sql'], 0, -strlen($split));
-			return $rtn;
+		public function prepare(string $sql): \PDOStatement {
+		    return $this->_link->prepare($sql);
 		}
 
 	}

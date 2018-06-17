@@ -1,33 +1,52 @@
 <?php
+/**
+ * User: JianSuoQiYue
+ * Date: 2017/11/18 16:39
+ * Last: 2018-6-17 01:08
+ */
+declare(strict_types = 1);
 
 /* For Qingmu Tongxun */
 
-namespace C\lib {
+namespace M\lib {
 
-    require LIB_PATH.'qmsms-sdk/qmsms.php';
+    require LIB_PATH.'Sms/qmsms.php';
 
     class Sms {
 
-        private $_qmsms = false;
+        private static $_poll = [];
 
-        public function __construct($srv = NULL, $usr = NULL, $tok = NULL) {
-            $srv = $srv === NULL ? SMS_SRV : $srv;
-            $usr = $usr === NULL ? SMS_USER : $usr;
-            $tok = $tok === NULL ? SMS_TOKEN : $tok;
+        /* @var $_link \QmSms */
+        private $_link = NULL;
 
-            $this->_qmsms = new \QmSms($srv, $usr, $tok);
+        public static function get(string $name = 'main', array $opt = []): Db {
+            if (isset(self::$_poll[$name])) {
+                return self::$_poll[$name];
+            } else {
+                $sms = new Sms($opt);
+                self::$_poll[$name] = $sms;
+                return self::$_poll[$name];
+            }
+        }
+
+        public function __construct(array $opt = []) {
+            $srv = isset($opt['srv']) ? $opt['srv'] : SMS_SRV;
+            $usr = isset($opt['usr']) ? $opt['usr'] : SMS_USER;
+            $tok = isset($opt['tok']) ? $opt['tok'] : SMS_TOKEN;
+
+            $this->_link = new \QmSms($srv, $usr, $tok);
         }
 
         public function send($phone, $body, $sign = '0', $template = '0') {
-            return $this->_qmsms->send($phone, $body, $sign, $template);
+            return $this->_link->send($phone, $body, $sign, $template);
         }
 
         public function sendMarket($phone, $sign, $template) {
-            return $this->_qmsms->sendMarket($phone, $sign, $template);
+            return $this->_link->sendMarket($phone, $sign, $template);
         }
 
         public function task($name, $phone, $sign, $template) {
-            return $this->_qmsms->task($name, $phone, $sign, $template);
+            return $this->_link->task($name, $phone, $sign, $template);
         }
 
     }
