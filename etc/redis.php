@@ -9,3 +9,7 @@ define('RD_SIMULATOR', false);
 define('RD_USER', '');
 define('RD_PWD', '');
 
+// --- Redis Simulator ---
+
+define('RDS_DB_PRE', NULL);
+

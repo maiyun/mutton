@@ -7,3 +7,6 @@ define('WECHAT_SECRET', '');
 define('WECHAT_MCHID', '');
 define('WECHAT_KEY', '');
 
+define('WECHAT_SSL_CERT', '');
+define('WECHAT_SSL_KEY', '');
+

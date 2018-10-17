@@ -1,1 +1,0 @@
-Auto route.<br><br>Processed in <?php echo $rt ?> second(s), <?php echo $ms ?>ms, <?php echo $me ?> K.

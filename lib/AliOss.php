@@ -7,7 +7,7 @@
 
 // --- 本类临时暂停维护，请勿使用，恢复时间待定 ---
 
-namespace M\lib {
+namespace M\Lib {
 
     require LIB_PATH.'AliOss/OssClient.php';
     require LIB_PATH.'AliOss/Core/OssUtil.php';

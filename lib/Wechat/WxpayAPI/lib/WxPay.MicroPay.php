@@ -1,5 +1,14 @@
 <?php
+/**
+*
+* example目录下为简单的支付样例，仅能用于搭建快速体验微信支付使用
+* 样例的作用仅限于指导如何使用sdk，在安全上面仅做了简单处理， 复制使用样例代码时请慎重
+* 请勿直接直接使用样例对外提供服务
+* 
+**/
 require_once "WxPay.Api.php";
+require_once "WxPay.Config.php";
+require_once 'log.php';
 /**
  * 
  * 刷卡支付实现类
@@ -27,17 +36,17 @@ class MicroPay
 	public function pay($microPayInput)
 	{
 		//①、提交被扫支付
-		$result = WxPayApi::micropay($microPayInput, 5);
+		$config = new WxPayConfig();
+		$result = WxPayApi::micropay($config, $microPayInput, 5);
 		//如果返回成功
 		if(!array_key_exists("return_code", $result)
-			|| !array_key_exists("out_trade_no", $result)
 			|| !array_key_exists("result_code", $result))
 		{
 			echo "接口调用失败,请确认是否输入是否有误！";
 			throw new WxPayException("接口调用失败！");
 		}
 		
-		//签名验证
+		//取订单号
 		$out_trade_no = $microPayInput->GetOut_trade_no();
 		
 		//②、接口调用成功，明确返回调用失败
@@ -62,7 +71,7 @@ class MicroPay
 			} else if($succResult == 1){//查询成功
 				return $queryResult;
 			} else {//订单交易失败
-				return false;
+				break;
 			}
 		}
 		
@@ -86,8 +95,12 @@ class MicroPay
 	{
 		$queryOrderInput = new WxPayOrderQuery();
 		$queryOrderInput->SetOut_trade_no($out_trade_no);
-		$result = WxPayApi::orderQuery($queryOrderInput);
-		
+		$config = new WxPayConfig();
+		try{
+			$result = WxPayApi::orderQuery($config, $queryOrderInput);
+		} catch(Exception $e) {
+			Log::ERROR(json_encode($e));
+		}
 		if($result["return_code"] == "SUCCESS" 
 			&& $result["result_code"] == "SUCCESS")
 		{
@@ -122,25 +135,32 @@ class MicroPay
 	 */
 	public function cancel($out_trade_no, $depth = 0)
 	{
-		if($depth > 10){
-			return false;
-		}
-		
-		$clostOrder = new WxPayReverse();
-		$clostOrder->SetOut_trade_no($out_trade_no);
-		$result = WxPayApi::reverse($clostOrder);
-		
-		//接口调用失败
-		if($result["return_code"] != "SUCCESS"){
-			return false;
-		}
-		
-		//如果结果为success且不需要重新调用撤销，则表示撤销成功
-		if($result["result_code"] != "SUCCESS" 
-			&& $result["recall"] == "N"){
-			return true;
-		} else if($result["recall"] == "Y") {
-			return $this->cancel($out_trade_no, ++$depth);
+		try {
+			if($depth > 10){
+				return false;
+			}
+			
+			$clostOrder = new WxPayReverse();
+			$clostOrder->SetOut_trade_no($out_trade_no);
+
+			$config = new WxPayConfig();
+			$result = WxPayApi::reverse($config, $clostOrder);
+
+			
+			//接口调用失败
+			if($result["return_code"] != "SUCCESS"){
+				return false;
+			}
+			
+			//如果结果为success且不需要重新调用撤销，则表示撤销成功
+			if($result["result_code"] != "SUCCESS" 
+				&& $result["recall"] == "N"){
+				return true;
+			} else if($result["recall"] == "Y") {
+				return $this->cancel($out_trade_no, ++$depth);
+			}
+		} catch(Exception $e) {
+			Log::ERROR(json_encode($e));
 		}
 		return false;
 	}

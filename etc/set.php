@@ -1,12 +1,5 @@
 <?php
 
-// --- ROUTE ---
-
-const ROUTE = [
-    '@'                             => 'main/main',
-    'article/([0-9]+?)'             => 'main/article'
-];
-
 // --- BASE ---
 
 const STATIC_VER = '20170205121132';
@@ -16,6 +9,6 @@ const CACHE_TTL = 0;
 
 // --- STATIC ---
 
-// const STATIC_PATH = 'http://static.xxx.com/';
+// const STATIC_PATH = 'https://static.xxx.com/';
 const STATIC_PATH = STC_PATH;
 

@@ -1,0 +1,102 @@
+html,body {
+    padding: 0; margin: 0; font-family: Consolas, Monaco, monospace; background-color: #BFBFBF; cursor: default; -webkit-user-select: none;
+}
+html,body,input {
+    font-size: 14px; font-weight: bold; line-height: 1.5;
+}
+
+#vue {
+	padding: 10px;
+}
+
+.title {
+	font-size: 24px;
+	text-align: center;
+	font-weight: bold;
+    margin-bottom: 10px;
+}
+
+/* --- Tab --- */
+
+.tab__top {
+    display: flex;
+    align-items: flex-end;
+    padding-right: 10px;
+}
+.tab__top__item {
+    border-left: solid 2px #FFF;
+    border-top: solid 2px #FFF;
+    border-right: solid 2px #000;
+    border-radius: 5px 5px 0 0;
+    flex: 1;
+    text-align: center;
+    background-color: #BFBFBF;
+}
+.tab__top__item__in {
+    border-right: solid 2px #7F7F7F;
+    padding: 4px 0;
+    border-radius: 2px 2px 0 0;
+}
+
+.tab__top__item.selected {
+    margin-bottom: -2px;
+}
+.tab__top__item.selected > .tab__top__item__in {
+    padding: 8px 0;
+}
+
+.tab__panel {
+    border: solid 2px #FFF;
+    border-right-color: #000;
+    border-bottom-color: #000;
+}
+.tab__panel__item {
+    padding: 10px;
+    border-right: solid 2px #7F7F7F;
+    border-bottom: solid 2px #7F7F7F;
+}
+
+
+/* --- Button --- */
+
+.button {
+    border: solid 2px #000;
+    background-color: #BFBFBF;
+    border-radius: 5px;
+    display: inline-block;
+}
+
+.button__in {
+    border: solid 2px #FFF;
+    border-right-color: #7F7F7F;
+    border-bottom-color: #7F7F7F;
+    padding: 8px 15px;
+    border-radius: 2px;
+    text-align: center;
+}
+
+.button:active > .button__in {
+    border-color: #7F7F7F #FFF #FFF #7F7F7F;
+}
+
+/* --- Input --- */
+
+.textbox {
+    border: solid 2px #FFF;
+    border-top-color: #7F7F7F;
+    border-left-color: #7F7F7F;
+}
+
+.textbox__in {
+    border: solid 2px #000;
+    border-bottom-color: #BFBFBF;
+    border-right-color: #BFBFBF;
+    padding: 8px;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    outline: none;
+    -webkit-appearance: none;
+    border-radius: 0;
+    margin: 0;
+}

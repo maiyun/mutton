@@ -2,7 +2,7 @@
 /**
 * 2015-06-29 修复签名问题
 **/
-require_once "WxPay.Config.php";
+require_once "WxPay.Config.Interface.php";
 require_once "WxPay.Exception.php";
 
 /**
@@ -15,14 +15,24 @@ require_once "WxPay.Exception.php";
 class WxPayDataBase
 {
 	protected $values = array();
-	
+
+	/**
+	* 设置签名，详见签名生成算法类型
+	* @param string $value 
+	**/
+	public function SetSignType($sign_type)
+	{
+		$this->values['sign_type'] = $sign_type;
+		return $sign_type;
+	}
+
 	/**
 	* 设置签名，详见签名生成算法
 	* @param string $value 
 	**/
-	public function SetSign()
+	public function SetSign($config)
 	{
-		$sign = $this->MakeSign();
+		$sign = $this->MakeSign($config);
 		$this->values['sign'] = $sign;
 		return $sign;
 	}
@@ -51,8 +61,7 @@ class WxPayDataBase
 	**/
 	public function ToXml()
 	{
-		if(!is_array($this->values) 
-			|| count($this->values) <= 0)
+		if(!is_array($this->values) || count($this->values) <= 0)
 		{
     		throw new WxPayException("数组数据异常！");
     	}
@@ -69,7 +78,7 @@ class WxPayDataBase
         $xml.="</xml>";
         return $xml; 
 	}
-	
+
     /**
      * 将xml转为array
      * @param string $xml
@@ -83,7 +92,7 @@ class WxPayDataBase
         //将XML转为array
         //禁止引用外部xml实体
         libxml_disable_entity_loader(true);
-        $this->values = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);		
+        $this->values = json_decode(json_encode(simplexml_load_string($xml, 'SimpleXMLElement', LIBXML_NOCDATA)), true);
 		return $this->values;
 	}
 	
@@ -106,17 +115,29 @@ class WxPayDataBase
 	
 	/**
 	 * 生成签名
+	 * @param WxPayConfigInterface $config  配置对象
+	 * @param bool $needSignType  是否需要补signtype
 	 * @return 签名，本函数不覆盖sign成员变量，如要设置签名需要调用SetSign方法赋值
 	 */
-	public function MakeSign()
+	public function MakeSign($config, $needSignType = true)
 	{
+		if($needSignType) {
+			$this->SetSignType($config->GetSignType());
+		}
 		//签名步骤一：按字典序排序参数
 		ksort($this->values);
 		$string = $this->ToUrlParams();
 		//签名步骤二：在string后加入KEY
-		$string = $string . "&key=".WxPayConfig::KEY;
-		//签名步骤三：MD5加密
-		$string = md5($string);
+		$string = $string . "&key=".$config->GetKey();
+		//签名步骤三：MD5加密或者HMAC-SHA256
+		if($config->GetSignType() == "MD5"){
+			$string = md5($string);
+		} else if($config->GetSignType() == "HMAC-SHA256") {
+			$string = hash_hmac("sha256",$string ,$config->GetKey());
+		} else {
+			throw new WxPayException("签名类型不支持！");
+		}
+		
 		//签名步骤四：所有字符转为大写
 		$result = strtoupper($string);
 		return $result;
@@ -132,6 +153,37 @@ class WxPayDataBase
 }
 
 /**
+ *
+ * 只使用md5算法进行签名， 不管配置的是什么签名方式，都只支持md5签名方式
+ *
+**/
+class WxPayDataBaseSignMd5 extends WxPayDataBase
+{
+	/**
+	 * 生成签名 - 重写该方法
+	 * @param WxPayConfigInterface $config  配置对象
+	 * @param bool $needSignType  是否需要补signtype
+	 * @return 签名，本函数不覆盖sign成员变量，如要设置签名需要调用SetSign方法赋值
+	 */
+	public function MakeSign($config, $needSignType = false)
+	{
+		if($needSignType) {
+			$this->SetSignType($config->GetSignType());
+		}
+		//签名步骤一：按字典序排序参数
+		ksort($this->values);
+		$string = $this->ToUrlParams();
+		//签名步骤二：在string后加入KEY
+		$string = $string . "&key=".$config->GetKey();
+		//签名步骤三：MD5加密
+		$string = md5($string);
+		//签名步骤四：所有字符转为大写
+		$result = strtoupper($string);
+		return $result;
+	}
+}
+
+/**
  * 
  * 接口调用结果类
  * @author widyhu
@@ -140,18 +192,44 @@ class WxPayDataBase
 class WxPayResults extends WxPayDataBase
 {
 	/**
-	 * 
+	 * 生成签名 - 重写该方法
+	 * @param WxPayConfigInterface $config  配置对象
+	 * @param bool $needSignType  是否需要补signtype
+	 * @return 签名，本函数不覆盖sign成员变量，如要设置签名需要调用SetSign方法赋值
+	 */
+	public function MakeSign($config, $needSignType = false)
+	{
+		//签名步骤一：按字典序排序参数
+		ksort($this->values);
+		$string = $this->ToUrlParams();
+		//签名步骤二：在string后加入KEY
+		$string = $string . "&key=".$config->GetKey();
+		//签名步骤三：MD5加密或者HMAC-SHA256
+		if(strlen($this->GetSign()) <= 32){
+			//如果签名小于等于32个,则使用md5验证
+			$string = md5($string);
+		} else {
+			//是用sha256校验
+			$string = hash_hmac("sha256",$string ,$config->GetKey());
+		}
+		//签名步骤四：所有字符转为大写
+		$result = strtoupper($string);
+		return $result;
+	}
+
+	/**
+	 * @param WxPayConfigInterface $config  配置对象
 	 * 检测签名
 	 */
-	public function CheckSign()
+	public function CheckSign($config)
 	{
-		//fix异常
 		if(!$this->IsSignSet()){
 			throw new WxPayException("签名错误！");
 		}
 		
-		$sign = $this->MakeSign();
+		$sign = $this->MakeSign($config, false);
 		if($this->GetSign() == $sign){
+			//签名正确
 			return true;
 		}
 		throw new WxPayException("签名错误！");
@@ -173,12 +251,12 @@ class WxPayResults extends WxPayDataBase
 	 * @param array $array
 	 * @param 是否检测签名 $noCheckSign
 	 */
-	public static function InitFromArray($array, $noCheckSign = false)
+	public static function InitFromArray($config, $array, $noCheckSign = false)
 	{
 		$obj = new self();
 		$obj->FromArray($array);
 		if($noCheckSign == false){
-			$obj->CheckSign();
+			$obj->CheckSign($config);
 		}
         return $obj;
 	}
@@ -196,19 +274,51 @@ class WxPayResults extends WxPayDataBase
 	
     /**
      * 将xml转为array
+     * @param WxPayConfigInterface $config  配置对象
      * @param string $xml
      * @throws WxPayException
      */
-	public static function Init($xml)
+	public static function Init($config, $xml)
 	{	
 		$obj = new self();
 		$obj->FromXml($xml);
-		//fix bug 2015-06-29
-		if($obj->values['return_code'] != 'SUCCESS'){
-			 return $obj->GetValues();
+		//失败则直接返回失败
+		if($obj->values['return_code'] != 'SUCCESS') {
+			foreach ($obj->values as $key => $value) {
+				#除了return_code和return_msg之外其他的参数存在，则报错
+				if($key != "return_code" && $key != "return_msg"){
+					throw new WxPayException("输入数据存在异常！");
+					return false;
+				}
+			}
+			return $obj->GetValues();
 		}
-		$obj->CheckSign();
+		$obj->CheckSign($config);
         return $obj->GetValues();
+	}
+}
+
+/**
+ *
+ * 回调回包数据基类
+ *
+ **/
+class WxPayNotifyResults extends WxPayResults
+{
+	/**
+     * 将xml转为array
+     * @param WxPayConfigInterface $config
+     * @param string $xml
+     * @return WxPayNotifyResults
+     * @throws WxPayException
+     */
+	public static function Init($config, $xml)
+	{	
+		$obj = new self();
+		$obj->FromXml($xml);
+		//失败则直接返回失败
+		$obj->CheckSign($config);
+        return $obj;
 	}
 }
 
@@ -218,7 +328,7 @@ class WxPayResults extends WxPayDataBase
  * @author widyhu
  *
  */
-class WxPayNotifyReply extends  WxPayDataBase
+class WxPayNotifyReply extends  WxPayDataBaseSignMd5
 {
 	/**
 	 * 
@@ -2444,7 +2554,6 @@ class WxPayMicroPay extends WxPayDataBase
 		return array_key_exists('spbill_create_ip', $this->values);
 	}
 
-
 	/**
 	* 设置订单生成时间，格式为yyyyMMddHHmmss，如2009年12月25日9点10分10秒表示为20091225091010。详见时间规则
 	* @param string $value 
@@ -2854,7 +2963,7 @@ class WxPayJsApiPay extends WxPayDataBase
  * @author widyhu
  *
  */
-class WxPayBizPayUrl extends WxPayDataBase
+class WxPayBizPayUrl extends WxPayDataBaseSignMd5
 {
 		/**
 	* 设置微信分配的公众账号ID
@@ -2982,3 +3091,4 @@ class WxPayBizPayUrl extends WxPayDataBase
 		return array_key_exists('product_id', $this->values);
 	}
 }
+

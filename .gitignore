@@ -2,4 +2,5 @@
 .project
 .buildpath
 .settings/
-sys/log/20*
+log/2*
+etc/__mutton__.php
