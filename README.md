@@ -1,5 +1,10 @@
 # Mutton
 
+[![License](https://img.shields.io/github/license/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/issues)
+[![GitHub Releases](https://img.shields.io/github/release/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/releases "Stable Release")
+[![GitHub Pre-Releases](https://img.shields.io/github/release/MaiyunNET/Mutton/all.svg)](https://github.com/MaiyunNET/Mutton/releases "Pre-Release")
+
 Simple, easy-to-use and fully functional PHP framework.
 
 ## Installation
@@ -10,6 +15,14 @@ Download the latest release version and put it in the website directory to start
 
 PHP 7.2+  
 Nginx/Apache
+
+> Note: Under Nginx, you need to manually configure the rewrite rule with the following rewrite rules:
+
+```
+if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[\w-]+?\.txt\??.*)$) {
+    rewrite ^/([\w-/.?]*)$ /index.php?__uri=$1 last;
+}
+```
 
 ## Library
 
@@ -72,6 +85,10 @@ Note: All database operations are secure in this framework.
 ## Other demos
 
 You can download and view the home Code (ctr/main.php) to see more examples.
+
+## Changelog
+
+[Changelog](doc/CHANGELOG.md)
 
 ## License
 

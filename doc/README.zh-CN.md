@@ -1,5 +1,10 @@
 # Mutton
 
+[![License](https://img.shields.io/github/license/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/issues)
+[![GitHub Releases](https://img.shields.io/github/release/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/releases "Stable Release")
+[![GitHub Pre-Releases](https://img.shields.io/github/release/MaiyunNET/Mutton/all.svg)](https://github.com/MaiyunNET/Mutton/releases "Pre-Release")
+
 简单，易用且功能完整的 PHP 框架。
 
 ## 安装
@@ -10,6 +15,14 @@
 
 PHP 7.2+  
 Nginx/Apache
+
+> 注意：在 Nginx 下，需要您手动配置重写规则，重写规则如下：
+
+```
+if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[\w-]+?\.txt\??.*)$) {
+    rewrite ^/([\w-/.?]*)$ /index.php?__uri=$1 last;
+}
+```
 
 ## 库
 
@@ -72,6 +85,10 @@ $userList = User::getList([
 ### 其他演示
 
 可以下载后访问首页和查看首页代码（ctr/main.php）看更多示例。
+
+## 更新日志
+
+[更新日志](CHANGELOG.zh-CN.md)
 
 ## 许可
 

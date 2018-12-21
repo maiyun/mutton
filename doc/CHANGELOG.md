@@ -7,6 +7,4 @@
 
 ### 5.0.0
 
-*2018-12-15*
-
 - A new beginning, I'm ready.
