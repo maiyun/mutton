@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2017/01/31 10:30
- * Last: 2018-6-16 01:11
+ * Last: 2018-12-12 12:29:14
  */
 declare(strict_types = 1);
 
@@ -14,37 +14,18 @@ require ETC_PATH.'redis.php';
 
 class Redis {
 
-    private static $_poll = [];
-
     /* @var \Redis|Simulator $_link */
     private $_link = NULL;
 
     /**
-     * @param string $name
      * @param array $opt
      * @return Redis
      * @throws \Exception
      */
-    public static function get(array $opt = [], ?string $name = NULL): Redis {
-        if ($name !== NULL) {
-            if (isset(self::$_poll[$name])) {
-                return self::$_poll[$name];
-            } else {
-                $redis = new Redis();
-                $redis->connect($opt);
-                self::$_poll[$name] = $redis;
-                return self::$_poll[$name];
-            }
-        } else {
-            $redis = new Redis();
-            $redis->connect($opt);
-            return $redis;
-        }
-    }
-
-    // --- 设置 simulator 的 db 连接 ---
-    public function setSimulatorDb(Db $db) {
-        $this->_link->__setDb($db);
+    public static function get(array $opt = []): Redis {
+        $redis = new Redis();
+        $redis->connect($opt);
+        return $redis;
     }
 
     /**
@@ -63,11 +44,16 @@ class Redis {
 
         if($simulator) {
             $this->_link = new Simulator();
+            $this->_link->__setDb($opt['db']);
         } else {
-            $this->_link = new \Redis();
+            if (class_exists('\\Redis')) {
+                $this->_link = new \Redis();
+            } else {
+                throw new \Exception('[Error] Redis not found.');
+            }
         }
         if($link = $this->_link->connect($host, $port)) {
-            if ($user != '' && $pwd != '') {
+            if ($user !== '' && $pwd !== '') {
                 if ($this->_link->auth($user . ':' . $pwd)) {
                     $this->_link->select($index);
                     return true;

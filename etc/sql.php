@@ -1,5 +1,5 @@
 <?php
 // --- Sql ---
 
-define('SQL_PRE', 'mu_');
+const SQL_PRE = 'mu_';
 

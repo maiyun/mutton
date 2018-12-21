@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2018-7-29 13:25:44
- * Last: 2018-7-29 23:42:41
+ * Last: 2018-12-12 12:32:38
  */
 declare(strict_types = 1);
 
@@ -12,10 +12,6 @@ require ETC_PATH.'ssh.php';
 
 class Ssh {
 
-    private static $_poll = [];
-
-    private $_opt = [];
-
     /* @var resource $_link */
     private $_link;
     private $_sftp;
@@ -23,25 +19,13 @@ class Ssh {
 
     /**
      * @param null|array $opt
-     * @param null|string $name
      * @return Ssh
      * @throws \Exception
      */
-    public static function get(?array $opt = [], ?string $name = NULL): Ssh {
-        if ($name !== NULL) {
-            if (isset(self::$_poll[$name])) {
-                return self::$_poll[$name];
-            } else {
-                $ssh = new Ssh();
-                $ssh->connect($opt);
-                self::$_poll[$name] = $ssh;
-                return self::$_poll[$name];
-            }
-        } else {
-            $ssh = new Ssh();
-            $ssh->connect($opt);
-            return $ssh;
-        }
+    public static function get(?array $opt = []): Ssh {
+        $ssh = new Ssh();
+        $ssh->connect($opt);
+        return $ssh;
     }
 
     /**
@@ -56,15 +40,6 @@ class Ssh {
         $pwd = isset($opt['pwd']) ? $opt['pwd'] : SSH_PASSWORD;
         $pub = isset($opt['pub']) ? $opt['pub'] : SSH_PUB;
         $prv = isset($opt['prv']) ? $opt['prv'] : SSH_PRV;
-
-        $this->_opt = [
-            'host' => $host,
-            'port' => $port,
-            'user' => $user,
-            'pwd' => $pwd,
-            'pub' => $pub,
-            'prv' => $prv
-        ];
 
         if (@($this->_link = ssh2_connect($host, $port))) {
             if ($pwd !== '') {
@@ -155,7 +130,6 @@ class Ssh {
     public function disconnect(): void {
         ssh2_disconnect($this->_link);
         $this->_link = NULL;
-        $this->_opt = [];
     }
 
 }

@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2018-7-28 15:18:28
+ * Last: 2018-12-12 12:29:32
  */
 declare(strict_types = 1);
 
@@ -11,8 +11,6 @@ namespace lib;
 require ETC_PATH.'sql.php';
 
 class Sql {
-
-    private static $_poll = [];
 
     // --- 组合成功的 sql ---
     private $_sql = [];
@@ -24,17 +22,8 @@ class Sql {
     private $_db = NULL;
 
     // --- 获取 Sql 实例 ---
-    public static function get(?string $pre = NULL, ?string $name = NULL): Sql {
-        if ($name !== NULL) {
-            if (isset(self::$_poll[$name])) {
-                return self::$_poll[$name];
-            } else {
-                self::$_poll[$name] = new Sql($pre);
-                return self::$_poll[$name];
-            }
-        } else {
-            return new Sql($pre);
-        }
+    public static function get(?string $pre = NULL): Sql {
+        return new Sql($pre);
     }
 
     // --- 实例化 ---
@@ -67,14 +56,14 @@ class Sql {
             // --- 'xx', ['id', 'name'], [['1', 'wow'], ['2', 'oh']] ---
             // --- 'xx', ['id', 'name'], ['1', 'wow'] ---
             foreach ($cs as $i) {
-                $sql .= $i . ',';
+                $sql .= $this->field($i) . ',';
             }
             $sql = substr($sql, 0, -1) . ') VALUES ';
             // --- 判断插入单条记录还是多条记录 ---
             if (is_array($vs[0])) {
                 // --- 多条记录 ---
                 if ($this->_single) {
-                    // --- INSERT INTO xx (id, name) VALUES ('1', 'wow'), ('2', 'oh') ---
+                    // --- INSERT INTO xx (`id`, `name`) VALUES ('1', 'wow'), ('2', 'oh') ---
                     foreach ($vs as $is) {
                         $sql .= '(';
                         foreach ($is as $i => $v) {
@@ -119,15 +108,15 @@ class Sql {
             // --- 'xx', ['id' => '1', 'name' => 'wow'] ---
             $values = '';
             if ($this->_single) {
-                // --- INSERT INTO xx (id, name) VALUES ('1', 'wow') ---
+                // --- INSERT INTO xx (`id`, `name`) VALUES ('1', 'wow') ---
                 foreach ($cs as $k => $v) {
-                    $sql .= $k . ',';
+                    $sql .= $this->field($k) . ',';
                     $values .= $this->quote($v.'') . ',';
                 }
             } else {
                 // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
                 foreach ($cs as $k => $v) {
-                    $sql .= $k . ',';
+                    $sql .= $this->field($k) . ',';
                     $values .= ':p_' . $k . ',';
                     $this->_data[':p_' . $k] = $v;
                 }
@@ -144,7 +133,9 @@ class Sql {
         $sql = 'SELECT ';
         if (is_string($c)) $sql .= $c;
         else if (is_array($c)) {
-            foreach ($c as $i) $sql .= $i . ',';
+            foreach ($c as $i) {
+                $sql .= $i . ',';
+            }
             $sql = substr($sql, 0, -1);
         }
         $sql .= ' FROM ' . $this->_pre . $f;
@@ -159,19 +150,19 @@ class Sql {
             foreach ($s as $k => $v) {
                 if (is_array($v)) {
                     // --- xx, [['total', '+', '1']] ---
-                    $sql .= $v[0] . ' = ' . $v[0] . ' ' . $v[1] . ' ' . $this->quote($v[2].'') . ',';
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->quote($v[2].'') . ',';
                 } else {
                     // --- xx, ['name' => 'oh'] ---
-                    $sql .= $k . ' = ' . $this->quote($v.'') . ',';
+                    $sql .= $this->field($k) . ' = ' . $this->quote($v.'') . ',';
                 }
             }
         } else {
             foreach ($s as $k => $v) {
                 if (is_array($v)) {
-                    $sql .= $v[0] . ' = ' . $v[0] . ' ' . $v[1] . ' :p_' . $v[0] . ',';
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' :p_' . $v[0] . ',';
                     $this->_data[':p_'.$v[0]] = $v[2];
                 } else {
-                    $sql .= $k . ' = :p_'.$k.',';
+                    $sql .= $this->field($k) . ' = :p_'.$k.',';
                     $this->_data[':p_'.$k] = $v;
                 }
             }
@@ -241,7 +232,7 @@ class Sql {
                 if (is_string($k)) {
                     if (is_array($i)) {
                         // --- 4, IN ---
-                        $sql .= 'AND ' . $k . ' IN (';
+                        $sql .= 'AND ' . $this->field($k) . ' IN (';
                         if ($this->_single) {
                             foreach ($i as $v) {
                                 $sql .= $this->quote($v.'') . ',';
@@ -258,9 +249,9 @@ class Sql {
                     } else {
                         // --- 1 ---
                         if ($this->_single) {
-                            $sql .= 'AND ' . $k . ' = ' . $this->quote($i.'') . ' ';
+                            $sql .= 'AND ' . $this->field($k) . ' = ' . $this->quote($i.'') . ' ';
                         } else {
-                            $sql .= 'AND ' . $k . ' = :w_' . $k.'_'.$this->_wsc . ' ';
+                            $sql .= 'AND ' . $this->field($k) . ' = :w_' . $k.'_'.$this->_wsc . ' ';
                             $this->_data[':w_'.$k.'_'.$this->_wsc] = $i;
                             ++$this->_wsc;
                         }
@@ -276,7 +267,7 @@ class Sql {
                         }
                     } else if (is_array($i[2])) {
                         // --- 3, IN ---
-                        $sql .= 'AND ' . $i[0] . ' '.$i[1].' (';
+                        $sql .= 'AND ' . $this->field($i[0]) . ' '.$i[1].' (';
                         if ($this->_single) {
                             foreach ($i[2] as $v) {
                                 $sql .= $this->quote($v.'') . ',';
@@ -293,9 +284,9 @@ class Sql {
                     } else {
                         // --- 2, > < = ---
                         if ($this->_single) {
-                            $sql .= 'AND ' . $i[0] . ' ' . $i[1] . ' ' . $this->quote($i[2].'') . ' ';
+                            $sql .= 'AND ' . $this->field($i[0]) . ' ' . $i[1] . ' ' . $this->quote($i[2].'') . ' ';
                         } else {
-                            $sql .= 'AND ' . $i[0] . ' ' . $i[1] . ' :w_' . $i[0].'_'.$this->_wsc . ' ';
+                            $sql .= 'AND ' . $this->field($i[0]) . ' ' . $i[1] . ' :w_' . $i[0].'_'.$this->_wsc . ' ';
                             $this->_data[':w_'.$i[0].'_'.$this->_wsc] = $i[2];
                             ++$this->_wsc;
                         }
@@ -378,6 +369,11 @@ class Sql {
         } else {
             return "'" . addslashes($str) . "'";
         }
+    }
+
+    // --- 字段转义 ---
+    public function field(string $str): string {
+        return '`'.$str.'`';
     }
 
 }

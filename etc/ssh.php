@@ -1,10 +1,10 @@
 <?php
-// --- MySQL ---
+// --- SSH ---
 
-define('SSH_HOST', '');
-define('SSH_PORT', 22);
-define('SSH_USERNAME', '');
-define('SSH_PASSWORD', '');
-define('SSH_PUB', '');
-define('SSH_PRV', '');
+const SSH_HOST = '';
+const SSH_PORT = 22;
+const SSH_USERNAME = '';
+const SSH_PASSWORD = '';
+const SSH_PUB = '';
+const SSH_PRV = '';
 

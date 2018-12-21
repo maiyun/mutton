@@ -3,18 +3,19 @@ declare(strict_types = 1);
 
 namespace ctr;
 
+use lib\Captcha;
 use lib\Db;
 use lib\Memcached;
 use lib\Net;
 use lib\Redis;
 use lib\Session;
 use lib\Sql;
+use lib\Storage;
 use sys\Ctr;
 
 class main extends Ctr {
 
     public function main() {
-
         $echo = [
             'Hello world! Welcome to use Mutton ' . VER,
 
@@ -48,6 +49,7 @@ class main extends Ctr {
 
             '<br><br><b>Net:</b>',
             '<br><br><a href="'.HTTP_PATH.'main/net">View "main/net"</a>',
+            '<br><a href="'.HTTP_PATH.'main/netCookie">View "main/netCookie"</a>',
 
             '<br><br><b>Sql:</b>',
             '<br><br><a href="'.HTTP_PATH.'main/sql?type=insert">View "main/sql?type=insert"</a>',
@@ -62,44 +64,44 @@ class main extends Ctr {
 
             '<br><br><b>Session:</b>',
             '<br><br><a href="'.HTTP_PATH.'main/session_db">View "main/session_db"</a>',
-            '<br><a href="'.HTTP_PATH.'main/session_redis">View "main/session_redis"</a>'
+            '<br><a href="'.HTTP_PATH.'main/session_redis">View "main/session_redis"</a>',
+
+            '<br><br><b>Captcha:</b>',
+            '<br><br><a href="'.HTTP_PATH.'main/captcha_fastbuild">View "main/captcha_fastbuild"</a>',
+            '<br><a href="'.HTTP_PATH.'main/captcha_base64">View "main/captcha_base64"</a>',
+
+            '<br><br><b>Storage:</b>',
+            '<br><br><a href="'.HTTP_PATH.'main/storage_oss">View "main/storage_oss"</a>',
+            '<br><a href="'.HTTP_PATH.'main/storage_oss_direct">View "main/storage_oss_direct"</a>',
+            '<br><a href="'.HTTP_PATH.'main/storage_cos">View "main/storage_cos"</a>'
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
         return implode('', $echo);
-
     }
 
     public function article() {
-
         return 'Article ID: ' . $this->param[0] . '<br><br>' . $this->_getEnd();
-
     }
 
     public function auto() {
-
         $rt = $this->getRunTime();
         $this->loadView('main/auto', [
             'rt' => $rt,
             'ms' => round($rt * 1000, 4),
             'me' => round($this->getMemoryUsage() / 1024, 2)
         ]);
-
     }
 
     public function qs() {
-
         $this->obStart();
         echo '$_GET: <br><br>';
         var_dump($_GET);
         $rtn = $this->obEnd();
-
         return $rtn . '<br><br>' . $this->_getEnd();
-
     }
 
     public function json() {
-
         switch ($_GET['type']) {
             case '1':
                 return [0];
@@ -116,7 +118,6 @@ class main extends Ctr {
             default:
                 return [];
         }
-
     }
 
     public function sql() {
@@ -306,7 +307,6 @@ class main extends Ctr {
     }
 
     public function memcached() {
-
         $this->obStart();
 
         echo '<pre>';
@@ -336,21 +336,53 @@ class main extends Ctr {
     public function net() {
         $this->obStart();
 
+        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');
+        echo "Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');";
         echo '<pre>';
+        var_dump($res);
+        echo '</pre>';
 
-        try {
-            $result = Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');
-            echo "Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');\n\n";
-            var_dump($result);
-            echo "\nError: ".Net::getError();
-            echo "\n\nErrno: ".Net::getErrno();
-            echo "\n\nInfo:\n";
-            var_dump(Net::getInfo());
-        } catch (\Exception $e) {
-            echo 'Error: '.$e->getMessage().'.';
-        }
+        echo "Error: ".$res->error;
+        echo "<br>ErrNo: ".$res->errNo;
+        echo "<br>ErrInfo:";
+        echo '<pre>';
+        var_dump($res->errInfo);
 
         return $this->obEnd() . '</pre>' . $this->_getEnd();
+    }
+
+    public function netCookie() {
+        $this->obStart();
+
+        $cookie = [];
+        $res = Net::get(HTTP_PATH.'main/netCookie1', NULL, $cookie)->content;
+        echo "\$cookie = [];<br>Net::get('".HTTP_PATH."main/netCookie1', NULL, \$cookie)->content;";
+        echo '<pre>'.$res.'</pre>';
+
+        echo "print_r(\$cookie);";
+        echo '<pre>';
+        print_r($cookie);
+        echo '</pre>';
+
+        $res = Net::get(HTTP_PATH.'main/netCookie2', NULL, $cookie)->content;
+        echo "Net::get('".HTTP_PATH."main/netCookie2', NULL, \$cookie)->content;";
+        echo '<pre>';
+        var_dump($res);
+        echo '</pre>';
+
+        return $this->obEnd() . $this->_getEnd();
+    }
+    public function netCookie1() {
+        setcookie('test1', '123', $_SERVER['REQUEST_TIME'] + 10);
+        setcookie('test2', '456', $_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
+        setcookie('test3', '789', $_SERVER['REQUEST_TIME'] + 30, '/', HTTP_HOST);
+        setcookie('test4', '012', $_SERVER['REQUEST_TIME'] + 40, '/ok/');
+        setcookie('test5', '345', $_SERVER['REQUEST_TIME'] + 10, '', '', true);
+        echo "setcookie('test', '123', \$_SERVER['REQUEST_TIME'] + 10);<br>setcookie('test2', '456', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');<br>setcookie('test3', '789', \$_SERVER['REQUEST_TIME'] + 30, '/', '".HTTP_HOST."');<br>setcookie('test4', '012', \$_SERVER['REQUEST_TIME'] + 40, '/ok/');<br>setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
+    }
+    public function netCookie2() {
+        echo 'print_r($_COOKIE);'."\n";
+        print_r($_COOKIE);
     }
 
     public function redis_simulator() {
@@ -433,6 +465,150 @@ class main extends Ctr {
         echo '</pre>';
 
         return '<a href="'.HTTP_PATH.'main/session_redis">Default</a> | <a href="'.HTTP_PATH.'main/session_redis?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/session_redis?value=bbb">Set "bbb"</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+    }
+
+    public function captcha_fastbuild() {
+        Captcha::get(400, 100)->output();
+    }
+
+    public function captcha_base64() {
+        $this->obStart();
+
+        echo '$cap = Captcha::get(400, 100);<br>$phrase = $cap->getPhrase();<br>$base64 = $cap->getBase64();<br>echo $phrase;';
+        $cap = Captcha::get(400, 100);
+        $phrase = $cap->getPhrase();
+        $base64 = $cap->getBase64();
+        echo '<pre>'.$phrase.'</pre>';
+
+        echo 'echo $base64;';
+        echo '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">'.$base64.'</pre>';
+
+        echo '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
+        echo '<pre><img src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
+
+        return $this->obEnd() . $this->_getEnd();
+    }
+
+    public function storage_oss() {
+        $this->obStart();
+        try {
+            $oss = Storage::get('OSS');
+            echo '$oss = Storage::get(\'OSS\');<br>print_r($oss->putFile(\'mutton_test.txt\', \'date: \'.date(\'Y-m-d H:i:s\')));';
+            echo '<pre>';
+            print_r($oss->putFile('__mutton__/mutton_test.txt', 'date: '.date('Y-m-d H:i:s')));
+            echo '</pre>';
+        } catch (\Exception $e) {
+            echo '<pre>';
+            echo $e->getMessage();
+            echo '</pre>';
+        }
+        return $this->obEnd() . $this->_getEnd();
+    }
+
+    // --- 直传 ---
+    public function storage_oss_direct() {
+        $this->obStart();
+        try {
+            $oss = Storage::get('OSS');
+            echo '
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+<script>
+function upload() {
+    if ($("#file").val() !== "") {
+        var file = $("#file")[0].files[0];
+        if (file.size < 10485760) {
+            $("#mask").text("getSignature...").addClass("show");
+            $.ajax({
+                method: "POST",
+                url:"' . HTTP_BASE . 'main/storage_oss_direct_ajax",
+                data: {name: file.name},
+                success:function(j) {
+                    if (j.result > 0) {
+                        $("#mask").html("key: "+j.dir+"<br>policy: "+j.policy+"<br>OSSAccessKeyId: "+j.accessid+"<br>callback: "+j.callback+"<br>signature: "+j.signature);
+                        setTimeout(function() {
+                            var fd = new FormData();
+                            fd.append("key", j.dir);
+                            fd.append("policy", j.policy);
+                            fd.append("OSSAccessKeyId", j.accessid);
+                            fd.append("success_action_status", "200");
+                            fd.append("callback", j.callback);
+                            fd.append("signature", j.signature);
+                            fd.append("file", file);
+                            // --- Upload ---
+                            var xhr = new XMLHttpRequest();
+                            xhr.onload = function() {
+                                alert("Upload successful.");
+                                $("#file").val("");
+                                $("#mask").removeClass("show");
+                            };
+                            xhr.upload.onloadstart = function(){
+                                $("#mask").text("0%");
+                            };
+                            xhr.upload.onprogress = function(evt) {
+                                $("#mask").text((evt.loaded/evt.total*100)+"%");
+                            };
+                            xhr.onerror = function() {
+                                alert("Upload failed.");
+                                $("#mask").removeClass("show");
+                            };
+                            xhr.open("POST",j.host,true);
+                            xhr.send(fd);
+                        }, 1000);
+                    } else {
+                        alert(j.msg);
+                    }
+                }
+            });
+        } else {
+            alert("Cannot be greater than 10M.");
+        }
+    } else {
+        alert("Please select a file first.");
+    }
+}
+</script>
+<style>
+html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-family:Consolas,Monaco,monospace;}
+#mask{position:fixed;left:0;top:0;width:100%;height:100%;background-color: rgba(0,0,0,.7);display:none;color:#FFF;align-items:center;justify-content:center;padding:50px;box-sizing:border-box;line-height:1.5;word-break:break-all;font-size:12px;}
+#mask.show{display:flex;}
+</style>
+<div id="mask"></div>
+<h1>Local direct to OSS server</h1>
+<input id="file" type="file"><input type="button" value="Upload" onclick="upload()">';
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+        return $this->obEnd() . '<br><br>' . $this->_getEnd();
+    }
+    public function storage_oss_direct_ajax() {
+        try {
+            $storage = Storage::get('OSS');
+            $rtn = $storage->getSignature([
+                'dir' => '__mutton__/' . $this->post('name'),
+                'callback' => HTTP_PATH . 'main/storage_oss_direct_cb',
+                'size' => 10485760, // 10 M
+                'data' => [
+                    'filename' => $_POST['name']
+                ]
+            ]);
+            return [1, $rtn];
+        } catch (\Exception $e) {
+            return [0, $e->getMessage()];
+        }
+    }
+    public function storage_oss_direct_cb() {
+        try {
+            $storage = Storage::get('OSS');
+            if (($res = $storage->callback()) !== false) {
+                // filename: 2017/11/07/100145js9qrumh.jpg, size: 128284, mimeType: image/jpeg, height: 800, width: 800
+            }
+        } catch (\Exception $e) {
+
+        }
+    }
+
+    public function storage_cos() {
+        return 'Coming soon.<br><br>' . $this->_getEnd();
     }
 
     // --- END ---

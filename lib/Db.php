@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/7/7 17:59
- * Last: 2018-7-29 23:56:02
+ * Last: 2018-12-8 22:39:24
  */
 declare(strict_types = 1);
 
@@ -11,8 +11,6 @@ namespace lib;
 require ETC_PATH.'db.php';
 
 class Db {
-
-    private static $_poll = [];
 
     private $_queries = 0;      // --- query 次数 ---
     private $_executions = 0;   // --- exec 次数 ---
@@ -23,35 +21,14 @@ class Db {
 
     /**
      * --- 获取数据库连接对象 ---
-     * @param string|null $name
      * @param array|null $opt
      * @return Db
      * @throws \Exception
      */
-    public static function get(?array $opt = [], ?string $name = NULL): Db {
-        if ($name !== NULL) {
-            if (isset(self::$_poll[$name])) {
-                return self::$_poll[$name];
-            } else {
-                $db = new Db();
-                $db->connect($opt);
-                self::$_poll[$name] = $db;
-                return self::$_poll[$name];
-            }
-        } else {
-            $db = new Db();
-            $db->connect($opt);
-            return $db;
-        }
-    }
-
-    // --- 判断 poll 中是否已经连接 ---
-    public static function checkPool(string $name): bool {
-        if (isset(self::$_poll[$name])) {
-            return true;
-        } else {
-            return false;
-        }
+    public static function get(?array $opt = []): Db {
+        $db = new Db();
+        $db->connect($opt);
+        return $db;
     }
 
     // --- 判断是否创建了链接 ---

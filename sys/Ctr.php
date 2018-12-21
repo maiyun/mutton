@@ -10,14 +10,12 @@ class Ctr {
 
     // --- 获取 POST 内容并解析为对象，POST 内容必须为 JSON ---
     protected function getJSONByPost(): object {
-
         $post = file_get_contents('php://input');
         if(($post = json_decode($post)) !== false) {
             return $post;
         } else {
             return json_decode('{}');
         }
-
     }
 
     // --- 获取截止当前时间的总运行时间 ---
@@ -109,7 +107,7 @@ class Ctr {
     protected function location(string $url): void {
         header('Location: '.$url);
     }
-    protected function redirect(string $url): void {
+    protected function redirect(string $url = ''): void {
         header('Location: '.HTTP_BASE.$url);
     }
 

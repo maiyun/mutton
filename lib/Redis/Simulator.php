@@ -45,7 +45,7 @@ class Simulator {
     // --- 非标准 结束 ---
 
     public function connect(string $host, int $port = 6379, float $timeout = 0.0, $reserved = null, int $retry_interval = 0): bool {
-        $this->_sql = Sql::get(RDS_DB_PRE === NULL ? SQL_PRE : RDS_DB_PRE);
+        $this->_sql = Sql::get();
         return true;
     }
 

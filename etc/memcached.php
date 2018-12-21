@@ -1,11 +1,11 @@
 <?php
 // --- Memcached ---
 
-define('MC_HOST', '127.0.0.1');
-define('MC_PORT', 11211);
-define('MC_POOL', '');
-define('MC_PRE', 'm_');
+const MC_HOST = '127.0.0.1';
+const MC_PORT = 11211;
+const MC_POOL = '';
+const MC_PRE = 'm_';
 
-define('MC_USER', '');
-define('MC_PWD', '');
+const MC_USER = '';
+const MC_PWD = '';
 

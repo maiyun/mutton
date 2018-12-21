@@ -1,12 +1,12 @@
 <?php
 // --- WeChat ---
 
-define('WECHAT_APPID', '');
-define('WECHAT_SECRET', '');
+const WECHAT_APPID = '';
+const WECHAT_SECRET = '';
 // --- Wehcat pay ---
-define('WECHAT_MCHID', '');
-define('WECHAT_KEY', '');
+const WECHAT_MCHID = '';
+const WECHAT_KEY = '';
 
-define('WECHAT_SSL_CERT', '');
-define('WECHAT_SSL_KEY', '');
+const WECHAT_SSL_CERT = '';
+const WECHAT_SSL_KEY = '';
 

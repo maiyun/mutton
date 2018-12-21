@@ -3,107 +3,75 @@
  * CA: https://curl.haxx.se/ca/cacert.pem
  * User: JianSuoQiYue
  * Date: 2015/10/26 14:23
- * Last: 2018-6-30 21:58:34
+ * Last: 2018-12-11 20:45:56
  */
 declare(strict_types = 1);
 
 namespace lib;
 
+use lib\Net\Request;
+use lib\Net\Response;
+
 class Net {
 
-    private static $_error = '';
-    private static $_errno = 0;
-    private static $_info = NULL;
-
-    public static function getError() {
-        return self::$_error;
-    }
-    public static function getErrno() {
-        return self::$_errno;
-    }
-    public static function getInfo() {
-        return self::$_info;
+    public static function get(string $url, ?Request $req = NULL, ?array &$cookie = NULL) {
+        return self::request($url, NULL, $req, $cookie);
     }
 
-    /**
-     * @param string $url
-     * @param array $opt
-     * @param array|null $cookie
-     * @return array|bool|string
-     * @throws \Exception
-     */
-    public static function get(string $url, array $opt = [], ?array &$cookie = NULL) {
-
-        $opt['url'] = $url;
-        return self::request($opt, $cookie);
-
+    public static function post(string $url, array $data, ?Request $req = NULL, ?array &$cookie = NULL) {
+        if ($req === NULL) {
+            $req = Request::get([
+                'method' => 'POST'
+            ]);
+        }
+        return self::request($url, $data, $req, $cookie);
     }
 
-    /**
-     * @param string $url
-     * @param array|string $data
-     * @param array $opt
-     * @param array|null $cookie
-     * @return array|bool|string
-     * @throws \Exception
-     */
-    public static function post(string $url, $data, array $opt = [], ?array &$cookie = NULL) {
-
-        $opt['url'] = $url;
-        $opt['data'] = $data;
-        $opt['method'] = 'POST';
-
-        return self::request($opt, $cookie);
-
+    public static function postJson(string $url, array $data, ?Request $req = NULL, ?array &$cookie = NULL): Response {
+        if ($req === NULL) {
+            $req = Request::get([
+                'method' => 'POST',
+                'type' => 'json'
+            ]);
+        }
+        return self::request($url, $data, $req, $cookie);
     }
 
     // --- GET, POST 基函数 ---
-
-    /**
-     * @param array $opt
-     * @param array|null $cookie
-     * @return bool|string|array
-     * @throws \Exception
-     */
-    public static function request(array $opt, ?array &$cookie = NULL) {
-        $method = isset($opt['method']) && strtoupper($opt['method']) == 'POST' ? 'POST' : 'GET';
-        $url = isset($opt['url']) ? $opt['url'] : '';
-        if ($cookie !== NULL) {
-            if (!is_array($cookie)) {
-                throw new \Exception('[Error] cookie type not support.');
-            }
+    public static function request(string $url, ?array $data = NULL, ?Request $req = NULL, ?array &$cookie = NULL): Response {
+        if ($req === NULL) {
+            $req = Request::get();
         }
-
+        $method = $req->getMethod();
         if ($url != '') {
             if ($method == 'GET') {
-                $ch = curl_init($url . (isset($opt['data']) ? '?' . http_build_query($opt['data']) : ''));
+                $ch = curl_init($url . ($data !== NULL ? '?' . http_build_query($data) : ''));
             } else {
                 // --- POST ---
                 $ch = curl_init($url);
                 curl_setopt($ch, CURLOPT_POST, true);
                 $upload = false;
-                if (isset($opt['data'])) {
-                    if (is_array($opt['data'])) {
-                        foreach ($opt['data'] as $i) {
-                            if (isset($i[0]) && ($i[0] == '@')) {
-                                $upload = true;
-                                break;
-                            }
-                        }
-                        if ($upload === false) {
-                            if (isset($opt['json']) && $opt['json']) {
-                                $opt['data'] = json_encode($opt['data']);
-                            } else {
-                                $opt['data'] = http_build_query($opt['data']);
-                            }
+                if ($data !== NULL) {
+                    foreach ($data as $i) {
+                        if (isset($i[0]) && ($i[0] == '@')) {
+                            $upload = true;
+                            break;
                         }
                     }
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $opt['data']);
+                    if ($upload === false) {
+                        if ($req->getType() === 'json') {
+                            $data = json_encode($data);
+                        } else {
+                            $data = http_build_query($data);
+                        }
+                    }
+                    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
                 }
             }
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.79 Safari/537.36');
+            curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_TIMEOUT, $req->getTimeout());
+            curl_setopt($ch, CURLOPT_USERAGENT, $req->getUserAgent());
             // --- ssl ---
             if (substr($url, 0, 6) == 'https:') {
                 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -111,78 +79,186 @@ class Net {
                 curl_setopt($ch, CURLOPT_CAINFO, LIB_PATH . 'Net/cacert.pem');
             }
             // --- 自定义头部 ---
-            if (isset($opt['headers'])) {
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $opt['headers']);
+            if ($req->getHttpHeader() !== NULL) {
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $req->getHttpHeader());
+            }
+            // --- 上级页面 ---
+            if ($req->getReferer() !== '') {
+                curl_setopt($ch, CURLOPT_REFERER, $req->getReferer());
             }
             // --- cookie 托管 ---
             if ($cookie !== NULL) {
-                curl_setopt($ch, CURLOPT_HEADER, true);
-                curl_setopt($ch, CURLOPT_COOKIE, self::_cookieBuildQuery($cookie));
-            }
-            // --- 返回头部 ---
-            if (isset($opt['resHeader']) && $opt['resHeader'] && $cookie === NULL) {
-                curl_setopt($ch, CURLOPT_HEADER, true);
+                curl_setopt($ch, CURLOPT_COOKIE, self::_cookieBuildQuery($cookie, $url));
             }
             // --- 检测有没有更多额外的 curl 定义项目 ---
-            foreach ($opt as $key => $val) {
-                if (is_int($key)) {
-                    curl_setopt($ch, $key, $val);
+            if (($curlOpt = $req->getCurlOpt()) !== NULL) {
+                foreach ($curlOpt as $key => $val) {
+                    if (is_int($key)) {
+                        curl_setopt($ch, $key, $val);
+                    }
                 }
             }
             // --- 执行 ---
             $output = curl_exec($ch);
-            self::$_error = curl_error($ch);
-            self::$_errno = curl_errno($ch);
-            self::$_info = curl_getinfo($ch);
+            $res = Response::get([
+                'error' => curl_error($ch),
+                'errNo' => curl_errno($ch),
+                'errInfo' => curl_getinfo($ch)
+            ]);
             curl_close($ch);
             // --- 处理返回值 ---
             if ($output !== false) {
-                if (($cookie !== NULL) || (isset($opt['resHeader']) && $opt['resHeader'])) {
-                    $sp = strpos($output, "\r\n\r\n");
-                    $header = substr($output, 0, $sp);
-                    $content = substr($output, $sp + 4);
-                    if ($cookie !== NULL) {
-                        // --- 提取 cookie ---
-                        preg_match_all('/Set-Cookie:(.+?);/i', $header, $matchList);
-                        foreach ($matchList[1] as $match) {
-                            list($key, $val) = explode('=', trim($match));
-                            if ($val == 'deleted') {
-                                if (isset($cookie[$key])) {
-                                    unset($cookie[$key]);
+                $sp = strpos($output, "\r\n\r\n");
+                $header = substr($output, 0, $sp);
+                $content = substr($output, $sp + 4);
+                $res->header = $header;
+                $res->content = $content;
+                if ($cookie !== NULL) {
+                    // --- 提取 cookie ---
+                    preg_match_all('/Set-Cookie:(.+?)\r\n/i', $header, $matchList);
+                    $uri = parse_url($url);
+                    foreach ($matchList[1] as $match) {
+                        $cookieTmp = [];
+                        $list = explode(';', $match);
+                        foreach ($list as $index => $item) {
+                            $arr = explode('=', $item);
+                            $key = $arr[0];
+                            $val = isset($arr[1]) ? $arr[1] : '';
+                            if ($index === 0) {
+                                $cookieTmp['name'] = trim($key);
+                                $cookieTmp['value'] = trim($val);
+                            } else {
+                                $cookieTmp[trim(strtolower($key))] = trim($val);
+                            }
+                        }
+                        if (isset($cookieTmp['domain'])) {
+                            if ($cookieTmp['domain'][0] !== '.') {
+                                $domain = '.' . $cookieTmp['domain'];
+                                $domainN = $cookieTmp['domain'];
+                            } else {
+                                $domain = $cookieTmp['domain'];
+                                $domainN = substr($cookieTmp['domain'], 1);
+                            }
+                        } else {
+                            $domain = '.' . $uri['host'];
+                            $domainN = $uri['host'];
+                        }
+                        // --- 判断有没有设置 domain 的权限 ---
+                        // --- ok.xxx.com, .ok.xxx.com: true ---
+                        // --- ok.xxx.com, .xxx.com: true ---
+                        // --- z.ok.xxx.com, .xxx.com: true ---
+                        // --- ok.xxx.com, .zz.ok.xxx.com: false ---
+                        $go = true;
+                        if ('.' . $uri['host'] !== $domain) {
+                            $domainSc = substr_count($domain, '.');
+                            if ($domainSc > 1) {
+                                // --- 判断自己是不是孩子 ---
+                                if (substr_count($uri['host'], '.') >= $domainSc) {
+                                    if (substr($uri['host'], -strlen($domain)) !== $domain) {
+                                        $go = false;
+                                    }
+                                } else {
+                                    $go = false;
                                 }
                             } else {
-                                $cookie[$key] = [
-                                    'value' => $val
+                                $go = false;
+                            }
+                        }
+                        if ($go) {
+                            $cookieKey = $cookieTmp['name'].'-'.$domainN;
+                            if (isset($cookieTmp['max-age']) && ($cookieTmp['max-age'] <= 0)) {
+                                if (isset($cookie[$cookieKey])) {
+                                    unset($cookie[$cookieKey]);
+                                    $go = false;
+                                }
+                            }
+                            if ($go) {
+                                $exp = 0;
+                                if (isset($cookieTmp['max-age'])) {
+                                    $exp = $_SERVER['REQUEST_TIME'] + $cookieTmp['max-age'];
+                                }
+                                $cookie[$cookieKey] = [
+                                    'name' => $cookieTmp['name'],
+                                    'value' => $cookieTmp['value'],
+                                    'exp' => $exp,
+                                    'path' => isset($cookieTmp['path']) ? $cookieTmp['path'] : '',
+                                    'domain' => $domainN,
+                                    'secure' => isset($cookieTmp['secure']) ? true : false
                                 ];
                             }
                         }
-                        if (isset($opt['resHeader']) && $opt['resHeader']) {
-                            return [
-                                'header' => $header,
-                                'content' => $content
-                            ];
-                        } else {
-                            return $content;
-                        }
-                    } else {
-                        return [
-                            'header' => $header,
-                            'content' => $content
-                        ];
                     }
+                    return $res;
                 } else {
-                    return $output;
+                    return $res;
                 }
             } else {
-                return false;
+                return $res;
             }
         } else {
-            return false;
+            return Response::get();
         }
     }
 
-    public static function getIP() {
+    // --- 数组转换为 Cookie ---
+    private static function _cookieBuildQuery(array &$cookie, string $url): string {
+        $cookieStr = '';
+        foreach ($cookie as $key => $item) {
+            $go = true;
+            if ($item['exp'] > 0) {
+                if ($item['exp'] < $_SERVER['REQUEST_TIME']) {
+                    unset($cookie[$key]);
+                    $go = false;
+                }
+            }
+            if ($go) {
+                $uri = parse_url($url);
+                if ($item['secure'] && (strtolower($uri['scheme']) === 'http')) {
+                    $go = false;
+                }
+                if ($go) {
+                    if ($item['path'] !== '') {
+                        $uri['path'] = isset($uri['path']) ? $uri['path'] : '/';
+                        if (substr($uri['path'], 0, strlen($item['path'])) !== $item['path']) {
+                            $go = false;
+                        }
+                    }
+                    if ($go) {
+                        $domain = '.' . $item['domain'];
+                        // --- 判断访问域名是不是同级，子级 ---
+                        // --- ok.xxx.com, .ok.xxx.com: true ---
+                        // --- ok.xxx.com, .xxx.com: true ---
+                        // --- z.ok.xxx.com, .xxx.com: false ---
+                        // --- ok.xxx.com, .zz.ok.xxx.com: false ---
+                        if ('.' . $uri['host'] !== $domain) {
+                            // --- 判断自己是不是孩子 ---
+                            if (substr_count($uri['host'], '.') === substr_count($domain, '.')) {
+                                if (substr($uri['host'], -strlen($domain)) !== $domain) {
+                                    $go = false;
+                                }
+                            } else {
+                                $go = false;
+                            }
+                        }
+                        if ($go) {
+                            $cookieStr .= $item['name'] . '=' . $item['value'] . ';';
+                        }
+                    }
+                }
+            }
+        }
+        if ($cookieStr != '') {
+            return substr($cookieStr, 0, -1);
+        } else {
+            return '';
+        }
+    }
 
+    /**
+     * --- 获取 IP ---
+     * @return string
+     */
+    public static function getIP(): string {
         if (getenv('HTTP_CLIENT_IP')) {
             return getenv('HTTP_CLIENT_IP');
         } else if (getenv('HTTP_X_FORWARDED_FOR')) {
@@ -190,16 +266,25 @@ class Net {
         } else {
             return getenv('REMOTE_ADDR');
         }
-
     }
 
-    public static function mail($server, $from, $nickname, $to, $title, $content) {
-
+    /**
+     * --- 无需 SMTP 服务器发送邮件 ---
+     * @param string $server
+     * @param string $from
+     * @param string $nickname
+     * @param string $to
+     * @param string $title
+     * @param string $content
+     * @return bool
+     * @throws \Exception
+     */
+    public static function mail(string $server, string $from, string $nickname, string $to, string $title, string $content): bool {
         if (!preg_match('/\w[a-zA-Z0-9\.\-\+]*\@(\w+[a-zA-Z0-9\-\.]+\w)/i', $to, $ms)) {
-            return ['success' => false, 'error' => 'Email address invalid'];
+            throw new \Exception( 'Email address invalid.');
         }
         if (!getmxrr($ms[1], $mx)) {
-            return ['success' => false, 'error' => 'MX record of host not found!'];
+            throw new \Exception( 'MX record of host not found.');
         }
         $mx = $mx[0];
 
@@ -226,23 +311,7 @@ class Net {
             //$r = fgets($fp);
         }
         fclose($fp);
-        return ['success' => true];
-
-    }
-
-    // --- 类内部工具 ---
-
-    // --- 数组转换为 Cookie ---
-    private static function _cookieBuildQuery($cookieArray) {
-        $cookie = '';
-        foreach ($cookieArray as $key => $item) {
-            $cookie .= $key . '=' . $item['value'] . ';';
-        }
-        if ($cookie != '') {
-            return substr($cookie, 0, -1);
-        } else {
-            return '';
-        }
+        return true;
     }
 
 }

@@ -1,8 +1,15 @@
 html,body {
-    padding: 0; margin: 0; font-family: Consolas, Monaco, monospace; background-color: #BFBFBF; cursor: default; -webkit-user-select: none;
+    padding: 0; margin: 0; background-color: #3b6ea5; cursor: default; -webkit-user-select: none;
 }
-html,body,input {
-    font-size: 14px; font-weight: bold; line-height: 1.5;
+html,body,input,textarea {
+    font-size: 14px; font-weight: bold; line-height: 1.5; font-family: Consolas, Monaco, monospace;
+}
+::selection {
+    background-color: rgba(0,0,168,0.99);
+    color: #fff;
+}
+* {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 #vue {
@@ -30,7 +37,7 @@ html,body,input {
     border-radius: 5px 5px 0 0;
     flex: 1;
     text-align: center;
-    background-color: #BFBFBF;
+    background-color: #c0c7c8;
 }
 .tab__top__item__in {
     border-right: solid 2px #7F7F7F;
@@ -44,7 +51,6 @@ html,body,input {
 .tab__top__item.selected > .tab__top__item__in {
     padding: 8px 0;
 }
-
 .tab__panel {
     border: solid 2px #FFF;
     border-right-color: #000;
@@ -54,18 +60,18 @@ html,body,input {
     padding: 10px;
     border-right: solid 2px #7F7F7F;
     border-bottom: solid 2px #7F7F7F;
+    background-color: #c0c7c8;
 }
-
 
 /* --- Button --- */
 
 .button {
     border: solid 2px #000;
-    background-color: #BFBFBF;
+    background-color: #c0c7c8;
     border-radius: 5px;
     display: inline-block;
+    line-height: 1;
 }
-
 .button__in {
     border: solid 2px #FFF;
     border-right-color: #7F7F7F;
@@ -74,20 +80,32 @@ html,body,input {
     border-radius: 2px;
     text-align: center;
 }
-
+.button__txt {
+    border: dotted 2px transparent;
+}
 .button:active > .button__in {
     border-color: #7F7F7F #FFF #FFF #7F7F7F;
+}
+.button:active > .button__in > .button__txt {
+    position: relative;
+    left: 2px;
+    top: 2px;
+}
+.button:focus {
+    outline: none;
+}
+.button:focus > .button__in > .button__txt {
+    border-color: #000;
 }
 
 /* --- Input --- */
 
-.textbox {
+.textbox, .list {
     border: solid 2px #FFF;
     border-top-color: #7F7F7F;
     border-left-color: #7F7F7F;
 }
-
-.textbox__in {
+.textbox__in, .list__in {
     border: solid 2px #000;
     border-bottom-color: #BFBFBF;
     border-right-color: #BFBFBF;
@@ -100,3 +118,94 @@ html,body,input {
     border-radius: 0;
     margin: 0;
 }
+textarea {
+    resize: vertical;
+}
+
+/* --- List --- */
+
+.list {
+    outline: none;
+}
+.list__in {
+    background-color: #FFF;
+    overflow-y: auto;
+}
+.list__item {
+    line-height: 1;
+    padding: 5px;
+}
+.list__item.selected {
+    background-color: #c0c7c8;
+    color: #FFF;
+}
+.list:focus > .list__in > .list__item.selected {
+    background-color: #0000a8;
+}
+
+/* --- Window --- */
+
+.window {
+    border: solid 2px #87888f;
+    border-right-color: #000;
+    border-bottom-color: #000;
+    background-color: #c0c7c8;
+}
+.window__in {
+    border: solid 2px #fff;
+    border-right-color: #87888f;
+    border-bottom-color: #87888f;
+    padding: 3px;
+}
+.window__title {
+    background-color: #0000a8;
+    color: #FFF;
+    text-align: center;
+    padding: 5px;
+}
+.window__panel {
+    padding: 7px;
+}
+.window__controls {
+    text-align: center;
+}
+
+/* --- Line --- */
+
+.line {
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+.line__title {
+    width: 100px;
+}
+.line > *:nth-child(2) {
+    flex: 1;
+}
+
+/* --- Mask --- */
+
+#mask {
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: rgba(0,0,0,.7);
+    width: 100%;
+    height: 100%;
+}
+
+/* --- Alert --- */
+
+#alert {
+    position: fixed;
+    left: 0;
+    top: 0;
+    background-color: rgba(0,0,0,.7);
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+

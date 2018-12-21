@@ -1,10 +1,10 @@
 <?php
 /**
- * For Captcha 1.1.6
+ * For Captcha 1.1.7
  * Url: https://github.com/Gregwar/Captcha
  * User: JianSuoQiYue
  * Date: 2018-7-4 09:37
- * Last: 2018-7-28 14:55:00
+ * Last: 2018-12-12 17:46:30
  */
 declare(strict_types = 1);
 
@@ -20,27 +20,47 @@ require LIB_PATH . 'Captcha/src/Gregwar/Captcha/PhraseBuilder.php';
 
 class Captcha {
 
-    public static function fastBuild(int $width, int $height, bool $base64 = false, int $len = 4): string {
-        if (!$base64) {
-            header('Content-type: image/jpeg');
-        }
+    /** @var $_link CaptchaBuilder */
+    private $_link;
+
+    public static function get(int $width, int $height, int $len = 4): Captcha {
+        $captcha = new Captcha($width, $height, $len);
+        return $captcha;
+    }
+
+    public function __construct(int $width, int $height, int $len = 4) {
         $phrase = new PhraseBuilder($len, 'ABCEFGHJKLMNPRSTWXYZ23456789');
-        $builder = new CaptchaBuilder(NULL, $phrase);
-        $builder->build($width, $height);
-        if ($base64) {
-            $old = ob_get_clean();
+        $this->_link = new CaptchaBuilder(NULL, $phrase);
+        $this->_link->build($width, $height);
+    }
+
+    // --- 直接输出 ---
+    public function output(int $quality = 70): string {
+        header('Content-type: image/jpeg');
+        $this->_link->output($quality);
+        return $this->_link->getPhrase();
+    }
+
+    // --- 获取 base64 ---
+    public function getBase64(int $quality = 70): string {
+        $old = ob_get_clean();
+        ob_start();
+        $this->_link->output($quality);
+        $r = ob_get_clean();
+        $str = 'data:image/jpg;base64,'.base64_encode($r);
+        if ($old !== false) {
             ob_start();
-            $builder->output();
-            $r = ob_get_clean();
-            echo 'data:image/jpg;base64,'.base64_encode($r);
-            if ($old !== false) {
-                ob_start();
-                echo $old;
-            }
-        } else {
-            $builder->output();
+            echo $old;
         }
-        return $builder->getPhrase();
+        return $str;
+    }
+
+    /**
+     * 获取随机码
+     * @return string
+     */
+    public function getPhrase(): string {
+        return $this->_link->getPhrase();
     }
 
 }

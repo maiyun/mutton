@@ -1,7 +1,7 @@
 <?php
 // --- Sms ---
 
-define('SMS_SRV', 'www.qingmu.mobi');
-define('SMS_USER', '');
-define('SMS_TOKEN', '');
+const SMS_SRV = 'www.xxx.com';
+const SMS_TOKEN_KEY = '';
+const SMS_TOKEN_SECRET = '';
 

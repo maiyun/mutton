@@ -1,10 +1,10 @@
 <?php
 /**
- * For PHPMailer 6.0.0-rc5
+ * For PHPMailer 6.0.6
  * Url: https://github.com/PHPMailer/PHPMailer
  * User: JianSuoQiYue
  * Date: 2017/03/16 14:20
- * Last: 2018/06/14
+ * Last: 2018-12-8 22:45:09
  */
 declare(strict_types = 1);
 
@@ -20,31 +20,17 @@ require LIB_PATH . 'Mailer/src/SMTP.php';
 
 class Mailer {
 
-    private static $_poll = [];
-
     /* @var $link PHPMailer */
     private $_link;
 
-    public static function get(array $opt = [], ?string $name = NULL): Mailer {
-        if ($name !== NULL) {
-            if (isset(self::$_poll[$name])) {
-                return self::$_poll[$name];
-            } else {
-                $mailer = new Mailer();
-                $mailer->connect($opt);
-                self::$_poll[$name] = $mailer;
-                return self::$_poll[$name];
-            }
-        } else {
-            $mailer = new Mailer();
-            $mailer->connect($opt);
-            return $mailer;
-        }
+    public static function get(array $opt = []): Mailer {
+        $mailer = new Mailer();
+        $mailer->connect($opt);
+        return $mailer;
     }
 
     // --- 连接服务器 ---
     public function connect(array $opt = []): void {
-
         $host = isset($opt['host']) ? $opt['host'] : MAIL_HOST;
         $user = isset($opt['user']) ? $opt['user'] : MAIL_USER;
         $pwd = isset($opt['pwd']) ? $opt['pwd'] : MAIL_PWD;
@@ -60,7 +46,6 @@ class Mailer {
         $this->_link->SMTPSecure = $secure;
         $this->_link->Port = $port;
         $this->_link->CharSet = 'UTF-8';
-
     }
 
     /**

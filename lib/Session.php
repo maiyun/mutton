@@ -56,7 +56,7 @@ class Session {
             self::$_redis = $link;
         } else {
             self::$_db = $link;
-            self::$_sql = Sql::get( isset($opt['pre']) ? $opt['pre'] : (SESSION_DB_PRE === NULL ? SQL_PRE : RDS_DB_PRE), '__session');
+            self::$_sql = Sql::get(isset($opt['pre']) ? $opt['pre'] : SQL_PRE);
         }
 
         // --- 初始化 Session 数组 ---
@@ -127,7 +127,6 @@ class Session {
      * @throws \Exception
      */
     public static function update(): void {
-
         if(self::$_redis !== NULL) {
             self::$_redis->setValue('se_' . self::$_token, $_SESSION, self::$_exp);
         } else {
@@ -140,7 +139,6 @@ class Session {
             $ps = self::$_db->prepare(self::$_sql->getSql());
             $ps->execute(self::$_sql->getData());
         }
-
     }
 
     /**

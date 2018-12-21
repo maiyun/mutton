@@ -1,7 +1,7 @@
 <?php
 // --- Alipay ---
 
-define('ALIPAY_APPID', '');
-define('ALIPAY_RSA_PUBLIC', '');
-define('ALIPAY_RSA_PRIVATE', '');
+const ALIPAY_APPID = '';
+const ALIPAY_RSA_PUBLIC = '';
+const ALIPAY_RSA_PRIVATE = '';
 

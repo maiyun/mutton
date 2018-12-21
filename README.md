@@ -1,36 +1,87 @@
-# Chameleon
-变色龙 PHP 框架，一个极简的 PHP 框架，应用于我们的所有 PHP 项目，也欢迎您的使用。  
-Chameleon PHP framework, a streamlined PHP framework that applies to all of our PHP projects, is also welcome for your use.  
+# Mutton
 
-## 极轻 / Extremely light
-完整项目仅有 320K 大小，但包含了平时使用当中的全部常用功能。  
-The full project is only 320K in size, but includes all of the usual features used in normal use.  
-### 库列表 / libs
-Aes, Db, Mailer, Memcached, Net, Oss, Redis, Session, Sql, Text
+Simple, easy-to-use and fully functional PHP framework.
 
-## HTTPS
-我们更推荐您部署 SSL，保护数据传输安全，部署 SSL 后使可在某个控制器方法内使用 mustHttps() 保证用户访问的一定是安全链接或者设置 set.php 常量 MUST_HTTPS 为 true 保证全站都必须为 HTTPS 链接。  
-We recommend that you deploy SSL, secure data transfer, and enable the use of mustHttps () within a controller method to ensure that the user accesses a secure link or sets the set.php constant MUST_HTTPS to true to ensure that all stations must For HTTPS links.  
+## Installation
 
-## 自动加载类文件 / Automatically load class files
-您只需要在控制器中尽情使用类库，文件会被系统识别并自动加载。  
-You only need to use the library in the controller, the file will be recognized by the system and automatically loaded.  
-  
-## 生成16位随机数 / Generates a 16-bit random number
+Download the latest release version and put it in the website directory to start development.
+
+## Environment
+
+PHP 7.2+  
+Nginx/Apache
+
+## Library
+
+Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Ssh, Storage (OSS/COS), Text, Wechat.
+
+## Some features
+
+### No brains
+
+Based on the idea of not using the brain, the commonly used and uniform style of the library has been encapsulated.
+
+### Library Auto Load
+
+You can use the library directly without having to manually include them.
+
+### UI Console
+
+A console that contains a UI interface that automatically pairs the latest version of Mutton to detect which files have been modified or need to be upgraded.
+
+### Net Library contains full Cookie implementation
+
+Cookies can be obtained directly as an array of variables, which can exist anywhere, such as databases, memory, and so on.
+
+### Perfect filter
+
+Reasonable use of filters, you can quickly filter database entries.
+
+### China Library Support
+
+For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment (forthcoming support) has been completed package.
+
+## Demonstrate
+
+### Generate 16-bit random numbers
+
 ```php
-echo Text::random(16, ['N']);
+$str = Text::random(16, Text::RANDOM_N);
 ```
-  
-## 对阿里云优化 / Optimized for Alibaba Cloud
-使用 Memcached、Oss、Redis、Db 类可以轻松使用阿里云的相关独立服务，当然，这些类也兼容自己搭建的服务器。  
-Use Memcached, Oss, Redis, Db category can easily use the Alibaba Cloud independent services, of course, these classes are also compatible with their own built server.  
-  
-## 关于 doc 目录 / About doc
-这个目录的内容已经相当老，未抽出时间更新，内容请暂时忽略。  
-The contents of this directory has been quite old, did not take the time to update, please temporarily ignore the content.  
-  
-## 关于 About
-本组件由雨滴社群开发开源，欢迎各位PR。  
-The components developed by the Yu Di She Qun, to welcome you Pull Request.    
-  
-Translated by Google.
+
+### Generate a verification code picture
+
+```php
+Captcha::get(400, 100)->output();
+```
+
+### Get a list from the database based on criteria
+
+```php
+$userList = User::getList([
+    'where' => [
+        ['state', '!=', '0'],
+        'type' => ['1', '2', '3'],
+        'is_lock' => '0'
+    ]
+]);
+```
+
+Note: All database operations are secure in this framework.
+
+## Other demos
+
+You can download and view the home Code (ctr/main.php) to see more examples.
+
+## License
+
+This library is published under [Apache-2.0](./LICENSE) license.
+
+## Name meaning
+
+The author loves to eat sheep.
+
+## Other languages
+
+[简体中文](doc/README.zh-CN.md)  
+[繁體中文](doc/README.zh-TW.md)

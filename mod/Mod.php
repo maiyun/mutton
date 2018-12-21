@@ -1,7 +1,8 @@
 <?php
 /**
  * User: JianSuoQiYue
- * Last: 2018-7-28 17:38:42
+ * Date: 2015
+ * Last: 2018-12-15 23:08:01
  */
 declare(strict_types = 1);
 
@@ -19,15 +20,11 @@ class Mod {
     // --- 设置自己 ---
     /* @var Db $__db */
     protected static $__db = NULL;
-    /* @var string $__pre */
-    protected static $__pre = NULL;
 
     // --- 其他变量 ---
     protected $_updates = [];
     /* @var Db $_db */
     protected $_db = NULL;
-    /* @var string $_pre */
-    protected $_pre = NULL;
 
     // --- 最后一次 SQL ---
     protected $_lastSqlString = '';
@@ -36,9 +33,6 @@ class Mod {
     // --- 静态设置项 ---
     public static function setDb(?Db $db = NULL) {
         self::$__db = $db;
-    }
-    public static function setPre(?string $pre = NULL) {
-        self::$__pre = $pre;
     }
 
     // --- 获取最后一次 SQL ---
@@ -56,8 +50,8 @@ class Mod {
     }
 
     // --- 获取创建项 ---
-    public static function getCreate(?string $pre = NULL) {
-        return new static($pre);
+    public static function getCreate() {
+        return new static();
     }
 
     // --- 事物代理操作 ---
@@ -71,25 +65,29 @@ class Mod {
         self::$__db->rollBack();
     }
 
-    public function __construct(?string $pre = NULL) {
+    public function __construct() {
         $this->_db = Mod::$__db;
-        $this->_pre = $pre !== NULL ? $pre : (Mod::$__pre === NULL ? SQL_PRE : Mod::$__pre);
     }
 
-    // --- 设置模型属性 ---
-    public function set($n, string $v = ''): void {
+    /**
+     * --- 设置模型属性 ---
+     * @param string|array $n
+     * @param string|int|float $v 可能是数字
+     */
+    public function set($n, $v = ''): void {
         if(is_array($n)) {
             foreach ($n as $k => $v) {
+                // --- 强制更新，因为有的可能就是要强制更新既然设置了 ---
                 // if ((isset($this->$k) && ($this->$k != $v)) || !isset($this->$k)) {
                 $this->_updates[$k] = true;
                 $this->$k = $v;
                 // }
             }
         } else {
-            if ((isset($this->$n) && ($this->$n != $v)) || !isset($this->$n)) {
-                $this->_updates[$n] = true;
-                $this->$n = $v;
-            }
+            // if ((isset($this->$n) && ($this->$n != $v)) || !isset($this->$n)) {
+            $this->_updates[$n] = true;
+            $this->$n = $v;
+            // }
         }
     }
 
@@ -101,7 +99,7 @@ class Mod {
         }
 
         if(count($updates) > 0) {
-            $sql = Sql::get($this->_pre);
+            $sql = Sql::get();
             try {
                 $sql->update(static::$_table, $updates)->where([
                     static::$_primary => $this->{static::$_primary}
@@ -126,7 +124,7 @@ class Mod {
     }
 
     public function remove(): bool {
-        $sql = Sql::get($this->_pre);
+        $sql = Sql::get();
         try {
             $sql->delete(static::$_table)->where([
                 static::$_primary => $this->{static::$_primary}
@@ -150,13 +148,19 @@ class Mod {
         }
     }
 
-    public function create(bool $lock = false): bool {
+    // --- 创建相关常量 ---
+
+    const NORMAL = 0;   // 创建后不获取
+    const LOCK = 1;     // 创建后获取并锁定
+    const RELOAD = 2;   // 创建后仅获取不锁定
+
+    public function create(int $type = 0): bool {
         $updates = [];
         foreach ($this->_updates as $k => $v) {
             $updates[$k] = $this->$k;
         }
 
-        $sql = Sql::get($this->_pre);
+        $sql = Sql::get();
         $sql->insert(static::$_table, $updates);
         $ps = $this->_db->prepare($sql->getSql());
 
@@ -166,22 +170,24 @@ class Mod {
         if ($ps->execute($sql->getData())) {
             $this->{static::$_primary} = $this->_db->getInsertID();
             // --- 重新获取 ---
-            try {
-                $sql->select('*', static::$_table)->where([
-                    static::$_primary => $this->{static::$_primary}
-                ]);
-                if ($lock) {
-                    $sql->append(' FOR UPDATE');
+            if ($type === 1 || $type === 2) {
+                try {
+                    $sql->select('*', static::$_table)->where([
+                        static::$_primary => $this->{static::$_primary}
+                    ]);
+                    if ($type === 1) {
+                        $sql->append(' FOR UPDATE');
+                    }
+                    $ps = $this->_db->prepare($sql->getSql());
+                    $ps->execute($sql->getData());
+                    $a = $ps->fetch(\PDO::FETCH_ASSOC);
+                    foreach ($a as $k => $v) {
+                        $this->$k = $v;
+                    }
+                } catch (\Exception $e) {
+                    \sys\log($e->getMessage());
+                    return false;
                 }
-                $ps = $this->_db->prepare($sql->getSql());
-                $ps->execute($sql->getData());
-                $a = $ps->fetch(\PDO::FETCH_ASSOC);
-                foreach($a as $k => $v) {
-                    $this->$k = $v;
-                }
-            } catch (\Exception $e) {
-                \sys\log($e->getMessage());
-                return false;
             }
             $this->_updates = [];
             return true;
@@ -195,7 +201,7 @@ class Mod {
 
     // --- 立即执行的自增 ---
     public function increase(string $col, int $num = 1): bool {
-        $sql = Sql::get($this->_pre);
+        $sql = Sql::get();
         try {
             $sql->update(static::$_table, [
                 [$col, '+', $num]
@@ -236,7 +242,7 @@ class Mod {
      * 需要数据库支持 time_remove 字段
      */
     public function softRemove(): bool {
-        $sql = Sql::get($this->_pre);
+        $sql = Sql::get();
         try {
             $sql->update(static::$_table, [
                 'time_remove' => $_SERVER['REQUEST_TIME']
@@ -273,13 +279,12 @@ class Mod {
     /**
      * @param array|string $where
      * @param bool $lock
-     * @param string $pre
      * @return Mod|bool
      */
-    public static function get($where, bool $lock = false, ?string $pre = NULL) {
+    public static function get($where, bool $lock = false) {
         try {
             $mod = static::class;
-            $sql = Sql::get($pre != NULL ? $pre : (self::$__pre === NULL ? SQL_PRE : self::$__pre));
+            $sql = Sql::get();
             $sql->select('*', static::$_table);
             if (is_array($where)) {
                 $sql->where($where);
@@ -305,8 +310,8 @@ class Mod {
     }
 
     // --- 添加一个序列 ---
-    public static function insert(array $cs, array $vs, ?string $pre = NULL): bool {
-        $sql = Sql::get($pre != NULL ? $pre : (self::$__pre === NULL ? SQL_PRE : self::$__pre));
+    public static function insert(array $cs, array $vs): bool {
+        $sql = Sql::get();
         $sql->insert(static::$_table, $cs, $vs);
         $ps = self::$__db->prepare($sql->getSql());
         if ($ps->execute($sql->getData())) {
@@ -321,7 +326,7 @@ class Mod {
     }
 
     // --- 获取列表, 数组里面是 mod 对象 ---
-    public static function getList(array $opt = [], ?string $pre = NULL): array {
+    public static function getList(array $opt = []): array {
         $opt['where'] = isset($opt['where']) ? $opt['where'] : NULL;
         $opt['limit'] = isset($opt['limit']) ? $opt['limit'] : NULL;
         $opt['by'] = isset($opt['by']) ? $opt['by'] : NULL;
@@ -332,7 +337,7 @@ class Mod {
         $opt['select'] = isset($opt['select']) ? $opt['select'] : '*';
 
         $mod = static::class;
-        $sql = Sql::get($pre != NULL ? $pre : (self::$__pre === NULL ? SQL_PRE : self::$__pre));
+        $sql = Sql::get();
         $sql->select($opt['select'], static::$_table);
         if ($opt['where'] !== NULL) {
             if (is_array($opt['where'])) {
@@ -409,62 +414,55 @@ class Mod {
 
     /**
      * @param $where
-     * @param string $c
-     * @param null|string $group
-     * @param null|string $groupKey
-     * @param null|string $pre
-     * @return array|int
+     * @param array|bool $opt 设置true代表锁定，否则设置数组
+     * @return object|int
      */
-    public static function count($where, string $c = 'COUNT(0) AS count', ?string $group = NULL, ?string $groupKey = NULL, ?string $pre = NULL) {
-        $sql = Sql::get($pre != NULL ? $pre : (self::$__pre === NULL ? SQL_PRE : self::$__pre));
-        $sql->select($c, static::$_table);
-        if(is_array($where)) {
-            try {
-                $sql->where($where);
-            } catch (\Exception $e) {
-                \sys\log($e->getMessage());
-                return 0;
-            }
+    public static function count($where = NULL, $opt = []) {
+        $o = [];
+        if (is_bool($opt)) {
+            $o['lock'] = true;
         } else {
-            $sql->append(' WHERE ' . $where);
+            $o = &$opt;
         }
-        if ($group !== NULL) {
-            $sql->groupBy($group);
+        $o['select'] = isset($o['select']) ? $o['select'] : 'COUNT(0) AS count';
+        $o['lock'] = isset($o['lock']) ? $o['lock'] : false;
+
+        $sql = Sql::get();
+        $sql->select($o['select'], static::$_table);
+        if ($where != NULL) {
+            if (is_array($where)) {
+                try {
+                    $sql->where($where);
+                } catch (\Exception $e) {
+                    \sys\log($e->getMessage());
+                    return 0;
+                }
+            } else {
+                $sql->append(' WHERE ' . $where);
+            }
         }
+        // --- 是否锁定 ---
+        if ($o['lock']) {
+            $sql->append(' FOR UPDATE');
+        }
+        // --- 开始 ---
         $ps = self::$__db->prepare($sql->getSql());
         $ps->execute($sql->getData());
-        $obj = $ps->fetch(\PDO::FETCH_ASSOC);
-        if ($c == 'COUNT(0) AS count') {
-            return $obj['count'] + 0;
+        $obj = $ps->fetchObject();
+        if ($o['select'] == 'COUNT(0) AS count') {
+            return $obj->count + 0;
         } else {
-            if ($group == '') {
-                return $obj;
-            } else {
-                $list = [];
-                if ($groupKey === NULL) {
-                    $list[] = $obj;
-                    while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
-                        $list[] = $obj;
-                    }
-                } else {
-                    $list[$obj[$groupKey]] = $obj;
-                    while ($obj = $ps->fetch(\PDO::FETCH_ASSOC)) {
-                        $list[$obj[$groupKey]] = $obj;
-                    }
-                }
-                return $list;
-            }
+            return $obj;
         }
     }
 
     // --- 静态方法，满足条件则移除 ---
     /**
      * @param array|string $where
-     * @param null|string $pre
      * @return bool
      */
-    public static function removeByWhere($where, ?string $pre = NULL): bool {
-        $sql = Sql::get($pre != NULL ? $pre : (self::$__pre === NULL ? SQL_PRE : self::$__pre));
+    public static function removeByWhere($where): bool {
+        $sql = Sql::get();
         $sql->delete(static::$_table);
         if(is_array($where)) {
             try {
@@ -489,8 +487,8 @@ class Mod {
     }
 
     // --- 满足条件则更新 ---
-    public static function updateByWhere(array $data, $where, ?string $pre = NULL): bool {
-        $sql = Sql::get($pre != NULL ? $pre : (self::$__pre === NULL ? SQL_PRE : self::$__pre));
+    public static function updateByWhere(array $data, $where): bool {
+        $sql = Sql::get();
         $sql->update(static::$_table, $data);
         if(is_array($where)) {
             try {
@@ -516,18 +514,18 @@ class Mod {
 
 }
 
-// --- 生成绝对单号 ---
+// --- 生成绝对唯一键值 ---
 class ModKey extends Mod {
 
     protected static $_key = '';
 
-    public function create(bool $lock = false): bool {
+    public function create(int $type = 0): bool {
         $updates = [];
         foreach ($this->_updates as $k => $v) {
             $updates[$k] = $this->$k;
         }
 
-        $sql = Sql::get($this->_pre);
+        $sql = Sql::get();
         // --- 区别开始 ---
         $column = (static::$_key !== '') ? static::$_key : static::$_primary;
         do {
@@ -538,27 +536,29 @@ class ModKey extends Mod {
         if ($ps->rowCount() > 0) {
             $this->{$column} = $updates[$column];
             // --- 重新获取 ---
-            try {
-                $sql->select('*', static::$_table)->where([
-                    $column => $updates[$column]
-                ]);
-                // --- 区别结束 ---
-                if ($lock) {
-                    $sql->append(' FOR UPDATE');
-                }
-                $ps = $this->_db->prepare($sql->getSql());
+            if ($type === 1 || $type === 2) {
+                try {
+                    $sql->select('*', static::$_table)->where([
+                        $column => $updates[$column]
+                    ]);
+                    // --- 区别结束 ---
+                    if ($type === 1) {
+                        $sql->append(' FOR UPDATE');
+                    }
+                    $ps = $this->_db->prepare($sql->getSql());
 
-                $this->_lastSqlString = $sql->getSql();
-                $this->_lastSqlData = $sql->getData();
+                    $this->_lastSqlString = $sql->getSql();
+                    $this->_lastSqlData = $sql->getData();
 
-                $ps->execute($sql->getData());
-                $a = $ps->fetch(\PDO::FETCH_ASSOC);
-                foreach($a as $k => $v) {
-                    $this->$k = $v;
+                    $ps->execute($sql->getData());
+                    $a = $ps->fetch(\PDO::FETCH_ASSOC);
+                    foreach ($a as $k => $v) {
+                        $this->$k = $v;
+                    }
+                } catch (\Exception $e) {
+                    \sys\log($e->getMessage());
+                    return false;
                 }
-            } catch (\Exception $e) {
-                \sys\log($e->getMessage());
-                return false;
             }
             $this->_updates = [];
             return true;

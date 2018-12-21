@@ -1,11 +1,11 @@
 <?php
 /**
  * 小程序、微信的登录、公众号/小程序/扫码支付均有，均OK
- * For 3.0.9
+ * For Wechat Pay SDK 3.0.9
  * Url: https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=11_1
  * User: JianSuoQiYue
  * Date: 2015/5/7 13:50
- * Last: 2018-7-28 15:45:39
+ * Last: 2018-12-12 12:36:03
  */
 declare(strict_types = 1);
 
@@ -23,14 +23,12 @@ class Wechat {
      * @param null|string $appid
      */
     public static function login(string $url, ?string $appid = NULL): void {
-
         $appid = $appid ? $appid : WECHAT_APPID;
         $lenUrl = substr($url, 0, 6);
         if ($lenUrl != 'https:' && $lenUrl != 'http:/') {
             $url = HTTP_PATH . $url;
         }
         header('Location: //open.weixin.qq.com/connect/oauth2/authorize?appid='.$appid.'&redirect_uri=' . urlencode($url) . '&response_type=code&scope=snsapi_userinfo&state=STATE#wechat_redirect');
-
     }
 
     /**
@@ -181,7 +179,6 @@ class Wechat {
         ]);
      */
     public static function createPay(array $opt = [], array $config = []) {
-
         require LIB_PATH . 'Wechat/WxpayAPI/lib/WxPay.Api.php';
 
         if (!isset($opt['type'])) {
@@ -231,7 +228,6 @@ class Wechat {
             $result = $notify->GetPayUrl($input);
             return $result["code_url"];
         }
-
     }
 
     // --- 支付回调 ---
@@ -241,7 +237,6 @@ class Wechat {
      * @param array $config
      */
     public static function payCallback(?callable $callback = NULL, array $config = []): void {
-
         require LIB_PATH . 'Wechat/WxpayAPI/lib/WxPay.Api.php';
         require LIB_PATH . 'Wechat/WxpayAPI/lib/WxPay.Notify.php';
         require LIB_PATH . 'Wechat/WxpayAPI/lib/WxPay.NotifyCallBack.php';
@@ -266,7 +261,6 @@ class Wechat {
             $notify->setCallback($callback);
         }
         $notify->Handle($wpconfig, false);
-
     }
 
 }

@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2018-7-28 15:45:28
+ * Last: 2018-12-12 12:34:27
  */
 declare(strict_types = 1);
 
@@ -21,30 +21,62 @@ class Text {
     const RANDOM_V = 'ABCEFGHJKLMNPRSTWXYZ23456789';
 
     public static function random(int $length = 8, string $source = self::RANDOM_LN): string {
-
         $len = strlen($source);
         $temp = '';
         for ($i = 0; $i < $length; ++$i) {
             $temp .= $source[rand(0, $len - 1)];
         }
         return $temp;
-
     }
 
-    // --- 是否是中国大陆的手机号 ---
-    public static function isPhone(string $p): bool {
+    // --- 显示文件大小格式化 ---
+    public static function sizeFormat(float $size, string $spliter = ' '): string {
+        static $units = array(
+            'Bytes',
+            'KB',
+            'MB',
+            'GB',
+            'TB',
+            'PB'
+        );
+        $i = 0;
+        for (; $i < 6 && $size >= 1024.0; ++$i) {
+            $size /= 1024.0;
+        }
+        return round($size, 2) . $spliter . $units[$i];
+    }
 
+    // --- 是否是邮件 ---
+    public static function isEMail(string $email): bool {
+        return preg_match('/^[-_\w\.]+\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
+    }
+
+    // --- 是否是 IP ---
+    public static function isIPv4(string $ip): bool {
+        return preg_match('/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/', $ip) ? true : false;
+    }
+
+    // --- 换行变成别的 ---
+    public static function nlReplace(string $str, $to = ''): string {
+        $str = str_replace("\r\n", "\n", $str);
+        $str = str_replace("\r", "\n", $str);
+        $str = str_replace("\n", $to, $str);
+        return $str;
+    }
+
+    // --- 以下是适用于中国大陆的方法 ---
+
+    // --- 是否是中国大陆的手机号 ---
+    public static function isPhoneCN(string $p): bool {
         if (preg_match('/^1[0-9]{10}$/', $p)) {
             return true;
         } else {
             return false;
         }
-
     }
 
     // --- 返回手机号是中国哪家运营商 ---
-    public static function phoneSP(string $p): int {
-
+    public static function phoneSPCN(string $p): int {
         $list = [
             // --- 移动 ---
             ['^13[4|5|6|7|8|9]\d{8}$', 0],
@@ -75,11 +107,10 @@ class Text {
             }
         }
         return -1;
-
     }
 
     // --- 根据中国手机号运营商分组 ---
-    public static function phoneSPGroup(array $pList): array {
+    public static function phoneSPGroupCN(array $pList): array {
         $list = ['0' => [], '1' => [], '2' => [], '-1' => []];
         foreach ($pList as $p) {
             if (($r = self::phoneSP($p)) !== false) {
@@ -97,8 +128,7 @@ class Text {
 
     // --- 是否是中国大陆身份证 ---
 
-    public static function isIdCard(string $idcard): bool {
-
+    public static function isIdCardCN(string $idcard): bool {
         if(strlen($idcard) != 18) {
             return false;
         }
@@ -123,33 +153,6 @@ class Text {
         } else {
             return false;
         }
-    }
-
-    // --- 显示文件大小格式化 ---
-    public static function sizeFormat(float $size, string $spliter = ' '): string {
-        static $units = array(
-            'Bytes',
-            'KB',
-            'MB',
-            'GB',
-            'TB',
-            'PB'
-        );
-        $i = 0;
-        for (; $i < 6 && $size >= 1024.0; ++$i) {
-            $size /= 1024.0;
-        }
-        return round($size, 2) . $spliter . $units[$i];
-    }
-
-    // --- 是否是邮件 ---
-    public static function isEMail(string $email): bool {
-        return preg_match('/^[-_\w\.]+\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
-    }
-
-    // --- 是否是 IP ---
-    public static function isIPv4(string $ip): bool {
-        return preg_match('/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/', $ip) ? true : false;
     }
 
 }
