@@ -77,12 +77,15 @@ class __Mutton__ extends Ctr {
         if ($this->post('password') == __MUTTON__PWD) {
             $json = [
                 'fileList' => [
-                    'index.php' => '',
-                    '.htaccess' => '',
+                    'ctr/__Mutton__.php' => '',
                     'mod/Mod.php' => '',
+                    'stc/__Mutton__/index.css' => '',
+                    'stc/__Mutton__/index.js' => '',
                     'sys/Boot.php' => '',
                     'sys/Ctr.php' => '',
-                    'sys/Route.php' => ''
+                    'sys/Route.php' => '',
+                    'index.php' => '',
+                    '.htaccess' => ''
                 ],
                 'const' => []
             ];
