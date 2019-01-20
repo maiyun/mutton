@@ -1,9 +1,8 @@
 # Changelog
 
-## Other languages
+## Languages
 
-[简体中文](./CHANGELOG.zh-CN.md)  
-[繁體中文](./CHANGELOG.zh-TW.md)
+[简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
 ## 5.0.0
 

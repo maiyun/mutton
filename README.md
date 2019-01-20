@@ -7,6 +7,10 @@
 
 Simple, easy-to-use and fully functional PHP framework.
 
+## Languages
+
+[简体中文](doc/README.zh-CN.md) | [繁體中文](doc/README.zh-TW.md)
+
 ## Installation
 
 Download the latest release version and put it in the website directory to start development.
@@ -97,8 +101,3 @@ This library is published under [Apache-2.0](./LICENSE) license.
 ## Name meaning
 
 The author loves to eat sheep.
-
-## Other languages
-
-[简体中文](doc/README.zh-CN.md)  
-[繁體中文](doc/README.zh-TW.md)
