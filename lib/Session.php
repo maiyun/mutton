@@ -43,6 +43,7 @@ class Session {
      */
     public static function start($link, array $opt = []): void {
         $name = isset($opt['name']) ? $opt['name'] : SESSION_NAME;
+        $ssl = isset($opt['ssl']) ? $opt['ssl'] : SESSION_SSL;
         self::$_exp = isset($opt['exp']) ? $opt['exp'] : SESSION_EXP;
 
         if (isset($_POST[$name])) {
@@ -117,7 +118,7 @@ class Session {
             }
         }
 
-        setcookie($name, self::$_token, $_SERVER['REQUEST_TIME'] + self::$_exp, '/');
+        setcookie($name, self::$_token, $_SERVER['REQUEST_TIME'] + self::$_exp, '/' ,'', $ssl, true);
 
         register_shutdown_function(function() {
             Session::update();
