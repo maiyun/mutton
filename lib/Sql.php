@@ -143,9 +143,35 @@ class Sql {
         return $this;
     }
 
-    public function update(string $f, array $s = []): Sql {
+    // --- 当不能 insert 时，update（仅能配合 insert 方法用） ---
+    public function onDuplicate(array $s): Sql {
+        if (count($s) > 0) {
+            $sql = ' ON DUPLICATE KEY UPDATE '.$this->_updateSub($s);
+            $this->_sql[] = $sql;
+        }
+        return $this;
+    }
+
+    /**
+     * --- UPDATE SQL 方法 ---
+     * @param string $f 表名
+     * @param array $s 设定 update 的值
+     * @return Sql
+     */
+    public function update(string $f, array $s): Sql {
         $this->_data = [];
-        $sql = 'UPDATE ' . $this->_pre . $f . ' SET ';
+        $sql = 'UPDATE ' . $this->_pre . $f . ' SET '.$this->_updateSub($s);
+        $this->_sql = [$sql];
+        return $this;
+    }
+
+    /**
+     * --- 生成 xx = xx 的格式，或 xx = xx + 1 格式 ---
+     * @param array $s 不可为空数组
+     * @return string
+     */
+    private function _updateSub(array $s): string {
+        $sql = '';
         if ($this->_single) {
             foreach ($s as $k => $v) {
                 if (is_array($v)) {
@@ -159,18 +185,16 @@ class Sql {
         } else {
             foreach ($s as $k => $v) {
                 if (is_array($v)) {
-                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' :p_' . $v[0] . ',';
-                    $this->_data[':p_'.$v[0]] = $v[2];
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' :u_' . $v[0] . ',';
+                    $this->_data[':u_'.$v[0]] = $v[2];
                 } else {
-                    $sql .= $this->field($k) . ' = :p_'.$k.',';
-                    $this->_data[':p_'.$k] = $v;
+                    $sql .= $this->field($k) . ' = :u_'.$k.',';
+                    $this->_data[':u_'.$k] = $v;
                 }
             }
         }
         $sql = substr($sql, 0, -1);
-
-        $this->_sql = [$sql];
-        return $this;
+        return $sql;
     }
 
     // --- 'xx' ---

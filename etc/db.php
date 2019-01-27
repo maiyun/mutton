@@ -6,6 +6,6 @@ const DB_PORT = 3306;
 const DB_CHARSET = 'utf8';
 const DB_NAME = 'mutton';
 
-const DB_USERNAME = 'mutton';
-const DB_PASSWORD = 'tUUIAhfBsp6If4Bi';
+const DB_USERNAME = 'root';
+const DB_PASSWORD = '';
 

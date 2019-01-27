@@ -12,7 +12,7 @@ CREATE TABLE `session` (
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/25 19:56
- * Last: 2018-7-28 15:27:25
+ * Last: 2019-1-27 12:49:55
  */
 declare(strict_types = 1);
 
@@ -42,7 +42,6 @@ class Session {
      * @param array $opt
      */
     public static function start($link, array $opt = []): void {
-
         $name = isset($opt['name']) ? $opt['name'] : SESSION_NAME;
         self::$_exp = isset($opt['exp']) ? $opt['exp'] : SESSION_EXP;
 
@@ -57,6 +56,7 @@ class Session {
         } else {
             self::$_db = $link;
             self::$_sql = Sql::get(isset($opt['pre']) ? $opt['pre'] : SQL_PRE);
+            self::_gc();    // --- 执行 gc ---
         }
 
         // --- 初始化 Session 数组 ---
@@ -75,7 +75,8 @@ class Session {
                 // --- 数据库 ---
                 try {
                     self::$_sql->select('*', 'session')->where([
-                        'token' => self::$_token
+                        'token' => self::$_token,
+                        ['time_update', '>=', $_SERVER['REQUEST_TIME'] - self::$_exp]
                     ]);
                     $ps = self::$_db->prepare(self::$_sql->getSql());
                     $ps->execute(self::$_sql->getData());
@@ -94,6 +95,7 @@ class Session {
         }
         // --- 本来就该添加个新 Session ---
         // --- 内存和数据库里没找到的也该添加个新 Session ---
+        // --- 数据库的 Session 已经过期加新 Session ---
         // --- 如果不存在不允许加新则返回错误 ---
         if ($needInsert) {
             self::$_token = self::_random();
@@ -120,7 +122,6 @@ class Session {
         register_shutdown_function(function() {
             Session::update();
         });
-
     }
 
     /**
@@ -142,18 +143,21 @@ class Session {
     }
 
     /**
-     * @throws \Exception
+     * --- 根据情况清空 Db 状态下的 session 表垃圾数据 ---
+     * --- 仅能在 Db 模式执行，本函数不进行判断是否是 Db 模式 ---
      */
-    public static function gc(): void {
+    private static function _gc(): void {
+        if(rand(0, 20) == 10) {
+            try {
+                self::$_sql->delete('session')->where([
+                    ['time_update', '<', $_SERVER['REQUEST_TIME'] - self::$_exp]
+                ]);
+                $ps = self::$_db->prepare(self::$_sql->getSql());
+                $ps->execute(self::$_sql->getData());
+            } catch (\Exception $e) {
 
-        if(self::$_redis === NULL) {
-            self::$_sql->delete('session')->where([
-                ['time_update', '<', $_SERVER['REQUEST_TIME'] - self::$_exp]
-            ]);
-            $ps = self::$_db->prepare(self::$_sql->getSql());
-            $ps->execute(self::$_sql->getData());
+            }
         }
-
     }
 
     private static function _random(): string {

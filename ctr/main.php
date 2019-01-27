@@ -138,23 +138,34 @@ class main extends Ctr {
                 $s3 = $sql->insert('user', ['name' => 'Bob', 'age' => '24'])->getSql();
                 $sd3 = $sql->getData();
 
+                $s4 = $sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->onDuplicate(['time_update' => '20'])->getSql();
+                $sd4 = $sql->getData();
+
                 $rtn = "<pre>\$sql->insert('user', ['name', 'age'], [
-['Ah', '16'],
-['Bob', '24']
+    ['Ah', '16'],
+    ['Bob', '24']
 ]);
 
 <b>getSql() :</b> $s;
 <b>getData():</b> ".print_r($sd, true)."
+------------------------------
 
 \$sql->insert('user', ['name', 'age'], ['Ah', '16']);
 
 <b>getSql() :</b> $s2;
 <b>getData():</b> ".print_r($sd2, true)."
+------------------------------
 
 \$sql->insert('user', ['name' => 'Bob', 'age' => '24']);
 
 <b>getSql() :</b> $s3;
-<b>getData():</b> ".print_r($sd3, true)."</pre>";
+<b>getData():</b> ".print_r($sd3, true)."
+------------------------------
+
+\$sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->onDuplicate(['time_update' => '20'])->getSql();
+
+<b>getSql() :</b> $s4;
+<b>getData():</b> ".print_r($sd4, true)."</pre>";
                 break;
             case 'select':
                 $s = $sql->select('*', 'user')->getSql();
@@ -248,6 +259,7 @@ class main extends Ctr {
 
 <b>getSql() :</b> $s;
 <b>getData():</b> ".print_r($sd, true)."
+------------------------------
 
 \$sql->update('order', ['state' => '1'])->where([
 [
@@ -265,6 +277,7 @@ class main extends Ctr {
 
 <b>getSql() :</b> $s2;
 <b>getData():</b> ".print_r($sd2, true)."
+------------------------------
 
 \$sql->update('order', ['state' => '1'])->where([
 'user_id' => '2',
