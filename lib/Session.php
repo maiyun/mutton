@@ -55,7 +55,7 @@ class Session {
             self::$_redis = $link;
         } else {
             self::$_db = $link;
-            self::$_sql = Sql::get(isset($opt['pre']) ? $opt['pre'] : SQL_PRE);
+            self::$_sql = Sql::get();
             self::_gc();    // --- 执行 gc ---
         }
 
@@ -109,7 +109,7 @@ class Session {
                     'data' => serialize([]),
                     'time_update' => $_SERVER['REQUEST_TIME'],
                     'time_add' => $_SERVER['REQUEST_TIME']
-                ]);
+                ]); // --- 不用使用 onDuplicate，因为 token 已经重新随机了 ---
                 $ps = self::$_db->prepare(self::$_sql->getSql());
                 while(!$ps->execute(self::$_sql->getData())) {
                     self::$_token = self::_random();

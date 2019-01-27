@@ -435,8 +435,10 @@ class main extends Ctr {
             $db = Db::get();
             echo "\$db = Db::get();\n\n";
 
-            Session::start($db);
-            echo "Session::start(\$db);\n\n";
+            Session::start($db, [
+                'exp' => '60'
+            ]);
+            echo "Session::start(\$db, ['exp' => '60']);\n\n";
 
             echo "<b>var_dump(\$_SESSION);</b>\n";
             var_dump($_SESSION);
@@ -461,8 +463,8 @@ class main extends Ctr {
             $rd = Redis::get();
             echo "\$rd = Redis::get();\n\n";
 
-            Session::start($rd);
-            echo "Session::start(\$rd);\n\n";
+            Session::start($rd, ['exp' => '60']);
+            echo "Session::start(\$rd, ['exp' => '60']);\n\n";
 
             echo "<b>var_dump(\$_SESSION);</b>\n";
             var_dump($_SESSION);
