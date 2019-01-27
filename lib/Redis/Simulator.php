@@ -7,7 +7,7 @@
  */
 
 /*
-CREATE TABLE `ymt_redis` (
+CREATE TABLE `redis` (
   `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
   `tag` varchar(255) NOT NULL,
   `value` text NOT NULL,
