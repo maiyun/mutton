@@ -11,6 +11,7 @@ use lib\Redis;
 use lib\Session;
 use lib\Sql;
 use lib\Storage;
+use lib\Text;
 use sys\Ctr;
 
 class main extends Ctr {
@@ -25,55 +26,58 @@ class main extends Ctr {
             '<br>PHP Verison: ' . PHP_VERSION,
 
             '<br><br><b>ROUTE(etc/set.php):</b>',
-            '<br><br><a href="'.HTTP_PATH.'article/123">View "article/123"</a>',
-            '<br><a href="'.HTTP_PATH.'article/456">View "article/456"</a>',
+            '<br><br><a href="'.HTTP_BASE.'article/123">View "article/123"</a>',
+            '<br><a href="'.HTTP_BASE.'article/456">View "article/456"</a>',
 
             '<br><br><b>AUTO ROUTE:</b>',
-            '<br><br><a href="'.HTTP_PATH.'__Mutton__/index">View "__Mutton__/index"</a>',
+            '<br><br><a href="'.HTTP_BASE.'__Mutton__/index">View "__Mutton__/index"</a>',
 
             '<br><br><b>QUERY STRING:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/qs?a=1&b=2">View "main/qs?a=1&b=2"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/qs?a=1&b=2">View "main/qs?a=1&b=2"</a>',
 
             '<br><br><b>RETURN JSON:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/json?type=1">View "main/json?type=1"</a>',
-            '<br><a href="'.HTTP_PATH.'main/json?type=2">View "main/json?type=2"</a>',
-            '<br><a href="'.HTTP_PATH.'main/json?type=3">View "main/json?type=3"</a>',
-            '<br><a href="'.HTTP_PATH.'main/json?type=4">View "main/json?type=4"</a>',
-            '<br><a href="'.HTTP_PATH.'main/json?type=5">View "main/json?type=5"</a>',
-            '<br><a href="'.HTTP_PATH.'main/json?type=6">View "main/json?type=6"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/json?type=1">View "main/json?type=1"</a>',
+            '<br><a href="'.HTTP_BASE.'main/json?type=2">View "main/json?type=2"</a>',
+            '<br><a href="'.HTTP_BASE.'main/json?type=3">View "main/json?type=3"</a>',
+            '<br><a href="'.HTTP_BASE.'main/json?type=4">View "main/json?type=4"</a>',
+            '<br><a href="'.HTTP_BASE.'main/json?type=5">View "main/json?type=5"</a>',
+            '<br><a href="'.HTTP_BASE.'main/json?type=6">View "main/json?type=6"</a>',
 
             '<br><br><b>Library test:</b>',
 
             '<br><br><b>Memcached:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/memcached">View "main/memcached"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/memcached">View "main/memcached"</a>',
 
             '<br><br><b>Net:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/net">View "main/net"</a>',
-            '<br><a href="'.HTTP_PATH.'main/netCookie">View "main/netCookie"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/net">View "main/net"</a>',
+            '<br><a href="'.HTTP_BASE.'main/netCookie">View "main/netCookie"</a>',
 
             '<br><br><b>Sql:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/sql?type=insert">View "main/sql?type=insert"</a>',
-            '<br><a href="'.HTTP_PATH.'main/sql?type=select">View "main/sql?type=select"</a>',
-            '<br><a href="'.HTTP_PATH.'main/sql?type=update">View "main/sql?type=update"</a>',
-            '<br><a href="'.HTTP_PATH.'main/sql?type=delete">View "main/sql?type=delete"</a>',
-            '<br><a href="'.HTTP_PATH.'main/sql?type=where">View "main/sql?type=where"</a>',
-            '<br><a href="'.HTTP_PATH.'main/sql?type=single-mode">View "main/sql?type=single-mode"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/sql?type=insert">View "main/sql?type=insert"</a>',
+            '<br><a href="'.HTTP_BASE.'main/sql?type=select">View "main/sql?type=select"</a>',
+            '<br><a href="'.HTTP_BASE.'main/sql?type=update">View "main/sql?type=update"</a>',
+            '<br><a href="'.HTTP_BASE.'main/sql?type=delete">View "main/sql?type=delete"</a>',
+            '<br><a href="'.HTTP_BASE.'main/sql?type=where">View "main/sql?type=where"</a>',
+            '<br><a href="'.HTTP_BASE.'main/sql?type=single-mode">View "main/sql?type=single-mode"</a>',
 
             '<br><br><b>Redis:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/redis_simulator">View "main/redis_simulator"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/redis_simulator">View "main/redis_simulator"</a>',
 
             '<br><br><b>Session:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/session_db">View "main/session_db"</a>',
-            '<br><a href="'.HTTP_PATH.'main/session_redis">View "main/session_redis"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/session_db">View "main/session_db"</a>',
+            '<br><a href="'.HTTP_BASE.'main/session_redis">View "main/session_redis"</a>',
 
             '<br><br><b>Captcha:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/captcha_fastbuild">View "main/captcha_fastbuild"</a>',
-            '<br><a href="'.HTTP_PATH.'main/captcha_base64">View "main/captcha_base64"</a>',
+            '<br><br><a href="'.HTTP_BASE.'main/captcha_fastbuild">View "main/captcha_fastbuild"</a>',
+            '<br><a href="'.HTTP_BASE.'main/captcha_base64">View "main/captcha_base64"</a>',
 
             '<br><br><b>Storage:</b>',
-            '<br><br><a href="'.HTTP_PATH.'main/storage_oss">View "main/storage_oss"</a>',
-            '<br><a href="'.HTTP_PATH.'main/storage_oss_direct">View "main/storage_oss_direct"</a>',
-            '<br><a href="'.HTTP_PATH.'main/storage_cos">View "main/storage_cos"</a>'
+            '<br><br><a href="'.HTTP_BASE.'main/storage_oss">View "main/storage_oss"</a>',
+            '<br><a href="'.HTTP_BASE.'main/storage_oss_direct">View "main/storage_oss_direct"</a>',
+            '<br><a href="'.HTTP_BASE.'main/storage_cos">View "main/storage_cos"</a>',
+
+            '<br><br><b>Text:</b>',
+            '<br><br><a href="'.HTTP_BASE.'main/text">View "main/text"</a>'
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
@@ -343,7 +347,7 @@ class main extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_PATH.'main/memcached">Default</a> | <a href="'.HTTP_PATH.'main/memcached?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/memcached?value=bbb">Set "bbb"</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'main/memcached">Default</a> | <a href="'.HTTP_BASE.'main/memcached?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'main/memcached?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function net() {
@@ -425,7 +429,7 @@ class main extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_PATH.'main/redis_simulator">Default</a> | <a href="'.HTTP_PATH.'main/redis_simulator?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/redis_simulator?value=bbb">Set "bbb"</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'main/redis_simulator">Default</a> | <a href="'.HTTP_BASE.'main/redis_simulator?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'main/redis_simulator?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function session_db() {
@@ -463,7 +467,7 @@ class main extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_PATH.'main/session_db">Default</a> | <a href="'.HTTP_PATH.'main/session_db?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/session_db?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'main/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'main/session_db">Default</a> | <a href="'.HTTP_BASE.'main/session_db?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'main/session_db?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'main/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function session_redis() {
@@ -489,7 +493,7 @@ class main extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_PATH.'main/session_redis">Default</a> | <a href="'.HTTP_PATH.'main/session_redis?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/session_redis?value=bbb">Set "bbb"</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'main/session_redis">Default</a> | <a href="'.HTTP_BASE.'main/session_redis?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'main/session_redis?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function captcha_fastbuild() {
@@ -634,6 +638,14 @@ html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-fa
 
     public function storage_cos() {
         return 'Coming soon.<br><br>' . $this->_getEnd();
+    }
+
+    public function text() {
+        $this->obStart();
+        echo 'var_dump(Text::random(16, Text::RANDOM_LUNS)):<br><br>';
+        var_dump(Text::random(16, Text::RANDOM_LUNS));
+        $rtn = $this->obEnd();
+        return $rtn . '<br><br>' . $this->_getEnd();
     }
 
     // --- END ---

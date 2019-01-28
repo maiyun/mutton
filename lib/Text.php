@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2018-12-12 12:34:27
+ * Last: 2019-1-28 13:27:16
  */
 declare(strict_types = 1);
 
@@ -14,11 +14,13 @@ class Text {
     const RANDOM_N = '0123456789';
     const RANDOM_U = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const RANDOM_L = 'abcdefghijklmnopqrstuvwxyz';
-    const RANDOM_UN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const RANDOM_LN = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    const RANDOM_LU = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
-    const RANDOM_LUN = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const RANDOM_V = 'ABCEFGHJKLMNPRSTWXYZ23456789';
+
+    const RANDOM_UN = self::RANDOM_U . self::RANDOM_N;
+    const RANDOM_LN = self::RANDOM_L . self::RANDOM_N;
+    const RANDOM_LU = self::RANDOM_L . self::RANDOM_U;
+    const RANDOM_LUN = self::RANDOM_L . self::RANDOM_U . self::RANDOM_N;
+    const RANDOM_V = 'ACEFGHJKLMNPRSTWXY345679';
+    const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]';
 
     public static function random(int $length = 8, string $source = self::RANDOM_LN): string {
         $len = strlen($source);
