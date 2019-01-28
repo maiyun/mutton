@@ -5,7 +5,7 @@
 [![GitHub Releases](https://img.shields.io/github/release/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/releases "Stable Release")
 [![GitHub Pre-Releases](https://img.shields.io/github/release/MaiyunNET/Mutton/all.svg)](https://github.com/MaiyunNET/Mutton/releases "Pre-Release")
 
-Simple, easy-to-use and fully functional PHP framework.
+Simple, easy to use, full functionality of the PHP framework.
 
 ## Languages
 

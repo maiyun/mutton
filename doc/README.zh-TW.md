@@ -5,7 +5,7 @@
 [![GitHub Releases](https://img.shields.io/github/release/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/releases "Stable Release")
 [![GitHub Pre-Releases](https://img.shields.io/github/release/MaiyunNET/Mutton/all.svg)](https://github.com/MaiyunNET/Mutton/releases "Pre-Release")
 
-簡單，易用且功能完整的 PHP 框架。
+簡單，易用，功能完整開袋即食的 PHP 框架。
 
 ## 安裝
 
