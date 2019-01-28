@@ -110,14 +110,14 @@ class __Mutton__ extends Ctr {
                             $arr = [];
                             $content = file_get_contents($file);
 
-                            preg_match_all('/const.*?([A-Z0-9_]+)/', $content, $matches);
+                            preg_match_all('/const\\s+?([A-Z0-9_]+)/', $content, $matches);
                             if (count($matches[1]) > 0) {
                                 foreach ($matches[1] as $val) {
                                     $arr[] = $val;
                                 }
                             }
 
-                            preg_match_all('/define.+?\'([A-Z0-9_]+?)\'/', $content, $matches);
+                            preg_match_all('/define[\\s\\S]+?\'([A-Z0-9_]+?)\'/', $content, $matches);
                             if (count($matches[1]) > 0) {
                                 foreach ($matches[1] as $val) {
                                     $arr[] = '\''.$val.'\'';

@@ -120,15 +120,52 @@ class Session {
 
         setcookie($name, self::$_token, $_SERVER['REQUEST_TIME'] + self::$_exp, '/' ,'', $ssl, true);
 
-        register_shutdown_function(function() {
-            Session::update();
-        });
+        register_shutdown_function([self::class, '_update']);
     }
 
     /**
+     * --- 获取有有效期限制的 Session ---
+     * @param string $name
+     * @return mixed
+     */
+    public static function get(string $name) {
+        // --- get 应该用不到 gc，因为本来就没多小，靠 session 的 gc 就能清理，而且，get 如果不存在也被自动清理，set 了总不能不 get 吧 ---
+        if (isset($_SESSION['__sessionGet']) && isset($_SESSION['__sessionGet'][$name])) {
+            if ($_SESSION['__sessionGet'][$name]['exp'] >= $_SERVER['REQUEST_TIME']) {
+                return $_SESSION['__sessionGet'][$name]['value'];
+            } else {
+                unset($_SESSION['__sessionGet'][$name]);
+                if (count($_SESSION['__sessionGet']) === 0) {
+                    unset($_SESSION['__sessionGet']);
+                }
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 设定会过期的 session 值 ---
+     * @param string $name Session 名
+     * @param mixed $value Session 值
+     * @param int $exp 有效期，如 60 代表 60 秒
+     */
+    public static function set(string $name, $value, int $exp): void {
+        if (!isset($_SESSION['__sessionGet'])) {
+            $_SESSION['__sessionGet'] = [];
+        }
+        $_SESSION['__sessionGet'][$name] = [
+            'exp' => $_SERVER['REQUEST_TIME'] + $exp,
+            'value' => $value
+        ];
+    }
+
+    /**
+     * --- 页面整体结束时，要写入到 Redis 或 数据库 ---
      * @throws \Exception
      */
-    public static function update(): void {
+    public static function _update(): void {
         if(self::$_redis !== NULL) {
             self::$_redis->setValue('se_' . self::$_token, $_SESSION, self::$_exp);
         } else {
@@ -161,6 +198,10 @@ class Session {
         }
     }
 
+    /**
+     * --- 返回随机数 ---
+     * @return string
+     */
     private static function _random(): string {
         $s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $sl = strlen($s);

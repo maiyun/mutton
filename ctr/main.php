@@ -443,17 +443,27 @@ class main extends Ctr {
             echo "<b>var_dump(\$_SESSION);</b>\n";
             var_dump($_SESSION);
 
-            echo "\n\$_SESSION['value'] = isset(\$_GET['value']) ? \$_GET['value'] : 'ok';\n\n";
+            echo "\n\$_SESSION['value'] = '" . (isset($_GET['value']) ? $_GET['value'] : 'ok') . "';\n\n";
             $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
 
             echo "<b>var_dump(\$_SESSION);</b>\n";
             var_dump($_SESSION);
+
+            echo "\n<b>var_dump(Session::get('temp'));</b>\n";
+            var_dump(Session::get('temp'));
+
+            if (isset($_GET['temp'])) {
+                echo "\nSession::set(\"temp\", " . $_GET['temp'] . ", 5);\n\n";
+                Session::set("temp", $_GET['temp'], 5);
+
+                echo "<b>Click other link to view the example.</b>";
+            }
         } catch (\Exception $e) {
             echo $e->getMessage();
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_PATH.'main/session_db">Default</a> | <a href="'.HTTP_PATH.'main/session_db?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/session_db?value=bbb">Set "bbb"</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_PATH.'main/session_db">Default</a> | <a href="'.HTTP_PATH.'main/session_db?value=aaa">Set "aaa"</a> | <a href="'.HTTP_PATH.'main/session_db?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'main/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.HTTP_PATH.'">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function session_redis() {
