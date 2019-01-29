@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2019-1-28 13:27:16
+ * Last: 2019-1-29 16:10:55
  */
 declare(strict_types = 1);
 
@@ -19,7 +19,7 @@ class Text {
     const RANDOM_LN = self::RANDOM_L . self::RANDOM_N;
     const RANDOM_LU = self::RANDOM_L . self::RANDOM_U;
     const RANDOM_LUN = self::RANDOM_L . self::RANDOM_U . self::RANDOM_N;
-    const RANDOM_V = 'ACEFGHJKLMNPRSTWXY345679';
+    const RANDOM_V = 'ACEFGHJKLMNPRSTWXY34567';
     const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]';
 
     public static function random(int $length = 8, string $source = self::RANDOM_LN): string {

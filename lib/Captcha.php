@@ -4,7 +4,7 @@
  * Url: https://github.com/Gregwar/Captcha
  * User: JianSuoQiYue
  * Date: 2018-7-4 09:37
- * Last: 2018-12-12 17:46:30
+ * Last: 2019-1-29 16:10:50
  */
 declare(strict_types = 1);
 
@@ -29,7 +29,7 @@ class Captcha {
     }
 
     public function __construct(int $width, int $height, int $len = 4) {
-        $phrase = new PhraseBuilder($len, 'ABCEFGHJKLMNPRSTWXYZ23456789');
+        $phrase = new PhraseBuilder($len, 'ACEFGHJKLMNPRSTWXY34567');
         $this->_link = new CaptchaBuilder(NULL, $phrase);
         $this->_link->build($width, $height);
     }

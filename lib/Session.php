@@ -12,7 +12,7 @@ CREATE TABLE `session` (
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/25 19:56
- * Last: 2019-1-27 12:49:55
+ * Last: 2019-1-29 17:18:25
  */
 declare(strict_types = 1);
 
@@ -150,14 +150,17 @@ class Session {
      * @param string $name Session 名
      * @param mixed $value Session 值
      * @param int $exp 有效期，如 60 代表 60 秒
+     * @param bool $auto 自动续期，默认不自动续期
      */
-    public static function set(string $name, $value, int $exp): void {
+    public static function set(string $name, $value, int $exp, bool $auto = false): void {
         if (!isset($_SESSION['__sessionGet'])) {
             $_SESSION['__sessionGet'] = [];
         }
         $_SESSION['__sessionGet'][$name] = [
             'exp' => $_SERVER['REQUEST_TIME'] + $exp,
-            'value' => $value
+            'value' => $value,
+            'expOrig' => $exp,
+            'auto' => $auto
         ];
     }
 
@@ -176,6 +179,15 @@ class Session {
      * @throws \Exception
      */
     public static function _update(): void {
+        // --- SESSION ---
+        if (isset($_SESSION['__sessionGet'])) {
+            foreach ($_SESSION['__sessionGet'] as $name => $session) {
+                if ($session['auto']) {
+                    $_SESSION['__sessionGet'][$name]['exp'] = $_SERVER['REQUEST_TIME'] + $session['expOrig'];
+                }
+            }
+        }
+        // --- 写入内存或数据库 ---
         if(self::$_redis !== NULL) {
             self::$_redis->setValue('se_' . self::$_token, $_SESSION, self::$_exp);
         } else {
