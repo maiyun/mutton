@@ -78,6 +78,7 @@ class __Mutton__ extends Ctr {
             $json = [
                 'fileList' => [
                     'ctr/__Mutton__.php' => '',
+                    'etc/const.php' => '',
                     'mod/Mod.php' => '',
                     'stc/__Mutton__/index.css' => '',
                     'stc/__Mutton__/index.js' => '',
