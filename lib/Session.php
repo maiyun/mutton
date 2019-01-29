@@ -162,6 +162,16 @@ class Session {
     }
 
     /**
+     * --- 移除含有有效期的 Session ---
+     * @param string $name Session 名
+     */
+    public static function remove(string $name): void {
+        if (isset($_SESSION['__sessionGet'])) {
+            unset($_SESSION['__sessionGet'][$name]);
+        }
+    }
+
+    /**
      * --- 页面整体结束时，要写入到 Redis 或 数据库 ---
      * @throws \Exception
      */
