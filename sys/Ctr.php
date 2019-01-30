@@ -69,8 +69,16 @@ class Ctr {
     }
 
     // --- 获取 json 数据 ---
-    protected function loadData(string $path): object {
-        return json_decode(file_get_contents(DATA_PATH . $path . '.json'));
+    protected function loadData(string $path) {
+        if (strpos($path, '.') === false) {
+            if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
+                return json_decode($f);
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     // --- 必须使用 https 访问 ---
