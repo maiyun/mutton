@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/11/26 12:56
- * Last: 2018-12-8 15:49:44
+ * Last: 2019-2-1 14:57:39
  */
 declare(strict_types = 1);
 
@@ -12,31 +12,42 @@ class Aes {
 
     const AES_256_ECB = 'AES-256-ECB';
     const AES_256_CBC = 'AES-256-CBC';
-    const AES_256_CFB = 'AES-256-CFB';
+    const AES_256_CFB = 'AES-256-CFB'; // 一般用这个，设置 $iv，自动就切换成了这个
 
     // --- 返回空代表加密失败 ---
-    public static function encrypt(string $original, string $key, string $iv = '', string $method = 'AES-256-ECB'): string {
+    public static function encrypt(string $original, string $key, string $iv = '', string $method = 'AES-256-ECB') {
         if ($iv !== '') {
             $method = $method === 'AES-256-ECB' ? 'AES-256-CFB' : $method;
-            $iv = substr(md5($iv), 8, 16);
+            $iv = substr(hash_hmac('md5', $iv, 'mutton'), 8, 16);
         }
-        if ($rtn = openssl_encrypt($original . '#', $method, $key, OPENSSL_RAW_DATA, $iv)) {
+        if ($method === self::AES_256_CFB) {
+            $original = 'm#' . $original;
+        }
+        if ($rtn = openssl_encrypt($original, $method, $key, OPENSSL_RAW_DATA, $iv)) {
             return base64_encode($rtn);
         } else {
-            return '';
+            return false;
         }
     }
 
     // --- 返回空代表解密失败 ---
-    public static function decrypt(string $encrypt, string $key, string $iv = '', string $method = 'AES-256-ECB'): string {
+    public static function decrypt(string $encrypt, string $key, string $iv = '', string $method = 'AES-256-ECB') {
         if ($iv !== '') {
             $method = $method === 'AES-256-ECB' ? 'AES-256-CFB' : $method;
-            $iv = substr(md5($iv), 8, 16);
+            $iv = substr(hash_hmac('md5', $iv, 'mutton'), 8, 16);
         }
         if ($rtn = openssl_decrypt(base64_decode($encrypt), $method, $key, OPENSSL_RAW_DATA, $iv)) {
-            return $rtn;
+            if ($method === self::AES_256_CFB) {
+                if (substr($rtn, 0, 2) === 'm#') {
+                    return substr($rtn, 2);
+                } else {
+                    return false;
+                }
+            } else {
+                return $rtn;
+            }
         } else {
-            return '';
+            return false;
         }
     }
 

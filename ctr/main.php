@@ -3,6 +3,7 @@ declare(strict_types = 1);
 
 namespace ctr;
 
+use lib\Aes;
 use lib\Captcha;
 use lib\Db;
 use lib\Memcached;
@@ -77,7 +78,10 @@ class main extends Ctr {
             '<br><a href="'.HTTP_BASE.'main/storage_cos">View "main/storage_cos"</a>',
 
             '<br><br><b>Text:</b>',
-            '<br><br><a href="'.HTTP_BASE.'main/text">View "main/text"</a>'
+            '<br><br><a href="'.HTTP_BASE.'main/text">View "main/text"</a>',
+
+            '<br><br><b>Aes:</b>',
+            '<br><br><a href="'.HTTP_BASE.'main/aes">View "main/aes"</a>'
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
@@ -539,8 +543,7 @@ class main extends Ctr {
         $this->obStart();
         try {
             $oss = Storage::get('OSS');
-            echo '
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
+            echo '<script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js"></script>
 <script>
 function upload() {
     if ($("#file").val() !== "") {
@@ -644,6 +647,78 @@ html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-fa
         $this->obStart();
         echo 'var_dump(Text::random(16, Text::RANDOM_LUNS)):<br><br>';
         var_dump(Text::random(16, Text::RANDOM_LUNS));
+        $rtn = $this->obEnd();
+        return $rtn . '<br><br>' . $this->_getEnd();
+    }
+
+    public function aes() {
+        $this->obStart();
+
+        echo '<b>AES-256-ECB:</b>';
+
+        $key = 'testkey';
+        $text = Aes::encrypt('Original text', $key);
+        echo '<pre>';
+        echo "\$key = 'testkey';\n\$text = Aes::encrypt('Original text', \$key);\nvar_dump(\$text);";
+        echo '</pre>';
+        var_dump($text);
+
+        $orig = Aes::decrypt($text, $key);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key);\nvar_dump(\$orig);";
+        echo '</pre>';
+        var_dump($orig);
+
+        $orig = Aes::decrypt($text, 'otherKey');
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, 'otherKey');\nvar_dump(\$orig);";
+        echo '</pre>';
+        var_dump($orig);
+
+        echo '<br><br><b>AES-256-CFB:</b>';
+
+        $key = 'testkey';
+        $iv = 'iloveu';
+        $text = Aes::encrypt('Original text', $key, $iv);
+        echo '<pre>';
+        echo "\$key = 'testkey';\n\$iv = 'iloveu';\n\$text = Aes::encrypt('Original text', \$key, \$iv);\nvar_dump(\$text);";
+        echo '</pre>';
+        var_dump($text);
+
+        $orig = Aes::decrypt($text, $key, $iv);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv);\nvar_dump(\$orig);";
+        echo '</pre>';
+        var_dump($orig);
+
+        $orig = Aes::decrypt($text, $key, 'otherIv');
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv');\nvar_dump(\$orig);";
+        echo '</pre>';
+        var_dump($orig);
+
+        echo '<br><br><b>AES-256-CBC:</b>';
+
+        $key = 'testkey';
+        $iv = 'iloveu';
+        $text = Aes::encrypt('Original text', $key, $iv, Aes::AES_256_CBC);
+        echo '<pre>';
+        echo "\$key = 'testkey';\n\$iv = 'iloveu';\n\$text = Aes::encrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);\nvar_dump(\$text);";
+        echo '</pre>';
+        var_dump($text);
+
+        $orig = Aes::decrypt($text, $key, $iv, Aes::AES_256_CBC);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv, Aes::AES_256_CBC);\nvar_dump(\$orig);";
+        echo '</pre>';
+        var_dump($orig);
+
+        $orig = Aes::decrypt($text, $key, 'otherIv', Aes::AES_256_CBC);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv', Aes::AES_256_CBC);\nvar_dump(\$orig);";
+        echo '</pre>';
+        var_dump($orig);
+
         $rtn = $this->obEnd();
         return $rtn . '<br><br>' . $this->_getEnd();
     }
