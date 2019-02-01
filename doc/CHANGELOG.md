@@ -4,6 +4,14 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 5.0.2
+
+[+] The session library add a "remove" method that manually removes session values that have not yet expired.  
+[+] The set method of Session increases the auto parameter and automatically is renewed for session values that have a valid validity period.  
+[\*] Optimizes the Text and Captcha Library's verification code strings for better visually differentiated characters.  
+[\*] Optimizes "loadData" methods to prevent cross-level access to files.  
+[\*] Optimizes the Aes library, the CFB mode automatically detects whether the decrypted data is normal.
+
 ## 5.0.1
 
 [+] Text Library add RANDOM_LUNS constants.  

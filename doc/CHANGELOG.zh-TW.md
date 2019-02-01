@@ -1,5 +1,13 @@
 # 更新日誌
 
+## 5.0.2
+
+[+] Session 庫增加 remove 方法，可手動移除還未到期的 session 值。  
+[+] Session 的 set 方法增加 auto 參數，可自動為有有效期的 session 值續期。  
+[\*] 優化 Text 和 Captcha 庫的驗證碼字串為更好肉眼區分的字元。  
+[\*] 優化 loadData 方法，防止跨級獲取檔案。  
+[\*] 優化 Aes 庫，CFB 模式自動檢測解密資料是否正常。
+
 ## 5.0.1
 
 [+] Text 庫添加 RANDOM_LUNS 常量。  
