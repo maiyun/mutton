@@ -26,7 +26,7 @@ if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[
 
 ## 庫
 
-Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Ssh, Storage (OSS/COS), Text, Wechat.
+Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Storage (OSS / COS), Text, Wechat, Comm (Ssh / Sftp).
 
 ## 部分特性
 
@@ -84,7 +84,7 @@ $userList = User::getList([
 
 ### 其他演示
 
-可以下載後訪問首頁和查看首頁代碼（ctr/main.php）看更多示例。
+可以下載後訪問首頁和查看首頁代碼（ctr/test.php）看更多示例。
 
 ## 更新日志
 

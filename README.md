@@ -30,7 +30,7 @@ if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[
 
 ## Library
 
-Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Ssh, Storage (OSS/COS), Text, Wechat.
+Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Storage (OSS / COS), Text, Wechat, Comm (Ssh / Sftp).
 
 ## Some features
 
@@ -88,7 +88,7 @@ Note: All database operations are secure in this framework.
 
 ## Other demos
 
-You can download and view the home Code (ctr/main.php) to see more examples.
+You can download and view the home Code (ctr/test.php) to see more examples.
 
 ## Changelog
 
