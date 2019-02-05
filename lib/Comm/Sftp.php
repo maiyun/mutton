@@ -2,16 +2,14 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-2-2 22:11
- * Last: 2019-2-4 13:23:36
+ * Last: 2019-2-5 22:47:39
  */
 
 declare(strict_types = 1);
 
 namespace lib\Comm;
 
-use OSS\Result\GetStorageCapacityResult;
 use phpseclib\Crypt\RSA;
-use sys\Route;
 
 class Sftp {
 
