@@ -34,6 +34,7 @@ class __Mutton__ extends Ctr {
                         // --- 校验 md5 ---
                         $list = [];
                         $slist = [];  // --- 严格模式 ---
+                        $flist = [];  // --- 完全模式 ---
 
                         $dir = dir(LIB_PATH);
                         while (($fileName = $dir->read()) !== false) {
@@ -63,6 +64,10 @@ class __Mutton__ extends Ctr {
                                     // --- 似乎没问题 ---
                                 } else {
                                     $list[] = 'The file "'.$file.'" mismatch, original "'.$md5.'", yours "'.$md5n.'".';
+                                }
+                            } else {
+                                if (substr($file, 0, 3) === 'lib') {
+                                    $flist[] = 'The file "'.$file.'" not been installed.';
                                 }
                             }
                         }
@@ -109,7 +114,7 @@ class __Mutton__ extends Ctr {
                             }
                         }
                         $dir->close();
-                        return [1, 'list' => $list, 'slist' => $this->post('strict') == '1' ? $slist : []];
+                        return [1, 'list' => $list, 'slist' => $this->post('strict') == '1' ? $slist : [], 'flist' => $this->post('full') == '1' ? $flist : []];
                     } else {
                         return [0, 'Decryption failed.'];
                     }

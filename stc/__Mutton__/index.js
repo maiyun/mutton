@@ -40,19 +40,26 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         methods: {
 		    // --- Check ---
-            check: function (strict) {
+            check: function (strict, full) {
                 var _this = this;
                 strict = strict || false;
+                full = full || false;
                 _this.mask = true;
-                post(HTTP_BASE+'__Mutton__/apiCheck', {password: _this.password, code: _this.code, strict: strict ? '1' : '0'}, function (j) {
+                post(HTTP_BASE+'__Mutton__/apiCheck', {password: _this.password, code: _this.code, strict: strict ? '1' : '0', full: full ? '1' : '0'}, function (j) {
                     _this.mask = false;
                     if (j.result > 0) {
                         var list = j.list;
                         if (strict) {
                             list = list.concat(j.slist);
                         }
+                        if (full) {
+                            if (j.flist.length > 0) {
+                                list.push('--------------------------------------------------');
+                                list = list.concat(j.flist);
+                            }
+                        }
                         _this.list = list;
-                        if (j.list.length === 0) {
+                        if (list.length === 0) {
                             _this.alert = 'There are no content to update.';
                         }
                     } else {

@@ -36,7 +36,7 @@
                         <div class="tab__panel__item" v-else-if="tab == 1">
                             <div style="padding-bottom: 10px;">Please enter the code:</div>
                             <div class="textbox"><textarea class="textbox__in" rows="8" v-model="code" style="resize: vertical;"></textarea></div>
-                            <div style="text-align: center; margin-top: 10px;"><mu-button @click.native="check()">Check</mu-button><mu-button @click.native="check(true)" style="margin-left: 10px;">Strict check</mu-button></div>
+                            <div style="text-align: center; margin-top: 10px;"><mu-button @click.native="check()">Check</mu-button><mu-button @click.native="check(true)" style="margin-left: 10px;">Strict check</mu-button><mu-button @click.native="check(true, true)" style="margin-left: 10px;">Full check</mu-button></div>
                             <div style="margin-top: 10px;">Mismatch file list:</div>
                             <mu-list :list="list"></mu-list>
                         </div>
