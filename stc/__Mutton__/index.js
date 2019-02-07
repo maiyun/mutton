@@ -40,13 +40,18 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         methods: {
 		    // --- Check ---
-            check: function () {
+            check: function (strict) {
                 var _this = this;
+                strict = strict || false;
                 _this.mask = true;
-                post(HTTP_BASE+'__Mutton__/apiCheck', {password: _this.password, code: _this.code}, function (j) {
+                post(HTTP_BASE+'__Mutton__/apiCheck', {password: _this.password, code: _this.code, strict: strict ? '1' : '0'}, function (j) {
                     _this.mask = false;
                     if (j.result > 0) {
-                        _this.list = j.list;
+                        var list = j.list;
+                        if (strict) {
+                            list = list.concat(j.slist);
+                        }
+                        _this.list = list;
                         if (j.list.length === 0) {
                             _this.alert = 'There are no content to update.';
                         }

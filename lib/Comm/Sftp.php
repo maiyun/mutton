@@ -31,7 +31,7 @@ class Sftp {
 
         $this->_link = new \phpseclib\Net\SFTP($host, $port);
         if ($pwd !== '') {
-            if ($this->_link->login($user, $pwd)) {
+            if (@$this->_link->login($user, $pwd)) {
                 return true;
             } else {
                 throw new \Exception('[Error][lib\\Comm\\Sftp] Password failed.');

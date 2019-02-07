@@ -30,7 +30,7 @@ class Ssh2 {
 
         $this->_link = new \phpseclib\Net\SSH2($host, $port);
         if ($pwd !== '') {
-            if ($this->_link->login($user, $pwd)) {
+            if (@$this->_link->login($user, $pwd)) {
                 return true;
             } else {
                 throw new \Exception('[Error][lib\\Comm\\Ssh2] Password failed.');
