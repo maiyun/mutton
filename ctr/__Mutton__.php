@@ -106,6 +106,7 @@ class __Mutton__ extends Ctr {
                                             foreach ($barr as $val) {
                                                 $list[] = 'The file "etc/' . $fileName . '" missing constants: ' . $val . '.';
                                             }
+                                            unset($json['const']['etc/' . $fileName]);
                                         } else {
                                             $slist[] = 'The file "etc/' . $fileName . '" does not found on Mutton Official Etc.';
                                         }
@@ -114,6 +115,9 @@ class __Mutton__ extends Ctr {
                             }
                         }
                         $dir->close();
+                        foreach ($json['const'] as $file => $arr) {
+                            $flist[] = 'The file "'.$file.'" not been installed.';
+                        }
                         return [1, 'list' => $list, 'slist' => $this->post('strict') == '1' ? $slist : [], 'flist' => $this->post('full') == '1' ? $flist : []];
                     } else {
                         return [0, 'Decryption failed.'];
@@ -142,6 +146,7 @@ class __Mutton__ extends Ctr {
                     'sys/Boot.php' => '',
                     'sys/Ctr.php' => '',
                     'sys/Route.php' => '',
+                    'view/__Mutton__/index.php' => '',
                     'index.php' => '',
                     '.htaccess' => ''
                 ],
