@@ -4,6 +4,11 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 5.1.0
+
+[+] Mutton Portal adds strict mode and full mode, and the strict pattern is used to determine whether there are third-party and deprecated files, all of which are used to determine whether all official libraries are fully installed.  
+[\*] Remove the Ssh library, add the Comm library, include Ssh and Sftp trusted sublibrary (old libraries can continue to be used without deletion, but do not do update maintenance and can be migrated to the Comm library).
+
 ## 5.0.2
 
 [+] The session library add a "remove" method that manually removes session values that have not yet expired.  
