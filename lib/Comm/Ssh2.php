@@ -28,7 +28,7 @@ class Ssh2 {
         $pub = isset($opt['pub']) ? $opt['pub'] : COMM_SSH_PUB;
         $prv = isset($opt['prv']) ? $opt['prv'] : COMM_SSH_PRV;
 
-        $this->_link = new \phpseclib\Net\SSH2($host, $port);
+        $this->_link = new \phpseclib\Net\SSH2($host, $port, 5);
         if ($pwd !== '') {
             if (@$this->_link->login($user, $pwd)) {
                 return true;

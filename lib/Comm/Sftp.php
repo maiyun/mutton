@@ -29,7 +29,7 @@ class Sftp {
         $pub = isset($opt['pub']) ? $opt['pub'] : COMM_SSH_PUB;
         $prv = isset($opt['prv']) ? $opt['prv'] : COMM_SSH_PRV;
 
-        $this->_link = new \phpseclib\Net\SFTP($host, $port);
+        $this->_link = new \phpseclib\Net\SFTP($host, $port, 5);
         if ($pwd !== '') {
             if (@$this->_link->login($user, $pwd)) {
                 return true;
