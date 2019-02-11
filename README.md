@@ -13,7 +13,7 @@ Simple, easy to use, full functionality of the PHP framework.
 
 ## Installation
 
-Download the latest release version and put it in the website directory to start development.
+Download the latest release and put it to directory, then to start development.
 
 ## Environment
 
@@ -32,13 +32,13 @@ if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[
 
 Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Storage (OSS / COS), Text, Wechat, Comm (Ssh / Sftp).
 
-## Some features
+## Features
 
 ### No brains
 
 Based on the idea of not using the brain, the commonly used and uniform style of the library has been encapsulated.
 
-### Library Auto Load
+### Library auto load
 
 You can use the library directly without having to manually include them.
 
@@ -58,6 +58,8 @@ Reasonable use of filters, you can quickly filter database entries.
 
 For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment (forthcoming support) has been completed package.
 
+#### And more...
+
 ## Demonstrate
 
 ### Generate 16-bit random numbers
@@ -72,7 +74,7 @@ $str = Text::random(16, Text::RANDOM_N);
 Captcha::get(400, 100)->output();
 ```
 
-### Get a list from the database based on criteria
+### Get a list from the database
 
 ```php
 $userList = User::getList([
@@ -100,4 +102,4 @@ This library is published under [Apache-2.0](./LICENSE) license.
 
 ## Name meaning
 
-The author loves to eat sheep.
+Sheep are so cute.

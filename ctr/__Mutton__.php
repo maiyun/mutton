@@ -48,6 +48,10 @@ class __Mutton__ extends Ctr {
                                             // --- 似乎没问题 ---
                                         } else {
                                             $list[] = 'The file "lib/' . $fileName . '" mismatch, original "' . $json['fileList']['lib/' . $fileName] . '", yours "' . $md5n . '".';
+                                            $fileNameS = substr($fileName, 0, strrpos($fileName, '.'));
+                                            if (is_dir(LIB_PATH.$fileNameS)) {
+                                                $list[] = 'Please replace the "lib/'.$fileNameS.'" folder.';
+                                            }
                                         }
                                         unset($json['fileList']['lib/' . $fileName]);
                                     } else {
@@ -64,6 +68,10 @@ class __Mutton__ extends Ctr {
                                     // --- 似乎没问题 ---
                                 } else {
                                     $list[] = 'The file "'.$file.'" mismatch, original "'.$md5.'", yours "'.$md5n.'".';
+                                    $fileS = substr($file, 0, strrpos($file, '.'));
+                                    if (is_dir(ROOT_PATH.$fileS)) {
+                                        $list[] = 'Please replace the "'.$fileS.'" folder.';
+                                    }
                                 }
                             } else {
                                 if (substr($file, 0, 3) === 'lib') {

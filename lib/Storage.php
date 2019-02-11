@@ -22,7 +22,6 @@ class Storage {
      */
     public static function get(string $name, array $opt = []): IStorage {
         try {
-            require LIB_PATH . 'Storage/' . $name . '.php';
             $class = 'lib\\Storage\\' . $name;
             return new $class($opt);
         } catch (\Exception $e) {

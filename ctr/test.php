@@ -4,9 +4,11 @@ declare(strict_types = 1);
 namespace ctr;
 
 use lib\Aes;
+use lib\Aliyun;
 use lib\Captcha;
 use lib\Comm;
 use lib\Db;
+use lib\Dns;
 use lib\Memcached;
 use lib\Net;
 use lib\Redis;
@@ -87,7 +89,10 @@ class test extends Ctr {
             '<br><br><a href="'.HTTP_BASE.'test/aes">View "test/aes"</a>',
 
             '<br><br><b>Ssh:</b>',
-            '<br><br><a href="'.HTTP_BASE.'test/ssh_sftp">View "test/ssh_sftp"</a>'
+            '<br><br><a href="'.HTTP_BASE.'test/ssh_sftp">View "test/ssh_sftp"</a>',
+
+            '<br><br><b>Dns:</b>',
+            '<br><br><a href="'.HTTP_BASE.'test/dns_aliyun">View "test/dns_aliyun"</a>',
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
@@ -911,6 +916,16 @@ echo '</div>';");
         }
 
         return $this->obEnd() . '<br>' . $this->_getEnd();
+    }
+
+    public function dns_aliyun(): string {
+        $this->obStart();
+        $aliyun = Aliyun::get([
+
+        ]);
+        $dns = Dns::get($aliyun);
+        $dns->describeDomains();
+        return $this->obEnd() . '<br><br>' . $this->_getEnd();
     }
 
     // --- END ---
