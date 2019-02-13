@@ -4,6 +4,12 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 5.1.1
+
+[+] Add Dns library, has encapsulated Alibaba Cloud, Tencent Cloud, and add Alibaba Cloud, Tencent Cloud Core library.  
+[\*] Optimizes Mutton Portal to add directory replacement prompts.  
+[\*] Optimizes some code and configuration items.
+
 ## 5.1.0
 
 [+] Mutton Portal adds strict mode and full mode, and the strict pattern is used to determine whether there are third-party and deprecated files, all of which are used to determine whether all official libraries are fully installed.  
