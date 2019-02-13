@@ -41,15 +41,17 @@ class Dns {
     // --- 其他线路参考 https://help.aliyun.com/document_detail/29807.html ---
 
     /**
-     * @param \lib\Aliyun $core
+     * @param \lib\Aliyun|TencentCloud $core
      * @return IDns
      */
     public static function get($core): IDns {
-        // --- 这个判断暂时先没有判断，等引入别的云服务再判断 ---
-        //if ($core instanceof Aliyun) {
+        if ($core instanceof Aliyun) {
             $class = 'lib\\Dns\\Aliyun';
             return new $class($core);
-        //}
+        } else {
+            $class = 'lib\\Dns\\TencentCloud';
+            return new $class($core);
+        }
     }
 
 }

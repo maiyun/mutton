@@ -26,7 +26,7 @@ if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[
 
 ## 庫
 
-Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Storage (OSS / COS), Text, Wechat, Comm (Ssh / Sftp).
+Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Storage (OSS / COS), Text, Wechat (Login / Payment), Alipay, Comm (Ssh / Sftp), Dns (Alibaba Cloud / Tencent Cloud).
 
 ## 部分特性
 

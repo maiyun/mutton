@@ -15,6 +15,7 @@ use lib\Redis;
 use lib\Session;
 use lib\Sql;
 use lib\Storage;
+use lib\TencentCloud;
 use lib\Text;
 use sys\Ctr;
 
@@ -93,6 +94,7 @@ class test extends Ctr {
 
             '<br><br><b>Dns:</b>',
             '<br><br><a href="'.HTTP_BASE.'test/dns_aliyun">View "test/dns_aliyun"</a>',
+            '<br><a href="'.HTTP_BASE.'test/dns_tencent_cloud">View "test/dns_tencent_cloud"</a>',
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
@@ -921,10 +923,26 @@ echo '</div>';");
     public function dns_aliyun(): string {
         $this->obStart();
         $aliyun = Aliyun::get([
-
+            'accessKeyId' => 'xxx',
+            'accessKeySecret' => 'xxx',
+            'region' => 'cn-hangzhou'
         ]);
         $dns = Dns::get($aliyun);
-        $dns->describeDomains();
+        $r = $dns->describeDomains();
+        var_dump($r);
+        return $this->obEnd() . '<br><br>' . $this->_getEnd();
+    }
+
+    public function dns_tencent_cloud(): string {
+        $this->obStart();
+        $tc = TencentCloud::get([
+            'secretId' => 'xxx',
+            'secretKey' => 'xxx',
+            'v' => 0
+        ]);
+        $dns = Dns::get($tc);
+        $r = $dns->describeDomains();
+        var_dump($r);
         return $this->obEnd() . '<br><br>' . $this->_getEnd();
     }
 

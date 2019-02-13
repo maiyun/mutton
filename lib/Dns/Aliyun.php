@@ -55,7 +55,7 @@ class Aliyun implements IDns {
     /**
      * --- 删除域名 ---
      * @param string $domain
-     * @return mixed|\SimpleXMLElement
+     * @return mixed
      * @throws \ClientException
      * @throws \ServerException
      */
@@ -131,11 +131,12 @@ class Aliyun implements IDns {
     /**
      * --- 删除解析记录 ---
      * @param string $recordId
+     * @param string$domain
      * @return mixed
      * @throws \ClientException
      * @throws \ServerException
      */
-    public function deleteDomainRecord(string $recordId) {
+    public function deleteDomainRecord(string $recordId, string $domain = '') {
         $ddrr = new DeleteDomainRecordRequest();
         $ddrr->setRecordId($recordId);
         return $this->_link->getAcsResponse($ddrr);
@@ -147,6 +148,7 @@ class Aliyun implements IDns {
      * @param string $rr
      * @param string $type
      * @param string $value
+     * @param string $domain
      * @param int $ttl
      * @param int $priority
      * @param string $line
@@ -154,7 +156,7 @@ class Aliyun implements IDns {
      * @throws \ClientException
      * @throws \ServerException
      */
-    public function updateDomainRecord(string $recordId, string $rr, string $type, string $value, int $ttl = 600, int $priority = 10, string $line = 'default') {
+    public function updateDomainRecord(string $recordId, string $rr, string $type, string $value, string $domain = '', int $ttl = 600, int $priority = 10, string $line = 'default') {
         $udr = new UpdateDomainRecordRequest();
         $udr->setRecordId($recordId);
         $udr->setRR($rr);

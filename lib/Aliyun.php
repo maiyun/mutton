@@ -1,10 +1,11 @@
 <?php
 /**
+ * --- 此类不能单独使用，属于 Core 性质 ---
  * For aliyun-openapi-php-sdk - aliyun-php-sdk-core 1.3.7
  * Url: https://github.com/aliyun/aliyun-openapi-php-sdk
  * User: JianSuoQiYue
  * Date: 2019-2-9 14:14:22
- * Last: 2019-2-9 22:14:49
+ * Last: 2019-2-12 00:08:26
  */
 declare(strict_types = 1);
 
