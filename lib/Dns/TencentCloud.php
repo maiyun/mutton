@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-2-12 15:43:30
- * Last: 2019-2-12 19:45:36
+ * Last: 2019-2-16 21:29:38
  */
 declare(strict_types = 1);
 
@@ -10,12 +10,14 @@ namespace lib\Dns;
 
 class TencentCloud implements IDns {
 
+    /** @var \lib\TencentCloud */
     private $_link = null;
     private $_service = null;
 
     public function __construct($core) {
-        $this->_link = $core->__link;
-        $this->_service = \QcloudApi::load(\QcloudApi::MODULE_CNS, $this->_link['config']);
+        $this->_link = $core;
+        $config = $this->_link->__getOldCore();
+        $this->_service = \QcloudApi::load(\QcloudApi::MODULE_CNS, $config);
     }
 
     /**
@@ -24,7 +26,7 @@ class TencentCloud implements IDns {
      * @return mixed
      */
     public function addDomain(string $domain, array $opt = []) {
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             $opt['domain'] = $domain;
             return $this->_service->DomainCreate($opt);
         } else {
@@ -53,7 +55,7 @@ class TencentCloud implements IDns {
         $pkg = [
             'domain' => $domain
         ];
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             return $this->_service->DomainDelete($pkg);
         } else {
             $rsp = $this->_service->DomainDelete($pkg);
@@ -74,7 +76,7 @@ class TencentCloud implements IDns {
      * @return mixed
      */
     public function describeDomains(array $opt = []) {
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             return $this->_service->DomainList($opt);
         } else {
             $pkg = [];
@@ -104,15 +106,14 @@ class TencentCloud implements IDns {
                         'DomainName' => $item['name'],
                         'DomainId' => $item['id'],
                         'DnsServers' => [
-                            'DnsServer' => [
-                            ]
+                            'DnsServer' => []
                         ],
                         'VersionName' => ''
                     ];
                 }
                 return json_decode(json_encode($rtn));
             } else {
-                throw new \Error('[Error][Dns][TC] describeDomains.');
+                throw new \Error('[Error][Dns][TC] describeDomains: '.$rsp['message'].'.');
             }
         }
     }
@@ -123,7 +124,7 @@ class TencentCloud implements IDns {
      * @return mixed
      */
     public function describeDomainRecords(string $domain, array $opt = []) {
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             $opt['domain'] = $domain;
             return $this->_service->RecordList($opt);
         } else {
@@ -190,7 +191,7 @@ class TencentCloud implements IDns {
             'ttl' => $ttl,
             'mx' => $priority
         ];
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             return $this->_service->RecordCreate($pkg);
         } else {
             $rsp = $this->_service->RecordCreate($pkg);
@@ -211,7 +212,7 @@ class TencentCloud implements IDns {
             'domain' => $domain,
             'recordId' => $recordId
         ];
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             return $this->_service->RecordDelete($pkg);
         } else {
             $rsp = $this->_service->RecordDelete($pkg);
@@ -238,7 +239,7 @@ class TencentCloud implements IDns {
             'ttl' => $ttl,
             'mx' => $priority
         ];
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             return $this->_service->RecordModify($pkg);
         } else {
             $rsp = $this->_service->RecordModify($pkg);
@@ -263,7 +264,7 @@ class TencentCloud implements IDns {
             'domain' => $recordId,
             'status' => $status ? 'enable' : 'disable'
         ];
-        if ($this->_link['orig']) {
+        if ($this->_link->__orig) {
             return $this->_service->SetDomainStatus($pkg);
         } else {
             $rsp = $this->_service->SetDomainStatus($pkg);
