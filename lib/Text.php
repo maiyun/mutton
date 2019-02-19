@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2019-2-19 19:33:47
+ * Last: 2019-2-19 22:36:57
  */
 declare(strict_types = 1);
 
@@ -93,9 +93,9 @@ class Text {
             }
         }
         if($isDoubleExt){
-            $host = $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
-        } else {
             $host = $domainArr[$count - 3] . '.' . $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
+        } else {
+            $host = $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
         }
         return $host;
     }

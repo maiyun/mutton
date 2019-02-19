@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-2-2 21:47
- * Last: 2019-2-18 20:59:42
+ * Last: 2019-2-19 23:32:11
  */
 declare(strict_types = 1);
 
@@ -35,7 +35,8 @@ class Ssh2 {
         $pub = isset($opt['pub']) ? $opt['pub'] : COMM_SSH_PUB;
         $prv = isset($opt['prv']) ? $opt['prv'] : COMM_SSH_PRV;
 
-        $this->_link = new \phpseclib\Net\SSH2($host, $port, 5);
+        $this->_link = new \phpseclib\Net\SSH2($host, $port, 1);
+        $this->_link->setWindowColumns(2000);
         if ($pwd !== '') {
             if (@$this->_link->login($user, $pwd)) {
                 return true;
@@ -57,9 +58,9 @@ class Ssh2 {
     /**
      * --- 执行一个命令行并立即返回 ---
      * @param string $cmd 命令语句
-     * @return string
+     * @return string|bool
      */
-    public function exec(string $cmd): string {
+    public function exec(string $cmd) {
         return $this->_link->exec($cmd);
     }
 
@@ -107,7 +108,7 @@ class Ssh2 {
     }
 
     /**
-     * --- 输入语句并发送（执行） ---
+     * --- 输入语句并发送（并执行） ---
      * @param string $cmd
      * @return bool
      */
@@ -117,6 +118,22 @@ class Ssh2 {
             $this->_state = self::__NORMAL;
         }
         return $this->_link->write($cmd."\n");
+    }
+
+    /**
+     * --- 发送中断 ---
+     * @return bool
+     */
+    public function sendCtrlC(): bool {
+        return $this->_link->write("\x03");
+    }
+
+    /**
+     * --- 关闭通道（channel） ---
+     * If read() timed out you might want to just close the channel and have it auto-restart on the next read() call
+     */
+    public function reset(): void {
+        $this->_link->reset();
     }
 
     /**
@@ -134,23 +151,55 @@ class Ssh2 {
      */
     public function readValue(): string {
         $value = $this->_link->read();
-        $last = substr($value, -3);
-        if ($last === ']# ') {
-            if ($this->_state === self::__NORMAL) {
-                preg_match('/^.+?\\n([\\s\\S]+?)\\n\\[.+?\\]# $/', $value, $matches);
-            } else {
-                $this->_state = self::__NORMAL;
-                preg_match('/^([\\s\\S]+?)\\n\\[.+?\\]# $/', $value, $matches);
-            }
-            return $matches[1];
-        } else {
-            if ($this->_state === self::__NORMAL) {
-                $this->_state = self::__CMD;
-                preg_match('/^.+?\\n([\\s\\S]+?)$/', $value, $matches);
+        if ($value !== '') {
+            $value = str_replace("\r\n", "\n", $value);
+            $value = str_replace("\r", "\n", $value);
+            $last = substr($value, -3);
+            if ($last === ']# ') {
+                if ($this->_state === self::__NORMAL) {
+                    preg_match('/^.+?\\n([\\s\\S]*?)\\n?\\[.+?\\]# $/', $value, $matches);
+                } else {
+                    $this->_state = self::__NORMAL;
+                    preg_match('/^([\\s\\S]*?)\\n?\\[.+?\\]# $/', $value, $matches);
+                }
                 return $matches[1];
             } else {
-                return $value;
+                if ($this->_state === self::__NORMAL) {
+                    $this->_state = self::__CMD;
+                    preg_match('/^.+?\\n([\\s\\S]*?)$/', $value, $matches);
+                    return $matches[1];
+                } else {
+                    return $value;
+                }
             }
+        } else {
+            return '';
+        }
+    }
+
+    /**
+     * --- 读取返回值（全部） ---
+     * @return string
+     */
+    public function readAll(): string {
+        $read = [$this->readValue()];
+        while (!$this->isDone()) {
+            if (($r = $this->readValue()) !== '') {
+                $read[] = $r;
+            }
+        }
+        return implode('', $read);
+    }
+
+    /**
+     * --- 当前是否可以输入命令 ---
+     * @return bool
+     */
+    public function isDone(): bool {
+        if ($this->_state === self::__NORMAL) {
+            return true;
+        } else {
+            return false;
         }
     }
 
