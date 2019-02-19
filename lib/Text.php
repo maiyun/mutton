@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2019-1-29 16:10:55
+ * Last: 2019-2-19 19:33:47
  */
 declare(strict_types = 1);
 
@@ -22,6 +22,12 @@ class Text {
     const RANDOM_V = 'ACEFGHJKLMNPRSTWXY34567';
     const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]';
 
+    /**
+     * --- 生成随机字符串 ---
+     * @param int $length 长度
+     * @param string $source 采样值
+     * @return string
+     */
     public static function random(int $length = 8, string $source = self::RANDOM_LN): string {
         $len = strlen($source);
         $temp = '';
@@ -64,6 +70,34 @@ class Text {
         $str = str_replace("\r", "\n", $str);
         $str = str_replace("\n", $to, $str);
         return $str;
+    }
+
+    /**
+     * --- 获取顶级域名 ---
+     * @param string $domain
+     * @return string
+     */
+    public static function getHost(string $domain = ''): string {
+        if ($domain === '') {
+            $domain = $_SERVER['HTTP_HOST'];
+        }
+        $domainArr = explode('.', $domain);
+        $count = count($domainArr);
+        // --- 判断是否是双后缀 ---
+        $isDoubleExt = false;
+        $extList = ['com.cn', 'net.cn', 'org.cn', 'gov.cn', 'co.jp', 'com.tw', 'co.kr', 'co.hk'];
+        foreach($extList as $ext){
+            if(strpos($domain, '.'.$ext)){
+                $isDoubleExt = true;
+                break;
+            }
+        }
+        if($isDoubleExt){
+            $host = $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
+        } else {
+            $host = $domainArr[$count - 3] . '.' . $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
+        }
+        return $host;
     }
 
     // --- 以下是适用于中国大陆的方法 ---
