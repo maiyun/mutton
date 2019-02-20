@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2019-2-19 22:36:57
+ * Last: 2019-2-20 12:17:07
  */
 declare(strict_types = 1);
 
@@ -149,7 +149,7 @@ class Text {
     public static function phoneSPGroupCN(array $pList): array {
         $list = ['0' => [], '1' => [], '2' => [], '-1' => []];
         foreach ($pList as $p) {
-            if (($r = self::phoneSP($p)) !== false) {
+            if (($r = self::phoneSPCN($p)) !== false) {
                 $list[(string)$r][] = $p;
             } else {
                 $list['-1'][] = $p;

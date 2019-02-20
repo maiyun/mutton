@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-2-2 21:47
- * Last: 2019-2-19 23:32:11
+ * Last: 2019-2-20 15:10:00
  */
 declare(strict_types = 1);
 
@@ -39,6 +39,7 @@ class Ssh2 {
         $this->_link->setWindowColumns(2000);
         if ($pwd !== '') {
             if (@$this->_link->login($user, $pwd)) {
+                register_shutdown_function([$this, 'disconnect']);
                 return true;
             } else {
                 throw new \Exception('[Error][lib\\Comm\\Ssh2] Password failed.');
@@ -48,6 +49,7 @@ class Ssh2 {
             $rsa->setPublicKey(file_get_contents($pub));
             $rsa->setPrivateKey(file_get_contents($prv));
             if ($this->_link->login($user, $rsa)) {
+                register_shutdown_function([$this, 'disconnect']);
                 return true;
             } else {
                 throw new \Exception('[Error][lib\\Comm\\Ssh2] Rsa failed.');
@@ -207,8 +209,10 @@ class Ssh2 {
      * --- 关闭连接 ---
      */
     public function disconnect(): void {
-        $this->_link->disconnect();
-        $this->_link = NULL;
+        if ($this->_link !== NULL) {
+            $this->_link->disconnect();
+            $this->_link = NULL;
+        }
     }
 
 }
