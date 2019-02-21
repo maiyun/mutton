@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-2-2 22:11
- * Last: 2019-2-5 22:47:39
+ * Last: 2019-2-21 21:03:21
  */
 
 declare(strict_types = 1);
@@ -32,6 +32,7 @@ class Sftp {
         $this->_link = new \phpseclib\Net\SFTP($host, $port, 5);
         if ($pwd !== '') {
             if (@$this->_link->login($user, $pwd)) {
+                register_shutdown_function([$this, 'disconnect']);
                 return true;
             } else {
                 throw new \Exception('[Error][lib\\Comm\\Sftp] Password failed.');
@@ -41,6 +42,7 @@ class Sftp {
             $rsa->setPublicKey(file_get_contents($pub));
             $rsa->setPrivateKey(file_get_contents($prv));
             if ($this->_link->login($user, $rsa)) {
+                register_shutdown_function([$this, 'disconnect']);
                 return true;
             } else {
                 throw new \Exception('[Error][lib\\Comm\\Sftp] Rsa failed.');
@@ -79,9 +81,9 @@ class Sftp {
      * @param string $remoteFile 远程文件地址
      * @param int $offset 分段偏移开始
      * @param int $length 分段偏移长度
-     * @return string
+     * @return string|bool
      */
-    public function getFile(string $remoteFile, $offset = 0, $length = -1): string {
+    public function getFile(string $remoteFile, $offset = 0, $length = -1) {
         return $this->_link->get($remoteFile, false, $offset, $length);
     }
 
@@ -288,8 +290,10 @@ class Sftp {
     }
 
     public function disconnect(): void {
-        $this->_link->disconnect();
-        $this->_link = NULL;
+        if ($this->_link !== NULL) {
+            $this->_link->disconnect();
+            $this->_link = NULL;
+        }
     }
 
 }
