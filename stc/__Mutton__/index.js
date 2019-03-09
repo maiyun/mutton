@@ -45,7 +45,6 @@ window.onerror = function (msg, uri, line, col, err) {
 };
 var headEle;
 var outPath = [];
-document.addEventListener("touchstart", function () { });
 document.addEventListener("DOMContentLoaded", function () {
     headEle = document.getElementsByTagName("head")[0];
     var callback = function () { return __awaiter(_this, void 0, void 0, function () {
@@ -168,6 +167,7 @@ document.addEventListener("DOMContentLoaded", function () {
         callback();
     }
 });
+document.addEventListener("touchstart", function () { });
 function loadScript(paths) {
     var _this = this;
     return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
