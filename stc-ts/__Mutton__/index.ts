@@ -10,7 +10,6 @@ window.onerror = (msg, uri, line, col, err) => {
 let headEle: HTMLHeadElement;
 /** 已加载的外部路径 */
 let outPath: string[] = [];
-document.addEventListener("touchstart", function() {});
 document.addEventListener("DOMContentLoaded", () => {
     headEle = document.getElementsByTagName("head")[0];
     // --- 先加载异步对象，这个很重要 ---
@@ -110,6 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
         callback();
     }
 });
+document.addEventListener("touchstart", function() {});
 
 /**
  * --- 顺序加载 js 后再执行 callback ---

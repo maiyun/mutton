@@ -151,6 +151,9 @@ class __Mutton__ extends Ctr {
                     'mod/Mod.php' => '',
                     'stc/__Mutton__/index.css' => '',
                     'stc/__Mutton__/index.js' => '',
+
+                    'stc-ts/__Mutton__/index.ts' => '',
+
                     'sys/Boot.php' => '',
                     'sys/Ctr.php' => '',
                     'sys/Route.php' => '',
