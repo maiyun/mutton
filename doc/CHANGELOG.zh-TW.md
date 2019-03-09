@@ -1,5 +1,13 @@
 # 更新日誌
 
+## 5.1.2
+
+[+] Text 庫增加 getHost 方法。  
+[+] Comm 庫，Ssh2 類增加 enablePTY / disablePTY / isPTYEnabled / setTimeout / write / writeLine / read / readValue / sendCtrlC / reset / readAll / isDone 方法。  
+[\*] TencentCloud 自動載入核心 SDK。  
+[\*] 優化 Text 庫。  
+[\*] Comm/Ssh2 和 Comm/Sftp 庫自動執行 disconnect 方法。
+
 ## 5.1.1
 
 [+] 增加 Dns 庫，已封裝阿裡雲、騰訊雲，並增加阿裡雲、騰訊雲的核心庫。  

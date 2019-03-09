@@ -1,5 +1,13 @@
 # 更新日志
 
+## 5.1.2
+
+[+] Text 库增加 getHost 方法。  
+[+] Comm 库，Ssh2 类增加 enablePTY / disablePTY / isPTYEnabled / setTimeout / write / writeLine / read / readValue / sendCtrlC / reset / readAll / isDone 方法。  
+[\*] TencentCloud 自动加载核心 SDK。  
+[\*] 优化 Text 库。  
+[\*] Comm/Ssh2 和 Comm/Sftp 库自动执行 disconnect 方法。
+
 ## 5.1.1
 
 [+] 增加 Dns 库，已封装阿里云、腾讯云，并增加阿里云、腾讯云的核心库。  

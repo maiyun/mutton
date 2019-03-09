@@ -4,6 +4,14 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 5.1.2
+
+[+] Text library add getHost method.  
+[+] Comm library, Ssh2 class increase enablePTY / disablePTY / isPTYEnabled / setTimeout / write / writeLine / read / readValue / sendCtrlC / reset / readAll / isDone method.  
+[\*] TencentCloud automatically loads the core SDK.  
+[\*] Optimizes the Text library.  
+[\*] The Comm/Ssh2 and Comm/Sftp libraries automatically execute the disconnect method.
+
 ## 5.1.1
 
 [+] Add Dns library, has encapsulated Alibaba Cloud, Tencent Cloud, and add Alibaba Cloud, Tencent Cloud Core library.  
