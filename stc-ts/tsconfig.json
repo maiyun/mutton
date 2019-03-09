@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "removeComments": true,
+        "preserveConstEnums": true,
+        "outDir": "../stc/",
+        "sourceMap": false,
+        "target": "es5",
+        "strict": true,
+        "declaration": false, // d.ts
+        "newLine": "LF",
+        "lib": ["dom", "es5", "scripthost", "es2015.promise"]
+    }
+}

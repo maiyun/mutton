@@ -3,13 +3,13 @@
 <head>
     <title>Mutton Portal</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
-    <link rel="stylesheet" href="<?php echo HTTP_STC ?>__Mutton__/index.css?6">
+    <link rel="stylesheet" href="<?php echo HTTP_STC ?>__Mutton__/index.css?7">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js"></script>
     <script>
         var tab = <?php echo $hasConfig ? '0' : '3' ?>;
         var HTTP_BASE = '<?php echo HTTP_BASE ?>';
     </script>
-    <script src="<?php echo HTTP_STC ?>__Mutton__/index.js?5"></script>
+    <script src="<?php echo HTTP_STC ?>__Mutton__/index.js?7"></script>
 </head>
 <body>
 <div id="vue">
@@ -24,6 +24,7 @@
                         <div class="tab__top__item" :class="{'selected': tab == 1}" @click="tab = 1"><div class="tab__top__item__in">Check</div></div>
                         <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2"><div class="tab__top__item__in">Build</div></div>
                         <div class="tab__top__item" :class="{'selected': tab == 3}" @click="tab = 3"><div class="tab__top__item__in">Config</div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 4}" @click="tab = 4"><div class="tab__top__item__in">Update</div></div>
                     </div>
                     <div class="tab__panel">
                         <!-- Password -->
@@ -52,13 +53,19 @@
                             <div style="padding-bottom: 10px;">Please place the following on "etc/__mutton__.php" to use this portal.</div>
                             <div class="textbox"><textarea class="textbox__in" rows="10" readonly v-model="configTxt" style="resize: none;"></textarea></div>
                         </div>
+                        <!-- Update -->
+                        <div class="tab__panel__item" v-else-if="tab == 4">
+                            This feature is for testing purposes only.<br><br>
+                            Current version: <?php echo VER ?><br>
+                            Latest versions: 1.0.0
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <!-- alert -->
-    <div v-if="alert!=''" id="alert">
+    <div v-if="alert!=''" class="alert">
         <div class="window">
             <div class="window__in">
                 <div class="window__title">Alert</div>
@@ -70,7 +77,7 @@
         </div>
     </div>
     <!-- mask -->
-    <div v-if="mask" id="mask"></div>
+    <div v-if="mask" class="mask"></div>
 </div>
 </body>
 </html>

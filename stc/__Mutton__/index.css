@@ -186,7 +186,7 @@ textarea {
 
 /* --- Mask --- */
 
-#mask {
+.mask {
     position: fixed;
     left: 0;
     top: 0;
@@ -197,7 +197,7 @@ textarea {
 
 /* --- Alert --- */
 
-#alert {
+.alert {
     position: fixed;
     left: 0;
     top: 0;
