@@ -60,6 +60,9 @@ document.addEventListener("DOMContentLoaded", function () {
                     Vue.component("mu-button", {
                         template: "<div class=\"button\" tabindex=\"0\"><div class=\"button__in\"><div class=\"button__txt\"><slot></div></div></div>"
                     });
+                    Vue.component("mu-line", {
+                        template: "<div class=\"line\"></div>"
+                    });
                     Vue.component("mu-list", {
                         data: function () {
                             return {
@@ -85,7 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             password: "",
                             code: "",
                             list: [],
-                            output: "",
+                            latestVer: "0",
                             configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                         },
                         methods: {
@@ -124,9 +127,30 @@ document.addEventListener("DOMContentLoaded", function () {
                                     });
                                 });
                             },
-                            build: function () {
+                            getLatestVer: function () {
                                 return __awaiter(this, void 0, void 0, function () {
                                     var j;
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0:
+                                                this.mask = true;
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiGetLatestVer", { password: this.password })];
+                                            case 1:
+                                                j = _a.sent();
+                                                this.mask = false;
+                                                if (j.result <= 0) {
+                                                    this.alert = j.msg;
+                                                    return [2];
+                                                }
+                                                this.latestVer = j.version;
+                                                return [2];
+                                        }
+                                    });
+                                });
+                            },
+                            build: function () {
+                                return __awaiter(this, void 0, void 0, function () {
+                                    var j, bstr, n, u8arr, blob, a, evt;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0:
@@ -135,12 +159,21 @@ document.addEventListener("DOMContentLoaded", function () {
                                             case 1:
                                                 j = _a.sent();
                                                 this.mask = false;
-                                                if (j.result > 0) {
-                                                    this.output = j.output;
-                                                }
-                                                else {
+                                                if (j.result <= 0) {
                                                     this.alert = j.msg;
+                                                    return [2];
                                                 }
+                                                bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
+                                                while (n--) {
+                                                    u8arr[n] = bstr.charCodeAt(n);
+                                                }
+                                                blob = new Blob([u8arr]);
+                                                a = document.createElement("a");
+                                                a.download = j.ver + ".mblob";
+                                                a.href = URL.createObjectURL(blob);
+                                                evt = document.createEvent("MouseEvents");
+                                                evt.initEvent("click", false, false);
+                                                a.dispatchEvent(evt);
                                                 return [2];
                                         }
                                     });
@@ -263,6 +296,17 @@ function post(url, data) {
                     return [3, 7];
                 case 7: return [2];
             }
+        });
+    }); });
+}
+function sleep(timeout) {
+    var _this = this;
+    return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            setTimeout(function () {
+                resolve();
+            }, timeout);
+            return [2];
         });
     }); });
 }

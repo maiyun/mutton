@@ -59,7 +59,6 @@ class Route {
             // --- 强制 HTTPS ---
 
             if ((MUST_HTTPS && $ctr->mustHttps()) || !MUST_HTTPS) {
-
                 if (method_exists($ctr, $action)) {
                     $rtn = $ctr->$action();
                     if (isset($rtn)) {
@@ -67,28 +66,31 @@ class Route {
                         if (is_string($rtn)) {
                             echo $rtn;
                         } else if (is_array($rtn)) {
-                            header('Content-type: application/json; charset=utf-8');
-                            if (isset($rtn[0]) && is_int($rtn[0])) {
-                                $json = ['result' => $rtn[0]];
-                                if (isset($rtn[1])) {
-                                    if (is_array($rtn[1])) {
-                                        echo json_encode(array_merge($json, $rtn[1]));
-                                    } else {
-                                        if (count($rtn) == 2) {
-                                            $json['msg'] = $rtn[1];
-                                            echo json_encode($json);
+                            // --- 空数组的话不做任何操作，否则会多出来来个空组字串 ---
+                            if (count($rtn) > 0) {
+                                // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
+                                header('Content-type: application/json; charset=utf-8');
+                                if (isset($rtn[0]) && is_int($rtn[0])) {
+                                    $json = ['result' => $rtn[0]];
+                                    if (isset($rtn[1])) {
+                                        if (is_array($rtn[1])) {
+                                            echo json_encode(array_merge($json, $rtn[1]));
                                         } else {
-                                            echo '[Error] Return value is wrong.';
+                                            if (count($rtn) == 2) {
+                                                $json['msg'] = $rtn[1];
+                                                echo json_encode($json);
+                                            } else {
+                                                echo '[Error] Return value is wrong.';
+                                            }
                                         }
+                                    } else {
+                                        unset($rtn[0]);
+                                        echo json_encode(array_merge($json, $rtn));
                                     }
                                 } else {
-                                    unset($rtn[0]);
-                                    echo json_encode(array_merge($json, $rtn));
+                                    echo json_encode($rtn);
                                 }
-                            } else {
-                                echo json_encode($rtn);
                             }
-                            // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
                         } else {
                             echo '[Error] Return type is wrong.';
                         }
@@ -96,7 +98,6 @@ class Route {
                 } else {
                     echo '[Error] Action not found.';
                 }
-
             }
         } else {
             // --- 指定的控制器不存在 ---

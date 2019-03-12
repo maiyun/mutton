@@ -22,6 +22,10 @@ document.addEventListener("DOMContentLoaded", () => {
         Vue.component("mu-button", {
             template: `<div class="button" tabindex="0"><div class="button__in"><div class="button__txt"><slot></div></div></div>`
         });
+        // --- Line ---
+        Vue.component("mu-line", {
+            template: `<div class="line"></div>`
+        });
         // --- List ---
         Vue.component("mu-list", {
             data: function() {
@@ -50,8 +54,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 // --- Check ---
                 code: "",
                 list: [],
-                // --- Build ---
-                output: "",
+                // --- System ---
+                latestVer: "0",
                 // --- Config ---
                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
             },
@@ -81,16 +85,36 @@ document.addEventListener("DOMContentLoaded", () => {
                         this.alert = "There are no content to update.";
                     }
                 },
-                // --- Build ---
+                // --- System ---
+                getLatestVer: async function (this: any) {
+                    this.mask = true;
+                    let j = await post(HTTP_BASE + "__Mutton__/apiGetLatestVer", {password: this.password});
+                    this.mask = false;
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    this.latestVer = j.version;
+                },
                 build: async function (this: any) {
                     this.mask = true;
                     let j = await post(HTTP_BASE + "__Mutton__/apiBuild", {password: this.password});
                     this.mask = false;
-                    if (j.result > 0) {
-                        this.output = j.output;
-                    } else {
+                    if (j.result <= 0) {
                         this.alert = j.msg;
+                        return;
                     }
+                    let bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    let blob = new Blob([u8arr]);
+                    let a = document.createElement("a");
+                    a.download = j.ver + ".mblob";
+                    a.href = URL.createObjectURL(blob);
+                    let evt = document.createEvent("MouseEvents");
+                    evt.initEvent("click", false, false);
+                    a.dispatchEvent(evt);
                 }
             }
         });
@@ -181,5 +205,17 @@ function post(url: string, data: any): Promise<any> {
         } catch (e) {
             reject(e);
         }
+    });
+}
+
+/**
+ * --- 休眠一段时间 ---
+ * @param timeout 休眠时间
+ */
+function sleep(timeout: number): Promise<void> {
+    return new Promise(async (resolve, reject) => {
+        setTimeout(() => {
+            resolve();
+        }, timeout);
     });
 }

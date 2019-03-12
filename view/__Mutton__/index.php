@@ -22,9 +22,8 @@
                     <div class="tab__top">
                         <div class="tab__top__item" :class="{'selected': tab == 0}" @click="tab = 0"><div class="tab__top__item__in">Password</div></div>
                         <div class="tab__top__item" :class="{'selected': tab == 1}" @click="tab = 1"><div class="tab__top__item__in">Check</div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2"><div class="tab__top__item__in">Build</div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2"><div class="tab__top__item__in">System</div></div>
                         <div class="tab__top__item" :class="{'selected': tab == 3}" @click="tab = 3"><div class="tab__top__item__in">Config</div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 4}" @click="tab = 4"><div class="tab__top__item__in">Update</div></div>
                     </div>
                     <div class="tab__panel">
                         <!-- Password -->
@@ -41,23 +40,25 @@
                             <div style="margin-top: 10px;">Mismatch file list:</div>
                             <mu-list :list="list"></mu-list>
                         </div>
-                        <!-- Build -->
+                        <!-- System -->
                         <div class="tab__panel__item" v-else-if="tab == 2">
-                            <div class="line">
-                                <div class="line__title">Output:</div><div class="textbox"><textarea class="textbox__in" rows="15" v-model="output" readonly style="resize: vertical;"></textarea></div>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div>
+                                    Current version: <?php echo VER ?><br>
+                                    Latest versions: {{latestVer}}<br>
+                                </div>
+                                <mu-button @click.native="getLatestVer()" style="margin-top: 10px;">Get latest versions</mu-button>
                             </div>
-                            <div style="text-align: center;"><mu-button @click.native="build()">Build</mu-button></div>
+                            <mu-line></mu-line>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                <div>Build a ".mblob" file.</div>
+                                <mu-button @click.native="build()" style="margin-top: 10px;">Build</mu-button>
+                            </div>
                         </div>
                         <!-- Config -->
                         <div class="tab__panel__item" v-else-if="tab == 3">
                             <div style="padding-bottom: 10px;">Please place the following on "etc/__mutton__.php" to use this portal.</div>
                             <div class="textbox"><textarea class="textbox__in" rows="10" readonly v-model="configTxt" style="resize: none;"></textarea></div>
-                        </div>
-                        <!-- Update -->
-                        <div class="tab__panel__item" v-else-if="tab == 4">
-                            This feature is for testing purposes only.<br><br>
-                            Current version: <?php echo VER ?><br>
-                            Latest versions: 1.0.0
                         </div>
                     </div>
                 </div>

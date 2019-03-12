@@ -98,7 +98,7 @@ html,body,input,textarea {
     border-color: #000;
 }
 
-/* --- Input --- */
+/* --- Textbox --- */
 
 .textbox, .list {
     border: solid 2px #FFF;
@@ -173,15 +173,10 @@ textarea {
 /* --- Line --- */
 
 .line {
-    padding-bottom: 10px;
-    display: flex;
-    align-items: center;
-}
-.line__title {
-    width: 100px;
-}
-.line > *:nth-child(2) {
-    flex: 1;
+    border-top: solid 2px #7F7F7F;
+    height: 2px;
+    background-color: #FFF;
+    margin: 10px 0;
 }
 
 /* --- Mask --- */
