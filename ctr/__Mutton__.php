@@ -26,119 +26,96 @@ class __Mutton__ extends Ctr {
 
     // --- API ---
 
+    public function apiCheckRefresh() {
+        if ($this->post('password') !== __MUTTON__PWD) {
+            return [0, 'Password is incorrect.'];
+        }
+        $req = Net\Request::get();
+        $req->setFollowLocation(true);
+        $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/contents/doc/mblob/', $req);
+        if (!$res->content) {
+            return [0, 'Network error, please try again.'];
+        }
+        $json = json_decode($res->content);
+        $list = [];
+        foreach ($json as $item) {
+            $list[] = substr($item->name, 0, -6);
+        }
+        return [1, 'list' => $list];
+    }
+
     public function apiCheck() {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
         }
-        $code = $this->post('code');
-        if (!($code = base64_decode($code))) {
+        $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/master/doc/mblob/'.$this->post('ver').'.mblob');
+        if (!$res->content) {
+            return [0, 'Network error, please try again.'];
+        }
+        if (!($blob = gzinflate($res->content))) {
             return [0, 'Decryption failed.'];
         }
-        if (!($code = gzinflate($code))) {
+        if (!($json = json_decode($blob, true))) {
             return [0, 'Decryption failed.'];
         }
-        if (!($json = json_decode($code, true))) {
-            return [0, 'Decryption failed.'];
-        }
-        $list = [];
-        $slist = [];  // --- 严格模式 ---
-        $flist = [];  // --- 完全模式 ---
+        $list = [];     // --- 有差异的文件 ---
+        $qlist = [];    // --- 缺失的文件（夹） ---
+        $dlist = [];    // --- 多余的文件（夹） ---
+        $qlistConst = [];
+        $dlistConst = [];
 
-        // --- 校验 exists ---
+        $nowList = $this->_buildList();
 
-
-        // --- 校验 md5 ---
-        $dir = dir(LIB_PATH);
-        while (($fileName = $dir->read()) !== false) {
-            if (($fileName !== '.') && ($fileName !== '..')) {
-                // --- 不判断的话有可能是文件夹 ---
-                if (is_file(LIB_PATH.$fileName)) {
-                    if (isset($json['fileList']['lib/' . $fileName])) {
-                        $file = LIB_PATH . $fileName;
-                        $md5n = md5_file($file);
-                        if ($md5n === $json['fileList']['lib/' . $fileName]) {
-                            // --- 似乎没问题 ---
-                        } else {
-                            $list[] = 'The file "lib/' . $fileName . '" mismatch, original "' . $json['fileList']['lib/' . $fileName] . '", yours "' . $md5n . '".';
-                            $fileNameS = substr($fileName, 0, strrpos($fileName, '.'));
-                            if (is_dir(LIB_PATH.$fileNameS)) {
-                                $list[] = 'Please replace the "lib/'.$fileNameS.'" folder.';
-                            }
-                        }
-                        unset($json['fileList']['lib/' . $fileName]);
-                    } else {
-                        $slist[] = 'The file "lib/' . $fileName . '" does not found on Mutton Official Library.';
-                    }
-                }
-            }
-        }
-        $dir->close();
-        foreach ($json['fileList'] as $file => $md5) {
-            if (is_file(ROOT_PATH.$file)) {
-                $md5n = md5_file(ROOT_PATH.$file);
-                if ($md5n === $md5) {
-                    // --- 似乎没问题 ---
-                } else {
-                    $list[] = 'The file "'.$file.'" mismatch, original "'.$md5.'", yours "'.$md5n.'".';
-                    $fileS = substr($file, 0, strrpos($file, '.'));
-                    if (is_dir(ROOT_PATH.$fileS)) {
-                        $list[] = 'Please replace the "'.$fileS.'" folder.';
-                    }
-                }
+        // --- 先判断目录结构 ---
+        foreach ($nowList['folders'] as $k => $v) {
+            if (isset($json['folders'][$k])) {
+                unset($json['folders'][$k]);
             } else {
-                if (substr($file, 0, 3) === 'lib') {
-                    $flist[] = 'The file "'.$file.'" not been installed.';
-                }
+                // --- 本地多出目录 ---
+                $dlist[] = $k;
             }
+        }
+        // --- 校验 md5，校验文件是否多出和缺失 ---
+        foreach ($nowList['files'] as $k => $v) {
+            if (isset($json['files'][$k])) {
+                if ($json['files'][$k] !== $v) {
+                    // --- 有差异 ---
+                    $list[] = $k;
+                }
+                unset($json['files'][$k]);
+            } else {
+                // --- 本地多出文件 ---
+                $dlist[] = $k;
+            }
+        }
+        // --- 缺失文件文件夹序列 ---
+        foreach ($json['folders'] as $k => $v) {
+            $qlist[] = $k;
+        }
+        foreach ($json['files'] as $k => $v) {
+            $qlist[] = $k;
         }
         // --- 校验 const ---
-        $dir = dir(ETC_PATH);
-        while (($fileName = $dir->read()) !== false) {
-            if (($fileName !== '.') && ($fileName !== '..')) {
-                if ($fileName[0] !== '_') {
-                    $file = ETC_PATH . $fileName;
-                    // --- 也可能是个文件夹，文件夹不检测 ---
-                    if (is_file($file)) {
-                        if (isset($json['const']['etc/' . $fileName])) {
-                            // --- 提取现在文件的进行比对，看看有没有现在文件有实际上不该有的 ---
-                            $arr = [];
-                            $barr = $json['const']['etc/' . $fileName];
-                            $content = file_get_contents($file);
-                            preg_match_all('/const\\s+?([A-Z0-9_]+)/', $content, $matches);
-                            if (count($matches[1]) > 0) {
-                                foreach ($matches[1] as $val) {
-                                    $arr[] = $val;
-                                }
-                            }
-                            preg_match_all('/define[\\s\\S]+?\'([A-Z0-9_]+?)\'/', $content, $matches);
-                            if (count($matches[1]) > 0) {
-                                foreach ($matches[1] as $val) {
-                                    $arr[] = '\'' . $val . '\'';
-                                }
-                            }
-                            foreach ($arr as $key => $val) {
-                                if (in_array($val, $barr)) {
-                                    unset($barr[$key]);
-                                } else {
-                                    $slist[] = 'The file "etc/' . $fileName . '" does not exist "' . $val . '" in Mutton Official Etc.';
-                                }
-                            }
-                            foreach ($barr as $val) {
-                                $list[] = 'The file "etc/' . $fileName . '" missing constants: ' . $val . '.';
-                            }
-                            unset($json['const']['etc/' . $fileName]);
-                        } else {
-                            $slist[] = 'The file "etc/' . $fileName . '" does not found on Mutton Official Etc.';
-                        }
+        foreach ($nowList['const'] as $k => $v) {
+            // --- 文件存在才判断 const ---
+            if (isset($json['const'][$k])) {
+                foreach ($v as $i => $v2) {
+                    if (isset($json['const'][$k][$i])) {
+                        unset($json['const'][$k][$i]);
+                    } else {
+                        // --- 本地多出本常量 ---
+                        $dlistConst[] = [$k, $i];
                     }
                 }
             }
         }
-        $dir->close();
-        foreach ($json['const'] as $file => $arr) {
-            $flist[] = 'The file "'.$file.'" not been installed.';
+        // --- 缺失的常量 ---
+        foreach ($json['const'] as $k => $v) {
+            foreach ($v as $i => $v2) {
+                $qlistConst[] = [$k, $i];
+            }
         }
-        return [1, 'list' => $list, 'slist' => $this->post('strict') == '1' ? $slist : [], 'flist' => $this->post('full') == '1' ? $flist : []];
+        return [1, 'list' => $list, 'qlist' => $qlist, 'dlist' => $dlist, 'qlistConst' => $qlistConst, 'dlistConst' => $dlistConst];
     }
 
     /**
@@ -167,7 +144,7 @@ class __Mutton__ extends Ctr {
     }
 
     /**
-     * --- 建立本地的路径
+     * --- 建立本地的路径 ---
      * @return array
      */
     private function _buildList(): array {
@@ -188,7 +165,6 @@ class __Mutton__ extends Ctr {
                 }
             } else {
                 if (!in_array($name, ['.git', 'doc', '.idea'])) {
-                    $list['folders'][$name . '/'] = '';
                     $deep = $this->_buildListDeep($name.'/');
                     $list['folders'] = array_merge($list['folders'], $deep['folders']);
                     $list['files'] = array_merge($list['files'], $deep['files']);
@@ -235,6 +211,10 @@ class __Mutton__ extends Ctr {
             'files' => [],
             'folders' => []
         ];
+        if (preg_match('/^log\\/2.*/', $path)) {
+            return $list;
+        }
+        $list['folders'][$path] = '';
         $dir = dir(ROOT_PATH.$path);
         while (($name = $dir->read()) !== false) {
             if (($name === '.') || ($name === '..')) {
@@ -243,7 +223,6 @@ class __Mutton__ extends Ctr {
             if (is_file(ROOT_PATH.$path.$name)) {
                 $list['files'][$path.$name] = md5_file(ROOT_PATH.$path.$name);
             } else {
-                $list['folders'][$path.$name.'/'] = '';
                 $deep = $this->_buildListDeep($path.$name.'/');
                 $list['folders'] = array_merge($list['folders'], $deep['folders']);
                 $list['files'] = array_merge($list['files'], $deep['files']);

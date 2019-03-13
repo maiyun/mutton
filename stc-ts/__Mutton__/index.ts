@@ -28,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         // --- List ---
         Vue.component("mu-list", {
-            data: function() {
+            data: function () {
                 return {
                     selectedIndex: 0
                 };
@@ -39,9 +39,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 },
                 height: {
                     default: "200px"
+                },
+                value: {
+                    default: 0
                 }
             },
-            template: `<div class="list" tabindex="0"><div class="list__in" :style="{\'height\': height}"><div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="selectedIndex = index">{{val}}</div></div></div>`
+            watch: {
+                value: function (this: any) {
+                    this.selectedIndex = this.value;
+                }
+            },
+            template: `<div class="list" tabindex="0"><div class="list__in" :style="{\'height\': height}"><div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="selectedIndex=index;$emit('change', index)">{{val}}</div></div></div>`
         });
         new Vue({
             el: "#vue",
@@ -52,7 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 // --- Password ---
                 password: "",
                 // --- Check ---
-                code: "",
+                mindex: 0,
+                mlist: [],
                 list: [],
                 // --- System ---
                 latestVer: "0",
@@ -61,28 +70,46 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             methods: {
                 // --- Check ---
-                check: async function (this: any, strict?: boolean, full?: boolean) {
-                    strict = strict || false;
-                    full = full || false;
+                refresh: async function (this: any) {
                     this.mask = true;
-                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, code: this.code, strict: strict ? "1" : "0", full: full ? "1" : "0"});
+                    let j = await post(HTTP_BASE + "__Mutton__/apiCheckRefresh", {password: this.password});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
                     }
-                    let list = j.list;
-                    if (strict) {
-                        list = list.concat(j.slist);
+                    this.mlist = j.list;
+                },
+                check: async function (this: any) {
+                    if (!this.mlist[this.mindex]) {
+                        this.alert = "Please select version.";
+                        return;
                     }
-                    if (full) {
-                        if (j.flist.length > 0) {
-                            list.push("--------------------------------------------------");
-                            list = list.concat(j.flist);
-                        }
+                    this.mask = true;
+                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.mlist[this.mindex]});
+                    this.mask = false;
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    let list = [];
+                    for (let v of j.list) {
+                        list.push(`Cannot match "${v}".`);
+                    }
+                    for (let v of j.qlist) {
+                        list.push(`Does not exist "${v}".`);
+                    }
+                    for (let v of j.dlist) {
+                        list.push(`Extra "${v}".`);
+                    }
+                    for (let v of j.qlistConst) {
+                        list.push(`Does not exist const "${v[1]}" on "${v[0]}".`);
+                    }
+                    for (let v of j.dlistConst) {
+                        list.push(`Extra const "${v[1]}" on "${v[0]}".`);
                     }
                     this.list = list;
                     if (list.length === 0) {
-                        this.alert = "There are no content to update.";
+                        this.alert = "All content is normal.";
                     }
                 },
                 // --- System ---

@@ -75,9 +75,17 @@ document.addEventListener("DOMContentLoaded", function () {
                             },
                             height: {
                                 default: "200px"
+                            },
+                            value: {
+                                default: 0
                             }
                         },
-                        template: "<div class=\"list\" tabindex=\"0\"><div class=\"list__in\" :style=\"{'height': height}\"><div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"selectedIndex = index\">{{val}}</div></div></div>"
+                        watch: {
+                            value: function () {
+                                this.selectedIndex = this.value;
+                            }
+                        },
+                        template: "<div class=\"list\" tabindex=\"0\"><div class=\"list__in\" :style=\"{'height': height}\"><div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"selectedIndex=index;$emit('change', index)\">{{val}}</div></div></div>"
                     });
                     new Vue({
                         el: "#vue",
@@ -86,41 +94,76 @@ document.addEventListener("DOMContentLoaded", function () {
                             alert: "",
                             tab: tab,
                             password: "",
-                            code: "",
+                            mindex: 0,
+                            mlist: [],
                             list: [],
                             latestVer: "0",
                             configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                         },
                         methods: {
-                            check: function (strict, full) {
+                            refresh: function () {
                                 return __awaiter(this, void 0, void 0, function () {
-                                    var j, list;
+                                    var j;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0:
-                                                strict = strict || false;
-                                                full = full || false;
                                                 this.mask = true;
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, code: this.code, strict: strict ? "1" : "0", full: full ? "1" : "0" })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheckRefresh", { password: this.password })];
                                             case 1:
                                                 j = _a.sent();
                                                 this.mask = false;
                                                 if (j.result <= 0) {
                                                     this.alert = j.msg;
                                                 }
-                                                list = j.list;
-                                                if (strict) {
-                                                    list = list.concat(j.slist);
+                                                this.mlist = j.list;
+                                                return [2];
+                                        }
+                                    });
+                                });
+                            },
+                            check: function () {
+                                return __awaiter(this, void 0, void 0, function () {
+                                    var j, list, _i, _a, v, _b, _c, v, _d, _e, v, _f, _g, v, _h, _j, v;
+                                    return __generator(this, function (_k) {
+                                        switch (_k.label) {
+                                            case 0:
+                                                if (!this.mlist[this.mindex]) {
+                                                    this.alert = "Please select version.";
+                                                    return [2];
                                                 }
-                                                if (full) {
-                                                    if (j.flist.length > 0) {
-                                                        list.push("--------------------------------------------------");
-                                                        list = list.concat(j.flist);
-                                                    }
+                                                this.mask = true;
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex] })];
+                                            case 1:
+                                                j = _k.sent();
+                                                this.mask = false;
+                                                if (j.result <= 0) {
+                                                    this.alert = j.msg;
+                                                    return [2];
+                                                }
+                                                list = [];
+                                                for (_i = 0, _a = j.list; _i < _a.length; _i++) {
+                                                    v = _a[_i];
+                                                    list.push("Cannot match \"" + v + "\".");
+                                                }
+                                                for (_b = 0, _c = j.qlist; _b < _c.length; _b++) {
+                                                    v = _c[_b];
+                                                    list.push("Does not exist \"" + v + "\".");
+                                                }
+                                                for (_d = 0, _e = j.dlist; _d < _e.length; _d++) {
+                                                    v = _e[_d];
+                                                    list.push("Extra \"" + v + "\".");
+                                                }
+                                                for (_f = 0, _g = j.qlistConst; _f < _g.length; _f++) {
+                                                    v = _g[_f];
+                                                    list.push("Does not exist const \"" + v[1] + "\" on \"" + v[0] + "\".");
+                                                }
+                                                for (_h = 0, _j = j.dlistConst; _h < _j.length; _h++) {
+                                                    v = _j[_h];
+                                                    list.push("Extra const \"" + v[1] + "\" on \"" + v[0] + "\".");
                                                 }
                                                 this.list = list;
                                                 if (list.length === 0) {
-                                                    this.alert = "There are no content to update.";
+                                                    this.alert = "All content is normal.";
                                                 }
                                                 return [2];
                                         }

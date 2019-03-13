@@ -3,7 +3,7 @@
  * CA: https://curl.haxx.se/ca/cacert.pem
  * User: JianSuoQiYue
  * Date: 2015/10/26 14:23
- * Last: 2018-12-11 20:45:56
+ * Last: 2019-3-13 17:33:39
  */
 declare(strict_types = 1);
 
@@ -188,13 +188,16 @@ class Net {
                             }
                         }
                     }
-                    return $res;
-                } else {
-                    return $res;
                 }
-            } else {
+            }
+            // --- 判断 follow 追踪 ---
+            if (!$req->getFollowLocation()) {
                 return $res;
             }
+            if (!preg_match('/Location: (.+?)\\r\\n/', $res->header, $matches)) {
+                return $res;
+            }
+            return self::request($matches[1], $data, $req, $cookie);
         } else {
             return Response::get();
         }
