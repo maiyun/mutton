@@ -4,6 +4,7 @@ declare(strict_types = 1);
 namespace ctr;
 
 use lib\Net;
+use lib\Text;
 use sys\Ctr;
 
 class __Mutton__ extends Ctr {
@@ -78,9 +79,15 @@ class __Mutton__ extends Ctr {
         // --- 校验 md5，校验文件是否多出和缺失 ---
         foreach ($nowList['files'] as $k => $v) {
             if (isset($json['files'][$k])) {
-                if ($json['files'][$k] !== $v) {
-                    // --- 有差异 ---
-                    $list[] = $k;
+                if (!Text::match($k, [
+                    '/^etc\\/.+/',
+                    '/^stc\\/index\\.js/',
+                    '/^stc-ts\\/(index\\.ts||tsconfig\\.js||tslint\\.json)/'
+                ])) {
+                    if ($json['files'][$k] !== $v) {
+                        // --- 有差异 ---
+                        $list[] = $k;
+                    }
                 }
                 unset($json['files'][$k]);
             } else {
@@ -138,9 +145,13 @@ class __Mutton__ extends Ctr {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
         }
-        $res = Net::get('https://github.com/MaiyunNET/Mutton/releases/latest');
-        preg_match('/g\\/v([0-9\\.]+)/', $res->content, $matches);
-        return [1, 'version' => $matches[1]];
+        $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/releases/latest');
+        if (!$res->content) {
+            return [0, 'Network error, please try again.'];
+        }
+        $json = json_decode($res->content);
+        preg_match('/[0-9\\.]+/', $json->tag_name, $matches);
+        return [1, 'version' => $matches[0]];
     }
 
     /**
@@ -164,11 +175,9 @@ class __Mutton__ extends Ctr {
                     $list['files'][$name] = md5_file(ROOT_PATH . $name);
                 }
             } else {
-                if (!in_array($name, ['.git', 'doc', '.idea'])) {
-                    $deep = $this->_buildListDeep($name.'/');
-                    $list['folders'] = array_merge($list['folders'], $deep['folders']);
-                    $list['files'] = array_merge($list['files'], $deep['files']);
-                }
+                $deep = $this->_buildListDeep($name.'/');
+                $list['folders'] = array_merge($list['folders'], $deep['folders']);
+                $list['files'] = array_merge($list['files'], $deep['files']);
             }
         }
         $dir->close();
@@ -211,7 +220,17 @@ class __Mutton__ extends Ctr {
             'files' => [],
             'folders' => []
         ];
-        if (preg_match('/^log\\/2.*/', $path)) {
+        if (Text::match($path, [
+            '/^\\.git\\//',
+            '/^doc\\//',
+            '/^\\.idea\\//',
+            '/^ctr\\/.+/',
+            '/^data\\/.+/',
+            '/^log\\/.+/',
+            '/^stc\\/(?!__Mutton__\\/).+/',
+            '/^stc-ts\\/(?!__Mutton__\\/|typings\\/).+/',
+            '/^view\\/(?!__Mutton__\\/).+/'
+        ])) {
             return $list;
         }
         $list['folders'][$path] = '';
@@ -221,6 +240,16 @@ class __Mutton__ extends Ctr {
                 continue;
             }
             if (is_file(ROOT_PATH.$path.$name)) {
+                if (Text::match($path.$name, [
+                    '/^ctr\\/(?!__).+/',
+                    '/^data\\/(?!index\\.html).+/',
+                    '/^mod\\/(?!Mod\\.php).+/',
+                    '/^stc\\/(?!__Mutton__\\/|index\\.html|index\\.js).+/',
+                    '/^stc-ts\\/(?!__Mutton__\\/|typings\\/|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
+                    '/^view\\/(?!__Mutton__\\/).+/'
+                ])) {
+                    continue;
+                }
                 $list['files'][$path.$name] = md5_file(ROOT_PATH.$path.$name);
             } else {
                 $deep = $this->_buildListDeep($path.$name.'/');

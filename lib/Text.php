@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/05/07 13:50
- * Last: 2019-2-20 12:17:07
+ * Last: 2019-3-13 21:28:21
  */
 declare(strict_types = 1);
 
@@ -64,11 +64,18 @@ class Text {
         return preg_match('/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/', $ip) ? true : false;
     }
 
-    // --- 换行变成别的 ---
-    public static function nlReplace(string $str, $to = ''): string {
+    /**
+     * --- 换行替换为空 ---
+     * @param string $str
+     * @param string $to
+     * @return string
+     */
+    public static function nlReplace(string $str, string $to = "\n"): string {
         $str = str_replace("\r\n", "\n", $str);
         $str = str_replace("\r", "\n", $str);
-        $str = str_replace("\n", $to, $str);
+        if ($to !== "\n") {
+            $str = str_replace("\n", $to, $str);
+        }
         return $str;
     }
 
@@ -100,7 +107,22 @@ class Text {
         return $host;
     }
 
-    // --- 以下是适用于中国大陆的方法 ---
+    /**
+     * --- 匹配正则数组 ---
+     * @param string $str
+     * @param array $reg
+     * @return bool
+     */
+    public static function match(string $str, array $reg): bool {
+        foreach ($reg as $val) {
+            if (preg_match($val, $str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+        // --- 以下是适用于中国大陆的方法 ---
 
     // --- 是否是中国大陆的手机号 ---
     public static function isPhoneCN(string $p): bool {
