@@ -141,7 +141,7 @@ class __Mutton__ extends Ctr {
                 $qlistConst[] = [$k, $i, $v2[1], $v2[0]];
             }
         }
-        return [1, 'list' => $list, 'qlist' => $qlist, 'dlist' => $dlist, 'qlistConst' => $qlistConst, 'dlistConst' => $dlistConst];
+        return [1, 'list' => $list, 'qlist' => $qlist, 'dlist' => $dlist, 'qlistConst' => $qlistConst, 'dlistConst' => $dlistConst, 'library' => $nowList['library']];
     }
 
     public function apiUpdate() {
@@ -154,7 +154,8 @@ class __Mutton__ extends Ctr {
         $mode = $this->post('mode');
         $ver = $this->post('ver');
         $path = $this->post('path');
-        $v = json_decode($this->post('v'));
+        $v = json_decode($this->post('v'), true);
+        $mblob = json_decode($this->post('mblob'), true);
 
         $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
         if (!$res->content) {
@@ -190,7 +191,19 @@ class __Mutton__ extends Ctr {
         }
         $json = json_decode($res->content);
         preg_match('/[0-9\\.]+/', $json->tag_name, $matches);
-        return [1, 'version' => $matches[0]];
+        $version = $matches[0];
+        // --- 获取 mblob ---
+        $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/master/doc/mblob/'.$version.'.mblob');
+        if (!$res->content) {
+            return [0, 'Network error, please try again.'];
+        }
+        if (!($blob = gzinflate($res->content))) {
+            return [0, 'Decryption failed.'];
+        }
+        if (!($json = json_decode($blob, true))) {
+            return [0, 'Decryption failed.'];
+        }
+        return [1, 'version' => $matches[0], 'mblob' => $json];
     }
 
     /**
@@ -223,6 +236,9 @@ class __Mutton__ extends Ctr {
                     $list['files'][$name] = md5_file(ROOT_PATH . $name);
                 }
             } else {
+                if ($name[0] === '_' && $name[1] === '_') {
+                    continue;
+                }
                 $deep = $this->_buildListDeep($name.'/');
                 $list['folders'] = array_merge($list['folders'], $deep['folders']);
                 $list['files'] = array_merge($list['files'], $deep['files']);
@@ -276,7 +292,7 @@ class __Mutton__ extends Ctr {
             '/^data\\/.+/',
             '/^log\\/.+/',
             '/^stc\\/(?!__Mutton__\\/).+/',
-            '/^stc-ts\\/(?!__Mutton__\\/|typings\\/).+/',
+            '/^stc-ts\\/(?!__Mutton__\\/|typings\\/|typings\\/vue\\/).+/',
             '/^view\\/(?!__Mutton__\\/).+/'
         ])) {
             return $list;
@@ -293,7 +309,7 @@ class __Mutton__ extends Ctr {
                     '/^data\\/(?!index\\.html).+/',
                     '/^mod\\/(?!Mod\\.php).+/',
                     '/^stc\\/(?!__Mutton__\\/|index\\.html|index\\.js).+/',
-                    '/^stc-ts\\/(?!__Mutton__\\/|typings\\/|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
+                    '/^stc-ts\\/(?!__Mutton__\\/|typings\\/any\\.d\\.ts|typings\\/vue\\/index\\.d\\.ts|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
                     '/^view\\/(?!__Mutton__\\/).+/'
                 ])) {
                     continue;

@@ -227,7 +227,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             },
                             update: function () {
                                 return __awaiter(this, void 0, void 0, function () {
-                                    var j, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path;
+                                    var j, version, mblob, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path;
                                     return __generator(this, function (_k) {
                                         switch (_k.label) {
                                             case 0:
@@ -240,6 +240,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 return [4, post(HTTP_BASE + "__Mutton__/apiGetLatestVer", { password: this.password })];
                                             case 1:
                                                 j = _k.sent();
+                                                version = j.version;
+                                                mblob = j.mblob;
                                                 this.mask = false;
                                                 if (j.result <= 0) {
                                                     this.alert = j.msg;
@@ -247,7 +249,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     return [2];
                                                 }
                                                 this.mask = true;
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: j.version, mode: "0" })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: version, mode: "0" })];
                                             case 2:
                                                 j = _k.sent();
                                                 this.mask = false;
@@ -312,7 +314,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                         path = k;
                                                         break;
                                                 }
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: j.version, mode: lk, path: path, v: JSON.stringify(v) })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob) })];
                                             case 6:
                                                 j = _k.sent();
                                                 if (!(j.result <= 0)) return [3, 8];

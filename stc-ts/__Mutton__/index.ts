@@ -153,8 +153,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     this.updateing = true;
                     this.mask = true;
-                    // --- 获取版本 ---
+                    // --- 获取版本，并获取 mblob ---
                     let j = await post(HTTP_BASE + "__Mutton__/apiGetLatestVer", {password: this.password});
+                    let version = j.version;
+                    let mblob = j.mblob;
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -163,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     // --- 获取差异列表 ---
                     this.mask = true;
-                    j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: j.version, mode: "0"});
+                    j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: version, mode: "0"});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -211,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     path = k;
                                     break;
                                 }
-                                j = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: j.version, mode: lk, path: path, v: JSON.stringify(v)});
+                                j = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob)});
                                 if (j.result <= 0) {
                                     this.updateList.unshift(`Error: ${v}, retry after 2 seconds.`);
                                     await sleep(2000);
