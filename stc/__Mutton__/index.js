@@ -98,6 +98,8 @@ document.addEventListener("DOMContentLoaded", function () {
                             mlist: [],
                             list: [],
                             latestVer: "0",
+                            updateList: [],
+                            updateing: false,
                             configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                         },
                         methods: {
@@ -121,7 +123,8 @@ document.addEventListener("DOMContentLoaded", function () {
                                     });
                                 });
                             },
-                            check: function () {
+                            check: function (mode) {
+                                if (mode === void 0) { mode = 0; }
                                 return __awaiter(this, void 0, void 0, function () {
                                     var j, list, _i, _a, v, _b, _c, v, _d, _e, v, _f, _g, v, _h, _j, v;
                                     return __generator(this, function (_k) {
@@ -132,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     return [2];
                                                 }
                                                 this.mask = true;
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex] })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex], mode: mode })];
                                             case 1:
                                                 j = _k.sent();
                                                 this.mask = false;
@@ -217,6 +220,124 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 evt = document.createEvent("MouseEvents");
                                                 evt.initEvent("click", false, false);
                                                 a.dispatchEvent(evt);
+                                                return [2];
+                                        }
+                                    });
+                                });
+                            },
+                            update: function () {
+                                return __awaiter(this, void 0, void 0, function () {
+                                    var j, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path;
+                                    return __generator(this, function (_k) {
+                                        switch (_k.label) {
+                                            case 0:
+                                                if (this.updateing) {
+                                                    this.alert = "Upgrade running...";
+                                                    return [2];
+                                                }
+                                                this.updateing = true;
+                                                this.mask = true;
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiGetLatestVer", { password: this.password })];
+                                            case 1:
+                                                j = _k.sent();
+                                                this.mask = false;
+                                                if (j.result <= 0) {
+                                                    this.alert = j.msg;
+                                                    this.updateing = false;
+                                                    return [2];
+                                                }
+                                                this.mask = true;
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: j.version, mode: "0" })];
+                                            case 2:
+                                                j = _k.sent();
+                                                this.mask = false;
+                                                if (j.result <= 0) {
+                                                    this.alert = j.msg;
+                                                    this.updateing = false;
+                                                    return [2];
+                                                }
+                                                listArr = ["list", "qlist", "dlist", "qdlistConst"];
+                                                qdlistConst = {};
+                                                for (_i = 0, _a = j.qlistConst; _i < _a.length; _i++) {
+                                                    v = _a[_i];
+                                                    if (!qdlistConst[v[0]]) {
+                                                        qdlistConst[v[0]] = [];
+                                                    }
+                                                    qdlistConst[v[0]].push(["q", v[1], v[2], v[3]]);
+                                                }
+                                                for (_b = 0, _c = j.dlistConst; _b < _c.length; _b++) {
+                                                    v = _c[_b];
+                                                    if (!qdlistConst[v[0]]) {
+                                                        qdlistConst[v[0]] = [];
+                                                    }
+                                                    qdlistConst[v[0]].push(["d", v[1], v[2], v[3]]);
+                                                }
+                                                j.qdlistConst = qdlistConst;
+                                                _d = [];
+                                                for (_e in listArr)
+                                                    _d.push(_e);
+                                                _f = 0;
+                                                _k.label = 3;
+                                            case 3:
+                                                if (!(_f < _d.length)) return [3, 13];
+                                                lk = _d[_f];
+                                                ln = listArr[lk];
+                                                list = j[ln];
+                                                _g = [];
+                                                for (_h in list)
+                                                    _g.push(_h);
+                                                _j = 0;
+                                                _k.label = 4;
+                                            case 4:
+                                                if (!(_j < _g.length)) return [3, 12];
+                                                k = _g[_j];
+                                                v = list[k];
+                                                retry = true;
+                                                _k.label = 5;
+                                            case 5:
+                                                if (!retry) return [3, 11];
+                                                path = v;
+                                                switch (ln) {
+                                                    case "list":
+                                                        this.updateList.unshift("Replace the file \"" + v + "\"...");
+                                                        break;
+                                                    case "qlist":
+                                                        this.updateList.unshift("Download the file \"" + v + "\"...");
+                                                        break;
+                                                    case "dlist":
+                                                        this.updateList.unshift("Remove the file \"" + v + "\"...");
+                                                        break;
+                                                    case "qdlistConst":
+                                                        this.updateList.unshift("Update configuration file \"" + k + "\"...");
+                                                        path = k;
+                                                        break;
+                                                }
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: j.version, mode: lk, path: path, v: JSON.stringify(v) })];
+                                            case 6:
+                                                j = _k.sent();
+                                                if (!(j.result <= 0)) return [3, 8];
+                                                this.updateList.unshift("Error: " + v + ", retry after 2 seconds.");
+                                                return [4, sleep(2000)];
+                                            case 7:
+                                                _k.sent();
+                                                return [3, 10];
+                                            case 8:
+                                                this.updateList.unshift("File \"" + v + "\" replaced successfully.");
+                                                retry = false;
+                                                return [4, sleep(500)];
+                                            case 9:
+                                                _k.sent();
+                                                _k.label = 10;
+                                            case 10: return [3, 5];
+                                            case 11:
+                                                _j++;
+                                                return [3, 4];
+                                            case 12:
+                                                _f++;
+                                                return [3, 3];
+                                            case 13:
+                                                this.alert = "Update completed, please refresh the page.";
+                                                this.updateing = false;
                                                 return [2];
                                         }
                                     });

@@ -39,6 +39,7 @@
                             <div style="text-align: center; margin-top: 10px;">
                                 <mu-button @click.native="refresh()">Refresh</mu-button>
                                 <mu-button @click.native="check()" style="margin-left: 10px;">Check</mu-button>
+                                <mu-button @click.native="check(1)" style="margin-left: 10px;">Online</mu-button>
                             </div>
                             <div style="margin-top: 10px;">Mismatch file list:</div>
                             <mu-list :list="list"></mu-list>
@@ -51,6 +52,12 @@
                                     Latest versions: {{latestVer}}<br>
                                 </div>
                                 <mu-button @click.native="getLatestVer()" style="margin-top: 10px;">Get latest versions</mu-button>
+                            </div>
+                            <mu-line></mu-line>
+                            <div style="display: flex; flex-direction: column; align-items: center;">
+                                Automatic upgrade (used only on local testing).<br>
+                                <mu-button @click.native="update()" style="margin-top: 10px;">Start</mu-button>
+                                <mu-list v-if="updateList.length > 0" :list="updateList" style="margin-top: 10px;"></mu-list>
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column; align-items: center;">

@@ -79,11 +79,16 @@ class __Mutton__ extends Ctr {
         // --- 校验 md5，校验文件是否多出和缺失 ---
         foreach ($nowList['files'] as $k => $v) {
             if (isset($json['files'][$k])) {
-                if (!Text::match($k, [
-                    '/^etc\\/.+/',
-                    '/^stc\\/index\\.js/',
-                    '/^stc-ts\\/(index\\.ts||tsconfig\\.js||tslint\\.json)/'
-                ])) {
+                $match = [
+                    '/^etc\\/(?!const\\.php).+/',
+                    '/^stc\\/index\\.js/'
+                ];
+                if ($this->post('mode') === '1') {
+                    $match[] = '/^stc-ts\\/.+/';
+                } else {
+                    $match[] = '/^stc-ts\\/(index\\.ts||tsconfig\\.js||tslint\\.json)/';
+                }
+                if (!Text::match($k, $match)) {
                     if ($json['files'][$k] !== $v) {
                         // --- 有差异 ---
                         $list[] = $k;
@@ -97,10 +102,23 @@ class __Mutton__ extends Ctr {
         }
         // --- 缺失文件文件夹序列 ---
         foreach ($json['folders'] as $k => $v) {
-            $qlist[] = $k;
+            if (($this->post('mode') === '1') && Text::match($k, [
+                    '/^stc-ts\\/.*/',
+                    '/^\\.gitignore/'
+                ])) {
+                // --- 在线模式，不计算 stc-ts 目录 ---
+            } else {
+                $qlist[] = $k;
+            }
         }
         foreach ($json['files'] as $k => $v) {
-            $qlist[] = $k;
+            if (($this->post('mode') === '1') && Text::match($k, [
+                    '/^stc-ts\\/.*/'
+                ])) {
+                // --- 在线模式，不计算 stc-ts 目录 ---
+            } else {
+                $qlist[] = $k;
+            }
         }
         // --- 校验 const ---
         foreach ($nowList['const'] as $k => $v) {
@@ -111,7 +129,8 @@ class __Mutton__ extends Ctr {
                         unset($json['const'][$k][$i]);
                     } else {
                         // --- 本地多出本常量 ---
-                        $dlistConst[] = [$k, $i];
+                        // --- [文件路径，常量名，常量值，const 还是 define]
+                        $dlistConst[] = [$k, $i, $v2[1], $v2[0]];
                     }
                 }
             }
@@ -119,10 +138,30 @@ class __Mutton__ extends Ctr {
         // --- 缺失的常量 ---
         foreach ($json['const'] as $k => $v) {
             foreach ($v as $i => $v2) {
-                $qlistConst[] = [$k, $i];
+                $qlistConst[] = [$k, $i, $v2[1], $v2[0]];
             }
         }
         return [1, 'list' => $list, 'qlist' => $qlist, 'dlist' => $dlist, 'qlistConst' => $qlistConst, 'dlistConst' => $dlistConst];
+    }
+
+    public function apiUpdate() {
+        if ($this->post('password') !== __MUTTON__PWD) {
+            return [0, 'Password is incorrect.'];
+        }
+        if (!is_writable(ROOT_PATH.'ctr/')) {
+            return [0, 'Server cannot be written.'];
+        }
+        $mode = $this->post('mode');
+        $ver = $this->post('ver');
+        $path = $this->post('path');
+        $v = json_decode($this->post('v'));
+
+        $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
+        if (!$res->content) {
+            return [0, 'Network error, please try again.'];
+        }
+        file_put_contents($path, $res->content);
+        return [1];
     }
 
     /**
@@ -162,8 +201,17 @@ class __Mutton__ extends Ctr {
         $list = [
             'files' => [],
             'folders' => [],
-            'const' => []
+            'const' => [],
+            'library' => []
         ];
+        // --- 本地库 ---
+        $dir = dir(LIB_PATH);
+        while (($name = $dir->read()) !== false) {
+            if (!is_file(LIB_PATH.$name)) {
+                continue;
+            }
+            $list['library'][] = explode('.', $name)[0];
+        }
         // --- 序列 ---
         $dir = dir(ROOT_PATH);
         while (($name = $dir->read()) !== false) {
@@ -200,14 +248,14 @@ class __Mutton__ extends Ctr {
             preg_match_all('/const\\s+([a-z0-9_]+)\\s*=\\s*([\\S\\s]+?);/i', $content, $matches);
             if (count($matches[0]) > 0) {
                 foreach ($matches[0] as $k => $v) {
-                    $arr[$matches[1][$k]] = $matches[2][$k];
+                    $arr[$matches[1][$k]] = [0, $matches[2][$k]];
                 }
             }
 
             preg_match_all('/define[\\S\\s]+?[\'"](.+?)[\'"]\\s*,\\s*([\\S\\s]+?)\\s*\\) *?;/i', $content, $matches);
             if (count($matches[0]) > 0) {
-                foreach ($matches[1] as $k => $v) {
-                    $arr[$matches[1][$k]] = $matches[2][$k];
+                foreach ($matches[0] as $k => $v) {
+                    $arr[$matches[1][$k]] = [1, $matches[2][$k]];
                 }
             }
             $list['const']['etc/'.$name] = $arr;

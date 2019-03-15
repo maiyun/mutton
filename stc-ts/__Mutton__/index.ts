@@ -65,6 +65,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 list: [],
                 // --- System ---
                 latestVer: "0",
+                updateList: [],
+                updateing: false,
                 // --- Config ---
                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
             },
@@ -79,13 +81,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     this.mlist = j.list;
                 },
-                check: async function (this: any) {
+                check: async function (this: any, mode: number = 0) {
                     if (!this.mlist[this.mindex]) {
                         this.alert = "Please select version.";
                         return;
                     }
                     this.mask = true;
-                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.mlist[this.mindex]});
+                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.mlist[this.mindex], mode: mode});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -142,6 +144,87 @@ document.addEventListener("DOMContentLoaded", () => {
                     let evt = document.createEvent("MouseEvents");
                     evt.initEvent("click", false, false);
                     a.dispatchEvent(evt);
+                },
+                // --- 自动升级 ---
+                update: async function (this: any) {
+                    if (this.updateing) {
+                        this.alert = "Upgrade running...";
+                        return;
+                    }
+                    this.updateing = true;
+                    this.mask = true;
+                    // --- 获取版本 ---
+                    let j = await post(HTTP_BASE + "__Mutton__/apiGetLatestVer", {password: this.password});
+                    this.mask = false;
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        this.updateing = false;
+                        return;
+                    }
+                    // --- 获取差异列表 ---
+                    this.mask = true;
+                    j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: j.version, mode: "0"});
+                    this.mask = false;
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        this.updateing = false;
+                        return;
+                    }
+                    // --- 分别下载相关文件，并传入相关地方 ---
+                    // --- 可能会有网络波动导致的异常，会需要重试，所以，进行自动网络重试机制 ---
+                    // --- 差异，直接替换文件 ---
+                    let listArr = ["list", "qlist", "dlist", "qdlistConst"];
+                    let qdlistConst: any = {};
+                    for (let v of j.qlistConst) {
+                        if (!qdlistConst[v[0]]) {
+                            qdlistConst[v[0]] = [];
+                        }
+                        qdlistConst[v[0]].push(["q", v[1], v[2], v[3]]);
+                    }
+                    for (let v of j.dlistConst) {
+                        if (!qdlistConst[v[0]]) {
+                            qdlistConst[v[0]] = [];
+                        }
+                        qdlistConst[v[0]].push(["d", v[1], v[2], v[3]]);
+                    }
+                    j.qdlistConst = qdlistConst;
+                    for (let lk in listArr) {
+                        let ln = listArr[lk];
+                        let list = j[ln];
+                        for (let k in list) {
+                            let v = list[k];
+                            let retry: boolean = true;
+                            while (retry) {
+                                let path = v;
+                                switch (ln) {
+                                case "list":
+                                    this.updateList.unshift(`Replace the file "${v}"...`);
+                                    break;
+                                case "qlist":
+                                    this.updateList.unshift(`Download the file "${v}"...`);
+                                    break;
+                                case "dlist":
+                                    this.updateList.unshift(`Remove the file "${v}"...`);
+                                    break;
+                                case "qdlistConst":
+                                    this.updateList.unshift(`Update configuration file "${k}"...`);
+                                    path = k;
+                                    break;
+                                }
+                                j = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: j.version, mode: lk, path: path, v: JSON.stringify(v)});
+                                if (j.result <= 0) {
+                                    this.updateList.unshift(`Error: ${v}, retry after 2 seconds.`);
+                                    await sleep(2000);
+                                } else {
+                                    this.updateList.unshift(`File "${v}" replaced successfully.`);
+                                    retry = false;
+                                    await sleep(500);
+                                }
+                            }
+                        }
+                    }
+                    this.alert = "Update completed, please refresh the page.";
+                    this.updateing = false;
                 }
             }
         });
