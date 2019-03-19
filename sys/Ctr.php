@@ -38,7 +38,6 @@ class Ctr {
      * @return string
      */
     protected function loadView(string $path, $data = [], bool $return = false) {
-
         // --- 重构 loadView(string $path, boolen $return) ---
         if(is_array($data)) {
             extract($data);
@@ -57,7 +56,6 @@ class Ctr {
         } else {
             return '';
         }
-
     }
 
     // --- 获取页面内容方法 ---
@@ -93,7 +91,7 @@ class Ctr {
         }
     }
 
-    // --- HTTP 方法 ---
+    // --- 获取 GET 和 POST 的数据 ---
 
     /**
      * @param $key
@@ -117,6 +115,31 @@ class Ctr {
     }
     protected function redirect(string $url = ''): void {
         header('Location: '.HTTP_BASE.$url);
+    }
+
+    /**
+     * --- 深度创建文件夹并赋予权限，失败不会回滚 ---
+     * @param string $path
+     * @param int $mode
+     * @return bool
+     */
+    protected function mkdir(string $path, int $mode): bool {
+        $path = str_replace('\\', '/', $path);
+        $dirs = explode('/', $path);
+        $tpath = '';
+        foreach ($dirs as $v) {
+            if ($v === '') {
+                continue;
+            }
+            $tpath .= $v . '/';
+            if (!is_dir($tpath)) {
+                if (!mkdir($tpath)) {
+                    return false;
+                }
+                chmod($tpath, $mode);
+            }
+        }
+        return true;
     }
 
 }

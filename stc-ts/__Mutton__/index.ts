@@ -125,25 +125,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     this.latestVer = j.version;
                 },
-                build: async function (this: any) {
+                build: async function (this: any, mode: number = 0) {
                     this.mask = true;
-                    let j = await post(HTTP_BASE + "__Mutton__/apiBuild", {password: this.password});
+                    let j = await post(HTTP_BASE + "__Mutton__/apiBuild", {password: this.password, mode: mode});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
                     }
-                    let bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
-                    while (n--) {
-                        u8arr[n] = bstr.charCodeAt(n);
+                    if (mode === 0) {
+                        let bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                        }
+                        let blob = new Blob([u8arr]);
+                        let a = document.createElement("a");
+                        a.download = j.ver + ".mblob";
+                        a.href = URL.createObjectURL(blob);
+                        let evt = document.createEvent("MouseEvents");
+                        evt.initEvent("click", false, false);
+                        a.dispatchEvent(evt);
+                    } else {
+                        this.alert = "Successful.";
                     }
-                    let blob = new Blob([u8arr]);
-                    let a = document.createElement("a");
-                    a.download = j.ver + ".mblob";
-                    a.href = URL.createObjectURL(blob);
-                    let evt = document.createEvent("MouseEvents");
-                    evt.initEvent("click", false, false);
-                    a.dispatchEvent(evt);
                 },
                 // --- 自动升级 ---
                 update: async function (this: any) {
@@ -199,26 +203,26 @@ document.addEventListener("DOMContentLoaded", () => {
                             while (retry) {
                                 let path = v;
                                 switch (ln) {
-                                case "list":
-                                    this.updateList.unshift(`Replace the file "${v}"...`);
-                                    break;
-                                case "qlist":
-                                    this.updateList.unshift(`Download the file "${v}"...`);
-                                    break;
-                                case "dlist":
-                                    this.updateList.unshift(`Remove the file "${v}"...`);
-                                    break;
-                                case "qdlistConst":
-                                    this.updateList.unshift(`Update configuration file "${k}"...`);
-                                    path = k;
-                                    break;
+                                    case "list":
+                                        this.updateList.unshift(`Replace the file "${path}"...`);
+                                        break;
+                                    case "qlist":
+                                        this.updateList.unshift(`Download the file "${path}"...`);
+                                        break;
+                                    case "dlist":
+                                        this.updateList.unshift(`Remove the file "${path}"...`);
+                                        break;
+                                    case "qdlistConst":
+                                        path = k;
+                                        this.updateList.unshift(`Update configuration file "${path}"...`);
+                                        break;
                                 }
-                                j = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob)});
-                                if (j.result <= 0) {
-                                    this.updateList.unshift(`Error: ${v}, retry after 2 seconds.`);
+                                let j2 = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob), library: JSON.stringify(j.library)});
+                                if (j2.result <= 0) {
+                                    this.updateList.unshift(`Error: ${path}, retry after 2 seconds.`);
                                     await sleep(2000);
                                 } else {
-                                    this.updateList.unshift(`File "${v}" replaced successfully.`);
+                                    this.updateList.unshift(j2.msg);
                                     retry = false;
                                     await sleep(500);
                                 }

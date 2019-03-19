@@ -56,13 +56,16 @@
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 Automatic upgrade (used only on local testing).<br>
-                                <mu-button @click.native="update()" style="margin-top: 10px;">Start</mu-button>
-                                <mu-list v-if="updateList.length > 0" :list="updateList" style="margin-top: 10px;"></mu-list>
+                                <mu-button @click.native="update()" style="margin-top: 10px;">{{updateing ? 'Running...' : 'Start'}}</mu-button>
+                                <mu-list v-if="updateList.length > 0" :list="updateList" style="margin-top: 10px; width: 100%;"></mu-list>
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <div>Build a ".mblob" file.</div>
-                                <mu-button @click.native="build()" style="margin-top: 10px;">Build</mu-button>
+                                <div style="text-align: center; margin-top: 10px;">
+                                    <mu-button @click.native="build()">Build</mu-button>
+                                    <mu-button @click.native="build(1)" style="margin-left: 10px;">Build to "doc"</mu-button>
+                                </div>
                             </div>
                         </div>
                         <!-- Config -->

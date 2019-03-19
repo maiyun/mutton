@@ -194,14 +194,15 @@ document.addEventListener("DOMContentLoaded", function () {
                                     });
                                 });
                             },
-                            build: function () {
+                            build: function (mode) {
+                                if (mode === void 0) { mode = 0; }
                                 return __awaiter(this, void 0, void 0, function () {
                                     var j, bstr, n, u8arr, blob, a, evt;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0:
                                                 this.mask = true;
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiBuild", { password: this.password })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiBuild", { password: this.password, mode: mode })];
                                             case 1:
                                                 j = _a.sent();
                                                 this.mask = false;
@@ -209,17 +210,22 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     this.alert = j.msg;
                                                     return [2];
                                                 }
-                                                bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
-                                                while (n--) {
-                                                    u8arr[n] = bstr.charCodeAt(n);
+                                                if (mode === 0) {
+                                                    bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
+                                                    while (n--) {
+                                                        u8arr[n] = bstr.charCodeAt(n);
+                                                    }
+                                                    blob = new Blob([u8arr]);
+                                                    a = document.createElement("a");
+                                                    a.download = j.ver + ".mblob";
+                                                    a.href = URL.createObjectURL(blob);
+                                                    evt = document.createEvent("MouseEvents");
+                                                    evt.initEvent("click", false, false);
+                                                    a.dispatchEvent(evt);
                                                 }
-                                                blob = new Blob([u8arr]);
-                                                a = document.createElement("a");
-                                                a.download = j.ver + ".mblob";
-                                                a.href = URL.createObjectURL(blob);
-                                                evt = document.createEvent("MouseEvents");
-                                                evt.initEvent("click", false, false);
-                                                a.dispatchEvent(evt);
+                                                else {
+                                                    this.alert = "Successful.";
+                                                }
                                                 return [2];
                                         }
                                     });
@@ -227,7 +233,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             },
                             update: function () {
                                 return __awaiter(this, void 0, void 0, function () {
-                                    var j, version, mblob, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path;
+                                    var j, version, mblob, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path, j2;
                                     return __generator(this, function (_k) {
                                         switch (_k.label) {
                                             case 0:
@@ -301,30 +307,30 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 path = v;
                                                 switch (ln) {
                                                     case "list":
-                                                        this.updateList.unshift("Replace the file \"" + v + "\"...");
+                                                        this.updateList.unshift("Replace the file \"" + path + "\"...");
                                                         break;
                                                     case "qlist":
-                                                        this.updateList.unshift("Download the file \"" + v + "\"...");
+                                                        this.updateList.unshift("Download the file \"" + path + "\"...");
                                                         break;
                                                     case "dlist":
-                                                        this.updateList.unshift("Remove the file \"" + v + "\"...");
+                                                        this.updateList.unshift("Remove the file \"" + path + "\"...");
                                                         break;
                                                     case "qdlistConst":
-                                                        this.updateList.unshift("Update configuration file \"" + k + "\"...");
                                                         path = k;
+                                                        this.updateList.unshift("Update configuration file \"" + path + "\"...");
                                                         break;
                                                 }
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob) })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob), library: JSON.stringify(j.library) })];
                                             case 6:
-                                                j = _k.sent();
-                                                if (!(j.result <= 0)) return [3, 8];
-                                                this.updateList.unshift("Error: " + v + ", retry after 2 seconds.");
+                                                j2 = _k.sent();
+                                                if (!(j2.result <= 0)) return [3, 8];
+                                                this.updateList.unshift("Error: " + path + ", retry after 2 seconds.");
                                                 return [4, sleep(2000)];
                                             case 7:
                                                 _k.sent();
                                                 return [3, 10];
                                             case 8:
-                                                this.updateList.unshift("File \"" + v + "\" replaced successfully.");
+                                                this.updateList.unshift(j2.msg);
                                                 retry = false;
                                                 return [4, sleep(500)];
                                             case 9:

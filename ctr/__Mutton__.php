@@ -53,7 +53,7 @@ class __Mutton__ extends Ctr {
         if (!$res->content) {
             return [0, 'Network error, please try again.'];
         }
-        if (!($blob = gzinflate($res->content))) {
+        if (!($blob = @gzinflate($res->content))) {
             return [0, 'Decryption failed.'];
         }
         if (!($json = json_decode($blob, true))) {
@@ -151,17 +151,47 @@ class __Mutton__ extends Ctr {
         if (!is_writable(ROOT_PATH.'ctr/')) {
             return [0, 'Server cannot be written.'];
         }
+        // --- ["list", "qlist", "dlist", "qdlistConst"] ---
         $mode = $this->post('mode');
         $ver = $this->post('ver');
         $path = $this->post('path');
         $v = json_decode($this->post('v'), true);
-        $mblob = json_decode($this->post('mblob'), true);
+        $mblob = json_decode($this->post('mblob'), true);  // 远程序列
+        $library = json_decode($this->post('library'), true); // 本地的 library
+        $isFile = substr($path, -1) === '/' ? false : true;
 
+        if (in_array($mode, [0, 1, 3])) {
+            $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
+            if (!$res->content) {
+                return [0, 'Network error, please try again.'];
+            }
+            switch ($mode) {
+                case 0:
+                    // --- md5 不同，直接替换 ---
+                    file_put_contents($path, $res->content);
+                    break;
+                case 1:
+                    // --- 本地缺失文件/文件夹，如果不是 lib，则直接补，如果是，则判断是否安装了相应 lib，安装了直接补 ---
+                    if (substr($path, 0, 4) !== 'lib/') {
+                        if ($isFile) {
+                            file_put_contents($path, $res->content);
+                        } else {
+                            $this->mkdir($path, 0755);
+                        }
+                    } else {
+
+                    }
+                    break;
+            }
+        }
+
+        /*
         $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
         if (!$res->content) {
             return [0, 'Network error, please try again.'];
         }
         file_put_contents($path, $res->content);
+        */
         return [1];
     }
 
@@ -173,8 +203,17 @@ class __Mutton__ extends Ctr {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
         }
-        $blob = base64_encode(gzdeflate(json_encode($this->_buildList())));
-        return [1, 'blob' => $blob, 'ver' => VER];
+        $mode = $this->post('mode');
+        $blob = gzdeflate(json_encode($this->_buildList()));
+        if ($mode === '0') {
+            return [1, 'blob' => base64_encode($blob), 'ver' => VER];
+        } else {
+            if (file_put_contents(ROOT_PATH.'doc/mblob/'.VER.'.mblob', $blob) === false) {
+                return [0, 'Permission denied.'];
+            } else {
+                return [1];
+            }
+        }
     }
 
     /**
@@ -192,18 +231,19 @@ class __Mutton__ extends Ctr {
         $json = json_decode($res->content);
         preg_match('/[0-9\\.]+/', $json->tag_name, $matches);
         $version = $matches[0];
+        $version = '5.2.0';
         // --- 获取 mblob ---
         $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/master/doc/mblob/'.$version.'.mblob');
         if (!$res->content) {
             return [0, 'Network error, please try again.'];
         }
-        if (!($blob = gzinflate($res->content))) {
+        if (!($blob = @gzinflate($res->content))) {
             return [0, 'Decryption failed.'];
         }
         if (!($json = json_decode($blob, true))) {
             return [0, 'Decryption failed.'];
         }
-        return [1, 'version' => $matches[0], 'mblob' => $json];
+        return [1, 'version' => $version, 'mblob' => $json];
     }
 
     /**
@@ -292,7 +332,8 @@ class __Mutton__ extends Ctr {
             '/^data\\/.+/',
             '/^log\\/.+/',
             '/^stc\\/(?!__Mutton__\\/).+/',
-            '/^stc-ts\\/(?!__Mutton__\\/|typings\\/|typings\\/vue\\/).+/',
+            '/^stc-ts\\/(?!__Mutton__\\/|typings\\/).+/',
+            '/^stc-ts\\/typings\\/(?!vue\\/).+/',
             '/^view\\/(?!__Mutton__\\/).+/'
         ])) {
             return $list;
