@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 this.selectedIndex = this.value;
                             }
                         },
-                        template: "<div class=\"list\" tabindex=\"0\"><div class=\"list__in\" :style=\"{'height': height}\"><div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"selectedIndex=index;$emit('change', index)\">{{val}}</div></div></div>"
+                        template: "<div class=\"list\" tabindex=\"0\"><div class=\"list__in\" :style=\"{'height': height}\"><div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"selectedIndex=index;$emit('change', index)\">{{val.label || val}}</div></div></div>"
                     });
                     new Vue({
                         el: "#vue",
@@ -100,6 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             latestVer: "0",
                             updateList: [],
                             updateing: false,
+                            updateIndex: 0,
                             configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                         },
                         methods: {
@@ -135,7 +136,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     return [2];
                                                 }
                                                 this.mask = true;
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex], mode: mode })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex].value, mode: mode })];
                                             case 1:
                                                 j = _k.sent();
                                                 this.mask = false;
@@ -233,7 +234,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             },
                             update: function () {
                                 return __awaiter(this, void 0, void 0, function () {
-                                    var j, version, mblob, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path, j2;
+                                    var version, j, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path, j2;
                                     return __generator(this, function (_k) {
                                         switch (_k.label) {
                                             case 0:
@@ -241,22 +242,16 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     this.alert = "Upgrade running...";
                                                     return [2];
                                                 }
-                                                this.updateing = true;
-                                                this.mask = true;
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiGetLatestVer", { password: this.password })];
-                                            case 1:
-                                                j = _k.sent();
-                                                version = j.version;
-                                                mblob = j.mblob;
-                                                this.mask = false;
-                                                if (j.result <= 0) {
-                                                    this.alert = j.msg;
-                                                    this.updateing = false;
+                                                if (!this.mlist[this.updateIndex]) {
+                                                    this.alert = "Please select version.";
                                                     return [2];
                                                 }
+                                                this.updateing = true;
+                                                this.mask = true;
+                                                version = this.mlist[this.updateIndex].value;
                                                 this.mask = true;
                                                 return [4, post(HTTP_BASE + "__Mutton__/apiCheck", { password: this.password, ver: version, mode: "0" })];
-                                            case 2:
+                                            case 1:
                                                 j = _k.sent();
                                                 this.mask = false;
                                                 if (j.result <= 0) {
@@ -285,9 +280,9 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 for (_e in listArr)
                                                     _d.push(_e);
                                                 _f = 0;
-                                                _k.label = 3;
-                                            case 3:
-                                                if (!(_f < _d.length)) return [3, 13];
+                                                _k.label = 2;
+                                            case 2:
+                                                if (!(_f < _d.length)) return [3, 12];
                                                 lk = _d[_f];
                                                 ln = listArr[lk];
                                                 list = j[ln];
@@ -295,15 +290,15 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 for (_h in list)
                                                     _g.push(_h);
                                                 _j = 0;
-                                                _k.label = 4;
-                                            case 4:
-                                                if (!(_j < _g.length)) return [3, 12];
+                                                _k.label = 3;
+                                            case 3:
+                                                if (!(_j < _g.length)) return [3, 11];
                                                 k = _g[_j];
                                                 v = list[k];
                                                 retry = true;
-                                                _k.label = 5;
-                                            case 5:
-                                                if (!retry) return [3, 11];
+                                                _k.label = 4;
+                                            case 4:
+                                                if (!retry) return [3, 10];
                                                 path = v;
                                                 switch (ln) {
                                                     case "list":
@@ -320,30 +315,30 @@ document.addEventListener("DOMContentLoaded", function () {
                                                         this.updateList.unshift("Update configuration file \"" + path + "\"...");
                                                         break;
                                                 }
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob), library: JSON.stringify(j.library) })];
-                                            case 6:
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), library: JSON.stringify(j.library) })];
+                                            case 5:
                                                 j2 = _k.sent();
-                                                if (!(j2.result <= 0)) return [3, 8];
-                                                this.updateList.unshift("Error: " + path + ", retry after 2 seconds.");
+                                                if (!(j2.result <= 0)) return [3, 7];
+                                                this.updateList.unshift("Error: " + j2.msg + " retry after 2 seconds.");
                                                 return [4, sleep(2000)];
-                                            case 7:
+                                            case 6:
                                                 _k.sent();
-                                                return [3, 10];
-                                            case 8:
+                                                return [3, 9];
+                                            case 7:
                                                 this.updateList.unshift(j2.msg);
                                                 retry = false;
                                                 return [4, sleep(500)];
-                                            case 9:
+                                            case 8:
                                                 _k.sent();
-                                                _k.label = 10;
-                                            case 10: return [3, 5];
-                                            case 11:
+                                                _k.label = 9;
+                                            case 9: return [3, 4];
+                                            case 10:
                                                 _j++;
-                                                return [3, 4];
-                                            case 12:
-                                                _f++;
                                                 return [3, 3];
-                                            case 13:
+                                            case 11:
+                                                _f++;
+                                                return [3, 2];
+                                            case 12:
                                                 this.alert = "Update completed, please refresh the page.";
                                                 this.updateing = false;
                                                 return [2];

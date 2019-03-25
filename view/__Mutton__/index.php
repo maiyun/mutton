@@ -54,10 +54,16 @@
                                 <mu-button @click.native="getLatestVer()" style="margin-top: 10px;">Get latest versions</mu-button>
                             </div>
                             <mu-line></mu-line>
-                            <div style="display: flex; flex-direction: column; align-items: center;">
+                            <div style="display: flex; flex-direction: column;">
                                 Automatic upgrade (used only on local testing).<br>
-                                <mu-button @click.native="update()" style="margin-top: 10px;">{{updateing ? 'Running...' : 'Start'}}</mu-button>
-                                <mu-list v-if="updateList.length > 0" :list="updateList" style="margin-top: 10px; width: 100%;"></mu-list>
+                                <div style="display: flex; margin-top: 10px;">
+                                    <mu-list :list="mlist" v-model="updateIndex" style="flex: 1;"></mu-list>
+                                    <mu-list :list="updateList" style="margin-left: 10px; flex: 2;"></mu-list>
+                                </div>
+                                <div style="margin-top: 10px; text-align: center;">
+                                    <mu-button @click.native="refresh()">Refresh</mu-button>
+                                    <mu-button @click.native="update()" style="margin-left: 10px;">{{updateing ? 'Running...' : 'Start'}}</mu-button>
+                                </div>
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column; align-items: center;">

@@ -123,7 +123,7 @@ class Ctr {
      * @param int $mode
      * @return bool
      */
-    protected function mkdir(string $path, int $mode): bool {
+    protected function mkdir(string $path, int $mode = 0755): bool {
         $path = str_replace('\\', '/', $path);
         $dirs = explode('/', $path);
         $tpath = '';
@@ -140,6 +140,38 @@ class Ctr {
             }
         }
         return true;
+    }
+
+    /**
+     * --- 深度删除文件夹以及所有文件 ---
+     * @param string $path
+     * @return bool
+     */
+    protected function rmdir(string $path): bool {
+        $path = str_replace('\\', '/', $path);
+        if (substr($path, -1) !== '/') {
+            $path .= '/';
+        }
+        if (!file_exists($path)) {
+            return true;
+        }
+        $dir = dir($path);
+        while (($name = $dir->read()) !== false) {
+            if (($name === '.') || ($name === '..')) {
+                continue;
+            }
+            if (is_file($path.$name)) {
+                if (!@unlink($path.$name)) {
+                    return false;
+                }
+            } else {
+                if (!$this->rmdir($path.$name.'/')) {
+                    return false;
+                }
+            }
+        }
+        $dir->close();
+        return @rmdir($path);
     }
 
 }

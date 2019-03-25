@@ -31,16 +31,18 @@ class __Mutton__ extends Ctr {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
         }
-        $req = Net\Request::get();
-        $req->setFollowLocation(true);
-        $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/contents/doc/mblob/', $req);
+        $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/releases');
         if (!$res->content) {
             return [0, 'Network error, please try again.'];
         }
         $json = json_decode($res->content);
         $list = [];
         foreach ($json as $item) {
-            $list[] = substr($item->name, 0, -6);
+            preg_match('/[0-9\\.]+/', $item->tag_name, $matches);
+            $list[] = [
+                'value' => $matches[0],
+                'label' => $item->name
+            ];
         }
         return [1, 'list' => $list];
     }
@@ -48,6 +50,9 @@ class __Mutton__ extends Ctr {
     public function apiCheck() {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
+        }
+        if (version_compare($this->post('ver'), '5.2.0', '<')) {
+            return [0, 'Version must be >= 5.2.0.'];
         }
         $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/master/doc/mblob/'.$this->post('ver').'.mblob');
         if (!$res->content) {
@@ -84,9 +89,11 @@ class __Mutton__ extends Ctr {
                     '/^stc\\/index\\.js/'
                 ];
                 if ($this->post('mode') === '1') {
+                    // --- online，忽略 stc-ts 文件夹下所有文件 ---
                     $match[] = '/^stc-ts\\/.+/';
                 } else {
-                    $match[] = '/^stc-ts\\/(index\\.ts||tsconfig\\.js||tslint\\.json)/';
+                    // --- offline，只忽略 stc-ts 下面3个的文件比对 ---
+                    $match[] = '/^stc-ts\\/(index\\.ts|tsconfig\\.js|tslint\\.json)/';
                 }
                 if (!Text::match($k, $match)) {
                     if ($json['files'][$k] !== $v) {
@@ -121,29 +128,30 @@ class __Mutton__ extends Ctr {
             }
         }
         // --- 校验 const ---
-        foreach ($nowList['const'] as $k => $v) {
+        foreach ($nowList['const'] as $k => $arr) {
             // --- 文件存在才判断 const ---
             if (isset($json['const'][$k])) {
-                foreach ($v as $i => $v2) {
-                    if (isset($json['const'][$k][$i])) {
+                foreach ($arr as $i => $v2) {
+                    if (in_array($v2, $json['const'][$k])) {
                         unset($json['const'][$k][$i]);
                     } else {
                         // --- 本地多出本常量 ---
                         // --- [文件路径，常量名，常量值，const 还是 define]
-                        $dlistConst[] = [$k, $i, $v2[1], $v2[0]];
+                        $dlistConst[] = [$k, $v2];
                     }
                 }
             }
         }
         // --- 缺失的常量 ---
-        foreach ($json['const'] as $k => $v) {
-            foreach ($v as $i => $v2) {
-                $qlistConst[] = [$k, $i, $v2[1], $v2[0]];
+        foreach ($json['const'] as $k => $arr) {
+            foreach ($arr as $i => $v2) {
+                $qlistConst[] = [$k, $v2];
             }
         }
         return [1, 'list' => $list, 'qlist' => $qlist, 'dlist' => $dlist, 'qlistConst' => $qlistConst, 'dlistConst' => $dlistConst, 'library' => $nowList['library']];
     }
 
+    // --- 自动升级 ---
     public function apiUpdate() {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
@@ -156,43 +164,110 @@ class __Mutton__ extends Ctr {
         $ver = $this->post('ver');
         $path = $this->post('path');
         $v = json_decode($this->post('v'), true);
-        $mblob = json_decode($this->post('mblob'), true);  // 远程序列
-        $library = json_decode($this->post('library'), true); // 本地的 library
+        $library = json_decode($this->post('library'), true); // 本地已装 library
         $isFile = substr($path, -1) === '/' ? false : true;
 
         if (in_array($mode, [0, 1, 3])) {
             $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
             if (!$res->content) {
-                return [0, 'Network error, please try again.'];
+                return [0, 'Network error.'];
             }
             switch ($mode) {
                 case 0:
                     // --- md5 不同，直接替换 ---
-                    file_put_contents($path, $res->content);
-                    break;
+                    $match = [
+                        '/^etc\\/(?!const\\.php).+/',
+                        '/^stc\\/index\\.js/',
+                        '/^stc-ts\\/(index\\.ts|tsconfig\\.js|tslint\\.json)/'
+                    ];
+                    if (!Text::match($path, $match)) {
+                        file_put_contents(ROOT_PATH.$path, $res->content);
+                    }
+                    return [1, 'File "'.$path.'" replacement success.'];
                 case 1:
-                    // --- 本地缺失文件/文件夹，如果不是 lib，则直接补，如果是，则判断是否安装了相应 lib，安装了直接补 ---
+                    // --- 本地缺失文件/文件夹，如果不是 lib，则直接补，如果是 lib，则判断是否安装了相应 lib，安装了直接补 ---
                     if (substr($path, 0, 4) !== 'lib/') {
                         if ($isFile) {
-                            file_put_contents($path, $res->content);
+                            file_put_contents(ROOT_PATH.$path, $res->content);
+                            return [1, 'File "'.$path.'" replacement success.'];
                         } else {
-                            $this->mkdir($path, 0755);
+                            $this->mkdir(ROOT_PATH.$path, 0755);
+                            return [1, 'Folder "'.$path.'" has been created.'];
                         }
                     } else {
-
+                        // --- 判断缺失的文件，lib 是否是已安装的 lib ---
+                        if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
+                            if (in_array($matches[0], $library)) {
+                                if ($isFile) {
+                                    file_put_contents(ROOT_PATH.$path, $res->content);
+                                    return [1, 'File "'.$path.'" replacement success.'];
+                                } else {
+                                    $this->mkdir(ROOT_PATH.$path, 0755);
+                                    return [1, 'Folder "'.$path.'" has been created.'];
+                                }
+                            } else {
+                                // --- 没有安装 ---
+                                return [1, 'Lib "'.$matches[0].'" not installed.'];
+                            }
+                        } else {
+                            // --- 无需替换 ---
+                            return [1, 'Lib "'.$matches[0].'" not installed.'];
+                        }
                     }
-                    break;
+                case 2:
+                    // --- 多出来的文件/文件夹 ---
+                    // 多出来理应删掉（ctr 等之类的不会被删掉，因为压根不会统计出来），但，如果不是 lib 里的直接删，如果是 lib，则判断是否安装了相应 lib，安装了直接删 ---
+                    if (substr($path, 0, 4) !== 'lib/') {
+                        if ($isFile) {
+                            unlink(ROOT_PATH.$path);
+                            return [1, 'File "'.$path.'" deleted.'];
+                        } else {
+                            $this->rmdir(ROOT_PATH.$path);
+                            return [1, 'Folder "'.$path.'" deleted.'];
+                        }
+                    } else {
+                        // --- 判断多出来的文件，是否 lib 已安装 ---
+                        if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
+                            if (in_array($matches[0], $library)) {
+                                if ($isFile) {
+                                    unlink(ROOT_PATH.$path);
+                                    return [1, 'File "'.$path.'" deleted.'];
+                                } else {
+                                    $this->rmdir(ROOT_PATH.$path);
+                                    return [1, 'Folder "'.$path.'" deleted.'];
+                                }
+                            } else {
+                                // --- 没有安装 ---
+                                return [1, 'Lib "'.$matches[0].'" not installed.'];
+                            }
+                        } else {
+                            // --- 无需删除 ---
+                            return [1, 'Lib "'.$matches[0].'" not installed.'];
+                        }
+                    }
+                case 3:
+                    // --- 常量缺失/多出 ---
+                    // --- 多出无所谓，就看缺失的 ---
+                    // --- 先把原常量内容都遍历出来 ---
+                    $arr = [];
+                    $content = file_get_contents(ROOT_PATH.$path);
+                    preg_match_all('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)\)?;/i', $content, $matches);
+                    if (count($matches[0]) > 0) {
+                        foreach ($matches[0] as $k => $v) {
+                            $arr[$matches[3][$k]] = $matches[5][$k];
+                        }
+                    }
+
+                    // --- 开始组成新的文件 ---
+                    // --- 多出和缺失都无所谓，把过去文件的数据替换进去就可以了 ---
+                    $content = $res->content;
+                    foreach ($arr as $k => $v) {
+                        $content = preg_replace('/(define|const)[(\\\'\s]+([A-Za-z0-9_]+)[\s\\\'][\s=,]+([\S\s]+?)\)?;/i', '$1$2$3$4'.$v.';', $content);
+                    }
+                    file_put_contents(ROOT_PATH.$path, $content);
+                    return [1, 'File "'.$path.'" repair is complete.'];
             }
         }
-
-        /*
-        $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
-        if (!$res->content) {
-            return [0, 'Network error, please try again.'];
-        }
-        file_put_contents($path, $res->content);
-        */
-        return [1];
     }
 
     /**
@@ -231,19 +306,7 @@ class __Mutton__ extends Ctr {
         $json = json_decode($res->content);
         preg_match('/[0-9\\.]+/', $json->tag_name, $matches);
         $version = $matches[0];
-        $version = '5.2.0';
-        // --- 获取 mblob ---
-        $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/master/doc/mblob/'.$version.'.mblob');
-        if (!$res->content) {
-            return [0, 'Network error, please try again.'];
-        }
-        if (!($blob = @gzinflate($res->content))) {
-            return [0, 'Decryption failed.'];
-        }
-        if (!($json = json_decode($blob, true))) {
-            return [0, 'Decryption failed.'];
-        }
-        return [1, 'version' => $version, 'mblob' => $json];
+        return [1, 'version' => $version];
     }
 
     /**
@@ -260,6 +323,9 @@ class __Mutton__ extends Ctr {
         // --- 本地库 ---
         $dir = dir(LIB_PATH);
         while (($name = $dir->read()) !== false) {
+            if (($name === '.') || ($name === '..')) {
+                continue;
+            }
             if (!is_file(LIB_PATH.$name)) {
                 continue;
             }
@@ -301,19 +367,13 @@ class __Mutton__ extends Ctr {
             $arr = [];
             $content = file_get_contents($file);
 
-            preg_match_all('/const\\s+([a-z0-9_]+)\\s*=\\s*([\\S\\s]+?);/i', $content, $matches);
+            preg_match_all('/(define|const)[(\\\'\s]+([A-Za-z0-9_]+)[\s\\\'][\s=,]+([\S\s]+?)\)?;/i', $content, $matches);
             if (count($matches[0]) > 0) {
                 foreach ($matches[0] as $k => $v) {
-                    $arr[$matches[1][$k]] = [0, $matches[2][$k]];
+                    $arr[$matches[2][$k]] = $matches[2][$k];
                 }
             }
 
-            preg_match_all('/define[\\S\\s]+?[\'"](.+?)[\'"]\\s*,\\s*([\\S\\s]+?)\\s*\\) *?;/i', $content, $matches);
-            if (count($matches[0]) > 0) {
-                foreach ($matches[0] as $k => $v) {
-                    $arr[$matches[1][$k]] = [1, $matches[2][$k]];
-                }
-            }
             $list['const']['etc/'.$name] = $arr;
         }
         $dir->close();

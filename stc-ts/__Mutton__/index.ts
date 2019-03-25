@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.selectedIndex = this.value;
                 }
             },
-            template: `<div class="list" tabindex="0"><div class="list__in" :style="{\'height\': height}"><div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="selectedIndex=index;$emit('change', index)">{{val}}</div></div></div>`
+            template: `<div class="list" tabindex="0"><div class="list__in" :style="{\'height\': height}"><div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="selectedIndex=index;$emit('change', index)">{{val.label || val}}</div></div></div>`
         });
         new Vue({
             el: "#vue",
@@ -67,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 latestVer: "0",
                 updateList: [],
                 updateing: false,
+                updateIndex: 0,
                 // --- Config ---
                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
             },
@@ -87,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.mlist[this.mindex], mode: mode});
+                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.mlist[this.mindex].value, mode: mode});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -155,21 +156,16 @@ document.addEventListener("DOMContentLoaded", () => {
                         this.alert = "Upgrade running...";
                         return;
                     }
-                    this.updateing = true;
-                    this.mask = true;
-                    // --- 获取版本，并获取 mblob ---
-                    let j = await post(HTTP_BASE + "__Mutton__/apiGetLatestVer", {password: this.password});
-                    let version = j.version;
-                    let mblob = j.mblob;
-                    this.mask = false;
-                    if (j.result <= 0) {
-                        this.alert = j.msg;
-                        this.updateing = false;
+                    if (!this.mlist[this.updateIndex]) {
+                        this.alert = "Please select version.";
                         return;
                     }
+                    this.updateing = true;
+                    this.mask = true;
+                    let version: string = this.mlist[this.updateIndex].value;
                     // --- 获取差异列表 ---
                     this.mask = true;
-                    j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: version, mode: "0"});
+                    let j = await post(HTTP_BASE + "__Mutton__/apiCheck", {password: this.password, ver: version, mode: "0"}); // mode 0 代表全部，1 代表 online
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -217,9 +213,9 @@ document.addEventListener("DOMContentLoaded", () => {
                                         this.updateList.unshift(`Update configuration file "${path}"...`);
                                         break;
                                 }
-                                let j2 = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), mblob: JSON.stringify(mblob), library: JSON.stringify(j.library)});
+                                let j2 = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), library: JSON.stringify(j.library)});
                                 if (j2.result <= 0) {
-                                    this.updateList.unshift(`Error: ${path}, retry after 2 seconds.`);
+                                    this.updateList.unshift(`Error: ${j2.msg} retry after 2 seconds.`);
                                     await sleep(2000);
                                 } else {
                                     this.updateList.unshift(j2.msg);
