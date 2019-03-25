@@ -259,6 +259,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     this.updateing = false;
                                                     return [2];
                                                 }
+                                                this.updateList = [];
                                                 listArr = ["list", "qlist", "dlist", "qdlistConst"];
                                                 qdlistConst = {};
                                                 for (_i = 0, _a = j.qlistConst; _i < _a.length; _i++) {

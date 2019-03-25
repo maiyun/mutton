@@ -3,13 +3,13 @@
 <head>
     <title>Mutton Portal</title>
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
-    <link rel="stylesheet" href="<?php echo HTTP_STC ?>__Mutton__/index.css?7">
+    <link rel="stylesheet" href="<?php echo HTTP_STC ?>__Mutton__/index.css?<?php echo VER ?>">
     <script src="https://cdn.jsdelivr.net/npm/vue@2.5.17/dist/vue.min.js"></script>
     <script>
         var tab = <?php echo $hasConfig ? '0' : '3' ?>;
         var HTTP_BASE = '<?php echo HTTP_BASE ?>';
     </script>
-    <script src="<?php echo HTTP_STC ?>__Mutton__/index.js?7"></script>
+    <script src="<?php echo HTTP_STC ?>__Mutton__/index.js?<?php echo VER ?>"></script>
 </head>
 <body>
 <div id="vue">

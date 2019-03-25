@@ -266,7 +266,7 @@ class __Mutton__ extends Ctr {
                 // --- 多出和缺失都无所谓，把过去文件的数据替换进去就可以了 ---
                 $content = $res->content;
                 foreach ($arr as $k => $v) {
-                    $content = preg_replace('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)\)?;/i', '$1$2$3$4'.$v.';', $content);
+                    $content = preg_replace('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)(\)?;)/i', '$1$2$3$4'.$v.'$6', $content);
                 }
                 file_put_contents(ROOT_PATH.$path, $content);
                 return [1, 'File "'.$path.'" repair is complete.'];
@@ -362,6 +362,9 @@ class __Mutton__ extends Ctr {
                 continue;
             }
             if ($name[0] === '_') {
+                continue;
+            }
+            if ($name === 'const.php') {
                 continue;
             }
             $file = ETC_PATH . $name;

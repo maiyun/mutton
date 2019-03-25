@@ -175,6 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     // --- 分别下载相关文件，并传入相关地方 ---
                     // --- 可能会有网络波动导致的异常，会需要重试，所以，进行自动网络重试机制 ---
                     // --- 差异，直接替换文件 ---
+                    this.updateList = [];
                     let listArr = ["list", "qlist", "dlist", "qdlistConst"];
                     let qdlistConst: any = {};
                     for (let v of j.qlistConst) {
