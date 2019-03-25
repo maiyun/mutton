@@ -163,110 +163,113 @@ class __Mutton__ extends Ctr {
         $mode = $this->post('mode');
         $ver = $this->post('ver');
         $path = $this->post('path');
-        $v = json_decode($this->post('v'), true);
         $library = json_decode($this->post('library'), true); // 本地已装 library
         $isFile = substr($path, -1) === '/' ? false : true;
 
         if (in_array($mode, [0, 1, 3])) {
-            $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v'.$ver.'/'.$path);
-            if (!$res->content) {
-                return [0, 'Network error.'];
+            if ($isFile) {
+                $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v' . $ver . '/' . $path);
+                if (!$res->content) {
+                    return [0, 'Network error.'];
+                }
+            } else {
+                $res = new \stdClass();
             }
-            switch ($mode) {
-                case 0:
-                    // --- md5 不同，直接替换 ---
-                    $match = [
-                        '/^etc\\/(?!const\\.php).+/',
-                        '/^stc\\/index\\.js/',
-                        '/^stc-ts\\/(index\\.ts|tsconfig\\.js|tslint\\.json)/'
-                    ];
-                    if (!Text::match($path, $match)) {
+        }
+        switch ($mode) {
+            case 0:
+                // --- md5 不同，直接替换 ---
+                $match = [
+                    '/^etc\\/(?!const\\.php).+/',
+                    '/^stc\\/index\\.js/',
+                    '/^stc-ts\\/(index\\.ts|tsconfig\\.js|tslint\\.json)/'
+                ];
+                if (!Text::match($path, $match)) {
+                    file_put_contents(ROOT_PATH.$path, $res->content);
+                }
+                return [1, 'File "'.$path.'" replacement success.'];
+            case 1:
+                // --- 本地缺失文件/文件夹，如果不是 lib，则直接补，如果是 lib，则判断是否安装了相应 lib，安装了直接补 ---
+                if (substr($path, 0, 4) !== 'lib/') {
+                    if ($isFile) {
                         file_put_contents(ROOT_PATH.$path, $res->content);
-                    }
-                    return [1, 'File "'.$path.'" replacement success.'];
-                case 1:
-                    // --- 本地缺失文件/文件夹，如果不是 lib，则直接补，如果是 lib，则判断是否安装了相应 lib，安装了直接补 ---
-                    if (substr($path, 0, 4) !== 'lib/') {
-                        if ($isFile) {
-                            file_put_contents(ROOT_PATH.$path, $res->content);
-                            return [1, 'File "'.$path.'" replacement success.'];
-                        } else {
-                            $this->mkdir(ROOT_PATH.$path, 0755);
-                            return [1, 'Folder "'.$path.'" has been created.'];
-                        }
+                        return [1, 'File "'.$path.'" replacement success.'];
                     } else {
-                        // --- 判断缺失的文件，lib 是否是已安装的 lib ---
-                        if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
-                            if (in_array($matches[0], $library)) {
-                                if ($isFile) {
-                                    file_put_contents(ROOT_PATH.$path, $res->content);
-                                    return [1, 'File "'.$path.'" replacement success.'];
-                                } else {
-                                    $this->mkdir(ROOT_PATH.$path, 0755);
-                                    return [1, 'Folder "'.$path.'" has been created.'];
-                                }
+                        $this->mkdir(ROOT_PATH.$path, 0755);
+                        return [1, 'Folder "'.$path.'" has been created.'];
+                    }
+                } else {
+                    // --- 判断缺失的文件，lib 是否是已安装的 lib ---
+                    if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
+                        if (in_array($matches[0], $library)) {
+                            if ($isFile) {
+                                file_put_contents(ROOT_PATH.$path, $res->content);
+                                return [1, 'File "'.$path.'" replacement success.'];
                             } else {
-                                // --- 没有安装 ---
-                                return [1, 'Lib "'.$matches[0].'" not installed.'];
+                                $this->mkdir(ROOT_PATH.$path, 0755);
+                                return [1, 'Folder "'.$path.'" has been created.'];
                             }
                         } else {
-                            // --- 无需替换 ---
+                            // --- 没有安装 ---
                             return [1, 'Lib "'.$matches[0].'" not installed.'];
-                        }
-                    }
-                case 2:
-                    // --- 多出来的文件/文件夹 ---
-                    // 多出来理应删掉（ctr 等之类的不会被删掉，因为压根不会统计出来），但，如果不是 lib 里的直接删，如果是 lib，则判断是否安装了相应 lib，安装了直接删 ---
-                    if (substr($path, 0, 4) !== 'lib/') {
-                        if ($isFile) {
-                            unlink(ROOT_PATH.$path);
-                            return [1, 'File "'.$path.'" deleted.'];
-                        } else {
-                            $this->rmdir(ROOT_PATH.$path);
-                            return [1, 'Folder "'.$path.'" deleted.'];
                         }
                     } else {
-                        // --- 判断多出来的文件，是否 lib 已安装 ---
-                        if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
-                            if (in_array($matches[0], $library)) {
-                                if ($isFile) {
-                                    unlink(ROOT_PATH.$path);
-                                    return [1, 'File "'.$path.'" deleted.'];
-                                } else {
-                                    $this->rmdir(ROOT_PATH.$path);
-                                    return [1, 'Folder "'.$path.'" deleted.'];
-                                }
+                        // --- 无需替换 ---
+                        return [1, 'Lib "'.$matches[0].'" not installed.'];
+                    }
+                }
+            case 2:
+                // --- 多出来的文件/文件夹 ---
+                // 多出来理应删掉（ctr 等之类的不会被删掉，因为压根不会统计出来），但，如果不是 lib 里的直接删，如果是 lib，则判断是否安装了相应 lib，安装了直接删 ---
+                if (substr($path, 0, 4) !== 'lib/') {
+                    if ($isFile) {
+                        unlink(ROOT_PATH.$path);
+                        return [1, 'File "'.$path.'" deleted.'];
+                    } else {
+                        $this->rmdir(ROOT_PATH.$path);
+                        return [1, 'Folder "'.$path.'" deleted.'];
+                    }
+                } else {
+                    // --- 判断多出来的文件，是否 lib 已安装 ---
+                    if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
+                        if (in_array($matches[0], $library)) {
+                            if ($isFile) {
+                                unlink(ROOT_PATH.$path);
+                                return [1, 'File "'.$path.'" deleted.'];
                             } else {
-                                // --- 没有安装 ---
-                                return [1, 'Lib "'.$matches[0].'" not installed.'];
+                                $this->rmdir(ROOT_PATH.$path);
+                                return [1, 'Folder "'.$path.'" deleted.'];
                             }
                         } else {
-                            // --- 无需删除 ---
+                            // --- 没有安装 ---
                             return [1, 'Lib "'.$matches[0].'" not installed.'];
                         }
+                    } else {
+                        // --- 无需删除 ---
+                        return [1, 'Lib "'.$matches[0].'" not installed.'];
                     }
-                case 3:
-                    // --- 常量缺失/多出 ---
-                    // --- 多出无所谓，就看缺失的 ---
-                    // --- 先把原常量内容都遍历出来 ---
-                    $arr = [];
-                    $content = file_get_contents(ROOT_PATH.$path);
-                    preg_match_all('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)\)?;/i', $content, $matches);
-                    if (count($matches[0]) > 0) {
-                        foreach ($matches[0] as $k => $v) {
-                            $arr[$matches[3][$k]] = $matches[5][$k];
-                        }
+                }
+            default:
+                // --- 常量缺失/多出 ---
+                // --- 多出无所谓，就看缺失的 ---
+                // --- 先把原常量内容都遍历出来 ---
+                $arr = [];
+                $content = file_get_contents(ROOT_PATH.$path);
+                preg_match_all('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)\)?;/i', $content, $matches);
+                if (count($matches[0]) > 0) {
+                    foreach ($matches[0] as $k => $v) {
+                        $arr[$matches[3][$k]] = $matches[5][$k];
                     }
+                }
 
-                    // --- 开始组成新的文件 ---
-                    // --- 多出和缺失都无所谓，把过去文件的数据替换进去就可以了 ---
-                    $content = $res->content;
-                    foreach ($arr as $k => $v) {
-                        $content = preg_replace('/(define|const)[(\\\'\s]+([A-Za-z0-9_]+)[\s\\\'][\s=,]+([\S\s]+?)\)?;/i', '$1$2$3$4'.$v.';', $content);
-                    }
-                    file_put_contents(ROOT_PATH.$path, $content);
-                    return [1, 'File "'.$path.'" repair is complete.'];
-            }
+                // --- 开始组成新的文件 ---
+                // --- 多出和缺失都无所谓，把过去文件的数据替换进去就可以了 ---
+                $content = $res->content;
+                foreach ($arr as $k => $v) {
+                    $content = preg_replace('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)\)?;/i', '$1$2$3$4'.$v.';', $content);
+                }
+                file_put_contents(ROOT_PATH.$path, $content);
+                return [1, 'File "'.$path.'" repair is complete.'];
         }
     }
 
@@ -279,14 +282,15 @@ class __Mutton__ extends Ctr {
             return [0, 'Password is incorrect.'];
         }
         $mode = $this->post('mode');
-        $blob = gzdeflate(json_encode($this->_buildList()));
+        $json = $this->_buildList();
+        $blob = gzdeflate(json_encode($json));
         if ($mode === '0') {
             return [1, 'blob' => base64_encode($blob), 'ver' => VER];
         } else {
             if (file_put_contents(ROOT_PATH.'doc/mblob/'.VER.'.mblob', $blob) === false) {
                 return [0, 'Permission denied.'];
             } else {
-                return [1];
+                return [1, 'source' => $json];
             }
         }
     }
@@ -370,7 +374,7 @@ class __Mutton__ extends Ctr {
             preg_match_all('/(define|const)[(\\\'\s]+([A-Za-z0-9_]+)[\s\\\'][\s=,]+([\S\s]+?)\)?;/i', $content, $matches);
             if (count($matches[0]) > 0) {
                 foreach ($matches[0] as $k => $v) {
-                    $arr[$matches[2][$k]] = $matches[2][$k];
+                    $arr[] = $matches[2][$k];
                 }
             }
 

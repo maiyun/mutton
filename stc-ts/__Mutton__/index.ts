@@ -203,17 +203,17 @@ document.addEventListener("DOMContentLoaded", () => {
                                         this.updateList.unshift(`Replace the file "${path}"...`);
                                         break;
                                     case "qlist":
-                                        this.updateList.unshift(`Download the file "${path}"...`);
+                                        this.updateList.unshift(`Download or create "${path}"...`);
                                         break;
                                     case "dlist":
-                                        this.updateList.unshift(`Remove the file "${path}"...`);
+                                        this.updateList.unshift(`Remove the object "${path}"...`);
                                         break;
                                     case "qdlistConst":
                                         path = k;
                                         this.updateList.unshift(`Update configuration file "${path}"...`);
                                         break;
                                 }
-                                let j2 = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), library: JSON.stringify(j.library)});
+                                let j2 = await post(HTTP_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, library: JSON.stringify(j.library)});
                                 if (j2.result <= 0) {
                                     this.updateList.unshift(`Error: ${j2.msg} retry after 2 seconds.`);
                                     await sleep(2000);

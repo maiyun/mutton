@@ -305,17 +305,17 @@ document.addEventListener("DOMContentLoaded", function () {
                                                         this.updateList.unshift("Replace the file \"" + path + "\"...");
                                                         break;
                                                     case "qlist":
-                                                        this.updateList.unshift("Download the file \"" + path + "\"...");
+                                                        this.updateList.unshift("Download or create \"" + path + "\"...");
                                                         break;
                                                     case "dlist":
-                                                        this.updateList.unshift("Remove the file \"" + path + "\"...");
+                                                        this.updateList.unshift("Remove the object \"" + path + "\"...");
                                                         break;
                                                     case "qdlistConst":
                                                         path = k;
                                                         this.updateList.unshift("Update configuration file \"" + path + "\"...");
                                                         break;
                                                 }
-                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, v: JSON.stringify(v), library: JSON.stringify(j.library) })];
+                                                return [4, post(HTTP_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, library: JSON.stringify(j.library) })];
                                             case 5:
                                                 j2 = _k.sent();
                                                 if (!(j2.result <= 0)) return [3, 7];
