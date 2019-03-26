@@ -38,7 +38,7 @@ class Ctr {
      * @return string
      */
     protected function loadView(string $path, $data = [], bool $return = false) {
-        // --- 重构 loadView(string $path, boolen $return) ---
+        // --- 重构 loadView(string $path, bool $return) ---
         if(is_array($data)) {
             extract($data);
         } else {
@@ -67,13 +67,9 @@ class Ctr {
     }
 
     // --- 获取 json 数据 ---
-    protected function loadData(string $path) {
-        if (strpos($path, '.') === false) {
-            if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
-                return json_decode($f);
-            } else {
-                return false;
-            }
+    protected function loadData(string $path, $assoc = false) {
+        if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
+            return json_decode($f, $assoc);
         } else {
             return false;
         }
@@ -172,6 +168,58 @@ class Ctr {
         }
         $dir->close();
         return @rmdir($path);
+    }
+
+    // --- 国际化 ---
+    private $_localePkg = [];
+
+    /**
+     * --- 根据当前设定语言加载语言包 ---
+     * @param string $locale 要加载的目标语言
+     * @param string $pkg 包名，为空自动填充为 default
+     * @return bool
+     */
+    protected function setLocale(string $locale, string $pkg = ''): bool {
+        global $__LOCALE, $__LOCALE_OBJ;
+
+        if ($pkg === '') {
+            $pkg = "default";
+        }
+        $lName = $locale . '.' . $pkg;
+        if (!in_array($lName, $this->_localePkg)) {
+            if (($loc = $this->loadData('locale/'.$lName, true)) === false) {
+                return false;
+            }
+            if (!isset($__LOCALE_OBJ[$locale])) {
+                $__LOCALE_OBJ[$locale] = [];
+            }
+
+            $__LOCALE_OBJ[$locale] = array_merge($__LOCALE_OBJ[$locale], $this->_setLocaleDeep($loc));
+
+            $this->_localePkg[] = $lName;
+        }
+        $__LOCALE = $locale;
+        return true;
+    }
+    private function _setLocaleDeep(array $loc, string $pre = '') {
+        $arr = [];
+        foreach ($loc as $k => $v) {
+            if (is_array($v)) {
+                $arr = array_merge($arr, $this->_setLocaleDeep($v, $pre . $k . '.'));
+            } else {
+                $arr[$pre . $k] = $v;
+            }
+        }
+        return $arr;
+    }
+
+    /**
+     * --- 获取当前 i18n 语言字符串 ---
+     * @return string
+     */
+    protected function getLocale(): string {
+        global $__LOCALE;
+        return $__LOCALE;
     }
 
 }

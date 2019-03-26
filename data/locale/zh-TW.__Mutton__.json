@@ -1,0 +1,17 @@
+{
+    "System": "系統",
+    "Config": "配置",
+    "Refresh": "刷新",
+    "Check": "檢查",
+    "Online": "線上",
+    "When the input is complete, you can use other features.": "密碼輸入正確的話，其他功能就可以正常使用。",
+    "Please click \"Refresh\" and select below:": "請點擊「刷新」按鈕並在下方選擇版本：",
+    "Mismatch file list:": "有異常的檔案清單：",
+    "Current version:": "當前版本：",
+    "Latest versions:": "最新版本：",
+    "Get latest versions": "獲取最新版本",
+    "Password": {
+        "title": "密碼",
+        "Please enter your password:": "請輸入你的密碼："
+    }
+}

@@ -20,38 +20,44 @@
                 <div class="title">Mutton Portal</div>
                 <div class="tab">
                     <div class="tab__top">
-                        <div class="tab__top__item" :class="{'selected': tab == 0}" @click="tab = 0"><div class="tab__top__item__in">Password</div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 1}" @click="tab = 1"><div class="tab__top__item__in">Check</div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2"><div class="tab__top__item__in">System</div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 3}" @click="tab = 3"><div class="tab__top__item__in">Config</div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 0}" @click="tab = 0"><div class="tab__top__item__in"><?php echo l('Password.title') ?></div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 1}" @click="tab = 1"><div class="tab__top__item__in"><?php echo l('Check') ?></div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2"><div class="tab__top__item__in"><?php echo l('System') ?></div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 3}" @click="tab = 3"><div class="tab__top__item__in"><?php echo l('Config') ?></div></div>
                     </div>
                     <div class="tab__panel">
                         <!-- Password -->
                         <div class="tab__panel__item" v-if="tab == 0">
-                            <div style="padding-bottom: 10px;">Please enter your password:</div>
+                            <div style="padding-bottom: 10px;"><?php echo l('Password.Please enter your password:') ?></div>
                             <div class="textbox"><input class="textbox__in" type="password" v-model="password"></div>
-                            <div style="padding-top: 10px;">When the input is complete, you can use other features.</div>
+                            <div style="padding-top: 10px;"><?php echo l('When the input is complete, you can use other features.') ?></div>
+                            <mu-line></mu-line>
+                            <div style="text-align: center;">
+                                <mu-button @click.native="window.location.href='?l=en'">English</mu-button>
+                                <mu-button @click.native="window.location.href='?l=zh-CN'" style="margin-left: 10px;">简体中文</mu-button>
+                                <mu-button @click.native="window.location.href='?l=zh-TW'" style="margin-left: 10px;">繁體中文</mu-button>
+                            </div>
                         </div>
                         <!-- Check -->
                         <div class="tab__panel__item" v-else-if="tab == 1">
-                            <div style="padding-bottom: 10px;">Please click "Refresh" and select below:</div>
+                            <div style="padding-bottom: 10px;"><?php echo l('Please click "Refresh" and select below:') ?></div>
                             <mu-list :list="mlist" v-model="mindex"></mu-list>
                             <div style="text-align: center; margin-top: 10px;">
-                                <mu-button @click.native="refresh()">Refresh</mu-button>
-                                <mu-button @click.native="check()" style="margin-left: 10px;">Check</mu-button>
-                                <mu-button @click.native="check(1)" style="margin-left: 10px;">Online</mu-button>
+                                <mu-button @click.native="refresh()"><?php echo l('Refresh') ?></mu-button>
+                                <mu-button @click.native="check()" style="margin-left: 10px;"><?php echo l('Check') ?></mu-button>
+                                <mu-button @click.native="check(1)" style="margin-left: 10px;"><?php echo l('Online') ?></mu-button>
                             </div>
-                            <div style="margin-top: 10px;">Mismatch file list:</div>
+                            <div style="margin-top: 10px;"><?php echo l('Mismatch file list:') ?></div>
                             <mu-list :list="list"></mu-list>
                         </div>
                         <!-- System -->
                         <div class="tab__panel__item" v-else-if="tab == 2">
                             <div style="display: flex; flex-direction: column; align-items: center;">
                                 <div>
-                                    Current version: <?php echo VER ?><br>
-                                    Latest versions: {{latestVer}}<br>
+                                    <?php echo l('Current version:') ?> <?php echo VER ?><br>
+                                    <?php echo l('Latest versions:') ?> {{latestVer}}<br>
                                 </div>
-                                <mu-button @click.native="getLatestVer()" style="margin-top: 10px;">Get latest versions</mu-button>
+                                <mu-button @click.native="getLatestVer()" style="margin-top: 10px;"><?php echo l('Get latest versions') ?></mu-button>
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column;">

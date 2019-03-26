@@ -180,15 +180,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     let qdlistConst: any = {};
                     for (let v of j.qlistConst) {
                         if (!qdlistConst[v[0]]) {
-                            qdlistConst[v[0]] = [];
+                            qdlistConst[v[0]] = "";
                         }
-                        qdlistConst[v[0]].push(["q", v[1], v[2], v[3]]);
                     }
                     for (let v of j.dlistConst) {
                         if (!qdlistConst[v[0]]) {
-                            qdlistConst[v[0]] = [];
+                            qdlistConst[v[0]] = "";
                         }
-                        qdlistConst[v[0]].push(["d", v[1], v[2], v[3]]);
                     }
                     j.qdlistConst = qdlistConst;
                     for (let lk in listArr) {

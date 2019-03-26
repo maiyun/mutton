@@ -265,16 +265,14 @@ document.addEventListener("DOMContentLoaded", function () {
                                                 for (_i = 0, _a = j.qlistConst; _i < _a.length; _i++) {
                                                     v = _a[_i];
                                                     if (!qdlistConst[v[0]]) {
-                                                        qdlistConst[v[0]] = [];
+                                                        qdlistConst[v[0]] = "";
                                                     }
-                                                    qdlistConst[v[0]].push(["q", v[1], v[2], v[3]]);
                                                 }
                                                 for (_b = 0, _c = j.dlistConst; _b < _c.length; _b++) {
                                                     v = _c[_b];
                                                     if (!qdlistConst[v[0]]) {
-                                                        qdlistConst[v[0]] = [];
+                                                        qdlistConst[v[0]] = "";
                                                     }
-                                                    qdlistConst[v[0]].push(["d", v[1], v[2], v[3]]);
                                                 }
                                                 j.qdlistConst = qdlistConst;
                                                 _d = [];

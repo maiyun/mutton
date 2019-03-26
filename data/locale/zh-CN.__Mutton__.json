@@ -1,0 +1,17 @@
+{
+    "System": "系统",
+    "Config": "配置",
+    "Refresh": "刷新",
+    "Check": "检查",
+    "Online": "在线",
+    "When the input is complete, you can use other features.": "密码输入正确的话，其他功能就可以正常使用。",
+    "Please click \"Refresh\" and select below:": "请点击“刷新”按钮并在下方选择版本：",
+    "Mismatch file list:": "有异常的文件列表：",
+    "Current version:": "当前版本：",
+    "Latest versions:": "最新版本：",
+    "Get latest versions": "获取最新版本",
+    "Password": {
+        "title": "密码",
+        "Please enter your password:": "请输入你的密码："
+    }
+}

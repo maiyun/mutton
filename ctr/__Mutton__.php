@@ -20,6 +20,14 @@ class __Mutton__ extends Ctr {
 
     // --- Index page ---
     public function index() {
+        $l = $this->get('l');
+        if ($l === '') {
+            $l = 'en';
+        }
+        if (!in_array($l, ['en', 'zh-CN', 'zh-TW'])) {
+            $l = 'en';
+        }
+        $this->setLocale($l, '__Mutton__');
         $this->loadView('__Mutton__/index', [
             'hasConfig' => $this->_hasConfig
         ]);
@@ -136,7 +144,7 @@ class __Mutton__ extends Ctr {
                         unset($json['const'][$k][$i]);
                     } else {
                         // --- 本地多出本常量 ---
-                        // --- [文件路径，常量名，常量值，const 还是 define]
+                        // --- [文件路径，常量名] ---
                         $dlistConst[] = [$k, $v2];
                     }
                 }
@@ -166,14 +174,13 @@ class __Mutton__ extends Ctr {
         $library = json_decode($this->post('library'), true); // 本地已装 library
         $isFile = substr($path, -1) === '/' ? false : true;
 
+        $res = new \stdClass();
         if (in_array($mode, [0, 1, 3])) {
             if ($isFile) {
                 $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v' . $ver . '/' . $path);
                 if (!$res->content) {
                     return [0, 'Network error.'];
                 }
-            } else {
-                $res = new \stdClass();
             }
         }
         switch ($mode) {
@@ -396,7 +403,7 @@ class __Mutton__ extends Ctr {
             '/^doc\\//',
             '/^\\.idea\\//',
             '/^ctr\\/.+/',
-            '/^data\\/.+/',
+            '/^data\\/(?!locale\\/).+/',
             '/^log\\/.+/',
             '/^stc\\/(?!__Mutton__\\/).+/',
             '/^stc-ts\\/(?!__Mutton__\\/|typings\\/).+/',
@@ -414,7 +421,7 @@ class __Mutton__ extends Ctr {
             if (is_file(ROOT_PATH.$path.$name)) {
                 if (Text::match($path.$name, [
                     '/^ctr\\/(?!__).+/',
-                    '/^data\\/(?!index\\.html).+/',
+                    '/^data\\/(?!index\\.html|locale\\/index.html|locale\\/.+?__Mutton__.+?).+/',
                     '/^mod\\/(?!Mod\\.php).+/',
                     '/^stc\\/(?!__Mutton__\\/|index\\.html|index\\.js).+/',
                     '/^stc-ts\\/(?!__Mutton__\\/|typings\\/any\\.d\\.ts|typings\\/vue\\/index\\.d\\.ts|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
