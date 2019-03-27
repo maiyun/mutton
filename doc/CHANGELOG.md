@@ -4,13 +4,14 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
-## 5.2.3
+## 5.2.4
 
 [+] Net Library adds followLocation configuration items.  
 [+] Text library adds a match() method.  
 [+] Ctr class adds the mkdir(), rmDir() method.  
 [+] Increase i18n support, Ctr class increase setLocale(), getLocale() method, global increase l() method.  
 [\*] Update Mutton Portal, the old version needs to first update the Mutton Portal Association file after use.
+[\*] Update phpseclib Library to 2.0.15.
 
 ## 5.1.2
 

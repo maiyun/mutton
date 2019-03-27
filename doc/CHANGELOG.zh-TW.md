@@ -1,12 +1,13 @@
 # 更新日誌
 
-## 5.2.3
+## 5.2.4
 
 [+] Net 庫增加 followLocation 配置項。  
 [+] Text 庫新增 match() 方法。  
 [+] Ctr 類增加 mkdir()、rmdir() 方法。  
 [+] 增加 i18n 支援，Ctr 類增加 setLocale()、getLocale() 方法，全域增加 l() 方法。  
-[\*] 更新 Mutton Portal 邏輯，老版需要先自行更新 Mutton Portal 關聯檔後使用。
+[\*] 更新 Mutton Portal 邏輯，老版需要先自行更新 Mutton Portal 關聯檔後使用。  
+[\*] 更新 phpseclib 庫到 2.0.15。
 
 ## 5.1.2
 
