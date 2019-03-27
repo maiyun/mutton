@@ -61,7 +61,7 @@
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column;">
-                                Automatic upgrade (used only on local testing).<br>
+                                <?php echo l('Automatic upgrade (used only on local testing).') ?><br>
                                 <div style="display: flex; margin-top: 10px;">
                                     <mu-list :list="mlist" v-model="updateIndex" style="flex: 1;"></mu-list>
                                     <mu-list :list="updateList" style="margin-left: 10px; flex: 2;"></mu-list>
