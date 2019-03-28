@@ -164,7 +164,7 @@ class __Mutton__ extends Ctr {
         if ($this->post('password') !== __MUTTON__PWD) {
             return [0, 'Password is incorrect.'];
         }
-        if (!is_writable(ROOT_PATH.'ctr/')) {
+        if (!$this->isWritable(ROOT_PATH.'ctr/')) {
             return [0, 'Server cannot be written.'];
         }
         // --- ["list", "qlist", "dlist", "qdlistConst"] ---

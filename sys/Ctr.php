@@ -170,6 +170,34 @@ class Ctr {
         return @rmdir($path);
     }
 
+    /**
+     * --- 检验文件或文件夹是否可写 ---
+     * @param string $path
+     * @return bool
+     */
+    protected function isWritable(string $path): bool {
+        // If we're on a Unix server with safe_mode off we call is_writable
+        if (DIRECTORY_SEPARATOR == '/' AND @ini_get("safe_mode") == false) {
+            return is_writable($path);
+        }
+        // For windows servers and safe_mode "on" installations we'll actually
+        // write a file then read it. Bah...
+        if (is_dir($path)) {
+            $file = rtrim($path, '/') . '/' . md5(mt_rand(1, 100).mt_rand(1, 100));
+            if (($fp = @fopen($file, 'ab')) === false) {
+                return false;
+            }
+            fclose($fp);
+            @chmod($file, 0777);
+            @unlink($file);
+            return true;
+        } elseif (!is_file($path) or ($fp = @fopen($path, 'ab')) === false) {
+            return false;
+        }
+        fclose($fp);
+        return true;
+    }
+
     // --- 国际化 ---
     private $_localePkg = [];
 
