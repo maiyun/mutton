@@ -28,6 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         // --- List ---
         Vue.component("mu-list", {
+            model: {
+                prop: "value",
+                event: "change"
+            },
             data: function () {
                 return {
                     selectedIndex: 0
@@ -49,7 +53,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     this.selectedIndex = this.value;
                 }
             },
-            template: `<div class="list" tabindex="0"><div class="list__in" :style="{\'height\': height}"><div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="selectedIndex=index;$emit('change', index)">{{val.label || val}}</div></div></div>`
+            methods: {
+                click: function(this: any, index: number) {
+                    this.selectedIndex = index;
+                    this.$emit("change", index);
+                }
+            },
+            template: `<div class="list" tabindex="0">` +
+                `<div class="list__in" :style="{\'height\': height}">` +
+                    `<div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="click(index)">{{val.label || val}}</div>` +
+                `</div>` +
+            `</div>`
         });
         new Vue({
             el: "#vue",
