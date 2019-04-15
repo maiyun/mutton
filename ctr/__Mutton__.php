@@ -290,10 +290,13 @@ class __Mutton__ extends Ctr {
         }
         $mode = $this->post('mode');
         $json = $this->_buildList();
-        $blob = gzdeflate(json_encode($json));
         if ($mode === '0') {
+            $blob = gzdeflate(json_encode($json));
             return [1, 'blob' => base64_encode($blob), 'ver' => VER];
+        } else if ($mode === '2') {
+            return [1, 'blob' => base64_encode(json_encode($json)), 'ver' => VER];
         } else {
+            $blob = gzdeflate(json_encode($json));
             if (file_put_contents(ROOT_PATH.'doc/mblob/'.VER.'.mblob', $blob) === false) {
                 return [0, 'Permission denied.'];
             } else {
@@ -398,6 +401,7 @@ class __Mutton__ extends Ctr {
             'files' => [],
             'folders' => []
         ];
+        // --- 以下正则代表排除的文件夹，排除的文件夹不做比对 ---
         if (Text::match($path, [
             '/^\\.git\\//',
             '/^doc\\//',
@@ -406,8 +410,7 @@ class __Mutton__ extends Ctr {
             '/^data\\/(?!locale\\/).+/',
             '/^log\\/.+/',
             '/^stc\\/(?!__Mutton__\\/).+/',
-            '/^stc-ts\\/(?!__Mutton__\\/|typings\\/).+/',
-            '/^stc-ts\\/typings\\/(?!vue\\/).+/',
+            '/^stc-ts\\/(?!__Mutton__\\/|types\\/).+/',
             '/^view\\/(?!__Mutton__\\/).+/'
         ])) {
             return $list;
@@ -424,7 +427,7 @@ class __Mutton__ extends Ctr {
                     '/^data\\/(?!index\\.html|locale\\/index.html|locale\\/.+?__Mutton__.+?).+/',
                     '/^mod\\/(?!Mod\\.php).+/',
                     '/^stc\\/(?!__Mutton__\\/|index\\.html|index\\.js).+/',
-                    '/^stc-ts\\/(?!__Mutton__\\/|typings\\/any\\.d\\.ts|typings\\/vue\\/index\\.d\\.ts|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
+                    '/^stc-ts\\/(?!__Mutton__\\/|types\\/any\\.d\\.ts|types\\/vue\\.d\\.ts|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
                     '/^view\\/(?!__Mutton__\\/).+/'
                 ])) {
                     continue;

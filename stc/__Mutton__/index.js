@@ -34,7 +34,6 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-var _this = this;
 window.onerror = function (msg, uri, line, col, err) {
     if (err) {
         alert("Error:\n" + err.message + "\n" + err.stack + "\nLine: " + line + "\nColumn: " + col);
@@ -43,14 +42,13 @@ window.onerror = function (msg, uri, line, col, err) {
         console.log(msg);
     }
 };
-var headEle;
-var outPath = [];
+var headElement;
 document.addEventListener("DOMContentLoaded", function () {
-    headEle = document.getElementsByTagName("head")[0];
-    var callback = function () { return __awaiter(_this, void 0, void 0, function () {
+    return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
+                    headElement = document.getElementsByTagName("head")[0];
                     if (!(typeof fetch !== "function")) return [3, 2];
                     return [4, loadScript(["https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/fetch.min.js"])];
                 case 1:
@@ -212,7 +210,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             build: function (mode) {
                                 if (mode === void 0) { mode = 0; }
                                 return __awaiter(this, void 0, void 0, function () {
-                                    var j, bstr, n, u8arr, blob, a, evt;
+                                    var j, ext, bstr, n, u8arr, blob, a, evt;
                                     return __generator(this, function (_a) {
                                         switch (_a.label) {
                                             case 0:
@@ -225,14 +223,15 @@ document.addEventListener("DOMContentLoaded", function () {
                                                     this.alert = j.msg;
                                                     return [2];
                                                 }
-                                                if (mode === 0) {
+                                                if (mode === 0 || mode === 2) {
+                                                    ext = mode === 0 ? "mblob" : "json";
                                                     bstr = atob(j.blob), n = bstr.length, u8arr = new Uint8Array(n);
                                                     while (n--) {
                                                         u8arr[n] = bstr.charCodeAt(n);
                                                     }
                                                     blob = new Blob([u8arr]);
                                                     a = document.createElement("a");
-                                                    a.download = j.ver + ".mblob";
+                                                    a.download = j.ver + "." + ext;
                                                     a.href = URL.createObjectURL(blob);
                                                     evt = document.createEvent("MouseEvents");
                                                     evt.initEvent("click", false, false);
@@ -364,44 +363,36 @@ document.addEventListener("DOMContentLoaded", function () {
                     return [2];
             }
         });
-    }); };
-    if (typeof Promise !== "function") {
-        var script = document.createElement("script");
-        script.addEventListener("load", function () {
-            callback();
-        });
-        script.addEventListener("error", function () {
-            alert("Load error.");
-        });
-        script.src = "https://cdn.jsdelivr.net/npm/promise-polyfill@8.1.0/dist/polyfill.min.js";
-        headEle.appendChild(script);
-    }
-    else {
-        callback();
-    }
+    });
 });
 document.addEventListener("touchstart", function () { });
 function loadScript(paths) {
     var _this = this;
     return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-        var i, e_1;
+        var _i, paths_1, path, pathLio, e_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     _a.trys.push([0, 5, , 6]);
                     if (!(paths.length > 0)) return [3, 4];
-                    i = 0;
+                    _i = 0, paths_1 = paths;
                     _a.label = 1;
                 case 1:
-                    if (!(i < paths.length)) return [3, 4];
-                    if (!(outPath.indexOf(paths[i]) === -1)) return [3, 3];
-                    outPath.push(paths[i]);
-                    return [4, loadOutScript(paths[i])];
+                    if (!(_i < paths_1.length)) return [3, 4];
+                    path = paths_1[_i];
+                    pathLio = path.lastIndexOf("?");
+                    if (pathLio !== -1) {
+                        path = path.slice(0, pathLio);
+                    }
+                    if (headElement.querySelector("[data-res=\"" + path + "\"]")) {
+                        return [3, 3];
+                    }
+                    return [4, _loadScript(path)];
                 case 2:
                     _a.sent();
                     _a.label = 3;
                 case 3:
-                    ++i;
+                    _i++;
                     return [3, 1];
                 case 4:
                     resolve();
@@ -415,20 +406,21 @@ function loadScript(paths) {
         });
     }); });
 }
-function loadOutScript(path) {
+function _loadScript(path) {
     var _this = this;
     return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
         var script;
         return __generator(this, function (_a) {
             script = document.createElement("script");
+            script.setAttribute("data-res", path);
             script.addEventListener("load", function () {
                 resolve();
             });
-            script.addEventListener("error", function () {
-                reject("Load error.");
+            script.addEventListener("error", function (e) {
+                reject(e);
             });
             script.src = path;
-            headEle.appendChild(script);
+            headElement.appendChild(script);
             return [2];
         });
     }); });

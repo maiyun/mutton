@@ -76,6 +76,7 @@
                                 <div>Build a ".mblob" file.</div>
                                 <div style="text-align: center; margin-top: 10px;">
                                     <mu-button @click.native="build()">Build</mu-button>
+                                    <mu-button @click.native="build(2)" style="margin-left: 10px;">Build a json</mu-button>
                                     <mu-button @click.native="build(1)" style="margin-left: 10px;">Build to "doc"</mu-button>
                                 </div>
                             </div>
