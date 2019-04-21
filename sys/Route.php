@@ -9,101 +9,98 @@ class Route {
 
     public static function run(): void {
 
-        $routeKey = ''; // --- 如果在 ROUTE 表中匹配到，则以 ROUTE 表为准 ---
-        $param = []; // --- 传入的参数 ---
-        if (URI === '') {
-            $routeKey = '@';
-        } else {
-            foreach (ROUTE as $key => $val) {
-                if ($key !== '@') {
-                    $reg = str_replace('/', '\\/', $key);
-                    preg_match('/^' . $reg . '$/', URI, $matches);
-                    if (!empty($matches)) {
-                        array_splice($matches, 0, 1);
-                        $routeKey = $key;
-                        $param = $matches;
-                        break;
-                    }
-                }
+        $path = URI;
+        // --- 如果为空则定义为 @ ---
+        if ($path === '') {
+            $path = "@";
+        }
+        // --- 检查路由表 ---
+        $param = [];
+        $match = NULL;
+        $pathLeft = ''; $pathRight = '';
+        foreach (ROUTE as $rule => $ruleVal) {
+            $rule = str_replace('/', '\\/', $rule);
+            preg_match('/^' . $rule . '$/', $path, $match);
+            if (!empty($match)) {
+                list($pathLeft, $pathRight) = self::_getPathLeftRight($ruleVal);
+                $param = $match;
+                break;
             }
         }
-
-        // --- 如果没有在路由表中找到相对应的解析，那么，则将 URI 直接当作值来处理 ---
-        $routeVal = ($routeKey !== '') ? ROUTE[$routeKey] : URI;
-
-        require SYS_PATH . 'Ctr.php';
-
-        $routeArray = explode('/', $routeVal);
-        // $filePath = '';
-        // $className = '';
-        $routeCount = count($routeArray);
-
-        if($routeCount == 2) {
-            $filePath = $routeArray[0];
-            $className = '\\ctr\\' . $routeArray[0];
-            $action = $routeArray[1];
-        } else {
-            $filePath = implode('/', array_slice($routeArray, 0, $routeCount - 1));
-            $className = '\\' . implode('\\', array_slice($routeArray, 0, $routeCount - 1));
-            $action = $routeArray[$routeCount - 1];
+        if (!$match) {
+            list($pathLeft, $pathRight) = self::_getPathLeftRight(URI);
         }
-
-        if (is_file(CTR_PATH . $filePath . '.php')) {
-            require CTR_PATH . $filePath . '.php';
-
-            /* @var Ctr $ctr */
-            $ctr = new $className($param, $action);
-            $ctr->param = $param;
-            $ctr->action = $action;
-
-            // --- 强制 HTTPS ---
-
-            if ((MUST_HTTPS && $ctr->mustHttps()) || !MUST_HTTPS) {
-                if (method_exists($ctr, $action)) {
-                    $rtn = $ctr->$action();
-                    if (isset($rtn)) {
-                        // --- return 返回值输出出来 ---
-                        if (is_string($rtn)) {
-                            echo $rtn;
-                        } else if (is_array($rtn)) {
-                            // --- 空数组的话不做任何操作，否则会多出来来个空组字串 ---
-                            if (count($rtn) > 0) {
-                                // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
-                                header('Content-type: application/json; charset=utf-8');
-                                if (isset($rtn[0]) && is_int($rtn[0])) {
-                                    $json = ['result' => $rtn[0]];
-                                    if (isset($rtn[1])) {
-                                        if (is_array($rtn[1])) {
-                                            echo json_encode(array_merge($json, $rtn[1]));
-                                        } else {
-                                            if (count($rtn) == 2) {
-                                                $json['msg'] = $rtn[1];
-                                                echo json_encode($json);
-                                            } else {
-                                                echo '[Error] Return value is wrong.';
-                                            }
-                                        }
-                                    } else {
-                                        unset($rtn[0]);
-                                        echo json_encode(array_merge($json, $rtn));
-                                    }
-                                } else {
-                                    echo json_encode($rtn);
-                                }
-                            }
+        // --- 加载控制器 ---
+        $ctr = '\\ctr\\' . str_replace('/', '\\', $pathLeft);
+        $filePath = CTR_PATH . $pathLeft . '.php';
+        if (!is_file($filePath)) {
+            // --- 指定的控制器不存在 ---
+            echo '[Error] Controller not found.';
+            return;
+        }
+        require SYS_PATH . 'Ctr.php';
+        require $filePath;
+        // --- 判断 action 是否存在 ---
+        /** @var Ctr $ctr */
+        $ctr = new $ctr($param, $pathRight);
+        $ctr->param = $param;
+        $ctr->action = $pathRight;
+        if (!method_exists($ctr, $pathRight)) {
+            echo '[Error] Action not found.';
+            return;
+        }
+        // --- 强制 HTTPS ---
+        if (MUST_HTTPS && !$ctr->mustHttps()) {
+            return;
+        }
+        // --- 执行 action ---
+        $rtn = $ctr->$pathRight();
+        if (!isset($rtn)) {
+            return;
+        }
+        if (is_string($rtn)) {
+            echo $rtn;
+        } else if (is_array($rtn)) {
+            // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
+            header('Content-type: application/json; charset=utf-8');
+            if (isset($rtn[0]) && is_int($rtn[0])) {
+                $json = ['result' => $rtn[0]];
+                if (isset($rtn[1])) {
+                    if (is_array($rtn[1])) {
+                        echo json_encode(array_merge($json, $rtn[1]));
+                    } else {
+                        if (count($rtn) == 2) {
+                            $json['msg'] = $rtn[1];
+                            echo json_encode($json);
                         } else {
-                            echo '[Error] Return type is wrong.';
+                            echo '[Error] Return value is wrong.';
                         }
                     }
                 } else {
-                    echo '[Error] Action not found.';
+                    unset($rtn[0]);
+                    echo json_encode(array_merge($json, $rtn));
                 }
+            } else {
+                echo json_encode($rtn);
             }
         } else {
-            // --- 指定的控制器不存在 ---
-            echo '[Error] Controller not found.';
+            echo '[Error] Return type is wrong.';
         }
 
+    }
+
+    /**
+     * --- 获取控制器 left 和 action ---
+     * @param string $path 相对路径
+     * @return array
+     */
+    private static function _getPathLeftRight($path) {
+        $pathLio = strrpos($path, "/");
+        if ($pathLio === false) {
+            return [$path, 'index'];
+        } else {
+            return [substr($path, 0, $pathLio), substr($path, $pathLio + 1)];
+        }
     }
 
 }

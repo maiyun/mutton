@@ -1,6 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
+        "module": "amd",
         "removeComments": true,
         "preserveConstEnums": true,
         "outDir": "../stc/",
