@@ -21,7 +21,7 @@ use sys\Ctr;
 
 class test extends Ctr {
 
-    public function main() {
+    public function index() {
         $echo = [
             'Hello world! Welcome to use Mutton ' . VER,
 
@@ -37,7 +37,7 @@ class test extends Ctr {
             '<br><a href="'.HTTP_BASE.'article/456">View "article/456"</a>',
 
             '<br><br><b>Automatic route:</b>',
-            '<br><br><a href="'.HTTP_BASE.'__Mutton__/index">View "__Mutton__/index"</a>',
+            '<br><br><a href="'.HTTP_BASE.'__Mutton__">View "__Mutton__"</a>',
 
             '<br><br><b>Query string:</b>',
             '<br><br><a href="'.HTTP_BASE.'test/qs?a=1&b=2">View "test/qs?a=1&b=2"</a>',
@@ -364,7 +364,7 @@ class test extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_BASE.'test/memcached">Default</a> | <a href="'.HTTP_BASE.'test/memcached?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/memcached?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'test/memcached">Default</a> | <a href="'.HTTP_BASE.'test/memcached?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/memcached?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function net() {
@@ -412,7 +412,7 @@ class test extends Ctr {
         setcookie('test3', '789', $_SERVER['REQUEST_TIME'] + 30, '/', HTTP_HOST);
         setcookie('test4', '012', $_SERVER['REQUEST_TIME'] + 40, '/ok/');
         setcookie('test5', '345', $_SERVER['REQUEST_TIME'] + 10, '', '', true);
-        echo "setcookie('test', '123', \$_SERVER['REQUEST_TIME'] + 10);<br>setcookie('test2', '456', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');<br>setcookie('test3', '789', \$_SERVER['REQUEST_TIME'] + 30, '/', '".HTTP_HOST."');<br>setcookie('test4', '012', \$_SERVER['REQUEST_TIME'] + 40, '/ok/');<br>setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
+        echo "setcookie('test1', '123', \$_SERVER['REQUEST_TIME'] + 10);<br>setcookie('test2', '456', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');<br>setcookie('test3', '789', \$_SERVER['REQUEST_TIME'] + 30, '/', '".HTTP_HOST."');<br>setcookie('test4', '012', \$_SERVER['REQUEST_TIME'] + 40, '/ok/');<br>setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
     }
     public function netCookie2() {
         echo 'print_r($_COOKIE);'."\n";
@@ -446,7 +446,7 @@ class test extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_BASE.'test/redis_simulator">Default</a> | <a href="'.HTTP_BASE.'test/redis_simulator?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/redis_simulator?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'test/redis_simulator">Default</a> | <a href="'.HTTP_BASE.'test/redis_simulator?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/redis_simulator?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function session_db() {
@@ -484,7 +484,7 @@ class test extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_BASE.'test/session_db">Default</a> | <a href="'.HTTP_BASE.'test/session_db?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/session_db?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'test/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'test/session_db">Default</a> | <a href="'.HTTP_BASE.'test/session_db?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/session_db?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'test/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.HTTP_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function session_redis() {
@@ -510,7 +510,7 @@ class test extends Ctr {
         }
         echo '</pre>';
 
-        return '<a href="'.HTTP_BASE.'test/session_redis">Default</a> | <a href="'.HTTP_BASE.'test/session_redis?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/session_redis?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="'.HTTP_BASE.'test/session_redis">Default</a> | <a href="'.HTTP_BASE.'test/session_redis?value=aaa">Set "aaa"</a> | <a href="'.HTTP_BASE.'test/session_redis?value=bbb">Set "bbb"</a> | <a href="'.HTTP_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function captcha_fastbuild() {

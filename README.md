@@ -23,8 +23,8 @@ Nginx/Apache
 > Note: Under Nginx, you need to manually configure the rewrite rule with the following rewrite rules:
 
 ```
-if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[\w-]+?\.txt\??.*)$) {
-    rewrite ^/([\w-/.?]*)$ /index.php?__uri=$1 last;
+if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\??.*|[\w-]+?\.txt\??.*)$) {
+    rewrite ^/([\s\S]*)$ /index.php?__uri=$1 last;
 }
 ```
 

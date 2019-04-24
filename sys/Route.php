@@ -24,6 +24,7 @@ class Route {
             if (!empty($match)) {
                 list($pathLeft, $pathRight) = self::_getPathLeftRight($ruleVal);
                 $param = $match;
+                array_splice($param, 0, 1);
                 break;
             }
         }

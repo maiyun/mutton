@@ -1,7 +1,7 @@
 <?php
 
 const ROUTE = [
-    '@'                             => 'main/main',
+    '@'                             => 'main',
     'article/([0-9]+?)'             => 'test/article'
 ];
 

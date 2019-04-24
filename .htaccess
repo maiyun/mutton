@@ -1,5 +1,5 @@
 RewriteEngine on
 
 RewriteRule .* - [env=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-RewriteCond $1 !(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[\w-]+?\.txt\??.*)
-RewriteRule ^([\w-/.?]*)$ index.php?__uri=$1 [L,QSA]
+RewriteCond $1 !^(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\??.*|[\w-]+?\.txt\??.*)
+RewriteRule ^([\s\S]*)$ index.php?__uri=$1 [L,QSA]
