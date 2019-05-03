@@ -70,6 +70,7 @@ class Net {
             }
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_HEADER, true);
+            curl_setopt($ch, CURLOPT_ENCODING, '');
             curl_setopt($ch, CURLOPT_TIMEOUT, $req->getTimeout());
             curl_setopt($ch, CURLOPT_USERAGENT, $req->getUserAgent());
             // --- ssl ---
