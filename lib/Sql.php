@@ -165,6 +165,7 @@ class Sql {
         return $this;
     }
 
+    private $_usc = 0;
     /**
      * --- 生成 xx = xx 的格式，或 xx = xx + 1 格式 ---
      * @param array $s 不可为空数组
@@ -175,18 +176,145 @@ class Sql {
         if ($this->_single) {
             foreach ($s as $k => $v) {
                 if (is_array($v)) {
-                    // --- xx, [['total', '+', '1']] ---
-                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->quote($v[2].'') . ',';
+                    // --- 1. ['total', '+', '1'] ---
+                    // --- 2. 'type' => ['CASE `id` WHEN 1 THEN "val1" WHEN 2 THEN "val2" END'] ---
+                    // --- 3. 'type' => ['case', 'id', ['1' => 'val1', '2' => 'val2'], 'val3'] ---
+                    // --- 4. 'type' => ['case', 'id', 'in', ['val1' => ['1', '2'], 'val2' => ['3', '4']], 'val3'] ---
+                    // --- 5. 'type' => ['case', ['val1' => [['id', '<>', '1'], ['id', '<>', '2']], 'val2' => [['id', '<>', '3'], ['id', '<>', '4']]], 'val3'] ---
+                    if (isset($v[2]) && is_string($v[2]) && is_string($v[1]) && !isset($v[3])) {
+                        // --- 1 ---
+                        $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->quote($v[2].'') . ',';
+                    } else if (!isset($v[1])) {
+                        // --- 2 ---
+                        $sql .= $this->field($k) . ' = ' . $v[0].',';
+                    } else {
+                        $sql .= $this->field($k) . ' = ';
+                        $type = strtolower($v[0]);
+                        if ($type === 'case') {
+                            if (isset($v[2]) && is_array($v[2])) {
+                                // --- 3 ---
+                                $sql .= '(CASE '.$this->field($v[1]).' ';
+                                foreach ($v[2] as $when => $val) {
+                                    $sql .= 'WHEN ' . $this->quote($when) . ' THEN ' . $this->quote($val) . ' ';
+                                }
+                                if (isset($v[3])) {
+                                    $sql .= 'ELSE ' . $this->quote($v[3]) . ' ';
+                                }
+                                $sql .= 'END),';
+                            } else if (isset($v[2]) && ($v[2] === 'in')) {
+                                // --- 4 ---
+                                $sql .= '(CASE ';
+                                foreach ($v[3] as $val => $list) {
+                                    $in = [];
+                                    foreach ($list as $listv) {
+                                        $in[] = $this->quote($listv);
+                                    }
+                                    $sql .= 'WHEN ' . $this->field($v[1]) . ' IN (' . implode(',', $in) . ') THEN ' . $this->quote($val) . ' ';
+                                }
+                                if (isset($v[4])) {
+                                    $sql .= 'ELSE ' . $this->quote($v[4]) . ' ';
+                                }
+                                $sql .= 'END),';
+                            } else {
+                                // --- 5 ---
+                                $sql .= '(CASE ';
+                                foreach ($v[1] as $val => $list) {
+                                    $sql .= 'WHEN ';
+                                    foreach ($list as $listv) {
+                                        $sql .= $this->field($listv[0]) . ' ' . $listv[1] . ' ' . $this->quote($listv[2]) . ' AND ';
+                                    }
+                                    $sql = substr($sql, 0, -4) . 'THEN ' . $this->quote($val) . ' ';
+                                }
+                                if (isset($v[2])) {
+                                    $sql .= 'ELSE ' . $this->quote($v[2]) . ' ';
+                                }
+                                $sql .= 'END),';
+                            }
+                        } else {
+                            // --- 异常 ---
+                        }
+                    }
                 } else {
-                    // --- xx, ['name' => 'oh'] ---
+                    // --- 'name' => 'oh' ---
                     $sql .= $this->field($k) . ' = ' . $this->quote($v.'') . ',';
                 }
             }
         } else {
             foreach ($s as $k => $v) {
                 if (is_array($v)) {
-                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' :u_' . $v[0] . ',';
-                    $this->_data[':u_'.$v[0]] = $v[2];
+                    if (isset($v[2]) && is_string($v[2]) && is_string($v[1]) && !isset($v[3])) {
+                        // --- 1 ---
+                        $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' :u_' . $v[0] . ',';
+                        $this->_data[':u_'.$v[0]] = $v[2];
+                    } else if (!isset($v[1])) {
+                        // --- 2 ---
+                        $sql .= $this->field($k) . ' = ' . $v[0].',';
+                    } else {
+                        $sql .= $this->field($k) . ' = ';
+                        $type = strtolower($v[0]);
+                        if ($type === 'case') {
+                            if (isset($v[2]) && is_array($v[2])) {
+                                // --- 3 ---
+                                $sql .= '(CASE '.$this->field($v[1]).' ';
+                                foreach ($v[2] as $when => $val) {
+                                    $sql .= 'WHEN :u_'.$k.'_'.$this->_usc.' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $when;
+                                    ++$this->_usc;
+                                    $sql .= 'THEN :u_'.$k.'_'.$this->_usc.' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $val;
+                                    ++$this->_usc;
+                                }
+                                if (isset($v[3])) {
+                                    $sql .= 'ELSE :u_'.$k.'_'.$this->_usc . ' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $v[3];
+                                    ++$this->_usc;
+                                }
+                                $sql .= 'END),';
+                            } else if (isset($v[2]) && ($v[2] === 'in')) {
+                                // --- 4 ---
+                                $sql .= '(CASE ';
+                                foreach ($v[3] as $val => $list) {
+                                    $in = [];
+                                    foreach ($list as $listv) {
+                                        $in[] = ':u_'.$k.'_'.$this->_usc;
+                                        $this->_data[':u_'.$k.'_'.$this->_usc] = $listv;
+                                        ++$this->_usc;
+                                    }
+                                    $sql .= 'WHEN ' . $this->field($v[1]) . ' IN (' . implode(',', $in) . ') THEN :u_'.$k.'_'.$this->_usc . ' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $val;
+                                    ++$this->_usc;
+                                }
+                                if (isset($v[4])) {
+                                    $sql .= 'ELSE :u_'.$k.'_'.$this->_usc . ' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $v[4];
+                                    ++$this->_usc;
+                                }
+                                $sql .= 'END),';
+                            } else {
+                                // --- 5 ---
+                                $sql .= '(CASE ';
+                                foreach ($v[1] as $val => $list) {
+                                    $sql .= 'WHEN ';
+                                    foreach ($list as $listv) {
+                                        $sql .= $this->field($listv[0]) . ' ' . $listv[1] . ' :u_'.$k.'_'.$this->_usc . ' AND ';
+                                        $this->_data[':u_'.$k.'_'.$this->_usc] = $listv[2];
+                                        ++$this->_usc;
+                                    }
+                                    $sql = substr($sql, 0, -4) . 'THEN :u_'.$k.'_'.$this->_usc . ' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $val;
+                                    ++$this->_usc;
+                                }
+                                if (isset($v[2])) {
+                                    $sql .= 'ELSE :u_'.$k.'_'.$this->_usc . ' ';
+                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $v[2];
+                                    ++$this->_usc;
+                                }
+                                $sql .= 'END),';
+                            }
+                        } else {
+                            // --- 异常 ---
+                        }
+                    }
                 } else {
                     $sql .= $this->field($k) . ' = :u_'.$k.',';
                     $this->_data[':u_'.$k] = $v;
@@ -387,7 +515,10 @@ class Sql {
         return $this;
     }
 
-    public function quote(string $str): string {
+    public function quote($str): string {
+        if (!is_string($str)) {
+            return "'".$str."'";
+        }
         if($this->_db) {
             return $this->_db->quote($str);
         } else {
@@ -397,7 +528,11 @@ class Sql {
 
     // --- 字段转义 ---
     public function field(string $str): string {
-        return '`'.$str.'`';
+        $l = explode('.', $str);
+        if (!isset($l[1])) {
+            return '`' . $str . '`';
+        }
+        return $l[0] . '`' . $l[1] . '`';
     }
 
 }

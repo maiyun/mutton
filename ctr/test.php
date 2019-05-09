@@ -198,18 +198,59 @@ class test extends Ctr {
 <b>getData():</b> ".print_r($sd, true)."</pre>";
                 break;
             case 'update':
+                $rtn = '<pre>';
                 try {
                     $s = $sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah'])->getSql();
                     $sd = $sql->getData();
-                } catch (\Exception $ex) {
-                    $s = '';
-                    $sd = [];
-                }
 
-                $rtn = "<pre>\$sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah']);
+                    $rtn .= "\$sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah']);
 
 <b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true)."</pre>";
+<b>getData():</b> ".print_r($sd, true);
+
+                    // --- 2 ---
+
+                    $s = $sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \'1\' THEN "a" ELSE "b" END)']])->where(['name' => 'Ah'])->getSql();
+                    $sd = $sql->getData();
+
+                    $rtn .= "\n\$sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \'1\' THEN \"a\" ELSE \"b\" END')]])->where(['name' => 'Ah']);
+
+<b>getSql() :</b> $s;
+<b>getData():</b> ".print_r($sd, true);
+
+                    // --- 3 ---
+
+                    $s = $sql->update('user', ['type' => ['case', 'id', ['1' => 'val1', '2' => 'val2'], 'val3']])->where(['name' => 'Ah'])->getSql();
+                    $sd = $sql->getData();
+
+                    $rtn .= "\n\$sql->update('user', ['type' => ['case', 'id', ['1' => 'val1', '2' => 'val2'], 'val3']])->where(['name' => 'Ah']);
+
+<b>getSql() :</b> $s;
+<b>getData():</b> ".print_r($sd, true);
+
+                    // --- 4 ---
+
+                    $s = $sql->update('user', ['type' => ['case', 'id', 'in', ['val1' => ['1', '2'], 'val2' => ['3', '4']], 'val3']])->where(['name' => 'Ah'])->getSql();
+                    $sd = $sql->getData();
+
+                    $rtn .= "\n\$sql->update('user', ['type' => ['case', 'id', 'in', ['val1' => ['1', '2'], 'val2' => ['3', '4']], 'val3']])->where(['name' => 'Ah']);
+
+<b>getSql() :</b> $s;
+<b>getData():</b> ".print_r($sd, true);
+
+                    // --- 5 ---
+
+                    $s = $sql->update('user', ['type' => ['case', ['val1' => [['id', '<>', '1'], ['id', '<>', '2']], 'val2' => [['id', '<>', '3'], ['id', '<>', '4']]], 'val3']])->where(['name' => 'Ah'])->getSql();
+                    $sd = $sql->getData();
+
+                    $rtn .= "\n\$sql->update('user', ['type' => ['case', ['val1' => [['id', '<>', '1'], ['id', '<>', '2']], 'val2' => [['id', '<>', '3'], ['id', '<>', '4']]], 'val3']])->where(['name' => 'Ah']);
+
+<b>getSql() :</b> $s;
+<b>getData():</b> ".print_r($sd, true);
+                } catch (\Exception $ex) {
+                    $rtn .= print_r($ex, true);
+                }
+                $rtn .= '</pre>';
                 break;
             case 'delete':
                 try {
