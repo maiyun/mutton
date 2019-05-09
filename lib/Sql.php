@@ -365,6 +365,7 @@ class Sql {
             }
         }
         $this->_wsc = 0;
+        $this->_usc = 0;
         return $this;
     }
 
