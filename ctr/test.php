@@ -105,15 +105,6 @@ class test extends Ctr {
         return 'Article ID: ' . $this->param[0] . '<br><br>' . $this->_getEnd();
     }
 
-    public function auto() {
-        $rt = $this->getRunTime();
-        $this->loadView('test/auto', [
-            'rt' => $rt,
-            'ms' => round($rt * 1000, 4),
-            'me' => round($this->getMemoryUsage() / 1024, 2)
-        ]);
-    }
-
     public function qs() {
         $this->obStart();
         echo '$_GET: <br><br>';
