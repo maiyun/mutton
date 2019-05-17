@@ -94,7 +94,7 @@ class test extends Ctr {
 
             '<br><br><b>Dns:</b>',
             '<br><br><a href="'.HTTP_BASE.'test/dns_aliyun">View "test/dns_aliyun"</a>',
-            '<br><a href="'.HTTP_BASE.'test/dns_tencent_cloud">View "test/dns_tencent_cloud"</a>',
+            '<br><a href="'.HTTP_BASE.'test/dns_tencent_cloud">View "test/dns_tencent_cloud"</a>'
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
