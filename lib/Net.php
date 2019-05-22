@@ -118,6 +118,9 @@ class Net {
                     // --- 提取 cookie ---
                     preg_match_all('/Set-Cookie:(.+?)\r\n/i', $header, $matchList);
                     $uri = parse_url($url);
+                    if (!isset($uri['path'])) {
+                        $uri['path'] = '/';
+                    }
                     foreach ($matchList[1] as $match) {
                         $cookieTmp = [];
                         $list = explode(';', $match);
@@ -178,11 +181,17 @@ class Net {
                                 if (isset($cookieTmp['max-age'])) {
                                     $exp = $_SERVER['REQUEST_TIME'] + $cookieTmp['max-age'];
                                 }
+                                // --- path ---
+                                $path = isset($cookieTmp['path']) ? $cookieTmp['path'] : '';
+                                if ($path === '') {
+                                    $srp = strrpos($uri['path'], '/');
+                                    $path = substr($uri['path'], 0, $srp + 1);
+                                }
                                 $cookie[$cookieKey] = [
                                     'name' => $cookieTmp['name'],
                                     'value' => $cookieTmp['value'],
                                     'exp' => $exp,
-                                    'path' => isset($cookieTmp['path']) ? $cookieTmp['path'] : '',
+                                    'path' => $path,
                                     'domain' => $domainN,
                                     'secure' => isset($cookieTmp['secure']) ? true : false
                                 ];
