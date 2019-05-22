@@ -127,9 +127,9 @@ class Net {
                             $val = isset($arr[1]) ? $arr[1] : '';
                             if ($index === 0) {
                                 $cookieTmp['name'] = trim($key);
-                                $cookieTmp['value'] = trim($val);
+                                $cookieTmp['value'] = urldecode($val);
                             } else {
-                                $cookieTmp[trim(strtolower($key))] = trim($val);
+                                $cookieTmp[trim(strtolower($key))] = $val;
                             }
                         }
                         if (isset($cookieTmp['domain'])) {
@@ -245,7 +245,7 @@ class Net {
                             }
                         }
                         if ($go) {
-                            $cookieStr .= $item['name'] . '=' . $item['value'] . ';';
+                            $cookieStr .= $item['name'] . '=' . urlencode($item['value']) . ';';
                         }
                     }
                 }
