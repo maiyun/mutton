@@ -89,7 +89,7 @@ class Net {
             }
             // --- cookie 托管 ---
             if ($cookie !== NULL) {
-                curl_setopt($ch, CURLOPT_COOKIE, self::_cookieBuildQuery($cookie, $url));
+                curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $url));
             }
             // --- 检测有没有更多额外的 curl 定义项目 ---
             if (($curlOpt = $req->getCurlOpt()) !== NULL) {
@@ -117,87 +117,7 @@ class Net {
                 if ($cookie !== NULL) {
                     // --- 提取 cookie ---
                     preg_match_all('/Set-Cookie:(.+?)\r\n/i', $header, $matchList);
-                    $uri = parse_url($url);
-                    if (!isset($uri['path'])) {
-                        $uri['path'] = '/';
-                    }
-                    foreach ($matchList[1] as $match) {
-                        $cookieTmp = [];
-                        $list = explode(';', $match);
-                        foreach ($list as $index => $item) {
-                            $arr = explode('=', $item);
-                            $key = $arr[0];
-                            $val = isset($arr[1]) ? $arr[1] : '';
-                            if ($index === 0) {
-                                $cookieTmp['name'] = trim($key);
-                                $cookieTmp['value'] = urldecode($val);
-                            } else {
-                                $cookieTmp[trim(strtolower($key))] = $val;
-                            }
-                        }
-                        if (isset($cookieTmp['domain'])) {
-                            if ($cookieTmp['domain'][0] !== '.') {
-                                $domain = '.' . $cookieTmp['domain'];
-                                $domainN = $cookieTmp['domain'];
-                            } else {
-                                $domain = $cookieTmp['domain'];
-                                $domainN = substr($cookieTmp['domain'], 1);
-                            }
-                        } else {
-                            $domain = '.' . $uri['host'];
-                            $domainN = $uri['host'];
-                        }
-                        // --- 判断有没有设置 domain 的权限 ---
-                        // --- ok.xxx.com, .ok.xxx.com: true ---
-                        // --- ok.xxx.com, .xxx.com: true ---
-                        // --- z.ok.xxx.com, .xxx.com: true ---
-                        // --- ok.xxx.com, .zz.ok.xxx.com: false ---
-                        $go = true;
-                        if ('.' . $uri['host'] !== $domain) {
-                            $domainSc = substr_count($domain, '.');
-                            if ($domainSc > 1) {
-                                // --- 判断自己是不是孩子 ---
-                                if (substr_count($uri['host'], '.') >= $domainSc) {
-                                    if (substr($uri['host'], -strlen($domain)) !== $domain) {
-                                        $go = false;
-                                    }
-                                } else {
-                                    $go = false;
-                                }
-                            } else {
-                                $go = false;
-                            }
-                        }
-                        if ($go) {
-                            $cookieKey = $cookieTmp['name'].'-'.$domainN;
-                            if (isset($cookieTmp['max-age']) && ($cookieTmp['max-age'] <= 0)) {
-                                if (isset($cookie[$cookieKey])) {
-                                    unset($cookie[$cookieKey]);
-                                    $go = false;
-                                }
-                            }
-                            if ($go) {
-                                $exp = 0;
-                                if (isset($cookieTmp['max-age'])) {
-                                    $exp = $_SERVER['REQUEST_TIME'] + $cookieTmp['max-age'];
-                                }
-                                // --- path ---
-                                $path = isset($cookieTmp['path']) ? $cookieTmp['path'] : '';
-                                if ($path === '') {
-                                    $srp = strrpos($uri['path'], '/');
-                                    $path = substr($uri['path'], 0, $srp + 1);
-                                }
-                                $cookie[$cookieKey] = [
-                                    'name' => $cookieTmp['name'],
-                                    'value' => $cookieTmp['value'],
-                                    'exp' => $exp,
-                                    'path' => $path,
-                                    'domain' => $domainN,
-                                    'secure' => isset($cookieTmp['secure']) ? true : false
-                                ];
-                            }
-                        }
-                    }
+                    self::_buildCookieObject($cookie, $matchList, $url);
                 }
             }
             // --- 判断 follow 追踪 ---
@@ -207,58 +127,136 @@ class Net {
             if (!preg_match('/Location: (.+?)\\r\\n/', $res->header, $matches)) {
                 return $res;
             }
+            $req = Request::get([
+                'referer' => $url
+            ]);
             return self::request($matches[1], $data, $req, $cookie);
         } else {
             return Response::get();
         }
     }
 
+    // --- 根据 Set-Cookie 头部转换到 cookie 数组 ---
+    private static function _buildCookieObject(array &$cookie, array $setCookies, string $url) {
+        $uri = parse_url($url);
+        if (!isset($uri['path'])) {
+            $uri['path'] = '/';
+        }
+        foreach ($setCookies[1] as $setCookie) {
+            $cookieTmp = [];
+            $list = explode(';', $setCookie);
+            foreach ($list as $index => $item) {
+                $arr = explode('=', $item);
+                $key = $arr[0];
+                $val = isset($arr[1]) ? $arr[1] : '';
+                if ($index === 0) {
+                    $cookieTmp['name'] = trim($key);
+                    $cookieTmp['value'] = urldecode($val);
+                } else {
+                    $cookieTmp[trim(strtolower($key))] = $val;
+                }
+            }
+            if (isset($cookieTmp['domain'])) {
+                if ($cookieTmp['domain'][0] !== '.') {
+                    $domain = '.' . $cookieTmp['domain'];
+                    $domainN = $cookieTmp['domain'];
+                } else {
+                    $domain = $cookieTmp['domain'];
+                    $domainN = substr($cookieTmp['domain'], 1);
+                }
+            } else {
+                $domain = '.' . $uri['host'];
+                $domainN = $uri['host'];
+            }
+            $uriHost = $uri['host'];
+            // --- 判断有没有设置 domain 的权限 ---
+            // --- $uriHost     vs  $domain($domainN) ---
+            // --- ok.xxx.com   vs  .ok.xxx.com: true ---
+            // --- ok.xxx.com   vs  .xxx.com: true ---
+            // --- z.ok.xxx.com vs  .xxx.com: true ---
+            // --- ok.xxx.com   vs  .zz.ok.xxx.com: false ---
+            if ($uriHost !== $domainN) {
+                $domainSc = substr_count($domain, '.');
+                if ($domainSc <= 1) {
+                    // --- .com ---
+                    continue;
+                }
+                // --- 判断访问路径 (uriHost) 是不是设置域名 (domain) 的孩子，domain 必须是 uriHost 的同级或者父辈 ---
+                if (substr_count($uriHost, '.') < $domainSc) {
+                    // --- ok.xxx.com (2) < .pp.xxx.com (2): false ---
+                    // --- ok.xxx.com < .z.xxx.com: false ---
+                    continue;
+                }
+                if (substr($uriHost, -strlen($domain)) !== $domain) {
+                    // --- ok.xxx.com, .ppp.com: false ---
+                    continue;
+                }
+            }
+            $cookieKey = $cookieTmp['name'].'-'.$domainN;
+            if (isset($cookieTmp['max-age']) && ($cookieTmp['max-age'] <= 0)) {
+                if (isset($cookie[$cookieKey])) {
+                    unset($cookie[$cookieKey]);
+                    continue;
+                }
+            }
+            $exp = $_SERVER['REQUEST_TIME'] + 31536000;
+            if (isset($cookieTmp['max-age'])) {
+                $exp = $_SERVER['REQUEST_TIME'] + $cookieTmp['max-age'];
+            }
+            // --- path ---
+            $path = isset($cookieTmp['path']) ? $cookieTmp['path'] : '';
+            if ($path === '') {
+                $srp = strrpos($uri['path'], '/');
+                $path = substr($uri['path'], 0, $srp + 1);
+            }
+            $cookie[$cookieKey] = [
+                'name' => $cookieTmp['name'],
+                'value' => $cookieTmp['value'],
+                'exp' => $exp,
+                'path' => $path,
+                'domain' => $domainN,
+                'secure' => isset($cookieTmp['secure']) ? true : false
+            ];
+        }
+    }
+
     // --- 数组转换为 Cookie ---
-    private static function _cookieBuildQuery(array &$cookie, string $url): string {
+    private static function _buildCookieQuery(array &$cookie, string $url): string {
         $cookieStr = '';
         foreach ($cookie as $key => $item) {
-            $go = true;
-            if ($item['exp'] > 0) {
-                if ($item['exp'] < $_SERVER['REQUEST_TIME']) {
-                    unset($cookie[$key]);
-                    $go = false;
+            if ($item['exp'] < $_SERVER['REQUEST_TIME']) {
+                unset($cookie[$key]);
+                continue;
+            }
+            $uri = parse_url($url);
+            if (!isset($uri['path'])) {
+                $uri['path'] = '/';
+            }
+            if ($item['secure'] && (strtolower($uri['scheme']) === 'http')) {
+                continue;
+            }
+            // --- 判断 path 是否匹配 ---
+            if (substr($uri['path'], 0, strlen($item['path'])) !== $item['path']) {
+                continue;
+            }
+            $domain = '.' . $item['domain'];
+            // --- 判断 $uri['host'] 必须是 $domain 的同级或子级 ---
+            // --- $uri['host']     vs      $domain ---
+            // --- ok.xxx.com       vs      .ok.xxx.com: true ---
+            // --- ok.xxx.com       vs      .xxx.com: true ---
+            // --- z.ok.xxx.com     vs      .xxx.com: false ---
+            // --- ok.xxx.com       vs      .zz.ok.xxx.com: false ---
+            if ('.' . $uri['host'] !== $domain) {
+                // --- 判断自己是不是孩子 ---
+                if (substr_count($uri['host'], '.') !== substr_count($domain, '.')) {
+                    // --- z.ok.xxx.com, .xxx.com: false ---
+                    continue;
+                }
+                if (substr($uri['host'], -strlen($domain)) !== $domain) {
+                    continue;
                 }
             }
-            if ($go) {
-                $uri = parse_url($url);
-                if ($item['secure'] && (strtolower($uri['scheme']) === 'http')) {
-                    $go = false;
-                }
-                if ($go) {
-                    if ($item['path'] !== '') {
-                        $uri['path'] = isset($uri['path']) ? $uri['path'] : '/';
-                        if (substr($uri['path'], 0, strlen($item['path'])) !== $item['path']) {
-                            $go = false;
-                        }
-                    }
-                    if ($go) {
-                        $domain = '.' . $item['domain'];
-                        // --- 判断访问域名是不是同级，子级 ---
-                        // --- ok.xxx.com, .ok.xxx.com: true ---
-                        // --- ok.xxx.com, .xxx.com: true ---
-                        // --- z.ok.xxx.com, .xxx.com: false ---
-                        // --- ok.xxx.com, .zz.ok.xxx.com: false ---
-                        if ('.' . $uri['host'] !== $domain) {
-                            // --- 判断自己是不是孩子 ---
-                            if (substr_count($uri['host'], '.') === substr_count($domain, '.')) {
-                                if (substr($uri['host'], -strlen($domain)) !== $domain) {
-                                    $go = false;
-                                }
-                            } else {
-                                $go = false;
-                            }
-                        }
-                        if ($go) {
-                            $cookieStr .= $item['name'] . '=' . urlencode($item['value']) . ';';
-                        }
-                    }
-                }
-            }
+            $cookieStr .= $item['name'] . '=' . urlencode($item['value']) . ';';
         }
         if ($cookieStr != '') {
             return substr($cookieStr, 0, -1);
@@ -268,7 +266,7 @@ class Net {
     }
 
     /**
-     * --- 获取 IP ---
+     * --- 获取 IP （非安全 IP）---
      * @return string
      */
     public static function getIP(): string {
