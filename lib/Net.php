@@ -244,15 +244,19 @@ class Net {
             // --- $uri['host']     vs      $domain ---
             // --- ok.xxx.com       vs      .ok.xxx.com: true ---
             // --- ok.xxx.com       vs      .xxx.com: true ---
-            // --- z.ok.xxx.com     vs      .xxx.com: false ---
+            // --- z.ok.xxx.com     vs      .xxx.com: true ---
             // --- ok.xxx.com       vs      .zz.ok.xxx.com: false ---
             if ('.' . $uri['host'] !== $domain) {
                 // --- 判断自己是不是孩子 ---
-                if (substr_count($uri['host'], '.') !== substr_count($domain, '.')) {
-                    // --- z.ok.xxx.com, .xxx.com: false ---
+                if (substr_count($uri['host'], '.') < substr_count($domain, '.')) {
+                    // --- ok.xxx.com, .zz.ok.xxx.com: false ---
+                    // --- pp.ok.xxx.com, .zz.ok.xxx.com: false ---
+                    // --- q.b.ok.xx.com, .zz.ok.xxx.com: true ---
                     continue;
                 }
                 if (substr($uri['host'], -strlen($domain)) !== $domain) {
+                    // --- q.b.ok.xx.com, .zz.ok.xxx.com: false ---
+                    // --- z.ok.xxx.com, .xxx.com: true ---
                     continue;
                 }
             }
