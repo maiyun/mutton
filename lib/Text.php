@@ -54,6 +54,54 @@ class Text {
         return round($size, 2) . $spliter . $units[$i];
     }
 
+    /**
+     * --- 将虚拟 URL 路径转换为绝对 URL 路径 ---
+     * @param string $from 基准路径
+     * @param string $to 虚拟路径
+     * @return string
+     */
+    function urlResolve(string $from, string $to): string {
+        // --- 获取 scheme, host, path ---
+        $f = parse_url($from);
+        // --- 以 // 开头的，加上 from 的 scheme 返回 ---
+        if (strpos($to,'//') === 0) {
+            return $f['scheme'] . ':' . $to;
+        }
+        // --- 已经是绝对路径，直接返回 ---
+        if (parse_url($to, PHP_URL_SCHEME) != '' ) {
+            return $to;
+        }
+        // --- # 或 ? 替换后返回 ---
+        if ($to[0] == '#' || $to[0] == '?') {
+            $sp = strpos($from, $to[0]);
+            if ($sp !== false) {
+                return substr($from, 0, $sp) . $to;
+            } else {
+                return $from . $to;
+            }
+        }
+        // --- 移除不是路径的部分，如 /ab/c 变成了 /ab ---
+        $path = preg_replace('#/[^/]*$#', '', $f['path']);
+        // --- 相对路径从根路径开始 ---
+        if ($to[0] ==  '/') {
+            $path = '';
+        }
+        // --- 非最终绝对网址 ----
+        $abs = $f['host'] . $path . '/' . $to;
+        // --- 删掉 ./ ---
+        $abs = preg_replace('/(\/\.?\/)/', '/', $abs);
+        // --- 删掉 ../ ---
+        while (true) {
+            $abs = preg_replace('/\/(?!\.\.)[^\/]+\/\.\.\//', '/', $abs, -1, $count);
+            if ($count === 0) {
+                break;
+            }
+        }
+        $abs = str_replace('../', '', $abs);
+        // --- 返回最终结果 ---
+        return $f['scheme'] . '://' . $abs;
+    }
+
     // --- 是否是邮件 ---
     public static function isEMail(string $email): bool {
         return preg_match('/^[-_\w\.]+\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
@@ -122,7 +170,7 @@ class Text {
         return false;
     }
 
-        // --- 以下是适用于中国大陆的方法 ---
+    // --- 以下是适用于中国大陆的方法 ---
 
     // --- 是否是中国大陆的手机号 ---
     public static function isPhoneCN(string $p): bool {

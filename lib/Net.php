@@ -172,7 +172,7 @@ class Net {
                 $domainN = $uri['host'];
             }
             // --- 判断有没有设置 domain 的权限 ---
-            // --- $uri['host']     vs  $domain($domainN) ---
+            // --- $uri['host'] vs  $domain($domainN) ---
             // --- ok.xxx.com   vs  .ok.xxx.com: true ---
             // --- ok.xxx.com   vs  .xxx.com: true ---
             // --- z.ok.xxx.com vs  .xxx.com: true ---
