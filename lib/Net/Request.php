@@ -32,7 +32,7 @@ class Request {
         $this->_method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
         $this->_type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
         $this->_timeout = isset($opt['timeout']) ? (int)$opt['timeout'] : 10;
-        $this->_userAgent = isset($opt['userAgent']) ? $opt['userAgent'] : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/72.0.3626.119 Safari/537.36';
+        $this->_userAgent = isset($opt['userAgent']) ? $opt['userAgent'] : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36';
         $this->_httpHeader = isset($opt['httpHeader']) && is_array($opt['httpHeader']) ? $opt['httpHeader'] : NULL;
         $this->_referer = isset($opt['referer']) ? $opt['referer'] : '';
         $this->_followLocation = isset($opt['followLocation']) ? $opt['followLocation'] : false;

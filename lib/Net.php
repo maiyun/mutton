@@ -145,6 +145,7 @@ class Net {
         foreach ($setCookies[1] as $setCookie) {
             $cookieTmp = [];
             $list = explode(';', $setCookie);
+            // --- 提取 set-cookie 中的定义信息 ---
             foreach ($list as $index => $item) {
                 $arr = explode('=', $item);
                 $key = $arr[0];
@@ -156,7 +157,9 @@ class Net {
                     $cookieTmp[trim(strtolower($key))] = $val;
                 }
             }
+            // --- 获取定义的 domain ---
             if (isset($cookieTmp['domain'])) {
+                $cookieTmp['domain'] = explode(':', $cookieTmp['domain'])[0];
                 if ($cookieTmp['domain'][0] !== '.') {
                     $domain = '.' . $cookieTmp['domain'];
                     $domainN = $cookieTmp['domain'];
@@ -168,26 +171,25 @@ class Net {
                 $domain = '.' . $uri['host'];
                 $domainN = $uri['host'];
             }
-            $uriHost = $uri['host'];
             // --- 判断有没有设置 domain 的权限 ---
-            // --- $uriHost     vs  $domain($domainN) ---
+            // --- $uri['host']     vs  $domain($domainN) ---
             // --- ok.xxx.com   vs  .ok.xxx.com: true ---
             // --- ok.xxx.com   vs  .xxx.com: true ---
             // --- z.ok.xxx.com vs  .xxx.com: true ---
             // --- ok.xxx.com   vs  .zz.ok.xxx.com: false ---
-            if ($uriHost !== $domainN) {
+            if ($uri['host'] !== $domainN) {
                 $domainSc = substr_count($domain, '.');
                 if ($domainSc <= 1) {
                     // --- .com ---
                     continue;
                 }
-                // --- 判断访问路径 (uriHost) 是不是设置域名 (domain) 的孩子，domain 必须是 uriHost 的同级或者父辈 ---
-                if (substr_count($uriHost, '.') < $domainSc) {
+                // --- 判断访问路径 (uri['host']) 是不是设置域名 (domain) 的孩子，domain 必须是 uriHost 的同级或者父辈 ---
+                if (substr_count($uri['host'], '.') < $domainSc) {
                     // --- ok.xxx.com (2) < .pp.xxx.com (2): false ---
                     // --- ok.xxx.com < .z.xxx.com: false ---
                     continue;
                 }
-                if (substr($uriHost, -strlen($domain)) !== $domain) {
+                if (substr($uri['host'], -strlen($domain)) !== $domain) {
                     // --- ok.xxx.com, .ppp.com: false ---
                     continue;
                 }
