@@ -130,7 +130,7 @@ class Net {
             $req = Request::get([
                 'referer' => $url
             ]);
-            return self::request($matches[1], $data, $req, $cookie);
+            return self::request(Text::urlResolve($url, $matches[1]), $data, $req, $cookie);
         } else {
             return Response::get();
         }

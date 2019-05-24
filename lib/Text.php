@@ -60,7 +60,7 @@ class Text {
      * @param string $to 虚拟路径
      * @return string
      */
-    function urlResolve(string $from, string $to): string {
+    public static function urlResolve(string $from, string $to): string {
         // --- 获取 scheme, host, path ---
         $f = parse_url($from);
         // --- 以 // 开头的，加上 from 的 scheme 返回 ---
