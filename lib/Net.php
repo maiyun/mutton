@@ -199,7 +199,7 @@ class Net {
                     continue;
                 }
             }
-            $exp = $_SERVER['REQUEST_TIME'] + 31536000;
+            $exp = -1992199400;
             if (isset($cookieTmp['max-age'])) {
                 $exp = $_SERVER['REQUEST_TIME'] + $cookieTmp['max-age'];
             }
@@ -208,6 +208,8 @@ class Net {
             if ($path === '') {
                 $srp = strrpos($uri['path'], '/');
                 $path = substr($uri['path'], 0, $srp + 1);
+            } else if ($path[0] !== '/') {
+                $path = '/' . $path;
             }
             $cookie[$cookieKey] = [
                 'name' => $cookieTmp['name'],
@@ -224,7 +226,7 @@ class Net {
     private static function _buildCookieQuery(array &$cookie, string $url): string {
         $cookieStr = '';
         foreach ($cookie as $key => $item) {
-            if ($item['exp'] < $_SERVER['REQUEST_TIME']) {
+            if (($item['exp'] < $_SERVER['REQUEST_TIME']) && ($item['exp'] !== -1992199400)) {
                 unset($cookie[$key]);
                 continue;
             }
@@ -266,6 +268,18 @@ class Net {
             return substr($cookieStr, 0, -1);
         } else {
             return '';
+        }
+    }
+
+    /**
+     * --- 模拟重启浏览器后的状态 ---
+     * @param array $cookie
+     */
+    public static function resetCookieSession(array &$cookie) {
+        foreach ($cookie as $key => $item) {
+            if ($item['exp'] === -1992199400) {
+                unset($cookie[$key]);
+            }
         }
     }
 
