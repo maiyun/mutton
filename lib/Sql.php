@@ -127,6 +127,19 @@ class Sql {
         return $this;
     }
 
+    /**
+     * --- 当不能 insert 时，update（仅能配合 insert 方法用） ---
+     * @param array $s 更新数据
+     * @return Sql
+     */
+    public function onDuplicate(array $s): Sql {
+        if (count($s) > 0) {
+            $sql = ' ON DUPLICATE KEY UPDATE '.$this->_updateSub($s);
+            $this->_sql[] = $sql;
+        }
+        return $this;
+    }
+
     // --- '*', 'xx' ---
     public function select(string $c, string $f): Sql {
         $this->_data = [];
@@ -140,15 +153,6 @@ class Sql {
         }
         $sql .= ' FROM ' . $this->_pre . $f;
         $this->_sql = [$sql];
-        return $this;
-    }
-
-    // --- 当不能 insert 时，update（仅能配合 insert 方法用） ---
-    public function onDuplicate(array $s): Sql {
-        if (count($s) > 0) {
-            $sql = ' ON DUPLICATE KEY UPDATE '.$this->_updateSub($s);
-            $this->_sql[] = $sql;
-        }
         return $this;
     }
 

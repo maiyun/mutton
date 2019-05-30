@@ -56,7 +56,7 @@ class Db {
      */
     public function query(string $sql): \PDOStatement {
         ++$this->_queries;
-        return $this->query($sql);
+        return $this->_link->query($sql);
     }
 
     /**
