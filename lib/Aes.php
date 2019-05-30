@@ -31,7 +31,7 @@ class Aes {
         if ($iv !== '') {
             $method = $method === 'AES-256-ECB' ? 'AES-256-CFB' : $method;
         }
-        if ($rtn = openssl_decrypt(base64_decode($encrypt), $method, $key, OPENSSL_RAW_DATA, $iv)) {
+        if ($rtn = @openssl_decrypt(base64_decode($encrypt), $method, $key, OPENSSL_RAW_DATA, $iv)) {
             if ($method === self::AES_256_CFB) {
                 if (json_encode($rtn) !== false) {
                     return $rtn;

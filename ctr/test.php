@@ -701,10 +701,10 @@ html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-fa
 
         echo '<b>AES-256-ECB:</b>';
 
-        $key = 'testkey';
+        $key = 'testkeyatestkeyatestkeyatestkeya';
         $text = Aes::encrypt('Original text', $key);
         echo '<pre>';
-        echo "\$key = 'testkey';\n\$text = Aes::encrypt('Original text', \$key);\nvar_dump(\$text);";
+        echo "\$key = 'estkeyatestkeyatestkeyatestkeya';\n\$text = Aes::encrypt('Original text', \$key);\nvar_dump(\$text);";
         echo '</pre>';
         var_dump($text);
 
@@ -720,13 +720,14 @@ html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-fa
         echo '</pre>';
         var_dump($orig);
 
+        // ----------
+
         echo '<br><br><b>AES-256-CFB:</b>';
 
-        $key = 'testkey';
-        $iv = 'iloveu';
+        $iv = 'iloveuiloveuilov';
         $text = Aes::encrypt('Original text', $key, $iv);
         echo '<pre>';
-        echo "\$key = 'testkey';\n\$iv = 'iloveu';\n\$text = Aes::encrypt('Original text', \$key, \$iv);\nvar_dump(\$text);";
+        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv);\nvar_dump(\$text);";
         echo '</pre>';
         var_dump($text);
 
@@ -742,13 +743,13 @@ html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-fa
         echo '</pre>';
         var_dump($orig);
 
+        // ----------
+
         echo '<br><br><b>AES-256-CBC:</b>';
 
-        $key = 'testkey';
-        $iv = 'iloveu';
         $text = Aes::encrypt('Original text', $key, $iv, Aes::AES_256_CBC);
         echo '<pre>';
-        echo "\$key = 'testkey';\n\$iv = 'iloveu';\n\$text = Aes::encrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);\nvar_dump(\$text);";
+        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);\nvar_dump(\$text);";
         echo '</pre>';
         var_dump($text);
 
