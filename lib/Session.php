@@ -99,22 +99,21 @@ class Session {
         // --- 数据库的 Session 已经过期加新 Session ---
         // --- 如果不存在不允许加新则返回错误 ---
         if ($needInsert) {
-            self::$_token = self::_random();
             if(self::$_redis !== NULL) {
-                while(!self::$_redis->setValue('se_'.self::$_token, [], self::$_exp, 'nx')) {
+                do {
                     self::$_token = self::_random();
-                }
+                } while (!self::$_redis->setValue('se_'.self::$_token, [], self::$_exp, 'nx'));
             } else {
-                self::$_sql->insert('session', [
-                    'token' => self::$_token,
-                    'data' => serialize([]),
-                    'time_update' => $_SERVER['REQUEST_TIME'],
-                    'time_add' => $_SERVER['REQUEST_TIME']
-                ]); // --- 不用使用 onDuplicate，因为 token 已经重新随机了 ---
-                $ps = self::$_db->prepare(self::$_sql->getSql());
-                while(!$ps->execute(self::$_sql->getData())) {
+                do {
                     self::$_token = self::_random();
-                }
+                    self::$_sql->insert('session', [
+                        'token' => self::$_token,
+                        'data' => serialize([]),
+                        'time_update' => $_SERVER['REQUEST_TIME'],
+                        'time_add' => $_SERVER['REQUEST_TIME']
+                    ]); // --- 不用使用 onDuplicate，因为 token 已经重新随机了 ---
+                    $ps = self::$_db->prepare(self::$_sql->getSql());
+                } while (!$ps->execute(self::$_sql->getData()));
             }
         }
 
@@ -228,9 +227,9 @@ class Session {
         $s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         $sl = strlen($s);
         $t = '';
-        for ($i = 8; $i; $i--)
+        for ($i = 16; $i; $i--)
             $t .= $s[rand(0, $sl - 1)];
-        return date('Ymd').$t;
+        return $t;
     }
 
 }
