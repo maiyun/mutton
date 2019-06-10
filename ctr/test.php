@@ -691,7 +691,7 @@ html,body,input,textarea{font-size:14px;font-weight:bold;line-height:1.5;font-fa
     public function text() {
         $this->obStart();
         echo 'var_dump(Text::random(16, Text::RANDOM_LUNS)):<br><br>';
-        var_dump(htmlspecialchars(Text::random(16, Text::RANDOM_LUNS)));
+        echo 'string(16) "' . htmlspecialchars(Text::random(16, Text::RANDOM_LUNS)) .  '"';
         $rtn = $this->obEnd();
         return $rtn . '<br><br>' . $this->_getEnd();
     }
