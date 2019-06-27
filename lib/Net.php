@@ -136,7 +136,12 @@ class Net {
         }
     }
 
-    // --- 根据 Set-Cookie 头部转换到 cookie 数组 ---
+    /**
+     * --- 根据 Set-Cookie 头部转换到 cookie 数组（会自动筛掉不能设置的 cookie） ---
+     * @param array $cookie Cookie 引用键值对数组
+     * @param array $setCookies 头部的 set-cookie 数组
+     * @param string $url 当前网址
+     */
     private static function _buildCookieObject(array &$cookie, array $setCookies, string $url) {
         $uri = parse_url($url);
         if (!isset($uri['path'])) {
@@ -224,7 +229,12 @@ class Net {
         }
     }
 
-    // --- 数组转换为 Cookie ---
+    /**
+     * --- 数组转换为 Cookie 拼接字符串（会自动筛掉不能发送的 cookie） ---
+     * @param array $cookie Cookie 键值数组
+     * @param string $url 当前网页路径
+     * @return string
+     */
     private static function _buildCookieQuery(array &$cookie, string $url): string {
         $cookieStr = '';
         foreach ($cookie as $key => $item) {
