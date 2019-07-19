@@ -11,11 +11,8 @@ namespace lib;
 require ETC_PATH.'sql.php';
 
 class Sql {
-
-    // --- 组合成功的 sql ---
-    private $_sql = [];
     private $_pre = '';
-    private $_single = false;
+    private $_sql = [];
     private $_data = [];
 
     /* @var $_db Db */
@@ -32,10 +29,6 @@ class Sql {
     }
 
     // --- 配置项 ---
-    public function setSingle(bool $single): Sql {
-        $this->_single = $single;
-        return $this;
-    }
     public function setDb(Db $db): Sql {
         $this->_db = $db;
         return $this;
@@ -49,6 +42,13 @@ class Sql {
 
     // --- 前导 ---
 
+    /**
+     * --- 插入 ---
+     * @param string $f 表名
+     * @param array $cs []
+     * @param array $vs [] | [][]
+     * @return Sql
+     */
     public function insert(string $f, array $cs = [], array $vs = []): Sql {
         $this->_data = [];
         $sql = 'INSERT' . ' INTO ' . $this->_pre . $f . ' (';
@@ -61,67 +61,40 @@ class Sql {
             $sql = substr($sql, 0, -1) . ') VALUES ';
             // --- 判断插入单条记录还是多条记录 ---
             if (is_array($vs[0])) {
+                // --- $vs: [['1', 'wow'], ['2', 'oh']] ---
                 // --- 多条记录 ---
-                if ($this->_single) {
-                    // --- INSERT INTO xx (`id`, `name`) VALUES ('1', 'wow'), ('2', 'oh') ---
-                    foreach ($vs as $is) {
-                        $sql .= '(';
-                        foreach ($is as $i => $v) {
-                            $sql .= $this->quote($v.'') . ',';
-                        }
-                        $sql = substr($sql, 0, -1) . '),';
-                    }
-                    $sql = substr($sql, 0, -1);
-                } else {
-                    // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
-                    $sql .= '(';
-                    foreach ($vs[0] as $i => $v) {
-                        $sql .= ':p_' . $cs[$i] . ',';
-                    }
-                    $sql = substr($sql, 0, -1) . ')';
-                    foreach ($vs as $is) {
-                        $line = [];
-                        foreach ($is as $i => $v) {
-                            $line[':p_'.$cs[$i]] = $v;
-                        }
-                        $this->_data[] = $line;
+                // --- INSERT INTO xx (id, name) VALUES (?, ?), (?, ?) ---
+                $sql .= '(';
+                foreach ($vs[0] as $i => $v) {
+                    $sql .= '?, ';
+                }
+                $sql = substr($sql, 0, -2) . ')';
+                foreach ($vs as $is) {
+                    foreach ($is as $i => $v) {
+                        $this->_data[] = $v;
                     }
                 }
             } else {
+                // --- $vs: ['1', 'wow'] ---
                 // --- 单条记录 ---
+                // --- INSERT INTO xx (id, name) VALUES (?, ?) ---
                 $sql .= '(';
-                if ($this->_single) {
-                    // --- INSERT INTO xx (id, name) VALUES ('1', 'wow') ---
-                    foreach ($vs as $i => $v) {
-                        $sql .= $this->quote($v.'') . ',';
-                    }
-                } else {
-                    // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
-                    foreach ($vs as $i => $v) {
-                        $sql .= ':p_' . $cs[$i] . ',';
-                        $this->_data[':p_' . $cs[$i]] = $v;
-                    }
+                foreach ($vs as $i => $v) {
+                    $sql .= '?, ';
                 }
-                $sql = substr($sql, 0, -1) . ')';
+                $sql = substr($sql, 0, -2) . ')';
+                $this->_data = $vs;
             }
         } else {
             // --- 'xx', ['id' => '1', 'name' => 'wow'] ---
+            // --- INSERT INTO xx (id, name) VALUES (?, ?) ---
             $values = '';
-            if ($this->_single) {
-                // --- INSERT INTO xx (`id`, `name`) VALUES ('1', 'wow') ---
-                foreach ($cs as $k => $v) {
-                    $sql .= $this->field($k) . ',';
-                    $values .= $this->quote($v.'') . ',';
-                }
-            } else {
-                // --- INSERT INTO xx (id, name) VALUES (:p_id, :p_name) ---
-                foreach ($cs as $k => $v) {
-                    $sql .= $this->field($k) . ',';
-                    $values .= ':p_' . $k . ',';
-                    $this->_data[':p_' . $k] = $v;
-                }
+            foreach ($cs as $k => $v) {
+                $sql .= $this->field($k) . ', ';
+                $this->_data[] = $v;
+                $values .= '?, ';
             }
-            $sql = substr($sql, 0, -1) . ') VALUES (' . substr($values, 0, -1) . ')';
+            $sql = substr($sql, 0, -2) . ') VALUES (' . substr($values, 0, -2) . ')';
         }
         $this->_sql = [$sql];
         return $this;
@@ -140,14 +113,21 @@ class Sql {
         return $this;
     }
 
-    // --- '*', 'xx' ---
-    public function select(string $c, string $f): Sql {
+    /**
+     * --- '*', 'xx' ---
+     * @param string|array $c 字段
+     * @param string $f 表
+     * @return Sql
+     */
+    public function select($c, string $f): Sql {
         $this->_data = [];
         $sql = 'SELECT ';
-        if (is_string($c)) $sql .= $c;
-        else if (is_array($c)) {
+        if (is_string($c)) {
+            $sql .= $c;
+        } else {
+            // --- $c: ['id', 'name'] ---
             foreach ($c as $i) {
-                $sql .= $i . ',';
+                $sql .= $this->field($i) . ',';
             }
             $sql = substr($sql, 0, -1);
         }
@@ -168,168 +148,43 @@ class Sql {
         $this->_sql = [$sql];
         return $this;
     }
-
-    private $_usc = 0;
-    /**
-     * --- 生成 xx = xx 的格式，或 xx = xx + 1 格式 ---
-     * @param array $s 不可为空数组
-     * @return string
-     */
     private function _updateSub(array $s): string {
+        /*
+        [
+            ['total', '+', '1'],        // 1
+            'type' => '6',              // 2
+            'str' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']]      // 3
+        ]
+        */
         $sql = '';
-        if ($this->_single) {
-            foreach ($s as $k => $v) {
-                if (is_array($v)) {
-                    // --- 1. ['total', '+', '1'] ---
-                    // --- 2. 'type' => ['CASE `id` WHEN 1 THEN "val1" WHEN 2 THEN "val2" END'] ---
-                    // --- 3. 'type' => ['case', 'id', ['1' => 'val1', '2' => 'val2'], 'val3'] ---
-                    // --- 4. 'type' => ['case', 'id', 'in', ['val1' => ['1', '2'], 'val2' => ['3', '4']], 'val3'] ---
-                    // --- 5. 'type' => ['case', ['val1' => [['id', '<>', '1'], ['id', '<>', '2']], 'val2' => [['id', '<>', '3'], ['id', '<>', '4']]], 'val3'] ---
-                    if (isset($v[2]) && is_string($v[2]) && is_string($v[1]) && !isset($v[3])) {
-                        // --- 1 ---
-                        $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->quote($v[2].'') . ',';
-                    } else if (!isset($v[1])) {
-                        // --- 2 ---
-                        $sql .= $this->field($k) . ' = ' . $v[0].',';
-                    } else {
-                        $sql .= $this->field($k) . ' = ';
-                        $type = strtolower($v[0]);
-                        if ($type === 'case') {
-                            if (isset($v[2]) && is_array($v[2])) {
-                                // --- 3 ---
-                                $sql .= '(CASE '.$this->field($v[1]).' ';
-                                foreach ($v[2] as $when => $val) {
-                                    $sql .= 'WHEN ' . $this->quote($when) . ' THEN ' . $this->quote($val) . ' ';
-                                }
-                                if (isset($v[3])) {
-                                    $sql .= 'ELSE ' . $this->quote($v[3]) . ' ';
-                                }
-                                $sql .= 'END),';
-                            } else if (isset($v[2]) && ($v[2] === 'in')) {
-                                // --- 4 ---
-                                $sql .= '(CASE ';
-                                foreach ($v[3] as $val => $list) {
-                                    $in = [];
-                                    foreach ($list as $listv) {
-                                        $in[] = $this->quote($listv);
-                                    }
-                                    $sql .= 'WHEN ' . $this->field($v[1]) . ' IN (' . implode(',', $in) . ') THEN ' . $this->quote($val) . ' ';
-                                }
-                                if (isset($v[4])) {
-                                    $sql .= 'ELSE ' . $this->quote($v[4]) . ' ';
-                                }
-                                $sql .= 'END),';
-                            } else {
-                                // --- 5 ---
-                                $sql .= '(CASE ';
-                                foreach ($v[1] as $val => $list) {
-                                    $sql .= 'WHEN ';
-                                    foreach ($list as $listv) {
-                                        $sql .= $this->field($listv[0]) . ' ' . $listv[1] . ' ' . $this->quote($listv[2]) . ' AND ';
-                                    }
-                                    $sql = substr($sql, 0, -4) . 'THEN ' . $this->quote($val) . ' ';
-                                }
-                                if (isset($v[2])) {
-                                    $sql .= 'ELSE ' . $this->quote($v[2]) . ' ';
-                                }
-                                $sql .= 'END),';
-                            }
-                        } else {
-                            // --- 异常 ---
-                        }
-                    }
+        foreach ($s as $k => $v) {
+            if (is_array($v)) {
+                if (isset($v[2]) && is_string($v[2])) {
+                    // --- 1 ---
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ?,';
+                    $this->_data[] = $v[2];
                 } else {
-                    // --- 'name' => 'oh' ---
-                    $sql .= $this->field($k) . ' = ' . $this->quote($v.'') . ',';
-                }
-            }
-        } else {
-            foreach ($s as $k => $v) {
-                if (is_array($v)) {
-                    if (isset($v[2]) && is_string($v[2]) && is_string($v[1]) && !isset($v[3])) {
-                        // --- 1 ---
-                        $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' :u_' . $v[0] . ',';
-                        $this->_data[':u_'.$v[0]] = $v[2];
-                    } else if (!isset($v[1])) {
-                        // --- 2 ---
-                        $sql .= $this->field($k) . ' = ' . $v[0].',';
-                    } else {
-                        $sql .= $this->field($k) . ' = ';
-                        $type = strtolower($v[0]);
-                        if ($type === 'case') {
-                            if (isset($v[2]) && is_array($v[2])) {
-                                // --- 3 ---
-                                $sql .= '(CASE '.$this->field($v[1]).' ';
-                                foreach ($v[2] as $when => $val) {
-                                    $sql .= 'WHEN :u_'.$k.'_'.$this->_usc.' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $when;
-                                    ++$this->_usc;
-                                    $sql .= 'THEN :u_'.$k.'_'.$this->_usc.' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $val;
-                                    ++$this->_usc;
-                                }
-                                if (isset($v[3])) {
-                                    $sql .= 'ELSE :u_'.$k.'_'.$this->_usc . ' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $v[3];
-                                    ++$this->_usc;
-                                }
-                                $sql .= 'END),';
-                            } else if (isset($v[2]) && ($v[2] === 'in')) {
-                                // --- 4 ---
-                                $sql .= '(CASE ';
-                                foreach ($v[3] as $val => $list) {
-                                    $in = [];
-                                    foreach ($list as $listv) {
-                                        $in[] = ':u_'.$k.'_'.$this->_usc;
-                                        $this->_data[':u_'.$k.'_'.$this->_usc] = $listv;
-                                        ++$this->_usc;
-                                    }
-                                    $sql .= 'WHEN ' . $this->field($v[1]) . ' IN (' . implode(',', $in) . ') THEN :u_'.$k.'_'.$this->_usc . ' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $val;
-                                    ++$this->_usc;
-                                }
-                                if (isset($v[4])) {
-                                    $sql .= 'ELSE :u_'.$k.'_'.$this->_usc . ' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $v[4];
-                                    ++$this->_usc;
-                                }
-                                $sql .= 'END),';
-                            } else {
-                                // --- 5 ---
-                                $sql .= '(CASE ';
-                                foreach ($v[1] as $val => $list) {
-                                    $sql .= 'WHEN ';
-                                    foreach ($list as $listv) {
-                                        $sql .= $this->field($listv[0]) . ' ' . $listv[1] . ' :u_'.$k.'_'.$this->_usc . ' AND ';
-                                        $this->_data[':u_'.$k.'_'.$this->_usc] = $listv[2];
-                                        ++$this->_usc;
-                                    }
-                                    $sql = substr($sql, 0, -4) . 'THEN :u_'.$k.'_'.$this->_usc . ' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $val;
-                                    ++$this->_usc;
-                                }
-                                if (isset($v[2])) {
-                                    $sql .= 'ELSE :u_'.$k.'_'.$this->_usc . ' ';
-                                    $this->_data[':u_'.$k.'_'.$this->_usc] = $v[2];
-                                    ++$this->_usc;
-                                }
-                                $sql .= 'END),';
-                            }
-                        } else {
-                            // --- 异常 ---
-                        }
+                    // --- 3 ---
+                    $sql .= $this->field($k) . ' = ' . $v[0].',';
+                    if (isset($v[1])) {
+                        $this->_data = array_merge($this->_data, $v[1]);
                     }
-                } else {
-                    $sql .= $this->field($k) . ' = :u_'.$k.',';
-                    $this->_data[':u_'.$k] = $v;
                 }
+            } else {
+                // --- 2 ---
+                $sql .= $this->field($k) . ' = ?,';
+                $this->_data[] = $v;
             }
         }
         $sql = substr($sql, 0, -1);
         return $sql;
     }
 
-    // --- 'xx' ---
+    /**
+     * --- 'xx' ---
+     * @param string $f 表名
+     * @return Sql
+     */
     public function delete(string $f): Sql {
         $this->_data = [];
         $this->_sql = ['DELETE ' . 'FROM ' . $this->_pre . $f];
@@ -338,141 +193,74 @@ class Sql {
 
     /**
      * --- 筛选器 ---
-     * --- 1.['city' => 'bj', 'type' => '2'] ---
-     * --- 2.['city' => 'bj', ['type', '>', '1']] ---
-     * --- 3.['city' => 'bj', ['type', 'in', ['1', '2']]] ---
-     * --- 4.['city' => 'bj', 'type' => ['1', '2']] ---
-     * --- 试验性 ---
-     * --- 5.
-     *  [
-     *      'list' => [
-     *          ['type', 'in', ['1', '2']]
-     *      ]
-     *  ],
-     *  [
-     *      'bound' => 'or',
-     *      'list' => [
-     *          ['type' => '5']
-     *      ]
-     * ] ---
-     * @param array $s
+     * --- 1. ['city' => 'bj', 'type' => '2'] ---
+     * --- 2. ['city' => 'bj', ['type', '>', '1']] ---
+     * --- 3. ['city' => 'bj', ['type', 'in', ['1', '2']]] ---
+     * --- 4. ['city' => 'bj', 'type' => ['1', '2']] ---
+     * --- 5. ['$or' => [['city' => 'bj'], ['city' => 'sh']], 'type' => '2'] ---
+     * @param array $s 筛选数据
      * @return Sql
-     * @throws \Exception
      */
     public function where(array $s): Sql {
         if (count($s) > 0) {
-            try {
-                $sql = $this->_whereSub($s);
-                $this->_sql[] = ' WHERE ' . $sql;
-            } catch (\Exception $ex) {
-                throw $ex;
-            }
+            $this->_sql[] = ' WHERE ' . $this->_whereSub($s);
         }
-        $this->_wsc = 0;
-        $this->_usc = 0;
         return $this;
     }
-
-    private $_wsc = 0;
-    /**
-     * --- 筛选器子过程 ---
-     * @param array $s
-     * @param string $type
-     * @param int $lev 层级
-     * @return string
-     * @throws \Exception
-     */
-    private function _whereSub(array $s, string $type = 'AND', int $lev = 0): string {
+    private function _whereSub(array $s, string $type = ' AND ', int $lev = 0): string {
         $sql = '';
-        if (count($s) > 0) {
-            foreach ($s as $k => $i) {
-                if (is_string($k)) {
-                    if (is_array($i)) {
-                        // --- 4, IN ---
-                        $sql .= 'AND ' . $this->field($k) . ' IN (';
-                        if ($this->_single) {
-                            foreach ($i as $v) {
-                                $sql .= $this->quote($v.'') . ',';
-                            }
-                            $sql = substr($sql, 0, -1) . ') ';
-                        } else {
-                            foreach ($i as $k2 => $v) {
-                                $sql .= ':w_'.$k . '_' . $k2.'_'.$this->_wsc . ',';
-                                $this->_data[':w_'.$k . '_' . $k2.'_'.$this->_wsc] = $v;
-                                ++$this->_wsc;
-                            }
-                            $sql = substr($sql, 0, -1) . ') ';
-                        }
-                    } else {
-                        // --- 1 ---
-                        if ($this->_single) {
-                            $sql .= 'AND ' . $this->field($k) . ' = ' . $this->quote($i.'') . ' ';
-                        } else {
-                            $sql .= 'AND ' . $this->field($k) . ' = :w_' . $k.'_'.$this->_wsc . ' ';
-                            $this->_data[':w_'.$k.'_'.$this->_wsc] = $i;
-                            ++$this->_wsc;
-                        }
-                    }
-                } else {
-                    if (isset($i['list']) && is_array($i['list'])) {
-                        // --- 5 ---
-                        $bound = isset($i['bound']) ? strtoupper($i['bound']) : 'AND';
-                        if ($bound == 'AND' || $bound == 'OR') {
-                            $sql .= $this->_whereSub($i['list'], $bound, $lev + 1);
-                        } else {
-                            throw new \Exception('[Error] Bound not support.');
-                        }
-                    } else if (is_array($i[2])) {
-                        // --- 3, IN ---
-                        $sql .= 'AND ' . $this->field($i[0]) . ' '.$i[1].' (';
-                        if ($this->_single) {
-                            foreach ($i[2] as $v) {
-                                $sql .= $this->quote($v.'') . ',';
-                            }
-                            $sql = substr($sql, 0, -1) . ') ';
-                        } else {
-                            foreach ($i[2] as $k2 => $v) {
-                                $sql .= ':w_'.$i[0] . '_' . $k2.'_'.$this->_wsc . ',';
-                                $this->_data[':w_'.$i[0] . '_' . $k2.'_'.$this->_wsc] = $v;
-                                ++$this->_wsc;
-                            }
-                            $sql = substr($sql, 0, -1) . ') ';
-                        }
-                    } else {
-                        // --- 2, > < = ---
-                        if ($this->_single) {
-                            $sql .= 'AND ' . $this->field($i[0]) . ' ' . $i[1] . ' ' . $this->quote($i[2].'') . ' ';
-                        } else {
-                            $sql .= 'AND ' . $this->field($i[0]) . ' ' . $i[1] . ' :w_' . $i[0].'_'.$this->_wsc . ' ';
-                            $this->_data[':w_'.$i[0].'_'.$this->_wsc] = $i[2];
-                            ++$this->_wsc;
-                        }
-                    }
-                }
-            }
-            $sql = substr($sql, strpos($sql, ' ') + 1, -1);
-            if ($lev > 0) {
-                return $type . ' (' . $sql . ') ';
-            } else {
-                return $sql;
-            }
-        } else {
-            return $sql;
+        if ($lev > 0) {
+            $sql = '(';
         }
+        foreach ($s as $k => $v) {
+            if (is_array($v)) {
+                // --- 2, 3, 4, 5 ---
+                if ($k[0] === '$') {
+                    // --- 5 ---
+                    $sql .= $this->_whereSub($v, ' ' . strtoupper(substr($k, 1)) . ' ', $lev + 1) . $type;
+                } else if (is_string($k) && is_array($v)) {
+                    // --- 4 ---
+                    $sql .= $this->field($k) . ' IN (';
+                    foreach ($v as $k1 => $v1) {
+                        $sql .= '?, ';
+                        $this->_data[] = $v1;
+                    }
+                    $sql = substr($sql, 0, -2) . ')' . $type;
+                } else if (isset($v[2]) && is_array($v[2])) {
+                    // --- 3 ---
+                    $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
+                    foreach ($v[2] as $k1 => $v1) {
+                        $sql .= '?, ';
+                        $this->_data[] = $v1;
+                    }
+                    $sql .= substr($sql, 0, -2) . ')' . $type;
+                } else {
+                    // --- 2 ---
+                    $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ?' . $type;
+                    $this->_data[] = $v[2];
+                }
+            } else {
+                // --- 1 ---
+                $sql .= $this->field($k) . ' = ?' . $type;
+                $this->_data[] = $v;
+            }
+        }
+        return substr($sql, 0, -strlen($type)) . ($lev > 0 ? ')' : '');
     }
 
     /**
-     * @param string|array $c
-     * @param string $d
+     * --- ORDER BY ---
+     * @param string|array $c 字段字符串或数组
+     * @param string $d 排序规则
      * @return Sql
      */
     public function by($c, string $d = 'DESC'): Sql {
         $sql = ' ORDER BY ';
         if (is_string($c)) {
             $sql .= $c . ' ' . $d;
-        } else if (is_array($c)) {
+        } else {
             foreach ($c as $k => $v) {
-                $sql .= $v . ',';
+                $sql .= $this->field( $v) . ',';
             }
             $sql = substr($sql, 0, -1) . ' ' . $d;
         }
@@ -481,16 +269,17 @@ class Sql {
     }
 
     /**
-     * @param string|array $c
+     * --- GROUP BY ---
+     * @param string|array $c 字段字符串或数组
      * @return Sql
      */
     public function groupBy($c): Sql {
         $sql = ' GROUP BY ';
         if (is_string($c)) {
             $sql .= $c;
-        } else if (is_array($c)) {
+        } else {
             foreach ($c as $k => $v) {
-                $sql .= $v . ',';
+                $sql .= $this->field($v) . ',';
             }
             $sql = substr($sql, 0, -1);
         }
@@ -498,6 +287,12 @@ class Sql {
         return $this;
     }
 
+    /**
+     * --- LIMIT ---
+     * @param int $a 起始
+     * @param int $b 长度
+     * @return Sql
+     */
     public function limit(int $a, int $b): Sql {
         $this->_sql[] = ' LIMIT ' . $a . ', ' . $b;
         return $this;
@@ -506,11 +301,29 @@ class Sql {
     // --- 操作 ---
 
     public function getSql(): string  {
-        return implode('', $this->_sql);
+        return join('', $this->_sql);
     }
 
     public function getData(): array {
         return $this->_data;
+    }
+
+    public function format(string $sql = '', array $data = []): string {
+        if ($sql === '') {
+            $sql = $this->getSql();
+        }
+        if (count($data) === 0) {
+            $data = $this->getData();
+        }
+        $i = -1;
+        return preg_replace_callback('/\\?/', function () use (&$i, $data) {
+            ++$i;
+            if (isset($data[$i])) {
+                return $data[$i];
+            } else {
+                return '\'\'';
+            }
+        }, $sql);
     }
 
     // --- 特殊方法 ---
@@ -537,7 +350,7 @@ class Sql {
         if (!isset($l[1])) {
             return '`' . $str . '`';
         }
-        return $l[0] . '`' . $l[1] . '`';
+        return '`' . $l[0] . '`.`' . $l[1] . '`';
     }
 
 }
