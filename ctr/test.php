@@ -65,7 +65,6 @@ class test extends Ctr {
             '<br><a href="'.HTTP_BASE.'test/sql?type=update">View "test/sql?type=update"</a>',
             '<br><a href="'.HTTP_BASE.'test/sql?type=delete">View "test/sql?type=delete"</a>',
             '<br><a href="'.HTTP_BASE.'test/sql?type=where">View "test/sql?type=where"</a>',
-            '<br><a href="'.HTTP_BASE.'test/sql?type=single-mode">View "test/sql?type=single-mode"</a>',
 
             '<br><br><b>Redis:</b>',
             '<br><br><a href="'.HTTP_BASE.'test/redis_simulator">View "test/redis_simulator"</a>',
@@ -133,243 +132,145 @@ class test extends Ctr {
     }
 
     public function sql() {
-        $rtn = '';
-
+        $echo = ['<pre>'];
         $sql = Sql::get('test_');
         switch ($_GET['type']) {
-            case 'insert':
+            case 'insert': {
                 $s = $sql->insert('user', ['name', 'age'], [
                     ['Ah', '16'],
                     ['Bob', '24']
                 ])->getSql();
                 $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->insert('user', ['name', 'age'], [\n" .
+                    "    ['Ah', '16'],\n" .
+                    "    ['Bob', '24']\n" .
+                    "]);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd) . "\n\n" .
+                    "------------------------------\n\n";
 
-                $s2 = $sql->insert('user', ['name', 'age'], ['Ah', '16'])->getSql();
-                $sd2 = $sql->getData();
+                $s = $sql->insert('user', ['name', 'age'], ['Ah', '16'])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->insert('user', ['name', 'age'], ['Ah', '16']);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd) . "\n\n" .
+                    "------------------------------\n\n";
 
-                $s3 = $sql->insert('user', ['name' => 'Bob', 'age' => '24'])->getSql();
-                $sd3 = $sql->getData();
+                $s = $sql->insert('user', ['name' => 'Bob', 'age' => '24'])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->insert('user', ['name' => 'Bob', 'age' => '24'});\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd) . "\n\n" .
+                    "------------------------------\n\n";
 
-                $s4 = $sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->onDuplicate(['time_update' => '20'])->getSql();
-                $sd4 = $sql->getData();
-
-                $rtn = "<pre>\$sql->insert('user', ['name', 'age'], [
-    ['Ah', '16'],
-    ['Bob', '24']
-]);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true)."
-------------------------------
-
-\$sql->insert('user', ['name', 'age'], ['Ah', '16']);
-
-<b>getSql() :</b> $s2;
-<b>getData():</b> ".print_r($sd2, true)."
-------------------------------
-
-\$sql->insert('user', ['name' => 'Bob', 'age' => '24']);
-
-<b>getSql() :</b> $s3;
-<b>getData():</b> ".print_r($sd3, true)."
-------------------------------
-
-\$sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->onDuplicate(['time_update' => '20'])->getSql();
-
-<b>getSql() :</b> $s4;
-<b>getData():</b> ".print_r($sd4, true)."</pre>";
+                $s = $sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->onDuplicate(['time_update' => '20'])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->insert('verify', ['token' => 'abc', 'time_update' => '10'})->onDuplicate(['time_update' => '20']);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd);
                 break;
-            case 'select':
+            }
+            case 'select': {
                 $s = $sql->select('*', 'user')->getSql();
                 $sd = $sql->getData();
-
-                $rtn = "<pre>\$sql->select('*', 'user');
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true)."</pre>";
+                $echo[] =
+                    "\$sql->select('*', 'user');\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd);
                 break;
-            case 'update':
-                $rtn = '<pre>';
-                try {
-                    $s = $sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah'])->getSql();
-                    $sd = $sql->getData();
+            }
+            case 'update': {
+                // --- 1, 2 ---
 
-                    $rtn .= "\$sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah']);
+                $s = $sql->update('user', [['age', '+', '1'], 'name' => 'Serene'])->where(['name' => 'Ah'])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->update('user', [['age', '+', '1'], 'name' => 'Serene']).where(['name' => 'Ah']);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd) . "\n\n" .
+                    "------------------------------\n\n";
 
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true);
+                // --- 3 ---
 
-                    // --- 2 ---
-
-                    $s = $sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \'1\' THEN "a" ELSE "b" END)']])->where(['name' => 'Ah'])->getSql();
-                    $sd = $sql->getData();
-
-                    $rtn .= "\n\$sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \'1\' THEN \"a\" ELSE \"b\" END')]])->where(['name' => 'Ah']);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true);
-
-                    // --- 3 ---
-
-                    $s = $sql->update('user', ['type' => ['case', 'id', ['1' => 'val1', '2' => 'val2'], 'val3']])->where(['name' => 'Ah'])->getSql();
-                    $sd = $sql->getData();
-
-                    $rtn .= "\n\$sql->update('user', ['type' => ['case', 'id', ['1' => 'val1', '2' => 'val2'], 'val3']])->where(['name' => 'Ah']);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true);
-
-                    // --- 4 ---
-
-                    $s = $sql->update('user', ['type' => ['case', 'id', 'in', ['val1' => ['1', '2'], 'val2' => ['3', '4']], 'val3']])->where(['name' => 'Ah'])->getSql();
-                    $sd = $sql->getData();
-
-                    $rtn .= "\n\$sql->update('user', ['type' => ['case', 'id', 'in', ['val1' => ['1', '2'], 'val2' => ['3', '4']], 'val3']])->where(['name' => 'Ah']);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true);
-
-                    // --- 5 ---
-
-                    $s = $sql->update('user', ['type' => ['case', ['val1' => [['id', '<>', '1'], ['id', '<>', '2']], 'val2' => [['id', '<>', '3'], ['id', '<>', '4']]], 'val3']])->where(['name' => 'Ah'])->getSql();
-                    $sd = $sql->getData();
-
-                    $rtn .= "\n\$sql->update('user', ['type' => ['case', ['val1' => [['id', '<>', '1'], ['id', '<>', '2']], 'val2' => [['id', '<>', '3'], ['id', '<>', '4']]], 'val3']])->where(['name' => 'Ah']);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true);
-                } catch (\Exception $ex) {
-                    $rtn .= print_r($ex, true);
-                }
-                $rtn .= '</pre>';
+                $s = $sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \'1\' THEN ? ELSE ? END)', ['a', 'b']]])->where(['name' => 'Ah'])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \\'1\\' THEN ? ELSE ? END)', ['a', 'b']]])->where(['name' => 'Ah']);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd);
                 break;
-            case 'delete':
-                try {
-                    $s = $sql->delete('user')->where(['id' => '1'])->getSql();
-                    $sd = $sql->getData();
-                } catch (\Exception $ex) {
-                    $s = '';
-                    $sd = [];
-                }
-
-                $rtn = "<pre>\$sql->delete('user')->where(['id' => '1']);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true)."</pre>";
+            }
+            case 'delete': {
+                $s = $sql->delete('user')->where(['id' => '1'])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->delete('user')->where(['id' => '1']);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd);
                 break;
-            case 'where':
-                try {
-                    $s = $sql->select('*', 'user')->where(['city' => 'la', ['age', '>', '10'], ['level', 'in', ['1', '2', '3']]])->getSql();
-                    $sd = $sql->getData();
+            }
+            case 'where': {
+                $s = $sql->select('*', 'user')->where(['city' => 'la', ['age', '>', '10'], ['level', 'in', ['1', '2', '3']]])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->select('*', 'user')->where(['city' => 'la', ['age', '>', '10'], ['level', 'in', ['1', '2', '3']]]);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> " . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd) . "\n\n" .
+                    "------------------------------\n\n";
 
-                    $s2 = $sql->update('order', ['state' => '1'])->where([
-                        [
-                            'list' => [
-                                'type' => '1'
-                            ]
-                        ],
-                        [
-                            'bound' => 'or',
-                            'list' => [
-                                'type' => '2'
-                            ]
-                        ]
-                    ])->getSql();
-                    $sd2 = $sql->getData();
+                $s = $sql->update('order', ['state' => '1'])->where([
+                    '$or' => [[
+                        'type' => '1'
+                    ], [
+                        'type' => '2'
+                    ]]
+                ])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->update('order', ['state' => '1'}])->where([\n" .
+                    "    '\$or' => [[\n" .
+                    "        'type' => '1'\n" .
+                    "    ], [\n" .
+                    "        'type' => '2'\n" .
+                    "    ]]\n" .
+                    "}]);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> $" . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd) . "\n\n" .
+                    "------------------------------\n\n";
 
-                    $s3 = $sql->update('order', ['state' => '1'])->where([
-                        'user_id' => '2',
-                        'state' => ['1', '2', '3'],
-                        [
-                            'list' => [
-                                [
-                                    'list' => [
-                                        'type' => '1'
-                                    ]
-                                ],
-                                [
-                                    'bound' => 'or',
-                                    'list' => [
-                                        'type' => '2'
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ])->getSql();
-                    $sd3 = $sql->getData();
-                } catch (\Exception $ex) {
-                    $s = '';
-                    $sd = [];
-
-                    $s2 = '';
-                    $sd2 = [];
-
-                    $s3 = '';
-                    $sd3 = [];
-                }
-
-                $rtn = "<pre>\$sql->select('*', 'user')->where(['city' => 'la', ['age', '>', '10'], ['level', 'in', ['1', '2', '3']]]);
-
-<b>getSql() :</b> $s;
-<b>getData():</b> ".print_r($sd, true)."
-------------------------------
-
-\$sql->update('order', ['state' => '1'])->where([
-[
-    'list' => [
-        'type' => '1'
-    ]
-],
-[
-    'bound' => 'or',
-    'list' => [
-        'type' => '2'
-    ]
-]
-]);
-
-<b>getSql() :</b> $s2;
-<b>getData():</b> ".print_r($sd2, true)."
-------------------------------
-
-\$sql->update('order', ['state' => '1'])->where([
-'user_id' => '2',
-'state' => ['1', '2', '3'],
-[
-    'list' => [
-        [
-            'list' => [
-                'type' => '1'
-            ]
-        ],
-        [
-            'bound' => 'or',
-            'list' => [
-                'type' => '2'
-            ]
-        ]
-    ]
-]
-]);
-
-<b>getSql() :</b> $s3;
-<b>getData():</b> ".print_r($sd3, true)."</pre>";
+                $s = $sql->update('order', ['state' => '1'])->where([
+                    'user_id' => '2',
+                    'state' => ['1', '2', '3'],
+                    '$or' => [['type' => '1', 'find' => '0'], ['type' => '2', 'find' => '1'], ['type', '<', '-1']]
+                ])->getSql();
+                $sd = $sql->getData();
+                $echo[] =
+                    "\$sql->update('order', ['state' => '1'])->where([\n" .
+                    "    'user_id' => '2',\n" .
+                    "    'state' => ['1', '2', '3'],\n" .
+                    "    '\$or' => [['type' => '1'], ['type' => '2']]\n" .
+                    "]);\n\n" .
+                    "<b>getSql() :</b> {$s}\n" .
+                    "<b>getData():</b> $" . json_encode($sd, JSON_PRETTY_PRINT) . "\n" .
+                    "<b>format() :</b> " . $sql->format($s, $sd);
                 break;
-            case 'single-mode':
-                $sql->setSingle(true);
-                try {
-                    $s = $sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah'])->getSql();
-                } catch (\Exception $ex) {
-                    $s = '';
-                }
-
-                $rtn = "<pre>\$sql->setSingle(true);
-\$sql->update('user', ['name' => 'Serene', ['age', '+', '1']])->where(['name' => 'Ah']);
-
-<b>getSql():</b> $s;</pre>";
-                break;
+            }
         }
-        return $rtn . $this->_getEnd();
+        return join('', $echo) . '</pre>' . $this->_getEnd();
     }
 
     public function memcached() {

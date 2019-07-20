@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2018-12-12 12:29:32
+ * Last: 2019-7-21 00:17:32
  */
 declare(strict_types = 1);
 
@@ -64,16 +64,15 @@ class Sql {
                 // --- $vs: [['1', 'wow'], ['2', 'oh']] ---
                 // --- 多条记录 ---
                 // --- INSERT INTO xx (id, name) VALUES (?, ?), (?, ?) ---
-                $sql .= '(';
-                foreach ($vs[0] as $i => $v) {
-                    $sql .= '?, ';
-                }
-                $sql = substr($sql, 0, -2) . ')';
-                foreach ($vs as $is) {
-                    foreach ($is as $i => $v) {
-                        $this->_data[] = $v;
+                foreach ($vs as $i => $v) {
+                    $sql .= '(';
+                    foreach ($v as $i1 => $v1) {
+                        $sql .= '?, ';
+                        $this->_data[] = $v1;
                     }
+                    $sql = substr($sql, 0, -2) . '), ';
                 }
+                $sql = substr($sql, 0, -2);
             } else {
                 // --- $vs: ['1', 'wow'] ---
                 // --- 单条记录 ---
@@ -207,17 +206,27 @@ class Sql {
         }
         return $this;
     }
-    private function _whereSub(array $s, string $type = ' AND ', int $lev = 0): string {
+    private function _whereSub(array $s): string {
         $sql = '';
-        if ($lev > 0) {
-            $sql = '(';
-        }
         foreach ($s as $k => $v) {
             if (is_array($v)) {
                 // --- 2, 3, 4, 5 ---
                 if ($k[0] === '$') {
                     // --- 5 ---
-                    $sql .= $this->_whereSub($v, ' ' . strtoupper(substr($k, 1)) . ' ', $lev + 1) . $type;
+                    $sp = ' ' . strtoupper(substr($k, 1)) . ' ';
+                    $sql .= '(';
+                    foreach ($v as $k1 => $v1) {
+                        if (isset($v1[1]) && is_string($v1[1])) {
+                            $sql .= $this->_whereSub([$v1]) . $sp;
+                        } else {
+                            if (count($v1) > 1) {
+                                $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
+                            } else {
+                                $sql .= $this->_whereSub($v1) . $sp;
+                            }
+                        }
+                    }
+                    $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
                 } else if (is_string($k) && is_array($v)) {
                     // --- 4 ---
                     $sql .= $this->field($k) . ' IN (';
@@ -225,7 +234,7 @@ class Sql {
                         $sql .= '?, ';
                         $this->_data[] = $v1;
                     }
-                    $sql = substr($sql, 0, -2) . ')' . $type;
+                    $sql = substr($sql, 0, -2) . ') AND ';
                 } else if (isset($v[2]) && is_array($v[2])) {
                     // --- 3 ---
                     $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
@@ -233,19 +242,19 @@ class Sql {
                         $sql .= '?, ';
                         $this->_data[] = $v1;
                     }
-                    $sql .= substr($sql, 0, -2) . ')' . $type;
+                    $sql .= substr($sql, 0, -2) . ') AND ';
                 } else {
                     // --- 2 ---
-                    $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ?' . $type;
+                    $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
                     $this->_data[] = $v[2];
                 }
             } else {
                 // --- 1 ---
-                $sql .= $this->field($k) . ' = ?' . $type;
+                $sql .= $this->field($k) . ' = ? AND ';
                 $this->_data[] = $v;
             }
         }
-        return substr($sql, 0, -strlen($type)) . ($lev > 0 ? ')' : '');
+        return substr($sql, 0, -5);
     }
 
     /**
@@ -319,7 +328,7 @@ class Sql {
         return preg_replace_callback('/\\?/', function () use (&$i, $data) {
             ++$i;
             if (isset($data[$i])) {
-                return $data[$i];
+                return $this->quote($data[$i]);
             } else {
                 return '\'\'';
             }
