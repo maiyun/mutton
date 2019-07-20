@@ -242,7 +242,7 @@ class Sql {
                         $sql .= '?, ';
                         $this->_data[] = $v1;
                     }
-                    $sql .= substr($sql, 0, -2) . ') AND ';
+                    $sql = substr($sql, 0, -2) . ') AND ';
                 } else {
                     // --- 2 ---
                     $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
