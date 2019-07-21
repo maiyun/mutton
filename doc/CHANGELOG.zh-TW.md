@@ -1,5 +1,14 @@
 # 更新日誌
 
+## 5.3.0
+
+[+] 增加 isWritable() 方法再 Ctr 類。  
+[+] 增加 resetCookieSession 方法再 Net 庫。  
+[+] 增加 urlResolve 方法在 Text 庫。 
+[\*] 優化 Route 代碼。  
+[\*] Sql 庫重寫，與 Nuttom 完全一致的 API，更簡約的代碼。  
+[\*] 其他大量代碼優化。
+
 ## 5.2.4
 
 [+] Net 庫增加 followLocation 配置項。  

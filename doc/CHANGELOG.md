@@ -4,6 +4,15 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 5.3.0  
+
+[+] Add the isWritable() method in the Ctr class.  
+[+] Add the reset cookie Session method in the Net library.  
+[+] Add the urlResolve method in the Text library.  
+[\*] Optimize the Route code.  
+[\*] Sql library rewrites, perfectly consistent with Nuttom's API, more minimalist code.  
+[\*] A large number of other code optimizations.
+
 ## 5.2.4
 
 [+] Net Library adds followLocation configuration items.  
