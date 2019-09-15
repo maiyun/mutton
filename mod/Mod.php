@@ -352,7 +352,7 @@ class Mod {
             }
         }
         if($opt['group'] !== NULL) {
-            $sql->groupBy($opt['group']);
+            $sql->group($opt['group']);
         }
         if($opt['by'] !== NULL) {
             $sql->by($opt['by'][0], $opt['by'][1]);

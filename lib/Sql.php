@@ -282,7 +282,7 @@ class Sql {
      * @param string|array $c 字段字符串或数组
      * @return Sql
      */
-    public function groupBy($c): Sql {
+    public function group($c): Sql {
         $sql = ' GROUP BY ';
         if (is_string($c)) {
             $sql .= $c;
@@ -304,6 +304,11 @@ class Sql {
      */
     public function limit(int $a, int $b): Sql {
         $this->_sql[] = ' LIMIT ' . $a . ', ' . $b;
+        return $this;
+    }
+
+    public function lock(): Sql {
+        $this->_sql[] = ' FOR UPDATE';
         return $this;
     }
 
