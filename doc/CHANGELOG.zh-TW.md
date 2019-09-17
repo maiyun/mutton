@@ -1,5 +1,11 @@
 # 更新日誌
 
+## 5.3.1
+
+[+] 添加 lock 方法在 Sql 庫。  
+[+] 添加軟刪模式在 Mod 類。  
+[\*] 優化 Sql/Mod 類使其 API 與 Nuttom 更一致。
+
 ## 5.3.0
 
 [+] 增加 isWritable() 方法再 Ctr 類。  

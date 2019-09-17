@@ -1,9 +1,15 @@
 # 更新日志
 
+## 5.3.1
+
+[+] 添加 lock 方法在 Sql 库。  
+[+] 添加软删模式在 Mod 类。  
+[\*] 优化 Sql/Mod 类使其 API 与 Nuttom 更一致。
+
 ## 5.3.0
 
-[+] 增加 isWritable() 方法再  Ctr 类。  
-[+] 增加 resetCookieSession 方法再 Net 库。  
+[+] 增加 isWritable() 方法在 Ctr 类。  
+[+] 增加 resetCookieSession 方法在 Net 库。  
 [+] 增加 urlResolve 方法在 Text 库。 
 [\*] 优化 Route 代码。  
 [\*] Sql 库重写，与 Nuttom 完全一致的 API，更简约的代码。  

@@ -4,6 +4,12 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 5.3.1
+
+[+] Add the lock method in the Sql library.  
+[+] Add a soft-delete pattern in the Mod class.  
+[\*] Optimize the Sql/Mod class to make its API more consistent with Nuttom.
+
 ## 5.3.0  
 
 [+] Add the isWritable() method in the Ctr class.  
