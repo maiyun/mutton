@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32
+ * Last: 2019-7-21 00:17:32, 2019-09-17
  */
 declare(strict_types = 1);
 
@@ -19,13 +19,31 @@ class Sql {
     private $_db = NULL;
 
     // --- 获取 Sql 实例 ---
-    public static function get(?string $pre = NULL): Sql {
-        return new Sql($pre);
+    public static function get(?array $etc = NULL): Sql {
+        return new Sql($etc);
+    }
+
+    /**
+     * --- 返回代入后的完整 SQL 字符串 ---
+     * @param string $sql SQL 字符串
+     * @param array $data DATA 数据
+     * @return string
+     */
+    public static function sFormat(string $sql, array $data): string {
+        $i = -1;
+        return preg_replace_callback('/\\?/', function () use (&$i, $data) {
+            ++$i;
+            if (isset($data[$i])) {
+                return $this->quote($data[$i]);
+            } else {
+                return '\'\'';
+            }
+        }, $sql);
     }
 
     // --- 实例化 ---
-    public function __construct(?string $pre = NULL) {
-        $this->_pre = $pre ? $pre : SQL_PRE;
+    public function __construct(?array $etc = NULL) {
+        $this->_pre = $etc && isset($etc['pre']) ? $etc['pre'] : SQL_PRE;
     }
 
     // --- 配置项 ---
@@ -49,7 +67,7 @@ class Sql {
      * @param array $vs [] | [][]
      * @return Sql
      */
-    public function insert(string $f, array $cs = [], array $vs = []): Sql {
+    public function insert(string $f, array $cs, array $vs = []): Sql {
         $this->_data = [];
         $sql = 'INSERT' . ' INTO ' . $this->_pre . $f . ' (';
         if (count($vs) > 0) {
