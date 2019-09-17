@@ -62,7 +62,7 @@ class __Mutton__ extends Ctr {
         if (version_compare($this->post('ver'), '5.2.0', '<')) {
             return [0, 'Version must be >= 5.2.0.'];
         }
-        $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/master/doc/mblob/'.$this->post('ver').'.mblob');
+        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton/doc/mblob/'.$this->post('ver').'.mblob');
         if (!$res->content) {
             return [0, 'Network error, please try again.'];
         }
@@ -177,7 +177,7 @@ class __Mutton__ extends Ctr {
         $res = new \stdClass();
         if (in_array($mode, [0, 1, 3])) {
             if ($isFile) {
-                $res = Net::get('https://raw.githubusercontent.com/MaiyunNET/Mutton/v' . $ver . '/' . $path);
+                $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@v' . $ver . '/' . $path);
                 if (!$res->content) {
                     return [0, 'Network error.'];
                 }
