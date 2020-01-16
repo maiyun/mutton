@@ -1,10 +1,19 @@
 <?php
+/**
+ * Project: Mutton, User: JianSuoQiYue
+ * Date: 2015-7-13 14:07
+ * Last: 2020-1-17 01:01:20
+ */
 declare(strict_types = 1);
+
+use sys\Route;
 
 define('START_TIME', microtime(true));
 define('START_MEMORY', memory_get_usage());
 
-// --- 处理 uri ---
+/**
+ * --- 获取和定义重写的 URI ---
+ */
 if ($_GET['__uri'] == 'index.html' || $_GET['__uri'] == 'index.htm' || $_GET['__uri'] == 'index.php') {
     header('Location: ./');
     exit;
@@ -19,10 +28,9 @@ require 'sys/Locale.php';
 // --- 正式启动 ---
 
 require 'sys/Boot.php';
-\sys\Boot::run();
 
 // --- 加载控制器 ---
 
 require SYS_PATH.'Route.php';
-\sys\Route::run();
+Route::run();
 

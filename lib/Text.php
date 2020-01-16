@@ -1,8 +1,9 @@
 <?php
 /**
- * User: JianSuoQiYue
+ * Project: Mutton, User: JianSuoQiYue
+ * CONF - {"ver":"0.1","folder":false} - END
  * Date: 2015/05/07 13:50
- * Last: 2019-6-7 13:10:04
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44
  */
 declare(strict_types = 1);
 
@@ -39,14 +40,7 @@ class Text {
 
     // --- 显示文件大小格式化 ---
     public static function sizeFormat(float $size, string $spliter = ' '): string {
-        static $units = array(
-            'Bytes',
-            'KB',
-            'MB',
-            'GB',
-            'TB',
-            'PB'
-        );
+        static $units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
         $i = 0;
         for (; $i < 6 && $size >= 1024.0; ++$i) {
             $size /= 1024.0;
@@ -102,18 +96,26 @@ class Text {
         return $f['scheme'] . '://' . $abs;
     }
 
-    // --- 是否是邮件 ---
+    /**
+     * --- 是否是邮件地址 ---
+     * @param string $email
+     * @return bool
+     */
     public static function isEMail(string $email): bool {
-        return preg_match('/^[-_\w\.]+\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
+        return preg_match('/^[-_\w\\.]+\\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
     }
 
-    // --- 是否是 IP ---
+    /**
+     * --- 是否是 IPv4 ---
+     * @param string $ip
+     * @return bool
+     */
     public static function isIPv4(string $ip): bool {
         return preg_match('/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/', $ip) ? true : false;
     }
 
     /**
-     * --- 换行替换为空 ---
+     * --- 换行替换为别的字符 ---
      * @param string $str
      * @param string $to
      * @return string
@@ -128,7 +130,7 @@ class Text {
     }
 
     /**
-     * --- 获取顶级域名 ---
+     * --- 获取一个域名的顶级域名 ---
      * @param string $domain
      * @return string
      */
@@ -141,13 +143,13 @@ class Text {
         // --- 判断是否是双后缀 ---
         $isDoubleExt = false;
         $extList = ['com.cn', 'net.cn', 'org.cn', 'gov.cn', 'co.jp', 'com.tw', 'co.kr', 'co.hk'];
-        foreach($extList as $ext){
-            if(strpos($domain, '.'.$ext)){
+        foreach ($extList as $ext){
+            if (strpos($domain, '.' . $ext)){
                 $isDoubleExt = true;
                 break;
             }
         }
-        if($isDoubleExt){
+        if ($isDoubleExt) {
             $host = $domainArr[$count - 3] . '.' . $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
         } else {
             $host = $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
@@ -156,14 +158,14 @@ class Text {
     }
 
     /**
-     * --- 匹配正则数组 ---
+     * --- 传入正则进行匹配 str 是否都满足 ---
      * @param string $str
-     * @param array $reg
+     * @param array $regs
      * @return bool
      */
-    public static function match(string $str, array $reg): bool {
-        foreach ($reg as $val) {
-            if (preg_match($val, $str)) {
+    public static function match(string $str, array $regs): bool {
+        foreach ($regs as $reg) {
+            if (preg_match($reg, $str)) {
                 return true;
             }
         }
@@ -172,7 +174,11 @@ class Text {
 
     // --- 以下是适用于中国大陆的方法 ---
 
-    // --- 是否是中国大陆的手机号 ---
+    /**
+     * --- 判断手机号是否是 11 位，不做真实性校验 ---
+     * @param string $p
+     * @return bool
+     */
     public static function isPhoneCN(string $p): bool {
         if (preg_match('/^1[0-9]{10}$/', $p)) {
             return true;
@@ -181,61 +187,13 @@ class Text {
         }
     }
 
-    // --- 返回手机号是中国哪家运营商 ---
-    public static function phoneSPCN(string $p): int {
-        $list = [
-            // --- 移动 ---
-            ['^13[4|5|6|7|8|9]\d{8}$', 0],
-            ['^15[0|1|2|7|8|9]\d{8}$', 0],
-            ['^18[2|3|4|7|8]\d{8}$', 0],
-            ['^147\d{8}$', 0],
-            ['^1705\d{7}$', 0],
-            ['^178\d{8}$', 0],
-            // --- 联通 ---
-            ['^13[0|1|2]\d{8}$', 1],
-            ['^15[5|6]\d{8}$', 1],
-            ['^18[5|6]\d{8}$', 1],
-            ['^145\d{8}$', 1],
-            ['^1709\d{7}$', 1],
-            ['^1708\d{7}$', 1],
-            ['^1707\d{7}$', 1],
-            ['^176\d{8}$', 1],
-            // --- 电信 ---
-            ['^133\d{8}$', 2],
-            ['^153\d{8}$', 2],
-            ['^18[0|1|9]\d{8}$', 2],
-            ['^1700\d{7}$', 2],
-            ['^177\d{8}$', 2]
-        ];
-        foreach($list as $item) {
-            if (preg_match('/'.$item[0].'/', $p)) {
-                return $item[1];
-            }
-        }
-        return -1;
-    }
-
-    // --- 根据中国手机号运营商分组 ---
-    public static function phoneSPGroupCN(array $pList): array {
-        $list = ['0' => [], '1' => [], '2' => [], '-1' => []];
-        foreach ($pList as $p) {
-            if (($r = self::phoneSPCN($p)) !== false) {
-                $list[(string)$r][] = $p;
-            } else {
-                $list['-1'][] = $p;
-            }
-        }
-        $list = array_filter($list, function($v) {
-            if (count($v) === 0 || $v === '') return false;
-            return true;
-        });
-        return $list;
-    }
-
-    // --- 是否是中国大陆身份证 ---
-
+    /**
+     * --- 是否是中国大陆身份证号码 ---
+     * @param string $idcard
+     * @return bool
+     */
     public static function isIdCardCN(string $idcard): bool {
-        if(strlen($idcard) != 18) {
+        if (strlen($idcard) != 18) {
             return false;
         }
         // --- 取出本码 ---
@@ -254,7 +212,7 @@ class Text {
         // --- 取模 ---
         $mod = $total % 11;
         // --- 比较校验码 ---
-        if($verifyCode == $verifyCodeList[$mod]) {
+        if ($verifyCode == $verifyCodeList[$mod]) {
             return true;
         } else {
             return false;

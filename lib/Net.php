@@ -2,138 +2,206 @@
 /**
  * CA: https://curl.haxx.se/ca/cacert.pem
  * User: JianSuoQiYue
+ * CONF - {"ver":"0.1","folder":true} - END
  * Date: 2015/10/26 14:23
- * Last: 2019-3-13 17:33:39
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06
  */
 declare(strict_types = 1);
 
 namespace lib;
 
-use lib\Net\Request;
 use lib\Net\Response;
 
 class Net {
 
-    public static function get(string $url, ?Request $req = NULL, ?array &$cookie = NULL) {
-        return self::request($url, NULL, $req, $cookie);
+    // --- 常量们 ---
+    public const METHOD = 'method';
+    public const METHOD_GET = 'GET';
+    public const METHOD_POST = 'POST';
+    public const TYPE = 'type';
+    public const TYPE_FORM = 'form';
+    public const TYPE_JSON = 'json';
+    public const TIMEOUT = 'timeout';
+    public const FOLLOW = 'follow';
+    public const HEADERS = 'headers';
+    public const HEADERS_USER_AGENT = 'user-agent';
+    public const HEADERS_REFERER = 'referer';
+
+    /**
+     * --- 发起 GET 请求 ---
+     * @param string $url
+     * @param array $opt
+     * @param array|null $cookie
+     * @return Response
+     */
+    public static function get(string $url, array $opt = [], ?array &$cookie = null) {
+        return self::request($url, null, $opt, $cookie);
     }
 
-    public static function post(string $url, array $data, ?Request $req = NULL, ?array &$cookie = NULL) {
-        if ($req === NULL) {
-            $req = Request::get([
-                'method' => 'POST'
-            ]);
-        }
-        return self::request($url, $data, $req, $cookie);
+    /**
+     * --- 发起 POST 请求 ---
+     * @param string $url
+     * @param array $data
+     * @param array $opt
+     * @param array|null $cookie
+     * @return Response
+     */
+    public static function post(string $url, array $data, array $opt = [], ?array &$cookie = null) {
+        $opt['method'] = 'POST';
+        return self::request($url, $data, $opt, $cookie);
     }
 
-    public static function postJson(string $url, array $data, ?Request $req = NULL, ?array &$cookie = NULL): Response {
-        if ($req === NULL) {
-            $req = Request::get([
-                'method' => 'POST',
-                'type' => 'json'
-            ]);
-        }
-        return self::request($url, $data, $req, $cookie);
+    /**
+     * --- 发起 JSON 请求 ---
+     * @param string $url
+     * @param array $data
+     * @param array $opt
+     * @param array|null $cookie
+     * @return Response
+     */
+    public static function postJson(string $url, array $data, array $opt = [], ?array &$cookie = null): Response {
+        $opt['method'] = 'POST';
+        $opt['type'] = 'json';
+        return self::request($url, $data, $opt, $cookie);
     }
 
-    // --- GET, POST 基函数 ---
-    public static function request(string $url, ?array $data = NULL, ?Request $req = NULL, ?array &$cookie = NULL): Response {
-        if ($req === NULL) {
-            $req = Request::get();
+    /**
+     * --- 发起请求 ---
+     * @param string $url 提交的 url
+     * @param array|null $data 提交的 data 数据
+     * @param array $opt 参数 method, type, timeout, follow, ip
+     * @param array|null $cookie
+     * @return Response
+     */
+    public static function request(string $url, ?array $data = null, array $opt = [], ?array &$cookie = null): Response {
+        $isSsl = false;
+        $method = isset($opt['method']) ? $opt['method'] : 'GET';
+        $type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
+        $timeout = isset($opt['timeout']) ? $opt['timeout'] : 5;
+        $follow = isset($opt['follow']) ? $opt['follow'] : false;
+        $ip = isset($opt['ip']) ? $opt['ip'] : null;
+        // $raw = isset($opt['raw']) ? $opt['raw'] : false; // --- 不应该依赖 raw，依赖本服务器的压缩 ---
+        $headers = [];
+        if (isset($opt['headers'])) {
+            foreach ($opt['headers'] as $key => $val) {
+                $headers[strtolower($key)] = $val;
+            }
         }
-        $method = $req->getMethod();
-        if ($url != '') {
-            if ($method == 'GET') {
-                $ch = curl_init($url . ($data !== NULL ? '?' . http_build_query($data) : ''));
-            } else {
-                // --- POST ---
-                $ch = curl_init($url);
-                curl_setopt($ch, CURLOPT_POST, true);
-                $upload = false;
-                if ($data !== NULL) {
-                    foreach ($data as $i) {
-                        if (isset($i[0]) && ($i[0] == '@')) {
-                            $upload = true;
-                            break;
-                        }
-                    }
-                    if ($upload === false) {
-                        if ($req->getType() === 'json') {
-                            $data = json_encode($data);
-                        } else {
-                            $data = http_build_query($data);
-                        }
-                    }
-                    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-                }
-            }
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_HEADER, true);
-            curl_setopt($ch, CURLOPT_ENCODING, '');
-            curl_setopt($ch, CURLOPT_TIMEOUT, $req->getTimeout());
-            curl_setopt($ch, CURLOPT_USERAGENT, $req->getUserAgent());
-            // --- ssl ---
-            if (substr($url, 0, 6) == 'https:') {
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
-                curl_setopt($ch, CURLOPT_CAINFO, LIB_PATH . 'Net/cacert.pem');
-            }
-            // --- 自定义头部 ---
-            if ($req->getHttpHeader() !== NULL) {
-                curl_setopt($ch, CURLOPT_HTTPHEADER, $req->getHttpHeader());
-            }
-            // --- 上级页面 ---
-            if ($req->getReferer() !== '') {
-                curl_setopt($ch, CURLOPT_REFERER, $req->getReferer());
-            }
-            // --- cookie 托管 ---
-            if ($cookie !== NULL) {
-                curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $url));
-            }
-            // --- 检测有没有更多额外的 curl 定义项目 ---
-            if (($curlOpt = $req->getCurlOpt()) !== NULL) {
-                foreach ($curlOpt as $key => $val) {
-                    if (is_int($key)) {
-                        curl_setopt($ch, $key, $val);
-                    }
-                }
-            }
-            // --- 执行 ---
-            $output = curl_exec($ch);
-            $res = Response::get([
-                'error' => curl_error($ch),
-                'errNo' => curl_errno($ch),
-                'errInfo' => curl_getinfo($ch)
-            ]);
-            curl_close($ch);
-            // --- 处理返回值 ---
-            if ($output !== false) {
-                $sp = strpos($output, "\r\n\r\n");
-                $header = substr($output, 0, $sp);
-                $content = substr($output, $sp + 4);
-                $res->header = $header;
-                $res->content = $content;
-                if ($cookie !== NULL) {
-                    // --- 提取 cookie ---
-                    preg_match_all('/Set-Cookie:(.+?)\r\n/i', $header, $matchList);
-                    self::_buildCookieObject($cookie, $matchList, $url);
-                }
-            }
-            // --- 判断 follow 追踪 ---
-            if (!$req->getFollowLocation()) {
-                return $res;
-            }
-            if (!preg_match('/Location: (.+?)\\r\\n/', $res->header, $matches)) {
-                return $res;
-            }
-            $req = Request::get([
-                'referer' => $url
-            ]);
-            return self::request(Text::urlResolve($url, $matches[1]), $data, $req, $cookie);
+        if (!isset($headers['user-agent'])) {
+            $headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36';
+        }
+        if ($method == 'GET') {
+            $ch = curl_init($url . ($data !== null ? '?' . http_build_query($data) : ''));
         } else {
-            return Response::get();
+            // --- POST ---
+            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_POST, true);
+            $upload = false;
+            if ($data !== null) {
+                foreach ($data as $key => $val) {
+                    if (is_array($val)) {
+                        foreach ($val as $k => $v) {
+                            if ($v instanceof \CURLFile) {
+                                $upload = true;
+                                break;
+                            }
+                        }
+                    } else if ($val instanceof \CURLFile) {
+                        $upload = true;
+                        break;
+                    }
+                }
+                if ($upload === false) {
+                    if ($type === 'json') {
+                        $data = json_encode($data);
+                    } else {
+                        $data = http_build_query($data);
+                    }
+                } else {
+                    // --- 处理 DATA ---
+                    foreach ($data as $key => $val) {
+                        if (!is_array($val)) {
+                            continue;
+                        }
+                        foreach ($val as $k => $v) {
+                            $data[$key . '[' . $k . ']'] = $v;
+                        }
+                        unset($data[$key]);
+                    }
+                }
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+            }
         }
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HEADER, true);
+        curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
+        curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+        // curl_setopt($ch, CURLOPT_HTTP_VERSION, HTTP_VERSION_2_0);
+        // --- ssl ---
+        if (substr($url, 0, 6) === 'https:') {
+            $isSsl = true;
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_CAINFO, LIB_PATH . 'Net/cacert.pem');
+        }
+        // --- 重定义 IP ---
+        if ($ip) {
+            $uri = parse_url($url);
+            $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
+            // curl_setopt($ch, 10243, [$uri['host'] . ':' . $port . ':' . $ip]);                       // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
+            curl_setopt($ch, CURLOPT_RESOLVE, [$uri['host'] . ':' . $port . ':' . $ip]);        // --- CURL 7.21.3 ---
+        }
+        // --- 设定头部以及判断提交的数据类型 ---
+        if ($type === 'json') {
+            if (!isset($headers['content-type'])) {
+                $headers['content-type'] = 'application/json; charset=utf-8';
+            }
+        }
+        // --- 设置 expect 防止出现 100 continue ---
+        if (!isset($headers['expect'])) {
+            $headers['expect'] = '';
+        }
+        curl_setopt($ch, CURLOPT_HTTPHEADER, self::_formatHeaderSender($headers));
+        // --- cookie 托管 ---
+        if ($cookie !== null) {
+            curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $url));
+        }
+        // --- 执行 ---
+        $output = curl_exec($ch);
+        $res = Response::get([
+            'error' => curl_error($ch),
+            'errno' => curl_errno($ch),
+            'info' => curl_getinfo($ch)
+        ]);
+        curl_close($ch);
+        // --- 处理返回值 ---
+        if ($output === false) {
+            return $res;
+        }
+        $sp = strpos($output, "\r\n\r\n");
+        $headers = substr($output, 0, $sp);
+        $content = substr($output, $sp + 4);
+        $res->headers = self::_formatHeader($headers);
+        $res->content = $content;
+        if ($cookie !== null) {
+            // --- 提取 cookie ---
+            self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $url);
+        }
+        // --- 判断 follow 追踪 ---
+        if (!$follow) {
+            return $res;
+        }
+        if (!isset($res->headers['location'])) {
+            return $res;
+        }
+        $headers['referer'] = $url;
+        return self::request(Text::urlResolve($url, $res->headers['location']), $data, [
+            'method' => $method,
+            'type' => $type,
+            'timeout' => $timeout,
+            'follow' => $follow,
+            'headers' => $headers
+        ], $cookie);
     }
 
     /**
@@ -147,19 +215,21 @@ class Net {
         if (!isset($uri['path'])) {
             $uri['path'] = '/';
         }
-        foreach ($setCookies[1] as $setCookie) {
+        foreach ($setCookies as $setCookie) {
             $cookieTmp = [];
             $list = explode(';', $setCookie);
             // --- 提取 set-cookie 中的定义信息 ---
             foreach ($list as $index => $item) {
                 $arr = explode('=', $item);
-                $key = $arr[0];
+                $key = trim($arr[0]);
                 $val = isset($arr[1]) ? $arr[1] : '';
                 if ($index === 0) {
-                    $cookieTmp['name'] = trim($key);
+                    // --- 用户定义的信息 ---
+                    $cookieTmp['name'] = $key;
                     $cookieTmp['value'] = urldecode($val);
                 } else {
-                    $cookieTmp[trim(strtolower($key))] = $val;
+                    // --- cookie 配置信息，可转小写方便读取 ---
+                    $cookieTmp[strtolower($key)] = $val;
                 }
             }
             // --- 获取定义的 domain ---
@@ -284,6 +354,48 @@ class Net {
     }
 
     /**
+     * --- 将获取的 header 字符串格式化为数组 ---
+     * @param string $header
+     * @return array
+     */
+    private static function _formatHeader(string $header) {
+        $h = [];
+        $header = explode("\r\n", $header);
+        foreach ($header as $val) {
+            $sp = strpos($val, ': ');
+            if (!$sp) {
+                preg_match('/HTTP\\/([0-9.]+) ([0-9]+)/', $val, $match);
+                $h['http-version'] = $match[1];
+                $h['http-code'] = $match[2];
+                continue;
+            }
+            $k = strtolower(substr($val, 0, $sp));
+            if ($k === 'set-cookie') {
+                if (!isset($h[$k])) {
+                    $h[$k] = [];
+                }
+                $h[$k][] = substr($val, $sp + 2);
+            } else {
+                $h[$k] = substr($val, $sp + 2);
+            }
+        }
+        return $h;
+    }
+
+    /**
+     * --- 将 kv 格式的 header 转换为 curl 提交时的 header ---
+     * @param array $headers
+     * @return array
+     */
+    private static function _formatHeaderSender(array $headers) {
+        $h = [];
+        foreach ($headers as $k => $v) {
+            $h[] = $k . ': ' . $v;
+        }
+        return $h;
+    }
+
+    /**
      * --- 模拟重启浏览器后的状态 ---
      * @param array $cookie
      */
@@ -300,59 +412,38 @@ class Net {
      * @return string
      */
     public static function getIP(): string {
-        if (getenv('HTTP_CLIENT_IP')) {
-            return getenv('HTTP_CLIENT_IP');
-        } else if (getenv('HTTP_X_FORWARDED_FOR')) {
-            return getenv('HTTP_X_FORWARDED_FOR');
+        if (isset($_SERVER['HTTP_X_REAL_FORWARDED_FOR']) && $_SERVER['HTTP_X_REAL_FORWARDED_FOR'] && ($_SERVER['HTTP_X_REAL_FORWARDED_FOR'] != '0.0.0.0')) {
+            return $_SERVER['HTTP_X_REAL_FORWARDED_FOR'];
+        } else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'] && ($_SERVER['HTTP_X_FORWARDED_FOR'] != '0.0.0.0')) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+        } else if (isset($_SERVER['HTTP_CLIENT_IP']) && $_SERVER['HTTP_CLIENT_IP'] && ($_SERVER['HTTP_CLIENT_IP'] != '0.0.0.0')) {
+            return $_SERVER['HTTP_CLIENT_IP'];
+        } else if (isset($_SERVER['HTTP_X_CONNECTING_IP']) && $_SERVER['HTTP_X_CONNECTING_IP'] && ($_SERVER['HTTP_X_CONNECTING_IP'] != '0.0.0.0')) {
+            return $_SERVER['HTTP_X_CONNECTING_IP'];
+        } else if (isset($_SERVER['HTTP_CF_CONNECTING_IP']) && $_SERVER['HTTP_CF_CONNECTING_IP'] && ($_SERVER['HTTP_CF_CONNECTING_IP'] != '0.0.0.0')) {
+            return $_SERVER['HTTP_CF_CONNECTING_IP'];
         } else {
-            return getenv('REMOTE_ADDR');
+            return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
         }
     }
 
+    /** @var string HTTP_X_CONNECTING_IP */
+    public const REAL_IP_HEADER_X = 'HTTP_X_CONNECTING_IP';
+    /** @var string HTTP_CF_CONNECTING_IP */
+    public const REAL_IP_HEADER_CF = 'HTTP_CF_CONNECTING_IP';
     /**
-     * --- 无需 SMTP 服务器发送邮件 ---
-     * @param string $server
-     * @param string $from
-     * @param string $nickname
-     * @param string $to
-     * @param string $title
-     * @param string $content
-     * @return bool
-     * @throws \Exception
+     * --- 獲取直連 IP（安全 IP） ---
+     * @param string $name 输入安全的 header
+     * @return string
      */
-    public static function mail(string $server, string $from, string $nickname, string $to, string $title, string $content): bool {
-        if (!preg_match('/\w[a-zA-Z0-9\.\-\+]*\@(\w+[a-zA-Z0-9\-\.]+\w)/i', $to, $ms)) {
-            throw new \Exception( 'Email address invalid.');
+    public static function getRealIP($name = ''): string {
+        if ($name === '') {
+            return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
         }
-        if (!getmxrr($ms[1], $mx)) {
-            throw new \Exception( 'MX record of host not found.');
+        if (isset($_SERVER[$name]) && $_SERVER[$name] && ($_SERVER[$name] != '0.0.0.0')) {
+            return $_SERVER[$name];
         }
-        $mx = $mx[0];
-
-        $commands = ['HELO '.$server, 'MAIL FROM:<'.$from.'@'.$server.'>', 'RCPT TO:<'.$to.'>', 'DATA', 'content', 'QUIT'];
-        $contents = [
-            'MIME-Version: 1.0',
-            'Delivered-To: '.$to,
-            'Subject: =?UTF-8?B?'.base64_encode($title).'?=',
-            'From: =?UTF-8?B?'.base64_encode($nickname).'?= <'.$from.'@'.$server.'>',
-            'To: '.$to,
-            'Content-Type: text/plain; charset=UTF-8',
-            'Content-Transfer-Encoding: base64',
-            '',
-            base64_encode($content)
-        ];
-        $fp = fsockopen($mx, 25);
-        foreach($commands as $c) {
-            if ($c == 'content') {
-                $content = join("\r\n", $contents)."\r\n.\r\n";
-                fwrite($fp, $content);
-            } else {
-                fwrite($fp, $c."\r\n");
-            }
-            //$r = fgets($fp);
-        }
-        fclose($fp);
-        return true;
+        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
 }

@@ -10,5 +10,5 @@ const CACHE_TTL = 0;
 // --- STATIC ---
 
 // const STATIC_PATH = 'https://static.xxx.com/';
-const STATIC_PATH = HTTP_STC;
+const STATIC_PATH = URL_STC;
 

@@ -1,4 +1,9 @@
 <?php
+/**
+ * Project: Mutton, User: JianSuoQiYue
+ * Date: 2018-6-17 23:29
+ * Last: 2020-1-17 01:09:39
+ */
 declare(strict_types = 1);
 
 namespace sys;
@@ -8,7 +13,7 @@ require ETC_PATH.'route.php';
 class Route {
 
     public static function run(): void {
-
+        // --- URI 是安全的，不会是 ../../ 来访问到了外层，Apache Nginx 都会做处理的 ---
         $path = URI;
         // --- 如果为空则定义为 @ ---
         if ($path === '') {
@@ -36,32 +41,87 @@ class Route {
         $filePath = CTR_PATH . $pathLeft . '.php';
         if (!is_file($filePath)) {
             // --- 指定的控制器不存在 ---
+            http_response_code(404);
             echo '[Error] Controller not found.';
             return;
         }
         require SYS_PATH . 'Ctr.php';
+        // --- 加载控制文件 ---
         require $filePath;
         // --- 判断 action 是否存在 ---
         /** @var Ctr $ctr */
-        $ctr = new $ctr($param, $pathRight);
-        $ctr->param = $param;
-        $ctr->action = $pathRight;
-        if (!method_exists($ctr, $pathRight)) {
-            echo '[Error] Action not found.';
-            return;
-        }
+        $ctr = new $ctr();
         // --- 强制 HTTPS ---
         if (MUST_HTTPS && !$ctr->mustHttps()) {
             return;
         }
+        // --- 检测 action 是否存在 ---
+        $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
+            return strtoupper($matches[1]);
+        }, $pathRight);
+        if (!method_exists($ctr, $pathRight)) {
+            http_response_code(404);
+            echo '[Error] Action not found.';
+            return;
+        }
+        // --- 对信息进行初始化 ---
+        // --- 路由定义的参数序列 ---
+        $ctr->param = $param;
+        // --- action 名 ---
+        $ctr->action = $pathRight;
+        // --- 处理 POST、GET、FILE ---
+        $ctr->rawPost = $_POST;
+        $contentType = isset($_SERVER['CONTENT_TYPE']) ? strtolower($_SERVER['CONTENT_TYPE']) : (isset($_SERVER['HTTP_CONTENT_TYPE']) ? strtolower($_SERVER['HTTP_CONTENT_TYPE']) : '');
+        if (strpos($contentType, 'json') !== false) {
+            // --- POST 的数据是 JSON ---
+            $_POST = file_get_contents('php://input');
+            if(($_POST = json_decode($_POST, true)) === false) {
+                $_POST = [];
+            }
+        } else if (strpos($contentType, 'form-data') !== false) {
+            // --- 上传文件简单处理 ---
+            foreach ($_FILES as $key => $val) {
+                if (is_string($_FILES[$key]['name'])) {
+                    continue;
+                }
+                $files = [];
+                foreach ($_FILES[$key]['name'] as $k => $v) {
+                    $files[$k] = [
+                        'name' => $_FILES[$key]['name'][$k],
+                        'type' => $_FILES[$key]['type'][$k],
+                        'tmp_name' => $_FILES[$key]['tmp_name'][$k],
+                        'error' => $_FILES[$key]['error'][$k],
+                        'size' => $_FILES[$key]['size'][$k]
+                    ];
+                }
+                $_FILES[$key] = $files;
+            }
+        }
+
+        self::_trimPost($_POST);
+        // --- 检测是否有 onLoad，有则优先执行一下 ---
+        if (method_exists($ctr, 'onLoad')) {
+            $ctr->onLoad();
+        }
         // --- 执行 action ---
         $rtn = $ctr->$pathRight();
+        // --- 在返回值输出之前，设置缓存 ---
+        if ($ctr->cacheTTL > 0) {
+            header('Expires: ' . gmdate('D, d M Y H:i:s', $_SERVER['REQUEST_TIME'] + $ctr->cacheTTL) . ' GMT');
+            header('Cache-Control: max-age=' . $ctr->cacheTTL);
+        } else {
+            header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
+            header('Cache-Control: no-store');
+        }
+        // --- 判断返回值 ---
         if (!isset($rtn)) {
             return;
         }
         if (is_string($rtn)) {
+            // --- 返回的是纯字符串，直接输出 ---
             echo $rtn;
         } else if (is_array($rtn)) {
+            // --- 返回的是数组，那么代表是 JSON，以 JSON 形式输出 ---
             // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
             header('Content-type: application/json; charset=utf-8');
             if (isset($rtn[0]) && is_int($rtn[0])) {
@@ -96,11 +156,25 @@ class Route {
      * @return array
      */
     private static function _getPathLeftRight($path) {
-        $pathLio = strrpos($path, "/");
+        $pathLio = strrpos($path, '/');
         if ($pathLio === false) {
             return [$path, 'index'];
         } else {
             return [substr($path, 0, $pathLio), substr($path, $pathLio + 1)];
+        }
+    }
+
+    /**
+     * --- 将 POST 数据的值执行 trim ---
+     * @param $post
+     */
+    private static function _trimPost(&$post) {
+        foreach ($post as $key => $val) {
+            if (is_string($val)) {
+                $post[$key] = trim($val);
+            } else if (is_array($val)) {
+                self::_trimPost($post[$key]);
+            }
         }
     }
 

@@ -1,11 +1,15 @@
 <?php
 // --- MySQL ---
 
-const DB_HOST = '127.0.0.1';
-const DB_PORT = 3306;
-const DB_CHARSET = 'utf8';
-const DB_NAME = 'mutton';
+const MY_HOST = '127.0.0.1';
+const MY_PORT = 3306;
+const MY_CHARSET = 'utf8mb4';
+const MY_NAME = 'mutton';
 
-const DB_USERNAME = 'root';
-const DB_PASSWORD = '';
+const MY_USER = 'root';
+const MY_PWD = '';
+
+// --- Sqlite ---
+
+const SL_PATH = DATA_PATH . 'db/db.sqlite';
 

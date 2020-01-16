@@ -11,23 +11,21 @@ class __Mutton__ extends Ctr {
 
     private $_hasConfig = false;
 
-    public function __construct($param, $action) {
+    public function onLoad() {
         if (is_file(ETC_PATH.'__mutton__.php')) {
             $this->_hasConfig = true;
             require_once ETC_PATH.'__mutton__.php';
         }
+
+        $l = isset($_GET['l']) ? $_GET['l'] : 'en';
+        if (!in_array($l, ['en', 'zh-CN', 'zh-TW'])) {
+            $l = 'en';
+        }
+        $this->loadLocale($l, '__Mutton__');
     }
 
     // --- Index page ---
     public function index() {
-        $l = $this->get('l');
-        if ($l === '') {
-            $l = 'en';
-        }
-        if (!in_array($l, ['en', 'zh-CN', 'zh-TW'])) {
-            $l = 'en';
-        }
-        $this->setLocale($l, '__Mutton__');
         $this->loadView('__Mutton__/index', [
             'hasConfig' => $this->_hasConfig
         ]);
@@ -36,12 +34,15 @@ class __Mutton__ extends Ctr {
     // --- API ---
 
     public function apiCheckRefresh() {
-        if ($this->post('password') !== __MUTTON__PWD) {
-            return [0, 'Password is incorrect.'];
+        $this->checkInput($_POST, [
+            'password' => ['require', 0, l('Please input password')]
+        ]);
+        if ($_POST['password'] !== __MUTTON__PWD) {
+            return [0, l('Password is incorrect')];
         }
         $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/releases');
         if (!$res->content) {
-            return [0, 'Network error, please try again.'];
+            return [0, l('Network error, please try again')];
         }
         $json = json_decode($res->content);
         $list = [];
@@ -56,21 +57,27 @@ class __Mutton__ extends Ctr {
     }
 
     public function apiCheck() {
-        if ($this->post('password') !== __MUTTON__PWD) {
-            return [0, 'Password is incorrect.'];
+        if (($rtn = $this->checkInput($_POST, [
+                'password' => ['require', 0, l('Please input password')],
+                'ver' => ['require', 0, l('System error')]
+            ])) && ($rtn[0] != 1)) {
+            return $rtn;
         }
-        if (version_compare($this->post('ver'), '5.2.0', '<')) {
+        if ($_POST['password'] !== __MUTTON__PWD) {
+            return [0, l('Password is incorrect')];
+        }
+        if (version_compare($_POST['ver'], '5.2.0', '<')) {
             return [0, 'Version must be >= 5.2.0.'];
         }
         $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton/doc/mblob/'.$this->post('ver').'.mblob');
         if (!$res->content) {
-            return [0, 'Network error, please try again.'];
+            return [0, l('Network error, please try again')];
         }
         if (!($blob = @gzinflate($res->content))) {
-            return [0, 'Decryption failed.'];
+            return [0, l('Decryption failed')];
         }
         if (!($json = json_decode($blob, true))) {
-            return [0, 'Decryption failed.'];
+            return [0, l('Decryption failed')];
         }
         $list = [];     // --- 有差异的文件 ---
         $qlist = [];    // --- 缺失的文件（夹） ---

@@ -10,20 +10,20 @@ namespace lib\Net;
 
 class Response {
 
-    public $header = '';
+    public $headers = [];
     public $content = '';
 
     public $error = '';
-    public $errNo = 0;
-    public $errInfo = NULL;
+    public $errno = 0;
+    public $info = null;
 
     public function __construct(array $opt = []) {
-        $this->header = isset($opt['header']) ? $opt['header'] : '';
+        $this->headers = isset($opt['headers']) ? $opt['headers'] : [];
         $this->content = isset($opt['content']) ? $opt['content'] : '';
 
         $this->error = isset($opt['error']) ? $opt['error'] : '';
-        $this->errNo = isset($opt['errNo']) ? $opt['errNo'] : 0;
-        $this->errInfo = isset($opt['errInfo']) ? $opt['errInfo'] : NULL;
+        $this->errno = isset($opt['errno']) ? $opt['errno'] : 0;
+        $this->info = isset($opt['info']) ? $opt['info'] : null;
     }
 
     public static function get(array $opt = []): Response {

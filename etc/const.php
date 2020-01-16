@@ -1,12 +1,14 @@
 <?php
 
-const VER = '5.3.1';
+const VER = '5.5.0';
 
 // --- 环境判断 ---
 
 define('MOBILE', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile') !== false ? true : false);
 define('WECHAT', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'micromessenger') === false ? false : true);
 define('HTTPS', isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on') ? true : false);
+define('HOST', $_SERVER['HTTP_HOST']);
+define('HOSTNAME', explode(':', HOST)[0]);
 
 // --- 服务端用的路径 ---
 
@@ -23,8 +25,7 @@ define('STC_PATH', ROOT_PATH . 'stc/');
 
 // --- 前端用户的路径 ---
 
-define('HTTP_BASE', substr($_SERVER['SCRIPT_NAME'], 0, strrpos($_SERVER['SCRIPT_NAME'], '/') + 1));
-define('HTTP_HOST', $_SERVER['HTTP_HOST']);
-define('HTTP_PATH', 'http' . (HTTPS ? 's' : '') . '://' . HTTP_HOST . HTTP_BASE);
-define('HTTP_STC', HTTP_BASE . 'stc/');
+define('URL_BASE', substr($_SERVER['SCRIPT_NAME'], 0, strrpos($_SERVER['SCRIPT_NAME'], '/') + 1));
+define('URL_STC', URL_BASE . 'stc/');
+define('URL_FULL', 'http' . (HTTPS ? 's' : '') . '://' . HOST . URL_BASE);
 

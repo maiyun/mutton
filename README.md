@@ -30,7 +30,7 @@ if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\??.*|[\
 
 ## Library
 
-Aes, Captcha, Db (MySQL), Mailer, Memcached, Net, Redis, Session, Sms, Sql, Storage (OSS / COS), Text, Wechat (Login / Payment), Alipay, Comm (Ssh / Sftp), Dns (Alibaba Cloud / Tencent Cloud).
+Aes, Captcha, Db (MySQL, Sqlite), Kv (Redis, Memcached), Net, Session, Sql, Text.
 
 ## Features
 

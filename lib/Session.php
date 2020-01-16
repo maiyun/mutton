@@ -1,18 +1,28 @@
 <?php
 /*
+ * --- Mysql ---
 CREATE TABLE `session` (
   `id` int(10) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
   `token` varchar(255) NOT NULL UNIQUE KEY,
   `data` text NOT NULL,
   `time_update` int(10) UNSIGNED NOT NULL,
   `time_add` int(10) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ * --- Sqlite ---
+CREATE TABLE `session` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `token` VARCHAR(255) UNIQUE NOT NULL,
+  `data` TEXT NOT NULL,
+  `time_update` INT(10) NOT NULL,
+  `time_add` INT(10) NOT NULL
+);
 */
 
 /**
- * User: JianSuoQiYue
+ * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/05/25 19:56
- * Last: 2019-1-29 17:18:25
+ * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33
  */
 declare(strict_types = 1);
 

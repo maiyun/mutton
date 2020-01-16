@@ -1,64 +1,61 @@
 <?php
+/**
+ * Project: Mutton, User: JianSuoQiYue
+ * Date: 2018-6-17 23:29
+ * Last: 2020-1-17 01:05:14
+ */
 declare(strict_types = 1);
 
 namespace sys;
 
+use lib\Text;
+
 class Ctr {
 
+    /** @var array 路由参数序列数组 */
     public $param = [];
+    /** @var string 当前的 action 名 */
     public $action = '';
+    /** @var array 原始 POST 数据 */
+    public $rawPost = [];
+    /** @var int 页面浏览器客户端缓存 */
+    public $cacheTTL = CACHE_TTL;
 
-    // --- 获取 POST 内容并解析为对象，POST 内容必须为 JSON ---
-    protected function getJSONByPost(): object {
-        $post = file_get_contents('php://input');
-        if(($post = json_decode($post)) !== false) {
-            return $post;
-        } else {
-            return json_decode('{}');
-        }
-    }
-
-    // --- 获取截止当前时间的总运行时间 ---
+    /**
+     * --- 获取截止当前时间的总运行时间 ---
+     * @param bool $ms
+     * @return float
+     */
     protected function getRunTime(bool $ms = false): float {
         $t = microtime(true) - START_TIME;
         return $ms ? $t * 1000 : $t;
     }
 
-    // --- 获取截止当前内存的使用情况 ---
+    /**
+     * --- 获取截止当前内存的使用情况 ---
+     * @return int
+     */
     protected function getMemoryUsage(): int {
         return memory_get_usage() - START_MEMORY;
     }
 
-    // --- 加载视图 ---
-
     /**
+     * --- 加载视图 ---
      * @param string $path
-     * @param array|bool $data
-     * @param bool $return
+     * @param array $data
      * @return string
      */
-    protected function loadView(string $path, $data = [], bool $return = false) {
+    protected function loadView(string $path, $data = []) {
         // --- 重构 loadView(string $path, bool $return) ---
-        if(is_array($data)) {
-            extract($data);
-        } else {
-            $return = $data;
-        }
-
-        if($return) {
-            ob_start();
-        }
-
+        extract($data);
+        ob_start();
         require VIEW_PATH . $path . '.php';
-
-        if ($return) {
-            return ob_get_clean();
-        } else {
-            return '';
-        }
+        return ob_get_clean();
     }
 
-    // --- 获取页面内容方法 ---
+    /**
+     * --- 获取页面内容方法 ---
+     */
     protected function obStart(): void {
         ob_start();
     }
@@ -66,140 +63,176 @@ class Ctr {
         return ob_get_clean();
     }
 
-    // --- 获取 json 数据 ---
-    protected function loadData(string $path, $assoc = false) {
-        if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
-            return json_decode($f, $assoc);
+    /**
+     * --- 检测提交的数据类型 ---
+     * @param array $input
+     * @param array $rule
+     * @param bool $exit 是否直接退出
+     * @return array
+     */
+    protected function checkInput(array &$input, array $rule, bool $exit = true) {
+        // --- 遍历规则 ---
+        // --- ['xx' => ['require', '> 6', 0, 'xx 必须大于 6']] ---
+        foreach ($rule as $key => $val) {
+            if (!isset($input[$key])) {
+                // --- 原值不存在则设定为空 ---
+                $input[$key] = '';
+            }
+            $ci = -1;
+            $count = count($val);
+            if ($count > 2) {
+                $ci = count($val) - 2;
+            } else {
+                continue;
+            }
+            // --- ['require', '> 6', 0, 'xx 必须大于 6'] ---
+            foreach ($val as $k => $v) {
+                if ($k == $ci) {
+                    break;
+                }
+                if (is_array($v)) {
+                    if (!in_array($input[$key], $v)) {
+                        return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                    }
+                } else {
+                    switch ($v) {
+                        case 'require': {
+                            if ($input[$key] == '') {
+                                return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                            }
+                            break;
+                        }
+                        case 'num':
+                        case 'number': {
+                            if ($input[$key] != '' && !is_numeric($input[$key])) {
+                                return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                            }
+                            break;
+                        }
+                        default: {
+                            if ($input[$key] != '') {
+                                if ($v[0] == '/') {
+                                    // --- 正则 ---
+                                    if (!preg_match($v, $input[$key])) {
+                                        return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                                    }
+                                } else if (preg_match('/^([><=]+) *([0-9]+)$/', $input[$key], $match)) {
+                                    // --- 判断表达式 ---
+                                    $return = false;
+                                    $inputNum = (float)$input[$key];
+                                    $num = (float)$match[2];
+                                    switch ($match[1]) {
+                                        case '>': {
+                                            if ($inputNum <= $num) {
+                                                $return = true;
+                                            }
+                                            break;
+                                        }
+                                        case '<': {
+                                            if ($inputNum >= $num) {
+                                                $return = true;
+                                            }
+                                            break;
+                                        }
+                                        case '>=': {
+                                            if ($inputNum < $num) {
+                                                $return = true;
+                                            }
+                                            break;
+                                        }
+                                        case '<=': {
+                                            if ($inputNum > $num) {
+                                                $return = true;
+                                            }
+                                            break;
+                                        }
+                                        case '=':
+                                        case '==':
+                                        case '===': {
+                                            if ($inputNum != $num) {
+                                                $return = true;
+                                            }
+                                            break;
+                                        }
+                                        case '!=':
+                                        case '<>': {
+                                            if ($inputNum == $num) {
+                                                $return = true;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                    if ($return) {
+                                        return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return [1];
+    }
+    private function _checkInputExit(int $result, string $msg, bool $exit) {
+        if ($exit) {
+            header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
+            header('Cache-Control: no-store');
+            header('Content-type: application/json; charset=utf-8');
+            echo json_encode(['result' => $result, 'msg' => $msg]);
+            exit;
         } else {
-            return false;
+            return [$result, $msg];
+        }
+
+    }
+
+    /**
+     * --- 获取 data 数据 ---
+     * @param string $path
+     * @return mixed|null
+     */
+    protected function loadData(string $path) {
+        if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
+            return json_decode($f);
+        } else {
+            return null;
         }
     }
 
-    // --- 必须使用 https 访问 ---
+    /**
+     * --- 强制 https 下访问 ---
+     * @return bool
+     */
     public function mustHttps(): bool {
         if (HTTPS) {
             return true;
         } else {
-            $redirect = 'https://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
-            header('HTTP/1.1 301 Moved Permanently');
+            $redirect = 'https://' . HOST . $_SERVER['REQUEST_URI'];
+            http_response_code(301);
             header('Location: ' . $redirect);
             return false;
         }
     }
 
-    // --- 获取 GET 和 POST 的数据 ---
-
     /**
-     * @param $key
-     * @return string
+     * --- 跳转，支持相对和绝对路径 ---
+     * @param string $url
      */
-    protected function get(string $key) {
-        return isset($_GET[$key]) ? trim($_GET[$key]) : '';
-    }
-
-    /**
-     * @param $key
-     * @return string
-     */
-    protected function post(string $key) {
-        return isset($_POST[$key]) ? trim($_POST[$key]) : '';
-    }
-
-    // --- 跳转 ---
     protected function location(string $url): void {
-        header('Location: '.$url);
-    }
-    protected function redirect(string $url = ''): void {
-        header('Location: '.HTTP_BASE.$url);
+        http_response_code(302);
+        header('Location: '.Text::urlResolve(URL_BASE, $url));
     }
 
     /**
-     * --- 深度创建文件夹并赋予权限，失败不会回滚 ---
-     * @param string $path
-     * @param int $mode
-     * @return bool
+     * --- 设置当前时区 ---
+     * @param string $timezone_identifier
      */
-    protected function mkdir(string $path, int $mode = 0755): bool {
-        $path = str_replace('\\', '/', $path);
-        $dirs = explode('/', $path);
-        $tpath = '';
-        foreach ($dirs as $v) {
-            if ($v === '') {
-                continue;
-            }
-            $tpath .= $v . '/';
-            if (!is_dir($tpath)) {
-                if (!mkdir($tpath)) {
-                    return false;
-                }
-                chmod($tpath, $mode);
-            }
-        }
-        return true;
-    }
-
-    /**
-     * --- 深度删除文件夹以及所有文件 ---
-     * @param string $path
-     * @return bool
-     */
-    protected function rmdir(string $path): bool {
-        $path = str_replace('\\', '/', $path);
-        if (substr($path, -1) !== '/') {
-            $path .= '/';
-        }
-        if (!file_exists($path)) {
-            return true;
-        }
-        $dir = dir($path);
-        while (($name = $dir->read()) !== false) {
-            if (($name === '.') || ($name === '..')) {
-                continue;
-            }
-            if (is_file($path.$name)) {
-                if (!@unlink($path.$name)) {
-                    return false;
-                }
-            } else {
-                if (!$this->rmdir($path.$name.'/')) {
-                    return false;
-                }
-            }
-        }
-        $dir->close();
-        return @rmdir($path);
-    }
-
-    /**
-     * --- 检验文件或文件夹是否可写 ---
-     * @param string $path
-     * @return bool
-     */
-    protected function isWritable(string $path): bool {
-        // If we're on a Unix server with safe_mode off we call is_writable
-        if (DIRECTORY_SEPARATOR == '/' AND @ini_get("safe_mode") == false) {
-            return is_writable($path);
-        }
-        // For windows servers and safe_mode "on" installations we'll actually
-        // write a file then read it. Bah...
-        if (is_dir($path)) {
-            $file = rtrim($path, '/') . '/' . md5(mt_rand(1, 100).mt_rand(1, 100));
-            if (($fp = @fopen($file, 'ab')) === false) {
-                return false;
-            }
-            fclose($fp);
-            @chmod($file, 0777);
-            @unlink($file);
-            return true;
-        } elseif (!is_file($path) or ($fp = @fopen($path, 'ab')) === false) {
-            return false;
-        }
-        fclose($fp);
-        return true;
+    protected function setTimezone(string $timezone_identifier): void{
+        date_default_timezone_set($timezone_identifier);
     }
 
     // --- 国际化 ---
-    private $_localePkg = [];
 
     /**
      * --- 根据当前设定语言加载语言包 ---
@@ -207,42 +240,43 @@ class Ctr {
      * @param string $pkg 包名，为空自动填充为 default
      * @return bool
      */
-    protected function setLocale(string $locale, string $pkg = ''): bool {
-        global $__LOCALE, $__LOCALE_OBJ;
+    protected function loadLocale(string $locale, string $pkg = ''): bool {
+        global $__LOCALE, $__LOCALE_OBJ, $__LOCALE_OVER;
 
         if ($pkg === '') {
             $pkg = "default";
         }
+        /** @var string $lName 语言名.包名 */
         $lName = $locale . '.' . $pkg;
-        if (!in_array($lName, $this->_localePkg)) {
-            if (($loc = $this->loadData('locale/'.$lName, true)) === false) {
+        if (!in_array($lName, $__LOCALE_OVER)) {
+            if (($locData = $this->loadData('locale/'.$lName)) === false) {
                 return false;
             }
             if (!isset($__LOCALE_OBJ[$locale])) {
                 $__LOCALE_OBJ[$locale] = [];
             }
-
-            $__LOCALE_OBJ[$locale] = array_merge($__LOCALE_OBJ[$locale], $this->_setLocaleDeep($loc));
-
-            $this->_localePkg[] = $lName;
+            $__LOCALE = $locale;
+            $this->_loadLocaleDeep($locData);
+            $__LOCALE_OVER[] = $lName;
+        } else {
+            $__LOCALE = $locale;
         }
-        $__LOCALE = $locale;
         return true;
     }
-    private function _setLocaleDeep(array $loc, string $pre = '') {
-        $arr = [];
-        foreach ($loc as $k => $v) {
+    private function _loadLocaleDeep(array $locData, string $pre = '') {
+        global $__LOCALE, $__LOCALE_OBJ;
+
+        foreach ($locData as $k => $v) {
             if (is_array($v)) {
-                $arr = array_merge($arr, $this->_setLocaleDeep($v, $pre . $k . '.'));
+                $this->_loadLocaleDeep($v, $pre . $k . '.');
             } else {
-                $arr[$pre . $k] = $v;
+                $__LOCALE_OBJ[$__LOCALE][$pre . $k] = $v;
             }
         }
-        return $arr;
     }
 
     /**
-     * --- 获取当前 i18n 语言字符串 ---
+     * --- 获取当前语言名 ---
      * @return string
      */
     protected function getLocale(): string {

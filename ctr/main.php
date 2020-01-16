@@ -8,7 +8,7 @@ use sys\Ctr;
 class main extends Ctr {
 
     public function index() {
-        return '<a href="' . HTTP_BASE . 'test">Hello world! Click here to visit demo.</a>';
+        return '<a href="' . URL_BASE . 'test">Hello world! Click here to visit demo.</a>';
     }
 
 }

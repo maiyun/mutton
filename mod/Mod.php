@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-09-17
+ * Last: 2018-12-15 23:08:01, 2019-10-2
  */
 declare(strict_types = 1);
 
@@ -32,9 +32,9 @@ class Mod {
     protected $_data = [];
 
     /* @var Db $_conn 数据库连接对象 */
-    protected $_conn = NULL;
+    protected $_conn = null;
     /** @var array etc 配置项，其实就是 Sql 对象的配置项 */
-    protected $_etc = NULL;
+    protected $_etc = null;
 
     // --- 最后一次执行的 SQL 内容 ---
     protected $_lastSqlString = '';
@@ -43,19 +43,19 @@ class Mod {
     // --- Mutton 独有配置项 [ 开始 ] ---
 
     /* @var Db $__conn Mutton 独有，设置映射静态数据库对象 */
-    protected static $__conn = NULL;
+    protected static $__conn = null;
     /** @var array Mutton 独有，设置 Sql 库的 etc 配置 */
-    protected static $__etc = NULL;
+    protected static $__etc = null;
 
     // --- Mutton 独有配置项 [ 结束 ] ---
 
     /**
      * 构造函数，etc 选项可选
-     * @param array|NULL $row
+     * @param array|null $row
      */
-    public function __construct(array $row = NULL) {
+    public function __construct(array $row = null) {
         // --- sql 对象配置 ---
-        if (Mod::$__etc !== NULL) {
+        if (Mod::$__etc !== null) {
             $this->_etc = Mod::$__etc;
         }
         // --- 导入数据库连接 ---
@@ -174,7 +174,7 @@ class Mod {
      * @param boolean|null $raw
      * @return bool
      */
-    public function remove($raw = NULL): bool {
+    public function remove($raw = null): bool {
         $sql = Sql::get($this->_etc);
         if (static::$_soft && ($raw !== true)) {
             $sql->update(static::$_table, [
@@ -325,15 +325,16 @@ class Mod {
         // $mod = static::class;
         $sql = Sql::get(Mod::$__etc);
         $sql->select('*', static::$_table);
-        // --- 判断是否筛掉已删除的 ---
-        if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-            $sql->where([
-                'time_remove' => '0'
-            ]);
-        }
         if (is_string($where)) {
-            $sql->append(' WHERE ' . $where);
+            // --- 判断是否筛掉已删除的 ---
+            $sql->append(' WHERE (' . $where . ')');
+            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
+                $sql->append(' AND `time_remove` = 0');
+            }
         } else {
+            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
+                $where['time_remove'] = '0';
+            }
             $sql->where($where);
         }
         if (isset($opt['lock']) && $opt['lock']) {
@@ -344,10 +345,10 @@ class Mod {
             if ($row = $ps->fetch(\PDO::FETCH_ASSOC)) {
                 return new static($row);
             } else {
-                return NULL;
+                return null;
             }
         } else {
-            return NULL;
+            return null;
         }
     }
 
@@ -357,7 +358,7 @@ class Mod {
      * @param array $vs 参数列表
      * @return bool
      */
-    public static function insert(array $cs, array $vs): bool {
+    public static function insert(array $cs, array $vs = []): bool {
         $sql = Sql::get(Mod::$__etc);
         $sql->insert(static::$_table, $cs, $vs);
         $ps = self::$__conn->prepare($sql->getSql());
@@ -395,10 +396,16 @@ class Mod {
                     $sql->append(' AND `time_remove` = 0');
                 }
             } else {
-                if (!isset($opt['raw']) || $opt['raw'] !== true) {
+                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
                     $opt['where']['time_remove'] = '0';
                 }
                 $sql->where($opt['where']);
+            }
+        } else {
+            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
+                $sql->where([
+                    'time_remove' => '0'
+                ]);
             }
         }
         if(isset($opt['group'])) {
@@ -440,11 +447,10 @@ class Mod {
             } else {
                 $list[] = $obj;
             }
-
         }
         // --- 返回 ---
         return [
-            'total' => $total,
+            'total' => $total == 0 ? count($list) : $total,
             'list' => $list
         ];
     }
@@ -492,7 +498,7 @@ class Mod {
      * @param bool $raw 是否真实
      * @return bool
      */
-    public static function removeByWhere($where, ?bool $raw = NULL): bool {
+    public static function removeByWhere($where, ?bool $raw = null): bool {
         $sql = Sql::get(Mod::$__etc);
         if (static::$_soft && ($raw !== true)) {
             // --- 软删除 ---
@@ -529,7 +535,7 @@ class Mod {
      * @param bool $raw 是否真实
      * @return bool
      */
-    public static function updateByWhere(array $data, $where, bool $raw = NULL): bool {
+    public static function updateByWhere(array $data, $where, bool $raw = null): bool {
         $sql = Sql::get(Mod::$__etc);
         $sql->update(static::$_table, $data);
         if (is_string($where)) {

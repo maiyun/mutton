@@ -1,0 +1,225 @@
+<?php
+/**
+ * User: JianSuoQiYue
+ * Date: 2019-12-21 11:56:27
+ * Last: 2019-12-21 11:56:30
+ */
+declare(strict_types = 1);
+
+namespace lib\Kv;
+
+interface IKv {
+
+    /**
+     * @param array $opt
+     * @return bool|null
+     */
+    public function connect(array $opt = []);
+
+    /**
+     * --- 判断是否连接成功 ---
+     * @return bool
+     */
+    public function isConnect();
+
+    /**
+     * --- 退出断开连接 ---
+     */
+    public function quit(): void;
+
+    /**
+     * --- 设定一个值 ---
+     * @param string $key
+     * @param mixed $val
+     * @param int $ttl 秒，0 为不限制
+     * @param string $mod 设置模式: 空,nx（key不存在才建立）,xx（key存在才修改）
+     * @return bool
+     */
+    public function set(string $key, $val, int $ttl = 0, string $mod = '');
+
+    /**
+     * --- 添加一个值，存在则不变 ---
+     * @param string $key
+     * @param $val
+     * @param int $ttl 有效期
+     * @return bool
+     */
+    public function add(string $key, $val, int $ttl = 0): bool;
+
+    /**
+     * --- 替换一个存在的值 ---
+     * @param string $key
+     * @param $val
+     * @param int $ttl
+     * @return bool
+     */
+    public function replace(string $key, $val, int $ttl = 0);
+
+    /**
+     * --- 向已存在的值后追加数据 ---
+     * @param string $key
+     * @param $val
+     * @return bool
+     */
+    public function append(string $key, $val);
+
+    /**
+     * --- 向已存在的值之前追加数据 ---
+     * @param string $key
+     * @param $val
+     * @return bool
+     */
+    public function prepend(string $key, $val);
+
+    /**
+     * --- 检测 key 是否存在 ---
+     * @param string[]|string $key 单个或序列
+     * @return int
+     */
+    public function exists($key);
+
+    /**
+     * --- 获取数值和字符串 ---
+     * @param string $key
+     * @return mixed|false
+     */
+    public function get(string $key);
+
+    /**
+     * --- 批量获取值 ---
+     * @param array $keys key 序列
+     * @return array
+     */
+    public function mget(array $keys);
+
+    /**
+     * --- 批量获取值 ---
+     * @param array $keys key 序列
+     * @return array
+     */
+    public function getMulti(array $keys);
+
+    /**
+     * --- 获取 json 对象 ---
+     * @param string $key
+     * @return bool|mixed
+     */
+    public function getJson(string $key);
+
+    /**
+     * --- 删除已存在的值 ---
+     * @param string|string[] $key
+     * @return bool
+     */
+    public function delete($key);
+
+    /**
+     * --- 自增 ---
+     * @param string $key
+     * @param int $num
+     * @return false|int
+     */
+    public function incr(string $key, int $num = 1);
+
+    /**
+     * --- 自减 ---
+     * @param string $key
+     * @param int $num
+     * @return false|int
+     */
+    public function decr(string $key, int $num = 1);
+
+    /**
+     * --- 仅修改过期时间不修改值 ---
+     * @param string $key
+     * @param int $ttl
+     * @return bool
+     */
+    public function touch(string $key, int $ttl);
+
+    /**
+     * --- 仅修改过期时间不修改值 ---
+     * @param string $key
+     * @param int $ttl
+     * @return bool
+     */
+    public function expire(string $key, int $ttl);
+
+    /**
+     * --- 获取服务器上的所有 key 列表（Memcached 下有延迟且 binary 需为 false） ---
+     * @return string[]|false
+     */
+    public function getAllKeys();
+
+    /**
+     * --- 获取服务器上的所有 key 列表（同步） ---
+     * @param string $pattern
+     * @return string[]|false
+     */
+    public function keys($pattern);
+
+    /**
+     * --- 根据条件获取服务器上的 key ---
+     * @param string $pattern
+     * @param int $count Count of keys per iteration (only a suggestion to Redis).
+     * @return string[]|false
+     */
+    public function scan($pattern = '*', $count = 0);
+
+    /**
+     * --- 清除服务器上所有的数据 ---
+     * @return bool
+     */
+    public function flush();
+
+    /**
+     * --- 清除服务器上所有的数据 ---
+     * @return bool
+     */
+    public function flushDB();
+
+    /**
+     * --- 获取最后一次执行结果码 ---
+     * @return int
+     */
+    public function getResultCode();
+
+    /**
+     * --- 获取最后一次执行结果文本 ---
+     * @return string
+     */
+    public function getResultMessage();
+
+    /**
+     * --- 获取最后一次错误信息 ---
+     * @return string|null
+     */
+    public function getLastError();
+
+    /**
+     * --- 获取当前服务器列表 ---
+     * @return array
+     */
+    public function getServerList();
+
+    /**
+     * --- 清除所有已连接的 server ---
+     * @return bool
+     */
+    public function resetServerList();
+
+    /**
+     * --- 发送 ping ---
+     * @return false|string
+     */
+    public function ping();
+
+    /**
+     * --- 获取状态 ---
+     * @param string $name
+     * @return array
+     */
+    public function getStats(string $name);
+
+}
+

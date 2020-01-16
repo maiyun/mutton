@@ -1,128 +1,198 @@
 <?php
 /**
- * User: JianSuoQiYue
+ * Project: Mutton, User: JianSuoQiYue
+ * CONF - {"ver":"0.1","folder":true} - END
  * Date: 2015/7/7 17:59
- * Last: 2018-12-8 22:39:24
+ * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04
  */
 declare(strict_types = 1);
 
 namespace lib;
 
+use Exception;
+use PDO;
+use PDOStatement;
+
 require ETC_PATH.'db.php';
 
 class Db {
 
-    private $_queries = 0;      // --- query 次数 ---
-    private $_executions = 0;   // --- exec 次数 ---
-    private $_affectRows = 0;   // --- 影响行数 ---
+    // --- 核心类型 ---
+    const MYSQL = 'Mysql';
+    const SQLITE = 'Sqlite';
 
-    /* @var $link \PDO */
+    /** @var int query 次数 */
+    private $_queries = 0;
+    /** @var int exec 次数 */
+    private $_executions = 0;
+    /** @var int 影响行数 */
+    private $_affectRows = 0;
+
+    /* @var PDO */
     private $_link;
+    /** @var string 当前核心 */
+    private $_core = '';
 
-    /**
-     * --- 获取数据库连接对象 ---
-     * @param array|null $opt
-     * @return Db
-     * @throws \Exception
-     */
-    public static function get(?array $opt = []): Db {
-        $db = new Db();
-        $db->connect($opt);
-        return $db;
+    public function __construct(string $core) {
+        $this->_core = $core;
     }
 
-    // --- 判断是否创建了链接 ---
+    /**
+     * @param string $core
+     * @return Db
+     */
+    public static function get(string $core): Db {
+        return new Db($core);
+    }
+
+    /**
+     * --- 获取当前核心是什么 ---
+     * @return string
+     */
+    public function getCore(): string {
+        return $this->_core;
+    }
+
+    /**
+     * --- 判断是否创建了连接 ---
+     * @return bool
+     */
     public function isConnected(): bool {
-        if ($this->_link instanceof \PDO) {
+        if ($this->_link instanceof PDO) {
             return true;
         }
         return false;
     }
 
-    // --- 关闭连接 ---
+    /**
+     * --- 关闭连接 ---
+     */
     public function quit(): void {
-        $this->_link = NULL;
+        $this->_link = null;
     }
 
-    // --- 转义 ---
+    /**
+     * --- 转义 ---
+     * @param string $str
+     * @return string
+     */
     public function quote(string $str): string {
         return $this->_link->quote($str);
     }
 
     /**
-     * 执行一个 query，有返回列表
+     * --- 执行一个 query，有返回列表 ---
      * @param string $sql
-     * @return \PDOStatement
+     * @return false|PDOStatement
      */
-    public function query(string $sql): \PDOStatement {
+    public function query(string $sql) {
         ++$this->_queries;
         return $this->_link->query($sql);
     }
 
     /**
-     * 执行一个 exec，只返回影响行数
+     * --- 执行一个 exec，只返回影响行数 ---
      * @param string $sql
-     * @return int
+     * @return false|int
      */
-    public function exec(string $sql): int {
+    public function exec(string $sql) {
         ++$this->_executions;
-        return $this->_affectRows = $this->exec($sql);
+        return $this->_affectRows = $this->_link->exec($sql);
     }
 
-    // --- 返回错误信息 ---
+    /**
+     * --- 返回错误信息 ---
+     * @return array
+     */
     public function getErrorInfo(): array {
         return $this->_link->errorInfo();
     }
 
-    // --- 返回错误代码 ---
-    public function getErrorCode(): string {
+    /**
+     * --- 返回错误代码 ---
+     * @return mixed
+     */
+    public function getErrorCode() {
         return $this->_link->errorCode();
     }
 
-    // --- 连接数据库 ---
-
     /**
+     * --- 连接数据库 ---
      * @param array $opt
-     * @return bool
-     * @throws \Exception
+     * @return bool|null
      */
-    public function connect(array $opt = []): bool {
-        $host = isset($opt['host']) ? $opt['host'] : DB_HOST;
-        $user = isset($opt['user']) ? $opt['user'] : DB_USERNAME;
-        $pwd = isset($opt['pwd']) ? $opt['pwd'] : DB_PASSWORD;
-        $name = isset($opt['name']) ? $opt['name'] : DB_NAME;
-        $charset = isset($opt['charset']) ? $opt['charset'] : DB_CHARSET;
-        $port = isset($opt['port']) ? $opt['port'] : DB_PORT;
-
+    public function connect(array $opt = []) {
         try {
-            if ($this->_link = new \PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
-                return true;
-            } else {
-                return false;
+            switch ($this->_core) {
+                case 'Mysql': {
+                    $host = isset($opt['host']) ? $opt['host'] : MY_HOST;
+                    $port = isset($opt['port']) ? $opt['port'] : MY_PORT;
+                    $user = isset($opt['user']) ? $opt['user'] : MY_USER;
+                    $pwd = isset($opt['pwd']) ? $opt['pwd'] : MY_PWD;
+                    $name = isset($opt['name']) ? $opt['name'] : MY_NAME;
+                    $charset = isset($opt['charset']) ? $opt['charset'] : MY_CHARSET;
+
+                    if ($this->_link = new PDO('mysql: host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
+                case 'Sqlite': {
+                    $path = isset($opt['path']) ? $opt['path'] : SL_PATH;
+
+                    if ($this->_link = new PDO('sqlite:' . $path)) {
+                        return true;
+                    } else {
+                        return false;
+                    }
+                    break;
+                }
             }
-        } catch (\Exception $exception) {
-            throw new \Exception('[Error] Can not connect to MySQL server on '.$host.'.');
+            return null;
+        } catch (Exception $exception) {
+            var_dump($exception);
+            return null;
         }
     }
 
-    // --- 获取最后插入的 id ---
+    /**
+     * --- 获取最后插入的 id ---
+     * @return string
+     */
     public function getInsertID(): string {
         return $this->_link->lastInsertId();
     }
 
+    /**
+     * --- 获取影响行数 ---
+     * @return int
+     */
     public function getAffectRows(): int {
         return $this->_affectRows;
     }
 
+    /**
+     * --- 获取 query 次数 ---
+     * @return int
+     */
     public function getQueries(): int {
         return $this->_queries;
     }
 
+    /**
+     * --- 获取 exec 次数 ---
+     * @return int
+     */
     public function getExecutions(): int {
         return $this->_executions;
     }
 
-    // --- 事物操作 ---
+    /**
+     * --- 开启事务 ---
+     * @return bool
+     */
     public function beginTransaction(): bool {
         return $this->_link->beginTransaction();
     }
@@ -134,11 +204,11 @@ class Db {
     }
 
     /**
-     * PDO 组装与绑定
+     * --- PDO 组装与绑定语句 ---
      * @param string $sql
-     * @return \PDOStatement
+     * @return PDOStatement
      */
-    public function prepare(string $sql): \PDOStatement {
+    public function prepare(string $sql): PDOStatement {
         return $this->_link->prepare($sql);
     }
 
