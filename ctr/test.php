@@ -27,6 +27,7 @@ class test extends Ctr {
             '<br>PHP Verison: ' . PHP_VERSION,
 
             '<br><br>URL_BASE: ' . URL_BASE,
+            '<br>URI: ' . URI,
             '<br>URL_FULL: ' . URL_FULL,
 
             '<br><br><b style="color: red;">Tips: The file can be deleted.</b>',
@@ -51,6 +52,13 @@ class test extends Ctr {
 
             '<br><br><b>Library test:</b>',
 
+            '<br><br><b>Aes:</b>',
+            '<br><br><a href="'.URL_BASE.'test/aes">View "test/aes"</a>',
+
+            '<br><br><b>Captcha:</b>',
+            '<br><br><a href="'.URL_BASE.'test/captcha_fastbuild">View "test/captcha-fastbuild"</a>',
+            '<br><a href="'.URL_BASE.'test/captcha_base64">View "test/captcha-base64"</a>',
+
             '<br><br><b>Db:</b>',
             '<br><a href="'.URL_BASE.'test/db?s=Mysql">View "test/db?s=Mysql"</a>',
             '<br><a href="'.URL_BASE.'test/db?s=Sqlite">View "test/db?s=Sqlite"</a>',
@@ -67,6 +75,10 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/net-upload">View "test/net-upload"</a>',
             '<br><a href="'.URL_BASE.'test/net-cookie">View "test/net-cookie"</a>',
 
+            '<br><br><b>Session:</b>',
+            '<br><br><a href="'.URL_BASE.'test/session_db">View "test/session-db"</a>',
+            '<br><a href="'.URL_BASE.'test/session_redis">View "test/session-redis"</a>',
+
             '<br><br><b>Sql:</b>',
             '<br><br><a href="'.URL_BASE.'test/sql?type=insert">View "test/sql?type=insert"</a>',
             '<br><a href="'.URL_BASE.'test/sql?type=select">View "test/sql?type=select"</a>',
@@ -74,19 +86,8 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/sql?type=delete">View "test/sql?type=delete"</a>',
             '<br><a href="'.URL_BASE.'test/sql?type=where">View "test/sql?type=where"</a>',
 
-            '<br><br><b>Session:</b>',
-            '<br><br><a href="'.URL_BASE.'test/session_db">View "test/session_db"</a>',
-            '<br><a href="'.URL_BASE.'test/session_redis">View "test/session_redis"</a>',
-
-            '<br><br><b>Captcha:</b>',
-            '<br><br><a href="'.URL_BASE.'test/captcha_fastbuild">View "test/captcha_fastbuild"</a>',
-            '<br><a href="'.URL_BASE.'test/captcha_base64">View "test/captcha_base64"</a>',
-
             '<br><br><b>Text:</b>',
-            '<br><br><a href="'.URL_BASE.'test/text">View "test/text"</a>',
-
-            '<br><br><b>Aes:</b>',
-            '<br><br><a href="'.URL_BASE.'test/aes">View "test/aes"</a>'
+            '<br><br><a href="'.URL_BASE.'test/text">View "test/text"</a>'
         ];
         $echo[] = '<br><br>'.$this->_getEnd();
 
@@ -99,8 +100,8 @@ class test extends Ctr {
 
     public function qs() {
         $this->obStart();
-        echo 'var_dump($_GET): <br><br>';
-        var_dump($_GET);
+        echo 'json_encode($_GET): <br><br>';
+        json_encode($_GET);
         $rtn = $this->obEnd();
         return $rtn . '<br><br>' . $this->_getEnd();
     }
@@ -122,6 +123,101 @@ class test extends Ctr {
             default:
                 return [];
         }
+    }
+
+    public function aes() {
+        $this->obStart();
+
+        echo '<b>AES-256-ECB:</b>';
+
+        $key = 'testkeyatestkeyatestkeyatestkeya';
+        $text = Aes::encrypt('Original text', $key);
+        echo '<pre>';
+        echo "\$key = 'estkeyatestkeyatestkeyatestkeya';\n\$text = Aes::encrypt('Original text', \$key);\njson_encode(\$text);";
+        echo '</pre>';
+        json_encode($text);
+
+        $orig = Aes::decrypt($text, $key);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key);\njson_encode(\$orig);";
+        echo '</pre>';
+        json_encode($orig);
+
+        $orig = Aes::decrypt($text, 'otherKey');
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, 'otherKey');\njson_encode(\$orig);";
+        echo '</pre>';
+        json_encode($orig);
+
+        // ----------
+
+        echo '<br><br><b>AES-256-CFB:</b>';
+
+        $iv = 'iloveuiloveuilov';
+        $text = Aes::encrypt('Original text', $key, $iv);
+        echo '<pre>';
+        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv);\njson_encode(\$text);";
+        echo '</pre>';
+        json_encode($text);
+
+        $orig = Aes::decrypt($text, $key, $iv);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv);\njson_encode(\$orig);";
+        echo '</pre>';
+        json_encode($orig);
+
+        $orig = Aes::decrypt($text, $key, 'otherIv');
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv');\njson_encode(\$orig);";
+        echo '</pre>';
+        json_encode($orig);
+
+        // ----------
+
+        echo '<br><br><b>AES-256-CBC:</b>';
+
+        $text = Aes::encrypt('Original text', $key, $iv, Aes::AES_256_CBC);
+        echo '<pre>';
+        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);\njson_encode(\$text);";
+        echo '</pre>';
+        json_encode($text);
+
+        $orig = Aes::decrypt($text, $key, $iv, Aes::AES_256_CBC);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv, Aes::AES_256_CBC);\njson_encode(\$orig);";
+        echo '</pre>';
+        json_encode($orig);
+
+        $orig = Aes::decrypt($text, $key, 'otherIv', Aes::AES_256_CBC);
+        echo '<pre>';
+        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv', Aes::AES_256_CBC);\njson_encode(\$orig);";
+        echo '</pre>';
+        json_encode($orig);
+
+        $rtn = $this->obEnd();
+        return $rtn . '<br><br>' . $this->_getEnd();
+    }
+
+    public function captchaFastbuild() {
+        Captcha::get(400, 100)->output();
+    }
+
+    public function captchaBase64() {
+        $this->obStart();
+
+        echo '$cap = Captcha::get(400, 100);<br>$phrase = $cap->getPhrase();<br>$base64 = $cap->getBase64();<br>echo $phrase;';
+        $cap = Captcha::get(400, 100);
+        $phrase = $cap->getPhrase();
+        $base64 = $cap->getBase64();
+        echo '<pre>'.$phrase.'</pre>';
+
+        echo 'echo $base64;';
+        echo '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">'.$base64.'</pre>';
+
+        echo '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
+        echo '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
+
+        return $this->obEnd() . $this->_getEnd();
     }
 
     public function db() {
@@ -169,7 +265,7 @@ exec: " . $exec . "<br><br>";
         return join('', $echo) . "<br>" . $this->_getEnd();
     }
     private function _dbTable(\PDOStatement $stmt, &$echo) {
-        $echo[] = '<table width="100%"><tr>';
+        $echo[] = '<table style="width: 100%;"><tr>';
         $cc = $stmt->columnCount();
         for($i = 0; $i < $cc; ++$i) {
             $echo[] = '<th>' . htmlspecialchars($stmt->getColumnMeta($i)['name']) . '</th>';
@@ -307,6 +403,51 @@ var_dump(\$kv->getServerList());</pre>";
             var_dump($kv->getResultCode());
             var_dump($kv->getResultMessage());
             var_dump($kv->getLastError());
+        } else if ($ac === 'hash') {
+            echo "<pre>var_dump(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>";
+            var_dump($kv->hSet('hTest', 'name', 'Cheng Xin'));
+
+            echo "<pre>var_dump(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
+            var_dump($kv->hSet('hTest', 'age', '16', 'nx'));
+
+            echo "<pre>var_dump(\$kv->hMSet('hTest', [
+    'age' => '16',
+    'sex' => 'female'
+]));</pre>";
+            var_dump($kv->hMSet('hTest', [
+                'age' => '16',
+                'sex' => 'female'
+            ]));
+
+            echo "<pre>var_dump(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
+            var_dump($kv->hSet('hTest', 'age', '16', 'nx'));
+
+            echo "<pre>var_dump(\$kv->hGet('hTest', 'name'));</pre>";
+            var_dump($kv->hGet('hTest', 'name'));
+
+            echo "<pre>var_dump(\$kv->hDel('hTest', 'name'));</pre>";
+            var_dump($kv->hDel('hTest', 'name'));
+
+            echo "<pre>var_dump(\$kv->hGetAll('hTest'));</pre>";
+            var_dump($kv->hGetAll('hTest'));
+
+            echo "<pre>var_dump(\$kv->hKeys('hTest'));</pre>";
+            var_dump($kv->hKeys('hTest'));
+
+            echo "<pre>var_dump(\$kv->hExists('hTest', 'age'));</pre>";
+            var_dump($kv->hExists('hTest', 'age'));
+
+            echo "<pre>var_dump(\$kv->hMGet('hTest', ['age', 'sex', 'school']));</pre>";
+            var_dump($kv->hMGet('hTest', ['age', 'sex', 'school']));
+
+            echo "<pre>var_dump(\$kv->delete('hTest'));</pre>";
+            var_dump($kv->delete('hTest'));
+
+            echo "<pre>var_dump(\$kv->hGet('hTest', 'name'));</pre>";
+            var_dump($kv->hGet('hTest', 'name'));
+
+            echo "<pre>var_dump(\$kv->hGetAll('hTest'));</pre>";
+            var_dump($kv->hGetAll('hTest'));
         } else if ($ac === 'other') {
             echo "<pre>for (\$i = 0; \$i < 50; ++\$i) {
     \$kv->add('t' . \$i, \$i, 10);
@@ -338,6 +479,9 @@ echo 'Added.';</pre>";
             echo "<pre>var_dump(\$kv->mget(['test', 'heheda']));</pre>";
             var_dump($kv->mget(['test', 'heheda']));
 
+            echo "<pre>var_dump(\$kv->getMulti(['test', 'heheda']));</pre>";
+            var_dump($kv->getMulti(['test', 'heheda']));
+
             echo "<pre>var_dump(\$kv->get('test'));</pre>";
             var_dump($kv->get('test'));
 
@@ -356,6 +500,7 @@ echo 'Added.';</pre>";
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=delete">Delete</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=incr-decr-replace">Incr/Decr/Replace</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=append-prepend">Append/Prepend</a> | ' .
+            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=hash">Hash</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=other">Other</a> | ' .
             '<a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
@@ -484,6 +629,70 @@ setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
     }
     public function netCookie2() {
         return "\$_COOKIE: \n\n" . json_encode($_COOKIE, JSON_PRETTY_PRINT);
+    }
+
+    public function sessionDb() {
+        $this->obStart();
+        echo '<pre>';
+        try {
+            $db = Db::get();
+            echo "\$db = Db::get();\n\n";
+
+            Session::start($db, [
+                'exp' => '60'
+            ]);
+            echo "Session::start(\$db, ['exp' => '60']);\n\n";
+
+            echo "<b>var_dump(\$_SESSION);</b>\n";
+            var_dump($_SESSION);
+
+            echo "\n\$_SESSION['value'] = '" . (isset($_GET['value']) ? $_GET['value'] : 'ok') . "';\n\n";
+            $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
+
+            echo "<b>var_dump(\$_SESSION);</b>\n";
+            var_dump($_SESSION);
+
+            echo "\n<b>var_dump(Session::get('temp'));</b>\n";
+            var_dump(Session::get('temp'));
+
+            if (isset($_GET['temp'])) {
+                echo "\nSession::set(\"temp\", " . $_GET['temp'] . ", 5);\n\n";
+                Session::set("temp", $_GET['temp'], 5);
+
+                echo "<b>Click other link to view the example.</b>";
+            }
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+        echo '</pre>';
+
+        return '<a href="'.URL_BASE.'test/session_db">Default</a> | <a href="'.URL_BASE.'test/session_db?value=aaa">Set "aaa"</a> | <a href="'.URL_BASE.'test/session_db?value=bbb">Set "bbb"</a> | <a href="'.URL_BASE.'test/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
+    }
+
+    public function sessionKv() {
+        $this->obStart();
+        echo '<pre>';
+        try {
+            $rd = Redis::get();
+            echo "\$rd = Redis::get();\n\n";
+
+            Session::start($rd, ['exp' => '60']);
+            echo "Session::start(\$rd, ['exp' => '60']);\n\n";
+
+            echo "<b>var_dump(\$_SESSION);</b>\n";
+            var_dump($_SESSION);
+
+            echo "\n\$_SESSION['value'] = isset(\$_GET['value']) ? \$_GET['value'] : 'ok';\n\n";
+            $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
+
+            echo "<b>var_dump(\$_SESSION);</b>\n";
+            var_dump($_SESSION);
+        } catch (\Exception $e) {
+            echo $e->getMessage();
+        }
+        echo '</pre>';
+
+        return '<a href="'.URL_BASE.'test/session_redis">Default</a> | <a href="'.URL_BASE.'test/session_redis?value=aaa">Set "aaa"</a> | <a href="'.URL_BASE.'test/session_redis?value=bbb">Set "bbb"</a> | <a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function sql() {
@@ -662,169 +871,10 @@ setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
         return join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
-    public function session_db() {
-        $this->obStart();
-        echo '<pre>';
-        try {
-            $db = Db::get();
-            echo "\$db = Db::get();\n\n";
-
-            Session::start($db, [
-                'exp' => '60'
-            ]);
-            echo "Session::start(\$db, ['exp' => '60']);\n\n";
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-
-            echo "\n\$_SESSION['value'] = '" . (isset($_GET['value']) ? $_GET['value'] : 'ok') . "';\n\n";
-            $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-
-            echo "\n<b>var_dump(Session::get('temp'));</b>\n";
-            var_dump(Session::get('temp'));
-
-            if (isset($_GET['temp'])) {
-                echo "\nSession::set(\"temp\", " . $_GET['temp'] . ", 5);\n\n";
-                Session::set("temp", $_GET['temp'], 5);
-
-                echo "<b>Click other link to view the example.</b>";
-            }
-        } catch (\Exception $e) {
-            echo $e->getMessage();
-        }
-        echo '</pre>';
-
-        return '<a href="'.URL_BASE.'test/session_db">Default</a> | <a href="'.URL_BASE.'test/session_db?value=aaa">Set "aaa"</a> | <a href="'.URL_BASE.'test/session_db?value=bbb">Set "bbb"</a> | <a href="'.URL_BASE.'test/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
-    }
-
-    public function session_redis() {
-        $this->obStart();
-        echo '<pre>';
-        try {
-            $rd = Redis::get();
-            echo "\$rd = Redis::get();\n\n";
-
-            Session::start($rd, ['exp' => '60']);
-            echo "Session::start(\$rd, ['exp' => '60']);\n\n";
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-
-            echo "\n\$_SESSION['value'] = isset(\$_GET['value']) ? \$_GET['value'] : 'ok';\n\n";
-            $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-        } catch (\Exception $e) {
-            echo $e->getMessage();
-        }
-        echo '</pre>';
-
-        return '<a href="'.URL_BASE.'test/session_redis">Default</a> | <a href="'.URL_BASE.'test/session_redis?value=aaa">Set "aaa"</a> | <a href="'.URL_BASE.'test/session_redis?value=bbb">Set "bbb"</a> | <a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
-    }
-
-    public function captcha_fastbuild() {
-        Captcha::get(400, 100)->output();
-    }
-
-    public function captcha_base64() {
-        $this->obStart();
-
-        echo '$cap = Captcha::get(400, 100);<br>$phrase = $cap->getPhrase();<br>$base64 = $cap->getBase64();<br>echo $phrase;';
-        $cap = Captcha::get(400, 100);
-        $phrase = $cap->getPhrase();
-        $base64 = $cap->getBase64();
-        echo '<pre>'.$phrase.'</pre>';
-
-        echo 'echo $base64;';
-        echo '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">'.$base64.'</pre>';
-
-        echo '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
-        echo '<pre><img src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
-
-        return $this->obEnd() . $this->_getEnd();
-    }
-
     public function text() {
         $this->obStart();
         echo 'var_dump(Text::random(16, Text::RANDOM_LUNS)):<br><br>';
         echo 'string(16) "' . htmlspecialchars(Text::random(16, Text::RANDOM_LUNS)) .  '"';
-        $rtn = $this->obEnd();
-        return $rtn . '<br><br>' . $this->_getEnd();
-    }
-
-    public function aes() {
-        $this->obStart();
-
-        echo '<b>AES-256-ECB:</b>';
-
-        $key = 'testkeyatestkeyatestkeyatestkeya';
-        $text = Aes::encrypt('Original text', $key);
-        echo '<pre>';
-        echo "\$key = 'estkeyatestkeyatestkeyatestkeya';\n\$text = Aes::encrypt('Original text', \$key);\nvar_dump(\$text);";
-        echo '</pre>';
-        var_dump($text);
-
-        $orig = Aes::decrypt($text, $key);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key);\nvar_dump(\$orig);";
-        echo '</pre>';
-        var_dump($orig);
-
-        $orig = Aes::decrypt($text, 'otherKey');
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, 'otherKey');\nvar_dump(\$orig);";
-        echo '</pre>';
-        var_dump($orig);
-
-        // ----------
-
-        echo '<br><br><b>AES-256-CFB:</b>';
-
-        $iv = 'iloveuiloveuilov';
-        $text = Aes::encrypt('Original text', $key, $iv);
-        echo '<pre>';
-        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv);\nvar_dump(\$text);";
-        echo '</pre>';
-        var_dump($text);
-
-        $orig = Aes::decrypt($text, $key, $iv);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv);\nvar_dump(\$orig);";
-        echo '</pre>';
-        var_dump($orig);
-
-        $orig = Aes::decrypt($text, $key, 'otherIv');
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv');\nvar_dump(\$orig);";
-        echo '</pre>';
-        var_dump($orig);
-
-        // ----------
-
-        echo '<br><br><b>AES-256-CBC:</b>';
-
-        $text = Aes::encrypt('Original text', $key, $iv, Aes::AES_256_CBC);
-        echo '<pre>';
-        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);\nvar_dump(\$text);";
-        echo '</pre>';
-        var_dump($text);
-
-        $orig = Aes::decrypt($text, $key, $iv, Aes::AES_256_CBC);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv, Aes::AES_256_CBC);\nvar_dump(\$orig);";
-        echo '</pre>';
-        var_dump($orig);
-
-        $orig = Aes::decrypt($text, $key, 'otherIv', Aes::AES_256_CBC);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv', Aes::AES_256_CBC);\nvar_dump(\$orig);";
-        echo '</pre>';
-        var_dump($orig);
-
         $rtn = $this->obEnd();
         return $rtn . '<br><br>' . $this->_getEnd();
     }

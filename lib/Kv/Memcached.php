@@ -189,35 +189,44 @@ class Memcached implements IKv {
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array
+     * @return array 顺序数组
      */
     public function mget(array $keys) {
-        foreach ($keys as $k => $v) {
-            $keys[$k] = $this->_pre . $v;
+        $rtn = [];
+        $list = $this->getMulti($keys);
+        foreach ($keys as $v) {
+            $rtn[] = $list[$v];
         }
-        $r = $this->_link->getMulti($keys, \Memcached::GET_PRESERVE_ORDER);
-        if ($r === false) {
-            $rtn = [];
-            foreach ($keys as $v) {
-                $rtn[] = false;
-            }
-            return $rtn;
-        }
-        foreach ($r as $k => $v) {
-            if ($v === null) {
-                $r[$k] = false;
-            }
-        }
-        return $r;
+        return $rtn;
     }
 
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array
+     * @return array key => value 键值对
      */
     public function getMulti(array $keys) {
-        return $this->mget($keys);
+        $inKeys = [];
+        foreach ($keys as $k => $v) {
+            $inKeys[$k] = $this->_pre . $v;
+        }
+        $r = $this->_link->getMulti($inKeys, \Memcached::GET_PRESERVE_ORDER);
+        if ($r === false) {
+            $rtn = [];
+            foreach ($keys as $v) {
+                $rtn[$v] = false;
+            }
+            return $rtn;
+        }
+        $rtn = [];
+        foreach ($keys as $v) {
+            if ($r[$this->_pre . $v] === null) {
+                $rtn[$v] = false;
+            } else {
+                $rtn[$v] = $r[$this->_pre . $v];
+            }
+        }
+        return $rtn;
     }
 
     /**
@@ -432,6 +441,170 @@ class Memcached implements IKv {
      */
     public function getStats(string $name) {
         return $this->_link->getStats($name);
+    }
+
+    /**
+     * --- 设置哈希表值 ---
+     * @param string $key key 名
+     * @param string $field 字段名
+     * @param mixed $val 值
+     * @param string $mod 空,nx(key不存在才建立)
+     * @return bool
+     */
+    public function hSet(string $key, string $field, $val, string $mod = '') {
+        if (is_array($val)) {
+            $val = json_encode($val);
+        }
+        if ($mod === 'nx') {
+            $r = $this->set($key . '-' . $field, $val, 0, 'nx');
+        } else {
+            $r = $this->set($key . '-' . $field, $val);
+        }
+        if ($r === false) {
+            return false;
+        }
+        if (($v = $this->get($key)) === false) {
+            $this->set($key, '-' . $field . '-');
+        } else {
+            if (strpos($v, '-' . $field . '-') === false) {
+                $this->append($key, $field . '-');
+            }
+        }
+        return true;
+    }
+
+    /**
+     * --- 批量设置哈希值 ---
+     * @param string $key key my
+     * @param array $rows key / val 数组
+     * @return bool
+     */
+    public function hMSet(string $key, array $rows) {
+        foreach ($rows as $k => $v) {
+            if (!$this->hSet($key, $k, $v)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * --- 获取哈希值 ---
+     * @param string $key
+     * @param string $field
+     * @return string|false
+     */
+    public function hGet(string $key, string $field) {
+        return $this->get($key . '-' . $field);
+    }
+
+    /**
+     * --- 批量获取哈希值 ---
+     * @param string $key
+     * @param array $fields
+     * @return array
+     */
+    public function hMGet(string $key, array $fields) {
+        $inKeys = [];
+        foreach ($fields as $v) {
+            $inKeys[] = $key . '-' . $v;
+        }
+        $kl = strlen($key) + 1;
+        $r = $this->getMulti($inKeys);
+        $rtn = [];
+        foreach ($r as $k => $v) {
+            $rtn[substr($k, $kl)] = $v;
+        }
+        return $rtn;
+    }
+
+    /**
+     * --- 批量获取哈希键值对 ---
+     * @param string $key
+     * @return array
+     */
+    public function hGetAll(string $key) {
+        if (($v = $this->get($key)) === false) {
+            return [];
+        }
+        if ($v === '-') {
+            return [];
+        }
+        $r = [];
+        $v = substr($v, 1, -1);
+        $keys = explode('-', $v);
+        foreach ($keys as $k) {
+            $r[$k] = $this->get($key . '-' . $k);
+        }
+        return $r;
+    }
+
+    /**
+     * --- 删除哈希键 ---
+     * @param string $key key
+     * @param string|string[] $fields 值序列
+     * @return int
+     */
+    public function hDel(string $key, $fields) {
+        if (is_string($fields)) {
+            $fields = [$fields];
+        }
+        $count = 0;
+        foreach ($fields as $field) {
+            if ($this->delete($key . '-' . $field)) {
+                ++$count;
+            }
+        }
+        if ($v = $this->get($key)) {
+            foreach ($fields as $field) {
+                $v = str_replace('-' . $field . '-', '-', $v);
+            }
+            if ($v === '-') {
+                $this->delete($v);
+            } else {
+                $this->set($key, $v);
+            }
+        }
+        return $count;
+    }
+
+    /**
+     * --- 判断哈希字段是否存在 ---
+     * @param string $key
+     * @param string $field
+     * @return bool
+     */
+    public function hExists(string $key, string $field) {
+        return $this->exists($key . '-' . $field) === 1 ? true : false;
+    }
+
+    /**
+     * --- 设置哈希自增自减 ---
+     * @param string $key
+     * @param string $field
+     * @param $increment
+     * @return float|int
+     */
+    public function hIncr(string $key, string $field, $increment) {
+        if ($increment >= 0) {
+            return $this->incr($key . '-' . $field, $increment);
+        } else {
+            return $this->decr($key . '-' . $field, abs($increment));
+        }
+    }
+
+    /**
+     * --- 获取哈希所有字段 ---
+     * @param string $key
+     * @return array
+     */
+    public function hKeys(string $key) {
+        if ($v = $this->get($key)) {
+            $v = substr($v, 1, -1);
+            return explode('-', $v);
+        } else {
+            return [];
+        }
     }
 
 }

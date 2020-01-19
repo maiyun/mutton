@@ -88,14 +88,14 @@ interface IKv {
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array
+     * @return array 顺序数组
      */
     public function mget(array $keys);
 
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array
+     * @return array key => value 键值对
      */
     public function getMulti(array $keys);
 
@@ -220,6 +220,79 @@ interface IKv {
      * @return array
      */
     public function getStats(string $name);
+
+    /**
+     * --- 设置哈希表值 ---
+     * @param string $key key 名
+     * @param string $field 字段名
+     * @param mixed $val 值
+     * @param string $mod 空,nx(key不存在才建立)
+     * @return bool
+     */
+    public function hSet(string $key, string $field, $val, string $mod = '');
+
+    /**
+     * --- 批量设置哈希值 ---
+     * @param string $key key my
+     * @param array $rows key / val 数组
+     * @return bool
+     */
+    public function hMSet(string $key, array $rows);
+
+    /**
+     * --- 获取哈希值 ---
+     * @param string $key
+     * @param string $field
+     * @return string|false
+     */
+    public function hGet(string $key, string $field);
+
+    /**
+     * --- 批量获取哈希值 ---
+     * @param string $key
+     * @param array $fields
+     * @return array
+     */
+    public function hMGet(string $key, array $fields);
+
+    /**
+     * --- 批量获取哈希键值对 ---
+     * @param string $key
+     * @return array
+     */
+    public function hGetAll(string $key);
+
+    /**
+     * --- 删除哈希键 ---
+     * @param string $key key
+     * @param string|string[] $fields 值序列
+     * @return int
+     */
+    public function hDel(string $key, $fields);
+
+    /**
+     * --- 判断哈希字段是否存在 ---
+     * @param string $key
+     * @param string $field
+     * @return bool
+     */
+    public function hExists(string $key, string $field);
+
+    /**
+     * --- 设置哈希自增自减 ---
+     * @param string $key
+     * @param string $field
+     * @param $increment
+     * @return float|int
+     */
+    public function hIncr(string $key, string $field, $increment);
+
+    /**
+     * --- 获取哈希所有字段 ---
+     * @param string $key
+     * @return array
+     */
+    public function hKeys(string $key);
 
 }
 

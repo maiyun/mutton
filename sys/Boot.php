@@ -60,7 +60,7 @@ function log(string $msg, string $fend = ''): void {
         file_put_contents($path, 'TIME,URL,COOKIE,USER_AGENT,REALIP,TWOIP,CLIENTIP,MESSAGE'."\n");
         chmod($path, 0777);
     }
-    file_put_contents($path, '"' . date('H:i:s') . '","' . URL_FULL . URI . (count($_GET) ? '?' . str_replace('"', '""', http_build_query($_GET)) : '') . '","' . str_replace('"', '""', http_build_query($_COOKIE)) . '","' . str_replace('"', '""', (isset($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : 'No HTTP_USER_AGENT') . '","' . str_replace('"', '""', $realIp) . '","' . str_replace('"', '""', $twoIp) . '","' . str_replace('"', '""', $clientIp) . '","' . str_replace('"', '""', $msg) . "\"\n", FILE_APPEND);
+    @file_put_contents($path, '"' . date('H:i:s') . '","' . URL_FULL . URI . (count($_GET) ? '?' . str_replace('"', '""', http_build_query($_GET)) : '') . '","' . str_replace('"', '""', http_build_query($_COOKIE)) . '","' . str_replace('"', '""', (isset($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : 'No HTTP_USER_AGENT') . '","' . str_replace('"', '""', $realIp) . '","' . str_replace('"', '""', $twoIp) . '","' . str_replace('"', '""', $clientIp) . '","' . str_replace('"', '""', $msg) . "\"\n", FILE_APPEND);
 
 }
 log('', '-visit');

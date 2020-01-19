@@ -2,5 +2,5 @@
 .project
 .buildpath
 .settings/
-log/2*
 etc/__mutton__.php
+log/2*

@@ -92,7 +92,7 @@ class Redis implements IKv {
     public function set(string $key, $val, int $ttl = 0, string $mod = '') {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
-        if(is_array($val)) {
+        if (is_array($val)) {
             $val = json_encode($val);
         }
         $opt = [];
@@ -218,7 +218,7 @@ SCRIPT;
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array
+     * @return array 顺序数组
      */
     public function mget(array $keys) {
         $this->_resultCode = 0;
@@ -232,10 +232,15 @@ SCRIPT;
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array
+     * @return array key => value 键值对
      */
     public function getMulti(array $keys) {
-        return $this->mget($keys);
+        $r = $this->mget($keys);
+        $rtn = [];
+        foreach ($keys as $k => $v) {
+            $rtn[$v] = $r[$k];
+        }
+        return $rtn;
     }
 
     /**
@@ -481,6 +486,154 @@ SCRIPT;
      */
     public function getStats(string $name) {
         return [];
+    }
+
+    /**
+     * --- 设置哈希表值 ---
+     * @param string $key key 名
+     * @param string $field 字段名
+     * @param mixed $val 值
+     * @param string $mod 空,nx(key不存在才建立)
+     * @return bool
+     */
+    public function hSet(string $key, string $field, $val, string $mod = '') {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        if (is_array($val)) {
+            $val = json_encode($val);
+        }
+        if ($mod === 'nx') {
+            $r = $this->_link->hSetNx($this->_pre . $key, $field, $val);
+        } else {
+            $r = $this->_link->hSet($this->_pre . $key, $field, $val);
+        }
+        if ($r === false) {
+            $this->_resultCode = -1;
+            $this->_resultMessage = $this->_link->getLastError();
+        }
+        return is_int($r) ? ($r ? true : false) : $r;
+    }
+
+    /**
+     * --- 批量设置哈希值 ---
+     * @param string $key key my
+     * @param array $rows key / val 数组
+     * @return bool
+     */
+    public function hMSet(string $key, array $rows) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        $r = $this->_link->hMSet($this->_pre . $key, $rows);
+        if ($r === false) {
+            $this->_resultCode = -1;
+            $this->_resultMessage = $this->_link->getLastError();
+        }
+        return $r;
+    }
+
+    /**
+     * --- 获取哈希值 ---
+     * @param string $key
+     * @param string $field
+     * @return string|false
+     */
+    public function hGet(string $key, string $field) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        $r = $this->_link->hGet($this->_pre . $key, $field);
+        if ($r === false) {
+            $this->_resultCode = -1;
+            $this->_resultMessage = $this->_link->getLastError();
+        }
+        return $r;
+    }
+
+    /**
+     * --- 批量获取哈希值 ---
+     * @param string $key
+     * @param array $fields
+     * @return array
+     */
+    public function hMGet(string $key, array $fields) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        return $this->_link->hMGet($this->_pre . $key, $fields);
+    }
+
+    /**
+     * --- 批量获取哈希键值对 ---
+     * @param string $key
+     * @return array
+     */
+    public function hGetAll(string $key) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        return $this->_link->hGetAll($this->_pre . $key);
+    }
+
+    /**
+     * --- 删除哈希键 ---
+     * @param string $key key
+     * @param string|string[] $fields 值序列
+     * @return int
+     */
+    public function hDel(string $key, $fields) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        if (is_string($fields)) {
+            $fields = [$fields];
+        }
+        $r = $this->_link->hDel($this->_pre . $key, ...$fields);
+        if (is_bool($r)) {
+            if ($r === false) {
+                $this->_resultCode = -1;
+                $this->_resultMessage = $this->_link->getLastError();
+            }
+            return $r ? 1 : 0;
+        } else {
+            return $r;
+        }
+    }
+
+    /**
+     * --- 判断哈希字段是否存在 ---
+     * @param string $key
+     * @param string $field
+     * @return bool
+     */
+    public function hExists(string $key, string $field) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        return $this->_link->hExists($this->_pre . $key, $field);
+    }
+
+    /**
+     * --- 设置哈希自增自减 ---
+     * @param string $key
+     * @param string $field
+     * @param $increment
+     * @return float|int
+     */
+    public function hIncr(string $key, string $field, $increment) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        if (is_int($increment)) {
+            $r = $this->_link->hIncrBy($this->_pre . $key, $field, $increment);
+        } else {
+            $r = $this->_link->hIncrByFloat($this->_pre . $key, $field, $increment);
+        }
+        return $r;
+    }
+
+    /**
+     * --- 获取哈希所有字段 ---
+     * @param string $key
+     * @return array
+     */
+    public function hKeys(string $key) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        return $this->_link->hKeys($this->_pre . $key);
     }
 
 }
