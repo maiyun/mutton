@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.1","folder":true} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-27 15:15:29
  */
 declare(strict_types = 1);
 
@@ -15,11 +15,11 @@ class Sql {
 
     /**
      * --- 获取 Sql 实例 ---
-     * @param array|null $etc
+     * @param string $pre
      * @return LSql
      */
-    public static function get(?array $etc = null): LSql {
-        return new LSql($etc);
+    public static function get(string $pre = ''): LSql {
+        return new LSql($pre);
     }
 
     /**
@@ -93,10 +93,10 @@ class LSql {
     /**
      * --- 实例化 ---
      * LSql constructor.
-     * @param array|null $etc
+     * @param string $pre
      */
-    public function __construct(?array $etc = null) {
-        $this->_pre = $etc && isset($etc['pre']) ? $etc['pre'] : SQL_PRE;
+    public function __construct(string $pre = '') {
+        $this->_pre = $pre ? $pre : SQL_PRE;
     }
 
     // --- 配置项 ---

@@ -744,9 +744,7 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
     public function sql() {
         $echo = [];
-        $sql = Sql::get([
-            'pre' => 'test_'
-        ]);
+        $sql = Sql::get('test_');
         switch ($_GET['type']) {
             case 'insert': {
                 $s = $sql->insert('user', ['name', 'age'], [

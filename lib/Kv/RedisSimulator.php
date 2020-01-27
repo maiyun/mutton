@@ -62,16 +62,11 @@ class RedisSimulator implements IKv {
             return false;
         }
         $this->_link = $opt['db'];
-        $etc = null;
-        if (isset($opt['sqlPre'])) {
-            $etc = [
-                'pre' => $opt['sqlPre']
-            ];
-        }
+        $pre = isset($opt['sqlPre']) ? $opt['sqlPre'] : '';
         if (isset($opt['table'])) {
             $this->_table = $opt['table'];
         }
-        $this->_sql = Sql::get($etc);
+        $this->_sql = Sql::get($pre);
         return true;
     }
 
