@@ -3,4 +3,5 @@
 .buildpath
 .settings/
 etc/__mutton__.php
-log/2*
+log/*
+!log/index.html

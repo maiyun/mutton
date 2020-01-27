@@ -12,6 +12,7 @@ namespace lib;
 use Exception;
 use PDO;
 use PDOStatement;
+use function sys\log;
 
 require ETC_PATH.'db.php';
 
@@ -152,7 +153,7 @@ class Db {
             }
             return null;
         } catch (Exception $exception) {
-            var_dump($exception);
+            log(json_encode($exception), '-error');
             return null;
         }
     }

@@ -56,8 +56,8 @@ class test extends Ctr {
             '<br><br><a href="'.URL_BASE.'test/aes">View "test/aes"</a>',
 
             '<br><br><b>Captcha:</b>',
-            '<br><br><a href="'.URL_BASE.'test/captcha_fastbuild">View "test/captcha-fastbuild"</a>',
-            '<br><a href="'.URL_BASE.'test/captcha_base64">View "test/captcha-base64"</a>',
+            '<br><br><a href="'.URL_BASE.'test/captcha-fastbuild">View "test/captcha-fastbuild"</a>',
+            '<br><a href="'.URL_BASE.'test/captcha-base64">View "test/captcha-base64"</a>',
 
             '<br><br><b>Db:</b>',
             '<br><a href="'.URL_BASE.'test/db?s=Mysql">View "test/db?s=Mysql"</a>',
@@ -74,10 +74,11 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/net-form-test">View "test/net-form-test"</a>',
             '<br><a href="'.URL_BASE.'test/net-upload">View "test/net-upload"</a>',
             '<br><a href="'.URL_BASE.'test/net-cookie">View "test/net-cookie"</a>',
+            '<br><a href="'.URL_BASE.'test/net-save">View "test/net-save"</a>',
 
             '<br><br><b>Session:</b>',
-            '<br><br><a href="'.URL_BASE.'test/session_db">View "test/session-db"</a>',
-            '<br><a href="'.URL_BASE.'test/session_redis">View "test/session-redis"</a>',
+            '<br><br><a href="'.URL_BASE.'test/session-db">View "test/session-db"</a>',
+            '<br><a href="'.URL_BASE.'test/session-redis">View "test/session-redis"</a>',
 
             '<br><br><b>Sql:</b>',
             '<br><br><a href="'.URL_BASE.'test/sql?type=insert">View "test/sql?type=insert"</a>',
@@ -101,7 +102,7 @@ class test extends Ctr {
     public function qs() {
         $this->obStart();
         echo 'json_encode($_GET): <br><br>';
-        json_encode($_GET);
+        echo json_encode($_GET);
         $rtn = $this->obEnd();
         return $rtn . '<br><br>' . $this->_getEnd();
     }
@@ -199,13 +200,16 @@ class test extends Ctr {
     }
 
     public function captchaFastbuild() {
-        Captcha::get(400, 100)->output();
+        return Captcha::get(400, 100)->getStream();
     }
 
     public function captchaBase64() {
         $this->obStart();
 
-        echo '$cap = Captcha::get(400, 100);<br>$phrase = $cap->getPhrase();<br>$base64 = $cap->getBase64();<br>echo $phrase;';
+        echo "<pre>\$cap = Captcha::get(400, 100);
+\$phrase = \$cap->getPhrase();
+\$base64 = \$cap->getBase64();
+echo \$phrase;</pre>";
         $cap = Captcha::get(400, 100);
         $phrase = $cap->getPhrase();
         $base64 = $cap->getBase64();
@@ -248,12 +252,20 @@ if (!(\$rtn = \$db->connect())) {
 
         $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
-exec: " . $exec . "<br>
-insertId: " . $insertId . "<br>
+exec: " . json_encode($exec) . "<br>
+insertId: " . json_encode($insertId) . "<br>
+errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
         $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
+
+        $exec = $db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+\$insertId = \$db->getInsertID();</pre>
+exec: " . json_encode($exec) . "<br>
+errorCode: " . json_encode($db->getErrorCode()) . "<br>
+error: ".json_encode($db->getErrorInfo())."<br><br>";
 
         $exec = $db->exec('DELETE FROM `mu_session` WHERE `id` = \'' . $insertId . '\';');
         $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `mu_session` WHERE `id` = \'$insertId\';');</pre>
@@ -266,18 +278,22 @@ exec: " . $exec . "<br><br>";
     }
     private function _dbTable(\PDOStatement $stmt, &$echo) {
         $echo[] = '<table style="width: 100%;"><tr>';
-        $cc = $stmt->columnCount();
-        for($i = 0; $i < $cc; ++$i) {
-            $echo[] = '<th>' . htmlspecialchars($stmt->getColumnMeta($i)['name']) . '</th>';
-        }
-        $echo[] = "</tr>";
-
-        while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
-            $echo[] = '<tr>';
-            foreach ($row as $key => $val) {
-                $echo[] = '<td>' . htmlspecialchars($val) . '</td>';
+        if ($stmt->getColumnMeta(0)) {
+            $cc = $stmt->columnCount();
+            for ($i = 0; $i < $cc; ++$i) {
+                $echo[] = '<th>' . htmlspecialchars($stmt->getColumnMeta($i)['name']) . '</th>';
             }
-            $echo[] = '</tr>';
+            $echo[] = "</tr>";
+
+            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+                $echo[] = '<tr>';
+                foreach ($row as $key => $val) {
+                    $echo[] = '<td>' . htmlspecialchars($val) . '</td>';
+                }
+                $echo[] = '</tr>';
+            }
+        } else {
+            $echo[] = '<th>No data</th></tr>';
         }
         $echo[] = '</table>';
     }
@@ -305,149 +321,157 @@ exec: " . $exec . "<br><br>";
 if (!(\$rtn = \$kv->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
-var_dump(\$kv->getServerList());</pre>";
-        var_dump($kv->getServerList());
+json_encode(\$kv->getServerList());</pre>";
+        echo json_encode($kv->getServerList());
 
-        echo "<pre>var_dump(\$kv->isConnect());</pre>";
-        var_dump($kv->isConnect());
+        echo "<pre>json_encode(\$kv->isConnect());</pre>";
+        echo json_encode($kv->isConnect());
 
         if ($ac == 'delete') {
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->delete('test'));</pre>";
-            var_dump($kv->delete('test'));
+            echo "<pre>json_encode(\$kv->delete('test'));</pre>";
+            echo json_encode($kv->delete('test'));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
         } else if ($ac == 'incr-decr-replace') {
-            echo "<pre>var_dump(\$kv->getResultCode());\nvar_dump(\$kv->getResultMessage());\nvar_dump(\$kv->getLastError());</pre>";
-            var_dump($kv->getResultCode());
-            var_dump($kv->getResultMessage());
-            var_dump($kv->getLastError());
+            echo "<pre>json_encode(\$kv->getResultCode());
+json_encode(\$kv->getResultMessage());
+json_encode(\$kv->getLastError());</pre>";
+            echo json_encode($kv->getResultCode());
+            echo json_encode($kv->getResultMessage());
+            echo json_encode($kv->getLastError());
 
-            echo "<pre>var_dump(\$kv->delete('test'));</pre>";
-            var_dump($kv->delete('test'));
+            echo "<pre>json_encode(\$kv->delete('test'));</pre>";
+            echo json_encode($kv->delete('test'));
 
-            echo "<pre>var_dump(\$kv->replace('test', 'QAQ'));</pre>";
-            var_dump($kv->replace('test', 'QAQ'));
+            echo "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>";
+            echo json_encode($kv->replace('test', 'QAQ'));
 
-            echo "<pre>var_dump(\$kv->incr('test'));</pre>";
-            var_dump($kv->incr('test'));
+            echo "<pre>json_encode(\$kv->incr('test'));</pre>";
+            echo json_encode($kv->incr('test'));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->set('test', 666));</pre>";
-            var_dump($kv->set('test', 666));
+            echo "<pre>json_encode(\$kv->set('test', 666));</pre>";
+            echo json_encode($kv->set('test', 666));
 
-            echo "<pre>var_dump(\$kv->incr('test'));</pre>";
-            var_dump($kv->incr('test'));
+            echo "<pre>json_encode(\$kv->incr('test'));</pre>";
+            echo json_encode($kv->incr('test'));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->decr('test', 10));</pre>";
-            var_dump($kv->decr('test', 10));
+            echo "<pre>json_encode(\$kv->decr('test', 10));</pre>";
+            echo json_encode($kv->decr('test', 10));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->replace('test', 111));</pre>";
-            var_dump($kv->replace('test', 111));
+            echo "<pre>json_encode(\$kv->replace('test', 111));</pre>";
+            echo json_encode($kv->replace('test', 111));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->replace('test', 'QAQ'));</pre>";
-            var_dump($kv->replace('test', 'QAQ'));
+            echo "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>";
+            echo json_encode($kv->replace('test', 'QAQ'));
 
-            echo "<pre>var_dump(\$kv->incr('test', 10));</pre>";
-            var_dump($kv->incr('test', 10));
+            echo "<pre>json_encode(\$kv->incr('test', 10));</pre>";
+            echo json_encode($kv->incr('test', 10));
 
-            echo "<pre>var_dump(\$kv->getResultCode());\nvar_dump(\$kv->getResultMessage());\nvar_dump(\$kv->getLastError());</pre>";
-            var_dump($kv->getResultCode());
-            var_dump($kv->getResultMessage());
-            var_dump($kv->getLastError());
+            echo "<pre>json_encode(\$kv->getResultCode());
+json_encode(\$kv->getResultMessage());
+json_encode(\$kv->getLastError());</pre>";
+            echo json_encode($kv->getResultCode());
+            echo json_encode($kv->getResultMessage());
+            echo json_encode($kv->getLastError());
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->getResultCode());\nvar_dump(\$kv->getResultMessage());\nvar_dump(\$kv->getLastError());</pre>";
-            var_dump($kv->getResultCode());
-            var_dump($kv->getResultMessage());
-            var_dump($kv->getLastError());
+            echo "<pre>json_encode(\$kv->getResultCode());
+json_encode(\$kv->getResultMessage());
+json_encode(\$kv->getLastError());</pre>";
+            echo json_encode($kv->getResultCode());
+            echo json_encode($kv->getResultMessage());
+            echo json_encode($kv->getLastError());
         } else if ($ac === 'append-prepend') {
-            echo "<pre>var_dump(\$kv->prepend('test', '0'));</pre>";
-            var_dump($kv->prepend('test', '0'));
+            echo "<pre>json_encode(\$kv->prepend('test', '0'));</pre>";
+            echo json_encode($kv->prepend('test', '0'));
 
-            echo "<pre>var_dump(\$kv->set('test', 'bbb'));</pre>";
-            var_dump($kv->set('test', 'bbb'));
+            echo "<pre>json_encode(\$kv->set('test', 'bbb'));</pre>";
+            echo json_encode($kv->set('test', 'bbb'));
 
-            echo "<pre>var_dump(\$kv->append('test', 'end'));</pre>";
-            var_dump($kv->append('test', 'end'));
+            echo "<pre>json_encode(\$kv->append('test', 'end'));</pre>";
+            echo json_encode($kv->append('test', 'end'));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->prepend('test', 'pre'));</pre>";
-            var_dump($kv->prepend('test', 'pre'));
+            echo "<pre>json_encode(\$kv->prepend('test', 'pre'));</pre>";
+            echo json_encode($kv->prepend('test', 'pre'));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->add('aaa'));</pre>";
-            var_dump($kv->add('test', 'aaa'));
+            echo "<pre>json_encode(\$kv->add('aaa'));</pre>";
+            echo json_encode($kv->add('test', 'aaa'));
 
-            echo "<pre>var_dump(\$kv->getResultCode());\nvar_dump(\$kv->getResultMessage());\nvar_dump(\$kv->getLastError());</pre>";
-            var_dump($kv->getResultCode());
-            var_dump($kv->getResultMessage());
-            var_dump($kv->getLastError());
+            echo "<pre>json_encode(\$kv->getResultCode());
+json_encode(\$kv->getResultMessage());
+json_encode(\$kv->getLastError());</pre>";
+            echo json_encode($kv->getResultCode());
+            echo json_encode($kv->getResultMessage());
+            echo json_encode($kv->getLastError());
         } else if ($ac === 'hash') {
-            echo "<pre>var_dump(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>";
-            var_dump($kv->hSet('hTest', 'name', 'Cheng Xin'));
+            echo "<pre>json_encode(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>";
+            echo json_encode($kv->hSet('hTest', 'name', 'Cheng Xin'));
 
-            echo "<pre>var_dump(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
-            var_dump($kv->hSet('hTest', 'age', '16', 'nx'));
+            echo "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
+            echo json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
 
-            echo "<pre>var_dump(\$kv->hMSet('hTest', [
+            echo "<pre>json_encode(\$kv->hMSet('hTest', [
     'age' => '16',
     'sex' => 'female'
 ]));</pre>";
-            var_dump($kv->hMSet('hTest', [
+            echo json_encode($kv->hMSet('hTest', [
                 'age' => '16',
                 'sex' => 'female'
             ]));
 
-            echo "<pre>var_dump(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
-            var_dump($kv->hSet('hTest', 'age', '16', 'nx'));
+            echo "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
+            echo json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
 
-            echo "<pre>var_dump(\$kv->hGet('hTest', 'name'));</pre>";
-            var_dump($kv->hGet('hTest', 'name'));
+            echo "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>";
+            echo json_encode($kv->hGet('hTest', 'name'));
 
-            echo "<pre>var_dump(\$kv->hDel('hTest', 'name'));</pre>";
-            var_dump($kv->hDel('hTest', 'name'));
+            echo "<pre>json_encode(\$kv->hDel('hTest', 'name'));</pre>";
+            echo json_encode($kv->hDel('hTest', 'name'));
 
-            echo "<pre>var_dump(\$kv->hGetAll('hTest'));</pre>";
-            var_dump($kv->hGetAll('hTest'));
+            echo "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>";
+            echo json_encode($kv->hGetAll('hTest'));
 
-            echo "<pre>var_dump(\$kv->hKeys('hTest'));</pre>";
-            var_dump($kv->hKeys('hTest'));
+            echo "<pre>json_encode(\$kv->hKeys('hTest'));</pre>";
+            echo json_encode($kv->hKeys('hTest'));
 
-            echo "<pre>var_dump(\$kv->hExists('hTest', 'age'));</pre>";
-            var_dump($kv->hExists('hTest', 'age'));
+            echo "<pre>json_encode(\$kv->hExists('hTest', 'age'));</pre>";
+            echo json_encode($kv->hExists('hTest', 'age'));
 
-            echo "<pre>var_dump(\$kv->hMGet('hTest', ['age', 'sex', 'school']));</pre>";
-            var_dump($kv->hMGet('hTest', ['age', 'sex', 'school']));
+            echo "<pre>json_encode(\$kv->hMGet('hTest', ['age', 'sex', 'school']));</pre>";
+            echo json_encode($kv->hMGet('hTest', ['age', 'sex', 'school']));
 
-            echo "<pre>var_dump(\$kv->delete('hTest'));</pre>";
-            var_dump($kv->delete('hTest'));
+            echo "<pre>json_encode(\$kv->delete('hTest'));</pre>";
+            echo json_encode($kv->delete('hTest'));
 
-            echo "<pre>var_dump(\$kv->hGet('hTest', 'name'));</pre>";
-            var_dump($kv->hGet('hTest', 'name'));
+            echo "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>";
+            echo json_encode($kv->hGet('hTest', 'name'));
 
-            echo "<pre>var_dump(\$kv->hGetAll('hTest'));</pre>";
-            var_dump($kv->hGetAll('hTest'));
+            echo "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>";
+            echo json_encode($kv->hGetAll('hTest'));
         } else if ($ac === 'other') {
             echo "<pre>for (\$i = 0; \$i < 50; ++\$i) {
     \$kv->add('t' . \$i, \$i, 10);
@@ -458,38 +482,38 @@ echo 'Added.';</pre>";
             }
             echo 'Added.';
 
-            echo "<pre>var_dump(\$kv->getAllKeys());</pre>";
-            var_dump($kv->getAllKeys());
+            echo "<pre>json_encode(\$kv->getAllKeys());</pre>";
+            echo json_encode($kv->getAllKeys());
 
-            echo "<pre>var_dump(\$kv->keys('t*'));</pre>";
-            var_dump($kv->keys('t*'));
+            echo "<pre>json_encode(\$kv->keys('t*'));</pre>";
+            echo json_encode($kv->keys('t*'));
 
-            echo "<pre>var_dump(\$kv->scan());</pre>";
-            var_dump($kv->scan());
+            echo "<pre>json_encode(\$kv->scan());</pre>";
+            echo json_encode($kv->scan());
 
-            echo "<pre>var_dump(\$kv->scan('*2*'));</pre>";
-            var_dump($kv->scan('*2*'));
+            echo "<pre>json_encode(\$kv->scan('*2*'));</pre>";
+            echo json_encode($kv->scan('*2*'));
 
-            echo "<pre>var_dump(\$kv->scan('*', 3));</pre>";
-            var_dump($kv->scan('*', 3));
+            echo "<pre>json_encode(\$kv->scan('*', 3));</pre>";
+            echo json_encode($kv->scan('*', 3));
         } else {
-            echo "<pre>var_dump(\$kv->exists(['test', 'heheda']));</pre>";
-            var_dump($kv->exists(['test', 'heheda']));
+            echo "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>";
+            echo json_encode($kv->exists(['test', 'heheda']));
 
-            echo "<pre>var_dump(\$kv->mget(['test', 'heheda']));</pre>";
-            var_dump($kv->mget(['test', 'heheda']));
+            echo "<pre>json_encode(\$kv->mget(['test', 'heheda']));</pre>";
+            echo json_encode($kv->mget(['test', 'heheda']));
 
-            echo "<pre>var_dump(\$kv->getMulti(['test', 'heheda']));</pre>";
-            var_dump($kv->getMulti(['test', 'heheda']));
+            echo "<pre>json_encode(\$kv->getMulti(['test', 'heheda']));</pre>";
+            echo json_encode($kv->getMulti(['test', 'heheda']));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
 
-            echo "<pre>var_dump(\$kv->set('test', \$value ? \$value : 'ok'));</pre>";
-            var_dump($kv->set('test', $value ? $value : 'ok'));
+            echo "<pre>json_encode(\$kv->set('test', \$value ? \$value : 'ok'));</pre>";
+            echo json_encode($kv->set('test', $value ? $value : 'ok'));
 
-            echo "<pre>var_dump(\$kv->get('test'));</pre>";
-            var_dump($kv->get('test'));
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
         }
 
         echo "<br><br>";
@@ -512,8 +536,8 @@ echo 'Added.';</pre>";
         $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
-error: " . $res->error . "<br>
-errno: " . $res->errno . "<br>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
 info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
@@ -526,8 +550,8 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $echo[] = "<pre>Net::post('" . URL_FULL . "test/netPost1', ['a' => '1', 'b' => '2', 'c' => ['1', '2', '3']]);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
-error: " . $res->error . "<br>
-errno: " . $res->errno . "<br>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
 info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
@@ -629,6 +653,29 @@ setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
     }
     public function netCookie2() {
         return "\$_COOKIE: \n\n" . json_encode($_COOKIE, JSON_PRETTY_PRINT);
+    }
+
+    public function netSave() {
+        $echo = [];
+
+        $res = Net::get(URL_FULL . 'test/net-save1', [
+            'follow' => true,
+            'save' => LOG_PATH . 'tmp-index.js'
+        ]);
+        $echo[] = "<pre>Net::get('" . URL_FULL . "test/net-save1', [
+    'follow' => true,
+    'save' => LOG_PATH . 'tmp-index.js'
+]);</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . $res->content . "</pre>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+    public function netSave1() {
+        $this->location(URL_STC . 'index.js');
     }
 
     public function sessionDb() {
@@ -872,11 +919,23 @@ setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
     }
 
     public function text() {
-        $this->obStart();
-        echo 'var_dump(Text::random(16, Text::RANDOM_LUNS)):<br><br>';
-        echo 'string(16) "' . htmlspecialchars(Text::random(16, Text::RANDOM_LUNS)) .  '"';
-        $rtn = $this->obEnd();
-        return $rtn . '<br><br>' . $this->_getEnd();
+        $echo = "<pre>Text::random(16, Text::RANDOM_LUNS);</pre>
+" . htmlspecialchars(Text::random(16, Text::RANDOM_LUNS)) . "
+<pre>json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))</pre>
+" . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))) . "
+<pre>json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))</pre>
+" . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))) . "
+<pre>Text::urlResolve('/', 'path?id=1');</pre>
+" . htmlspecialchars(Text::urlResolve('/', 'path?id=1')) . "
+<pre>Text::urlResolve('https://www.url.com/view/path', 'find');</pre>
+" . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', 'find')) . "
+<pre>Text::urlResolve('/', '//www.url.com/path');</pre>
+" . htmlspecialchars(Text::urlResolve('/', '//www.url.com/path')) . "
+<pre>Text::urlResolve('http://www.url.com/path', 'https://www.url.com/path');</pre>
+" . htmlspecialchars(Text::urlResolve('http://www.url.com/path', 'https://www.url.com/path')) . "
+<pre>Text::urlResolve('http://www.url.com/path?ok=b', '?do=some');</pre>
+" . htmlspecialchars(Text::urlResolve('http://www.url.com/path?ok=b', '?do=some'));
+        return $echo . '<br><br>' . $this->_getEnd();
     }
 
     // --- END ---

@@ -216,7 +216,7 @@ class Ctr {
     }
 
     /**
-     * --- 跳转，支持相对和绝对路径 ---
+     * --- 跳转（302临时跳转），支持相对和绝对路径 ---
      * @param string $url
      */
     protected function location(string $url): void {

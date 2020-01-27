@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.1","folder":false} - END
  * Date: 2015/05/07 13:50
- * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44,  2020-1-26 23:18:42
  */
 declare(strict_types = 1);
 
@@ -20,7 +20,7 @@ class Text {
     const RANDOM_LN = self::RANDOM_L . self::RANDOM_N;
     const RANDOM_LU = self::RANDOM_L . self::RANDOM_U;
     const RANDOM_LUN = self::RANDOM_L . self::RANDOM_U . self::RANDOM_N;
-    const RANDOM_V = 'ACEFGHJKMNPRTWXYabcdefghkmnpqrtwxy3467';
+    const RANDOM_V = 'ACEFGHJKLMNPRSTWXY34567';
     const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]';
 
     /**
@@ -38,7 +38,12 @@ class Text {
         return $temp;
     }
 
-    // --- 显示文件大小格式化 ---
+    /**
+     * --- 将文件大小格式化为容量显示字符串 ---
+     * @param float $size
+     * @param string $spliter
+     * @return string
+     */
     public static function sizeFormat(float $size, string $spliter = ' '): string {
         static $units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
         $i = 0;
@@ -49,6 +54,36 @@ class Text {
     }
 
     /**
+     * --- 格式化一段 URL ---
+     * @param string $url
+     * @return array
+     */
+    public static function parseUrl(string $url): array {
+        $uri = parse_url($url);
+        $rtn = [
+            'protocol' => isset($uri['scheme']) ? strtolower($uri['scheme']) : null,
+            'auth' => null,
+            'user' => isset($uri['user']) ? $uri['user'] : null,
+            'pass' => isset($uri['pass']) ? $uri['pass'] : null,
+            'host' => null,
+            'port' => isset($uri['port']) ? $uri['port'] : null,
+            'hostname' => isset($uri['host']) ? strtolower($uri['host']) : null,
+            'hash' => isset($uri['fragment']) ? $uri['fragment'] : null,
+            'query' => isset($uri['query']) ? $uri['query'] : null,
+            'pathname' => isset($uri['path']) ? $uri['path'] : '/',
+            'path' => null
+        ];
+        if ($rtn['user']) {
+            $rtn['auth'] = $rtn['user'] . ($rtn['pass'] ? ':' . $rtn['pass'] : '');
+        }
+        if ($rtn['hostname']) {
+            $rtn['host'] = $rtn['hostname'] . ($rtn['port'] ? ':' . $rtn['port'] : '');
+        }
+        $rtn['path'] = $rtn['pathname'] . ($rtn['query'] ? '?' . $rtn['query'] : '');
+        return $rtn;
+    }
+
+    /**
      * --- 将虚拟 URL 路径转换为绝对 URL 路径 ---
      * @param string $from 基准路径
      * @param string $to 虚拟路径
@@ -56,13 +91,13 @@ class Text {
      */
     public static function urlResolve(string $from, string $to): string {
         // --- 获取 scheme, host, path ---
-        $f = parse_url($from);
-        // --- 以 // 开头的，加上 from 的 scheme 返回 ---
+        $f = Text::parseUrl($from);
+        // --- 以 // 开头的，加上 from 的 protocol 返回 ---
         if (strpos($to,'//') === 0) {
-            return $f['scheme'] . ':' . $to;
+            return $f['protocol'] ? $f['protocol'] . ':' . $to : $to;
         }
         // --- 已经是绝对路径，直接返回 ---
-        if (parse_url($to, PHP_URL_SCHEME) != '' ) {
+        if (parse_url($to, PHP_URL_SCHEME)) {
             return $to;
         }
         // --- # 或 ? 替换后返回 ---
@@ -81,19 +116,21 @@ class Text {
             $path = '';
         }
         // --- 非最终绝对网址 ----
-        $abs = $f['host'] . $path . '/' . $to;
+        $abs = ($f['host'] ? $f['host'] : '') . $path . '/' . $to;
         // --- 删掉 ./ ---
         $abs = preg_replace('/(\/\.?\/)/', '/', $abs);
         // --- 删掉 ../ ---
         while (true) {
+            // --- 用循环法把 /xx/../ 变成 / 进行返回上级目录 ---
             $abs = preg_replace('/\/(?!\.\.)[^\/]+\/\.\.\//', '/', $abs, -1, $count);
             if ($count === 0) {
                 break;
             }
         }
+        // --- 剩下的 ../ 就是无效的直接替换为空 ---
         $abs = str_replace('../', '', $abs);
         // --- 返回最终结果 ---
-        return $f['scheme'] . '://' . $abs;
+        return ($f['protocol'] ? $f['protocol'] . '://' : '') . $abs;
     }
 
     /**
