@@ -304,8 +304,16 @@ exec: " . $exec . "<br><br>";
         ]);
 
         $kv = Kv::get($_GET['s']);
+        $db = null;
+        if ($_GET['s'] === 'RedisSimulator') {
+            $db = Db::get(Db::MYSQL);
+            if (!$db->connect()) {
+                return [0, 'Failed, MySQL can not be connected.'];
+            }
+        }
         if (!($rtn = $kv->connect([
-            'binary' => false
+            'binary' => false,
+            'db' => $db
         ]))) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
@@ -403,6 +411,9 @@ json_encode(\$kv->getLastError());</pre>";
             echo "<pre>json_encode(\$kv->prepend('test', '0'));</pre>";
             echo json_encode($kv->prepend('test', '0'));
 
+            echo "<pre>json_encode(\$kv->get('test'));</pre>";
+            echo json_encode($kv->get('test'));
+
             echo "<pre>json_encode(\$kv->set('test', 'bbb'));</pre>";
             echo json_encode($kv->set('test', 'bbb'));
 
@@ -418,8 +429,11 @@ json_encode(\$kv->getLastError());</pre>";
             echo "<pre>json_encode(\$kv->get('test'));</pre>";
             echo json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->add('aaa'));</pre>";
+            echo "<pre>json_encode(\$kv->add('test', 'aaa'));</pre>";
             echo json_encode($kv->add('test', 'aaa'));
+
+            echo "<pre>json_encode(\$kv->append('tmp_test', 'hehe'));</pre>";
+            echo json_encode($kv->append('tmp_test', 'hehe'));
 
             echo "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
@@ -427,6 +441,12 @@ json_encode(\$kv->getLastError());</pre>";
             echo json_encode($kv->getResultCode());
             echo json_encode($kv->getResultMessage());
             echo json_encode($kv->getLastError());
+
+            echo "<pre>json_encode(\$kv->get('tmp_test'));</pre>";
+            echo json_encode($kv->get('tmp_test'));
+
+            echo "<pre>json_encode(\$kv->delete('tmp_test'));</pre>";
+            echo json_encode($kv->delete('tmp_test'));
         } else if ($ac === 'hash') {
             echo "<pre>json_encode(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>";
             echo json_encode($kv->hSet('hTest', 'name', 'Cheng Xin'));
@@ -831,9 +851,9 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
                 // --- 3 ---
 
-                $s = $sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \'1\' THEN ? ELSE ? END)', ['a', 'b']]])->where(['name' => 'Ah'])->getSql();
+                $s = $sql->update('user', ['name' => 'Serene', 'type' => '#(CASE `id` WHEN 1 THEN ' . $sql->data('val1') . ' WHEN 2 THEN ' . $sql->data('val2') . ' END)'])->where(['name' => 'Ah'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN \\'1\\' THEN ? ELSE ? END)', ['a', 'b']]])->where(['name' => 'Ah']);</pre>
+                $echo[] = "<pre>\$sql->update('user', ['name' => 'Serene', 'type' => '#(CASE `id` WHEN 1 THEN ' . \$sql->data('val1') . ' WHEN 2 THEN ' . \$sql->data('val2') . ' END)'])->where(['name' => 'Ah']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";

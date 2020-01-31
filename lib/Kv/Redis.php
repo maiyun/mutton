@@ -142,7 +142,7 @@ class Redis implements IKv {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         $r = $this->_link->append($this->_pre . $key, $val);
-        if ($r === false) {
+        if ($r <= 0) {
             $this->_resultCode = -1;
             $this->_resultMessage = $this->_link->getLastError();
         }
@@ -156,6 +156,8 @@ class Redis implements IKv {
      * @return bool
      */
     public function prepend(string $key, $val) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
         $script = <<<SCRIPT
 local val = redis.call("GET", KEYS[1])
 if (val == false) then
@@ -168,10 +170,14 @@ else
     return 0
 end
 SCRIPT;
-        $r = $this->_link->evalSha('ea360f3f6508a243824ecda6be15db56df217873', [$this->_pre.$key, $val], 1);
-        if ($r === false) {
+        $r = $this->_link->evalSha('ea360f3f6508a243824ecda6be15db56df217873', [$this->_pre . $key, $val], 1);
+        if ($r <= 0) {
             $this->_link->script('load', $script);
-            $r = $this->_link->evalSha('ea360f3f6508a243824ecda6be15db56df217873', [$this->_pre.$key, $val], 1);
+            $r = $this->_link->evalSha('ea360f3f6508a243824ecda6be15db56df217873', [$this->_pre . $key, $val], 1);
+            if ($r <= 0) {
+                $this->_resultCode = -1;
+                $this->_resultMessage = $this->_link->getLastError();
+            }
         }
         return $r > 0 ? true : false;
     }
@@ -226,7 +232,13 @@ SCRIPT;
         foreach ($keys as $k => $v) {
             $keys[$k] = $this->_pre . $v;
         }
-        return $this->_link->mget($keys);
+        $rtn = $this->_link->mget($keys);
+        foreach ($rtn as $k => $v) {
+            if ($v === false) {
+                $rtn[$k] = null;
+            }
+        }
+        return $rtn;
     }
 
     /**
@@ -381,16 +393,15 @@ SCRIPT;
     /**
      * --- 根据条件获取服务器上的 key ---
      * @param string $pattern
-     * @param int $count Count of keys per iteration (only a suggestion to Redis).
      * @return string[]|false
      */
-    public function scan($pattern = '*', $count = 0) {
+    public function scan($pattern = '*') {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         $pl = strlen($this->_pre);
         $keys = [];
         $iterator = null;
-        while (($r = $this->_link->scan($iterator, $this->_pre . $pattern, $count)) !== false) {
+        while (($r = $this->_link->scan($iterator, $this->_pre . $pattern)) !== false) {
             foreach ($r as $k => $v) {
                 $keys[] = $pl > 0 ? substr($v, $pl) : $v;
             }

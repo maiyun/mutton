@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.1","folder":true} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-27 15:15:29
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08
  */
 declare(strict_types = 1);
 
@@ -71,6 +71,23 @@ class Sql {
             }
         }
         return "'" . join('', $rStr) . "'";
+    }
+
+    /**
+     * --- 包裹一些数据用来组合 SQL  ---
+     * @param string|int|float|array $val
+     * @return string
+     */
+    public static function data($val): string {
+        if (is_array($val)) {
+            $sql = [];
+            foreach ($val as $v) {
+                $sql[] = '{##{' . $v . '}##}';
+            }
+            return join(', ', $sql);
+        } else {
+            return '{##{' . $val . '}##}';
+        }
     }
 
 }
@@ -228,33 +245,31 @@ class LSql {
         [
             ['total', '+', '1'],        // 1, '1' 可能也是 1 数字类型
             'type' => '6',              // 2
-            'str' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']]      // 3
+            'type' => '#(CASE `id` WHEN 1 THEN ' . data('val1') . ' WHEN 2 THEN ' . data('val2') . ' END)'          // 3
         ]
         */
         $sql = '';
         foreach ($s as $k => $v) {
             if (is_array($v)) {
-                if (isset($v[2])) {
-                    // --- 1 ---
-                    $if = $this->_isField($v[2]);
-                    if ($if[0]) {
-                        $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($if[1]) . ', ';
-                    } else {
-                        $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ?, ';
-                        $this->_data[] = $if[1];
+                // --- 1, 3 ---
+                $if = $this->_isField($v[2]);
+                if ($if[0]) {
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($if[1]) . ', ';
+                    if (count($if[2]) > 0) {
+                        $this->_data = array_merge($this->_data, $if[2]);
                     }
                 } else {
-                    // --- 3 ---
-                    $sql .= $this->field($k) . ' = ' . $v[0].', ';
-                    if (isset($v[1])) {
-                        $this->_data = array_merge($this->_data, $v[1]);
-                    }
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ?, ';
+                    $this->_data[] = $if[1];
                 }
             } else {
-                // --- 2 ---
+                // --- 2, 3 ---
                 $if = $this->_isField($v);
                 if ($if[0]) {
                     $sql .= $this->field($k) . ' = ' . $this->field($if[1]) . ', ';
+                    if (count($if[2]) > 0) {
+                        $this->_data = array_merge($this->_data, $if[2]);
+                    }
                 } else {
                     $sql .= $this->field($k) . ' = ?, ';
                     $this->_data[] = $if[1];
@@ -401,6 +416,9 @@ class LSql {
                     $if = $this->_isField($v[2]);
                     if ($if[0]) {
                         $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($if[1])  . ' AND ';
+                        if (count($if[2]) > 0) {
+                            $this->_data = array_merge($this->_data, $if[2]);
+                        }
                     } else {
                         $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
                         $this->_data[] = $v[2];
@@ -411,6 +429,9 @@ class LSql {
                 $if = $this->_isField($v);
                 if ($if[0]) {
                     $sql .= $this->field($k) . ' = ' . $this->field($if[1]) . ' AND ';
+                    if (count($if[2]) > 0) {
+                        $this->_data = array_merge($this->_data, $if[2]);
+                    }
                 } else {
                     $sql .= $this->field($k) . ' = ? AND ';
                     $this->_data[] = $if[1];
@@ -539,6 +560,15 @@ class LSql {
     }
 
     /**
+     * --- 包裹一些数据用来组合 SQL  ---
+     * @param string|int|float|array $val
+     * @return string
+     */
+    public function data($val): string {
+        return Sql::data($val);
+    }
+
+    /**
      * --- 对字段进行包裹 ---
      * @param string $str
      * @param string $pre 表前缀，仅请在 field 表名时倒入前缀
@@ -585,7 +615,13 @@ class LSql {
                 return [false, substr($str, 1)];
             } else {
                 // --- 是 field ---
-                return [true, substr($str, 1)];
+                $data = [];
+                $str = substr($str, 1);
+                $str = preg_replace_callback('/\\{##\\{([\\S\\s]+?)\\}##\\}/', function ($matches) use (&$data) {
+                    $data[] = $matches[1];
+                    return '?';
+                }, $str);
+                return [true, $str, $data];
             }
         } else {
             // --- 肯定不是 field ---

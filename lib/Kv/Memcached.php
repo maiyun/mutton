@@ -214,14 +214,14 @@ class Memcached implements IKv {
         if ($r === false) {
             $rtn = [];
             foreach ($keys as $v) {
-                $rtn[$v] = false;
+                $rtn[$v] = null;
             }
             return $rtn;
         }
         $rtn = [];
         foreach ($keys as $v) {
             if ($r[$this->_pre . $v] === null) {
-                $rtn[$v] = false;
+                $rtn[$v] = null;
             } else {
                 $rtn[$v] = $r[$this->_pre . $v];
             }
@@ -349,10 +349,9 @@ class Memcached implements IKv {
     /**
      * --- 根据条件获取服务器上的 key ---
      * @param string $pattern
-     * @param int $count Count of keys per iteration (only a suggestion to Redis).
      * @return string[]|false
      */
-    public function scan($pattern = '*', $count = 0) {
+    public function scan($pattern = '*') {
         return $this->keys($pattern);
     }
 
