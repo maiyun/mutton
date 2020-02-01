@@ -16,6 +16,8 @@ CREATE TABLE `redis` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `tag` (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ * --- 仅支持 MySQL ---
 */
 
 /**
@@ -183,7 +185,7 @@ class RedisSimulator implements IKv {
                 'value' => $val,
                 'time_add' => $time,
                 'time_exp' => $time_exp
-            ])->onDuplicate([
+            ])->duplicate([
                 'value' => $val,
                 'time_exp' => $time_exp
             ]);
@@ -235,7 +237,7 @@ class RedisSimulator implements IKv {
             'value' => $val,
             'time_add' => time(),
             'time_exp' => 4294967295
-        ])->onDuplicate([
+        ])->duplicate([
             'value' => '#CONCAT(`value`, ' . Sql::data($val) . ')'
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
@@ -288,6 +290,7 @@ class RedisSimulator implements IKv {
     public function exists($key) {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
+        $this->_gc();
         if (is_string($key)) {
             $key = [$key];
         }
@@ -474,29 +477,33 @@ class RedisSimulator implements IKv {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         $this->_gc();
-        $this->_sql->update($this->_table, [
-            ['value', $op, $value]
-        ])->where([
-            'tag' => $this->_index . $this->_pre . '_' . $key,
-            ['time_exp', '>=', time()]
+
+        $time = time();
+        $this->_sql->insert($this->_table, [
+            'tag' => $this->_index . '_' . $this->_pre . $key,
+            'value' => $op === '+' ? $value : -$value,
+            'time_add' => $time,
+            'time_exp' => 4294967295
+        ])->duplicate([
+            'value' => '#IF(`value` REGEXP ' . Sql::data('^-?\\d+\\.?\\d*$') . ', `value` ' . $op . ' ' . $value . ', `value`)'
         ]);
+
         $ps = $this->_link->prepare($this->_sql->getSql());
         if ($ps->execute($this->_sql->getData())) {
-            if ($ps->rowCount() > 0) {
-                $this->_sql->select(['value'], $this->_table)->where([
-                    'tag' => $this->_index . $this->_pre . '_' . $key
-                ]);
-                $ps = $this->_link->prepare($this->_sql->getSql());
-                if ($ps->execute($this->_sql->getData())) {
-                    return (int)($ps->fetch(PDO::FETCH_ASSOC)['value']);
-                } else {
-                    $this->_resultCode = -1;
-                    $this->_resultMessage = $ps->errorInfo()[0];
-                    return false;
-                }
+            if ($ps->rowCount() <= 1) {
+                $this->_resultCode = -1;
+                $this->_resultMessage = 'ERR value is not an integer or out of range';
+                return false;
+            }
+            $this->_sql->select(['value'], $this->_table)->where([
+                'tag' => $this->_index . '_' . $this->_pre . $key
+            ]);
+            $ps = $this->_link->prepare($this->_sql->getSql());
+            if ($ps->execute($this->_sql->getData())) {
+                return (int)($ps->fetch(PDO::FETCH_ASSOC)['value']);
             } else {
                 $this->_resultCode = -1;
-                $this->_resultMessage = 'Key does not exist.';
+                $this->_resultMessage = $ps->errorInfo()[0];
                 return false;
             }
         } else {

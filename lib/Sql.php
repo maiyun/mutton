@@ -188,7 +188,7 @@ class LSql {
      * @param array $s 更新数据
      * @return LSql
      */
-    public function onDuplicate(array $s): LSql {
+    public function duplicate(array $s): LSql {
         if (count($s) > 0) {
             $sql = ' ON DUPLICATE KEY UPDATE '.$this->_updateSub($s);
             $this->_sql[] = $sql;
@@ -245,7 +245,7 @@ class LSql {
         [
             ['total', '+', '1'],        // 1, '1' 可能也是 1 数字类型
             'type' => '6',              // 2
-            'type' => '#(CASE `id` WHEN 1 THEN ' . data('val1') . ' WHEN 2 THEN ' . data('val2') . ' END)'          // 3
+            'type' => '#(CASE `id` WHEN 1 THEN ' . data('val1') . ' WHEN 2 THEN ' . data('val2') . ' END)'      // 3
         ]
         */
         $sql = '';
@@ -576,27 +576,42 @@ class LSql {
      */
     public function field(string $str, string $pre = ''): string {
         $str = trim($str);
-        $str = str_replace('`', '', $str);  // --- 替换 ` 防止字段内部包含 ` ---
+        // $str = str_replace('`', '', $str);  // --- 替换 ` 防止字段内部包含 ` ---
         $str = preg_replace('/  {2,}/', ' ', $str);
-        if (preg_match('/^[a-zA-Z0-9_ .-]+?$/', $str)) {
+        if (preg_match('/^[a-zA-Z0-9`_ .-]+?$/', $str)) {
             $loStr = strtolower($str);
             $asPos = strpos($loStr, ' as ');
             $left = '';
             $right = '';
             if ($asPos !== false) {
                 $left = substr($str, 0, $asPos);
-                $right = ' AS `' . substr($str, $asPos + 4) . '`';
+                if ($left[0] === '`') {
+                    $left = str_replace('`', '', $left);
+                }
+                $right = substr($str, $asPos + 4);
+                if ($right[0] !== '`') {
+                    $right = '`' . $right . '`';
+                }
+                $right = ' AS ' . $right;
             } else {
                 $l = explode(' ', $str);
                 $left = $l[0];
                 if (isset($l[1])) {
-                    $right = ' AS `' . $l[1] . '`';
+                    if ($l[1][0] !== '`') {
+                        $l[1] = '`' . $l[1] . '`';
+                    }
+                    $right = ' AS ' . $l[1];
                 }
             }
             $l = explode('.', $left);
+            if ($l[0][0] === '`') {
+                $l[0] = str_replace('`', '', $l[0]);
+            }
             if (!isset($l[1])) {
+                // --- xxx ---
                 return '`' . $pre . $l[0] . '`' . $right;
             }
+            // --- x.xxx ---
             return '`' . $l[0] . '`.`' . $pre . $l[1] . '`' . $right;
         } else {
             return $str;

@@ -361,6 +361,13 @@ json_encode(\$kv->getLastError());</pre>";
             echo "<pre>json_encode(\$kv->incr('test'));</pre>";
             echo json_encode($kv->incr('test'));
 
+            echo "<pre>json_encode(\$kv->getResultCode());
+json_encode(\$kv->getResultMessage());
+json_encode(\$kv->getLastError());</pre>";
+            echo json_encode($kv->getResultCode());
+            echo json_encode($kv->getResultMessage());
+            echo json_encode($kv->getLastError());
+
             echo "<pre>json_encode(\$kv->get('test'));</pre>";
             echo json_encode($kv->get('test'));
 
@@ -794,9 +801,9 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->onDuplicate(['time_update' => '20'])->getSql();
+                $s = $sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('verify', ['token' => 'abc', 'time_update' => '10'})->onDuplicate(['time_update' => '20']);</pre>
+                $echo[] = "<pre>\$sql->insert('verify', ['token' => 'abc', 'time_update' => '10'})->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
@@ -831,9 +838,9 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
-                $s = $sql->select(['o.no', 'u.nick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
+                $s = $sql->select(['o.no', 'u.nick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['o.no', 'u.nick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1'])</pre>
+                $echo[] = "<pre>\$sql->select(['o.no', 'u.nick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);

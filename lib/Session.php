@@ -122,7 +122,7 @@ class Session {
                         'data' => serialize([]),
                         'time_update' => $_SERVER['REQUEST_TIME'],
                         'time_add' => $_SERVER['REQUEST_TIME']
-                    ]); // --- 不用使用 onDuplicate，因为 token 已经重新随机了 ---
+                    ]); // --- 不用使用 duplicate，因为 token 已经重新随机了 ---
                     $ps = self::$_db->prepare(self::$_sql->getSql());
                 } while (!$ps->execute(self::$_sql->getData()));
             }
