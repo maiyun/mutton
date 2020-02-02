@@ -358,6 +358,13 @@ json_encode(\$kv->getLastError());</pre>";
             echo "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>";
             echo json_encode($kv->replace('test', 'QAQ'));
 
+            echo "<pre>json_encode(\$kv->getResultCode());
+json_encode(\$kv->getResultMessage());
+json_encode(\$kv->getLastError());</pre>";
+            echo json_encode($kv->getResultCode());
+            echo json_encode($kv->getResultMessage());
+            echo json_encode($kv->getLastError());
+
             echo "<pre>json_encode(\$kv->incr('test'));</pre>";
             echo json_encode($kv->incr('test'));
 

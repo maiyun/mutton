@@ -2,7 +2,7 @@
 /**
  * --- 注意了注意了 ---
  * 本模拟器基于 Db 类，尽量不要用于任何实际运行环境。
- * 效率低，且没意义，仅为方便测试不用装 Redis 环境。
+ * 效率低意义不大，仅为方便测试不用装 Redis 环境。
  */
 
 /*
@@ -147,11 +147,13 @@ class RedisSimulator implements IKv {
                 } else {
                     $this->_resultCode = -1;
                     $this->_resultMessage = 'Key already exists.';
+                    $this->_lastError = $this->_resultMessage;
                     return false;
                 }
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else if ($mod === 'xx') {
@@ -171,11 +173,13 @@ class RedisSimulator implements IKv {
                 } else {
                     $this->_resultCode = -1;
                     $this->_resultMessage = 'Key does not exist.';
+                    $this->_lastError = $this->_resultMessage;
                     return false;
                 }
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
@@ -195,6 +199,7 @@ class RedisSimulator implements IKv {
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         }
@@ -246,6 +251,7 @@ class RedisSimulator implements IKv {
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
@@ -273,11 +279,13 @@ class RedisSimulator implements IKv {
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = 'Key does not exist.';
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
@@ -313,6 +321,7 @@ class RedisSimulator implements IKv {
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return 0;
         }
     }
@@ -337,11 +346,13 @@ class RedisSimulator implements IKv {
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
@@ -378,6 +389,7 @@ class RedisSimulator implements IKv {
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
         }
         return $rtn;
     }
@@ -436,11 +448,13 @@ class RedisSimulator implements IKv {
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = 'Key does not exist.';
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
@@ -490,9 +504,10 @@ class RedisSimulator implements IKv {
 
         $ps = $this->_link->prepare($this->_sql->getSql());
         if ($ps->execute($this->_sql->getData())) {
-            if ($ps->rowCount() <= 1) {
+            if ($ps->rowCount() === 0) {
                 $this->_resultCode = -1;
                 $this->_resultMessage = 'ERR value is not an integer or out of range';
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
             $this->_sql->select(['value'], $this->_table)->where([
@@ -504,11 +519,13 @@ class RedisSimulator implements IKv {
             } else {
                 $this->_resultCode = -1;
                 $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
@@ -535,6 +552,7 @@ class RedisSimulator implements IKv {
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
@@ -577,6 +595,7 @@ class RedisSimulator implements IKv {
         if (!$ps->execute($this->_sql->getData())) {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
         $rtn = [];
@@ -612,6 +631,7 @@ class RedisSimulator implements IKv {
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_lastError = $this->_resultMessage;
             return false;
         }
     }
