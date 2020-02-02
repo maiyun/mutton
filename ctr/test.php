@@ -781,12 +781,12 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $sql = Sql::get('test_');
         switch ($_GET['type']) {
             case 'insert': {
-                $s = $sql->insert('user', ['name', 'age'], [
+                $s = $sql->insert('user')->values(['name', 'age'], [
                     ['Ah', '16'],
                     ['Bob', '24']
                 ])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('user', ['name', 'age'], [
+                $echo[] = "<pre>\$sql->insert('user')->values(['name', 'age'], [
     ['Ah', '16'],
     ['Bob', '24']
 ]);</pre>
@@ -794,23 +794,37 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) ."</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('user', ['name', 'age'], ['Ah', '16'])->getSql();
+                $s = $sql->insert('user')->values(['name', 'age'], ['Ah', '16'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('user', ['name', 'age'], ['Ah', '16']);</pre>
+                $echo[] = "<pre>\$sql->insert('user')->values(['name', 'age'], ['Ah', '16']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('user', ['name' => 'Bob', 'age' => '24'])->getSql();
+                $s = $sql->insert('user')->values(['name' => 'Bob', 'age' => '24'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('user', ['name' => 'Bob', 'age' => '24'});</pre>
+                $echo[] = "<pre>\$sql->insert('user')->values(['name' => 'Bob', 'age' => '24']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('verify', ['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')'])->getSql();
+                $s = $sql->replace('user')->values(['token' => '20200202', 'name' => 'Bob'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('verify', ['token' => 'abc', 'time_update' => '10'})->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')']);</pre>
+                $echo[] = "<pre>\$sql->replace('user')->values(['token' => '20200202', 'name' => 'Bob']);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
+
+                $s = $sql->insert('order')->notExists('order', ['name' => 'Amy', 'age' => '16', 'time_add' => time()], ['name' => 'Amy'])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->insert('user')->notExists('order', ['name' => 'Amy', 'age' => '16', 'time_add' => time()], ['name' => 'Amy']);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
+
+                $s = $sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')'])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'})->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);

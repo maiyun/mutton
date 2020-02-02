@@ -127,49 +127,60 @@ class LSql {
     // --- 前导 ---
 
     /**
-     * --- 插入 ---
-     * @param string $f 表名
-     * @param array $cs []
-     * @param array $vs [] | [][]
+     * --- 插入数据前导 ---
+     * @param string $table 表名
      * @return LSql
      */
-    public function insert(string $f, array $cs, array $vs = []): LSql {
+    public function insert(string $table): LSql {
         $this->_data = [];
-        $sql = 'INSERT' . ' INTO ' . $this->field($f, $this->_pre) . ' (';
+        $sql = 'INSERT' . ' INTO ' . $this->field($table, $this->_pre);
+        $this->_sql = [$sql];
+        return $this;
+    }
+
+    /**
+     * --- 替换已经存在的唯一索引数据 ---
+     * @param string $table 表名
+     * @return LSql
+     */
+    public function replace(string $table): LSql {
+        $this->_data = [];
+        $sql = 'REPLACE' . ' INTO ' . $this->field($table, $this->_pre);
+        $this->_sql = [$sql];
+        return $this;
+    }
+
+    /**
+     * --- 实际插入数据的数据 ---
+     * @param array $cs [] 数据列或字段列
+     * @param array $vs [] | [][] 数据
+     * @return LSql
+     */
+    public function values(array $cs, array $vs = []): LSql {
+        $sql = ' (';
         if (count($vs) > 0) {
-            // --- 'xx', ['id', 'name'], [['1', 'wow'], ['2', 'oh']] ---
-            // --- 'xx', ['id', 'name'], ['1', 'wow'] ---
+            // --- ['id', 'name'], [['1', 'wow'], ['2', 'oh']] ---
+            // --- ['id', 'name'], ['1', 'wow'] ---
             foreach ($cs as $i) {
                 $sql .= $this->field($i) . ', ';
             }
             $sql = substr($sql, 0, -2) . ') VALUES ';
-            // --- 判断插入单条记录还是多条记录 ---
-            if (is_array($vs[0])) {
-                // --- $vs: [['1', 'wow'], ['2', 'oh']] ---
-                // --- 多条记录 ---
-                // --- INSERT INTO xx (id, name) VALUES (?, ?), (?, ?) ---
-                foreach ($vs as $i => $v) {
-                    $sql .= '(';
-                    foreach ($v as $i1 => $v1) {
-                        $sql .= '?, ';
-                        $this->_data[] = $v1;
-                    }
-                    $sql = substr($sql, 0, -2) . '), ';
-                }
-                $sql = substr($sql, 0, -2);
-            } else {
-                // --- $vs: ['1', 'wow'] ---
-                // --- 单条记录 ---
-                // --- INSERT INTO xx (id, name) VALUES (?, ?) ---
-                $sql .= '(';
-                foreach ($vs as $i => $v) {
-                    $sql .= '?, ';
-                }
-                $sql = substr($sql, 0, -2) . ')';
-                $this->_data = $vs;
+            if (!is_array($vs[0])) {
+                $vs = [$vs];
             }
+            // --- INSERT INTO xx (id, name) VALUES (?, ?) ---
+            // --- INSERT INTO xx (id, name) VALUES (?, ?), (?, ?) ---
+            foreach ($vs as $i => $v) {
+                $sql .= '(';
+                foreach ($v as $i1 => $v1) {
+                    $sql .= '?, ';
+                    $this->_data[] = $v1;
+                }
+                $sql = substr($sql, 0, -2) . '), ';
+            }
+            $sql = substr($sql, 0, -2);
         } else {
-            // --- 'xx', ['id' => '1', 'name' => 'wow'] ---
+            // --- ['id' => '1', 'name' => 'wow'] ---
             // --- INSERT INTO xx (id, name) VALUES (?, ?) ---
             $values = '';
             foreach ($cs as $k => $v) {
@@ -179,7 +190,31 @@ class LSql {
             }
             $sql = substr($sql, 0, -2) . ') VALUES (' . substr($values, 0, -2) . ')';
         }
-        $this->_sql = [$sql];
+        $this->_sql[] = $sql;
+        return $this;
+    }
+
+    /**
+     * --- 不存在则插入，衔接在 insert 之后 ---
+     * @param string $table
+     * @param array $insert
+     * @param array $where
+     * @return LSql
+     */
+    public function notExists(string $table, array $insert, array $where): LSql {
+        $sql = '(';
+        $values = [];
+        foreach ($insert as $field => $val) {
+            $sql .= $this->field($field) . ', ';
+            $values[] = $val;
+        }
+        $sql = substr($sql, 0, -2) . ') SELECT ';
+        foreach ($values as $value) {
+            $sql .= '?, ';
+            $this->_data[] = $value;
+        }
+        $sql = substr($sql, 0, -2) . ' FROM DUAL WHERE NOT EXISTS (SELECT `id` FROM ' . $this->field($table, $this->_pre) . ' WHERE ' . $this->_whereSub($where) . ')';
+        $this->_sql[] = $sql;
         return $this;
     }
 
