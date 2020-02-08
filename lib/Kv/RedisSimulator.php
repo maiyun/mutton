@@ -23,7 +23,7 @@ CREATE TABLE `redis` (
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/09/29 15:26
- * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46
+ * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-8 09:55:57
  */
 declare(strict_types = 1);
 
@@ -70,8 +70,13 @@ class RedisSimulator implements IKv {
         // $pwd = isset($opt['pwd']) ? $opt['pwd'] : RD_PWD;
         $index = isset($opt['index']) ? $opt['index'] : RD_INDEX;
         $this->_pre = isset($opt['pre']) ? $opt['pre'] : RD_PRE;
+        /** @var Db $db */
+        $db = isset($opt['db']) ? $opt['db'] : null;
 
-        if (!isset($opt['db'])) {
+        if (!$db) {
+            return false;
+        }
+        if ($db->getCore() !== Db::MYSQL) {
             return false;
         }
 

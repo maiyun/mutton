@@ -3,7 +3,7 @@ declare(strict_types = 1);
 
 namespace ctr;
 
-use lib\Aes;
+use lib\Crypto;
 use lib\Captcha;
 use lib\Db;
 use lib\Kv;
@@ -52,12 +52,12 @@ class test extends Ctr {
 
             '<br><br><b>Library test:</b>',
 
-            '<br><br><b>Aes:</b>',
-            '<br><br><a href="'.URL_BASE.'test/aes">View "test/aes"</a>',
-
             '<br><br><b>Captcha:</b>',
             '<br><br><a href="'.URL_BASE.'test/captcha-fastbuild">View "test/captcha-fastbuild"</a>',
             '<br><a href="'.URL_BASE.'test/captcha-base64">View "test/captcha-base64"</a>',
+
+            '<br><br><b>Crypto:</b>',
+            '<br><br><a href="'.URL_BASE.'test/crypto">View "test/crypto"</a>',
 
             '<br><br><b>Db:</b>',
             '<br><a href="'.URL_BASE.'test/db?s=Mysql">View "test/db?s=Mysql"</a>',
@@ -126,79 +126,6 @@ class test extends Ctr {
         }
     }
 
-    public function aes() {
-        $this->obStart();
-
-        echo '<b>AES-256-ECB:</b>';
-
-        $key = 'testkeyatestkeyatestkeyatestkeya';
-        $text = Aes::encrypt('Original text', $key);
-        echo '<pre>';
-        echo "\$key = 'estkeyatestkeyatestkeyatestkeya';\n\$text = Aes::encrypt('Original text', \$key);\njson_encode(\$text);";
-        echo '</pre>';
-        json_encode($text);
-
-        $orig = Aes::decrypt($text, $key);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key);\njson_encode(\$orig);";
-        echo '</pre>';
-        json_encode($orig);
-
-        $orig = Aes::decrypt($text, 'otherKey');
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, 'otherKey');\njson_encode(\$orig);";
-        echo '</pre>';
-        json_encode($orig);
-
-        // ----------
-
-        echo '<br><br><b>AES-256-CFB:</b>';
-
-        $iv = 'iloveuiloveuilov';
-        $text = Aes::encrypt('Original text', $key, $iv);
-        echo '<pre>';
-        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv);\njson_encode(\$text);";
-        echo '</pre>';
-        json_encode($text);
-
-        $orig = Aes::decrypt($text, $key, $iv);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv);\njson_encode(\$orig);";
-        echo '</pre>';
-        json_encode($orig);
-
-        $orig = Aes::decrypt($text, $key, 'otherIv');
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv');\njson_encode(\$orig);";
-        echo '</pre>';
-        json_encode($orig);
-
-        // ----------
-
-        echo '<br><br><b>AES-256-CBC:</b>';
-
-        $text = Aes::encrypt('Original text', $key, $iv, Aes::AES_256_CBC);
-        echo '<pre>';
-        echo "\$key = 'testkeyatestkeyatestkeyatestkeya';\n\$iv = 'iloveuiloveuilov';\n\$text = Aes::encrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);\njson_encode(\$text);";
-        echo '</pre>';
-        json_encode($text);
-
-        $orig = Aes::decrypt($text, $key, $iv, Aes::AES_256_CBC);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, \$iv, Aes::AES_256_CBC);\njson_encode(\$orig);";
-        echo '</pre>';
-        json_encode($orig);
-
-        $orig = Aes::decrypt($text, $key, 'otherIv', Aes::AES_256_CBC);
-        echo '<pre>';
-        echo "\$orig = Aes::decrypt(\$text, \$key, 'otherIv', Aes::AES_256_CBC);\njson_encode(\$orig);";
-        echo '</pre>';
-        json_encode($orig);
-
-        $rtn = $this->obEnd();
-        return $rtn . '<br><br>' . $this->_getEnd();
-    }
-
     public function captchaFastbuild() {
         return Captcha::get(400, 100)->getStream();
     }
@@ -222,6 +149,61 @@ echo \$phrase;</pre>";
         echo '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
 
         return $this->obEnd() . $this->_getEnd();
+    }
+
+    public function crypto() {
+        $echo = ['<b>AES-256-ECB:</b>'];
+
+        $key = 'testkeyatestkeyatestkeyatestkeya';
+        $text = Crypto::aesEncrypt('Original text', $key);
+        $echo[] = "<pre>\$key = 'testkeyatestkeyatestkeyatestkeya';
+\$text = Crypto::aesEncrypt('Original text', \$key);
+json_encode(\$text);</pre>" . json_encode($text);
+
+        $orig = Crypto::aesDecrypt($text, $key);
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key);
+json_encode(\$orig);</pre>" . json_encode($orig);
+
+        $orig = Crypto::aesDecrypt($text, 'otherKey');
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, 'otherKey');
+json_encode(\$orig);</pre>" . json_encode($orig);
+
+        // ----------
+
+        $echo[] = '<br><br><b>AES-256-CFB:</b>';
+
+        $iv = 'iloveuiloveuilov';
+        $text = Crypto::aesEncrypt('Original text', $key, $iv);
+        $echo[] = "<pre>\$iv = 'iloveuiloveuilov';
+\$text = Crypto::aesEncrypt('Original text', \$key, \$iv);
+json_encode(\$text);</pre>" . json_encode($text);
+
+        $orig = Crypto::aesDecrypt($text, $key, $iv);
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, \$iv);\njson_encode(\$orig);</pre>" . json_encode($orig);
+
+        $orig = Crypto::aesDecrypt($text, $key, 'otherIv');
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, 'otherIv');
+json_encode(\$orig);</pre>" . json_encode($orig);
+
+        // ----------
+
+        $echo[] = '<br><br><b>AES-256-CBC:</b>';
+
+        $text = Crypto::aesEncrypt('Original text', $key, $iv, Crypto::AES_256_CBC);
+        $echo[] = "<pre>\$key = 'testkeyatestkeyatestkeyatestkeya';
+\$iv = 'iloveuiloveuilov';
+\$text = Crypto::aesEncrypt('Original text', \$key, \$iv, Aes::AES_256_CBC);
+json_encode(\$text);</pre>" . json_encode($text);
+
+        $orig = Crypto::aesDecrypt($text, $key, $iv, Crypto::AES_256_CBC);
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, \$iv, Aes::AES_256_CBC);
+json_encode(\$orig);</pre>" . json_encode($orig);
+
+        $orig = Crypto::aesDecrypt($text, $key, 'otherIv', Crypto::AES_256_CBC);
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, 'otherIv', Aes::AES_256_CBC);
+json_encode(\$orig);</pre>" . json_encode($orig);
+
+        return join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
     public function db() {
