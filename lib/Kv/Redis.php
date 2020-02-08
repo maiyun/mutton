@@ -264,7 +264,7 @@ SCRIPT;
         if (($v = $this->get($key)) === false) {
             return false;
         }
-        $j = json_decode($v);
+        $j = json_decode($v, true);
         return $j === null ? false : $j;
     }
 

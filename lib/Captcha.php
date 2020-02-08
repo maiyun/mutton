@@ -36,7 +36,7 @@ class Captcha {
 
     public function __construct(int $width, int $height, int $len = 4) {
         $phrase = new PhraseBuilder($len, 'ACEFGHJKLMNPRSTWXY34567');
-        $this->_link = new CaptchaBuilder(NULL, $phrase);
+        $this->_link = new CaptchaBuilder(null, $phrase);
         $this->_link->build($width, $height);
     }
 

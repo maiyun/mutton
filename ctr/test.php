@@ -77,8 +77,8 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/net-save">View "test/net-save"</a>',
 
             '<br><br><b>Session:</b>',
-            '<br><br><a href="'.URL_BASE.'test/session-db">View "test/session-db"</a>',
-            '<br><a href="'.URL_BASE.'test/session-redis">View "test/session-redis"</a>',
+            '<br><br><a href="'.URL_BASE.'test/session?s=db">View "test/session?s=db"</a>',
+            '<br><a href="'.URL_BASE.'test/session?s=kv">View "test/session?s=kv"</a>',
 
             '<br><br><b>Sql:</b>',
             '<br><br><a href="'.URL_BASE.'test/sql?type=insert">View "test/sql?type=insert"</a>',
@@ -694,68 +694,40 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $this->location(URL_STC . 'index.js');
     }
 
-    public function sessionDb() {
-        $this->obStart();
-        echo '<pre>';
-        try {
-            $db = Db::get();
-            echo "\$db = Db::get();\n\n";
+    public function session() {
+        $this->checkInput($_GET, [
+            's' => ['require', ['db', 'kv'], 0, 'Object not found.'],
+            'value' => []
+        ]);
 
-            Session::start($db, [
-                'exp' => '60'
-            ]);
-            echo "Session::start(\$db, ['exp' => '60']);\n\n";
+        $echo = ['<pre>'];
 
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-
-            echo "\n\$_SESSION['value'] = '" . (isset($_GET['value']) ? $_GET['value'] : 'ok') . "';\n\n";
-            $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-
-            echo "\n<b>var_dump(Session::get('temp'));</b>\n";
-            var_dump(Session::get('temp'));
-
-            if (isset($_GET['temp'])) {
-                echo "\nSession::set(\"temp\", " . $_GET['temp'] . ", 5);\n\n";
-                Session::set("temp", $_GET['temp'], 5);
-
-                echo "<b>Click other link to view the example.</b>";
+        $link = null;
+        if ($_GET['s'] === 'db') {
+            $link = Db::get(Db::MYSQL);
+            if (!$link->connect()) {
+                return [0, 'Failed, MySQL can not be connected.'];
             }
-        } catch (\Exception $e) {
-            echo $e->getMessage();
+            $echo[] = "\$link = Db::get(Db::MYSQL);\n";
+        } else {
+            $link = Kv::get(Kv::REDIS);
+            if (!$link->connect()) {
+                return [0, 'Failed, Redis can not be connected.'];
+            }
+            $echo[] = "\$link = Kv::get(Kv::REDIS);\n";
         }
-        echo '</pre>';
+        Session::start($link, ['ttl' => 60]);
+        $echo[] = "Session::start(\$link, ['ttl' => 60]);
+json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
-        return '<a href="'.URL_BASE.'test/session_db">Default</a> | <a href="'.URL_BASE.'test/session_db?value=aaa">Set "aaa"</a> | <a href="'.URL_BASE.'test/session_db?value=bbb">Set "bbb"</a> | <a href="'.URL_BASE.'test/session_db?temp=bye">Set "temp" is "bye", expire is 5 seconds.</a> | <a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
-    }
+        $_SESSION['value'] = $_GET['value'] ? $_GET['value'] : 'ok';
+        $echo[] = "<pre>\$_SESSION['value'] = '" . ($_GET['value'] ? $_GET['value'] : 'ok') . "';
+json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
-    public function sessionKv() {
-        $this->obStart();
-        echo '<pre>';
-        try {
-            $rd = Redis::get();
-            echo "\$rd = Redis::get();\n\n";
-
-            Session::start($rd, ['exp' => '60']);
-            echo "Session::start(\$rd, ['exp' => '60']);\n\n";
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-
-            echo "\n\$_SESSION['value'] = isset(\$_GET['value']) ? \$_GET['value'] : 'ok';\n\n";
-            $_SESSION['value'] = isset($_GET['value']) ? $_GET['value'] : 'ok';
-
-            echo "<b>var_dump(\$_SESSION);</b>\n";
-            var_dump($_SESSION);
-        } catch (\Exception $e) {
-            echo $e->getMessage();
-        }
-        echo '</pre>';
-
-        return '<a href="'.URL_BASE.'test/session_redis">Default</a> | <a href="'.URL_BASE.'test/session_redis?value=aaa">Set "aaa"</a> | <a href="'.URL_BASE.'test/session_redis?value=bbb">Set "bbb"</a> | <a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
+        return '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '">Default</a> | ' .
+        '<a href="'.URL_BASE.'test/session?s=' . $_GET['s'] . '&value=aaa">Set "aaa"</a> | ' .
+        '<a href="'.URL_BASE.'test/session?s=' . $_GET['s'] . '&value=bbb">Set "bbb"</a> | ' .
+        '<a href="'.URL_BASE.'test">Return</a>' . join('',  $echo) . '<br><br>' . $this->obEnd() . $this->_getEnd();
     }
 
     public function sql() {

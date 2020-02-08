@@ -21,7 +21,7 @@ class Route {
         }
         // --- 检查路由表 ---
         $param = [];
-        $match = NULL;
+        $match = null;
         $pathLeft = ''; $pathRight = '';
         foreach (ROUTE as $rule => $ruleVal) {
             $rule = str_replace('/', '\\/', $rule);
