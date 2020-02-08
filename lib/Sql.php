@@ -15,10 +15,10 @@ class Sql {
 
     /**
      * --- 获取 Sql 实例 ---
-     * @param string $pre
+     * @param string|null $pre
      * @return LSql
      */
-    public static function get(string $pre = ''): LSql {
+    public static function get(?string $pre = null): LSql {
         return new LSql($pre);
     }
 
@@ -110,10 +110,10 @@ class LSql {
     /**
      * --- 实例化 ---
      * LSql constructor.
-     * @param string $pre
+     * @param string|null $pre
      */
-    public function __construct(string $pre = '') {
-        $this->_pre = $pre ? $pre : SQL_PRE;
+    public function __construct(?string $pre = null) {
+        $this->_pre = $pre !== null ? $pre : SQL_PRE;
     }
 
     // --- 配置项 ---
