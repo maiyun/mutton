@@ -19,14 +19,14 @@ Nginx/Apache
 > 注意：在 Nginx 下，需要您手動設定重寫規則，重寫規則如下：
 
 ```
-if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\?*?.*|[\w-]+?\.txt\??.*)$) {
-    rewrite ^/([\w-/.?]*)$ /index.php?__uri=$1 last;
+if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.txt\??.*)$) {
+    rewrite ^/([\s\S]*)$ /index.php?__uri=$1 last;
 }
 ```
 
 ## 庫
 
-Aes, Captcha, Db (MySQL, Sqlite), Kv (Redis, Memcached), Net, Session, Sql, Text.
+Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net, Session, Sql, Text.
 
 ## 部分特性
 
@@ -65,7 +65,7 @@ $str = Text::random(16, Text::RANDOM_N);
 ### 生成驗證碼圖片
 
 ```php
-Captcha::get(400, 100)->output();
+Captcha::get(400, 100)->getStream();
 ```
 
 ### 根據條件從資料庫獲取清單

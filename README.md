@@ -23,14 +23,14 @@ Nginx/Apache
 > Note: Under Nginx, you need to manually configure the rewrite rule with the following rewrite rules:
 
 ```
-if ($request_uri !~ ^/(stc/[\w-/.]+?\??.*|favicon.\w+?\??.*|[\w-]+?\.doc\??.*|[\w-]+?\.txt\??.*)$) {
+if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.txt\??.*)$) {
     rewrite ^/([\s\S]*)$ /index.php?__uri=$1 last;
 }
 ```
 
 ## Library
 
-Aes, Captcha, Db (MySQL, Sqlite), Kv (Redis, Memcached), Net, Session, Sql, Text.
+Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net, Session, Sql, Text.
 
 ## Features
 
@@ -71,7 +71,7 @@ $str = Text::random(16, Text::RANDOM_N);
 ### Generate a verification code picture
 
 ```php
-Captcha::get(400, 100)->output();
+Captcha::get(400, 100)->getStream();
 ```
 
 ### Get a list from the database
