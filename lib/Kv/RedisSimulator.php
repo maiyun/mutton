@@ -139,7 +139,7 @@ class RedisSimulator implements IKv {
         if ($mod === 'nx') {
             $this->_gcDo();
             // --- 不存在才建立 ---
-            $this->_sql->insert($this->_table, [
+            $this->_sql->insert($this->_table)->values([
                 'tag' => $this->_index . '_' . $this->_pre . $key,
                 'value' => $val,
                 'time_add' => $_SERVER['REQUEST_TIME'],
@@ -189,7 +189,7 @@ class RedisSimulator implements IKv {
             }
         } else {
             $this->_gc();
-            $this->_sql->insert($this->_table, [
+            $this->_sql->insert($this->_table)->values([
                 'tag' => $this->_index . '_' . $this->_pre . $key,
                 'value' => $val,
                 'time_add' => $time,
@@ -242,7 +242,7 @@ class RedisSimulator implements IKv {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         $this->_gc();
-        $this->_sql->insert($this->_table, [
+        $this->_sql->insert($this->_table)->values([
             'tag' => $this->_index . '_' . $this->_pre . $key,
             'value' => $val,
             'time_add' => time(),
@@ -498,7 +498,7 @@ class RedisSimulator implements IKv {
         $this->_gc();
 
         $time = time();
-        $this->_sql->insert($this->_table, [
+        $this->_sql->insert($this->_table)->values([
             'tag' => $this->_index . '_' . $this->_pre . $key,
             'value' => $op === '+' ? $value : -$value,
             'time_add' => $time,

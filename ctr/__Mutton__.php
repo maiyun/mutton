@@ -34,9 +34,11 @@ class __Mutton__ extends Ctr {
     // --- API ---
 
     public function apiCheckRefresh() {
-        $this->checkInput($_POST, [
-            'password' => ['require', 0, l('Please input password')]
-        ]);
+        if (!$this->checkInput($_POST, [
+            'password' => ['require', [0, l('Please input password')]]
+        ], $return)) {
+            return $return;
+        }
         if ($_POST['password'] !== __MUTTON__PWD) {
             return [0, l('Password is incorrect')];
         }
@@ -57,11 +59,11 @@ class __Mutton__ extends Ctr {
     }
 
     public function apiCheck() {
-        if (($rtn = $this->checkInput($_POST, [
-                'password' => ['require', 0, l('Please input password')],
-                'ver' => ['require', 0, l('System error')]
-            ])) && ($rtn[0] != 1)) {
-            return $rtn;
+        if (!$this->checkInput($_POST, [
+            'password' => ['require', [0, l('Please input password')]],
+            'ver' => ['require', [0, l('System error')]]
+        ], $return)) {
+            return $return;
         }
         if ($_POST['password'] !== __MUTTON__PWD) {
             return [0, l('Password is incorrect')];

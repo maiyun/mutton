@@ -8,8 +8,11 @@ declare(strict_types = 1);
 
 namespace mod;
 
+use Generator;
 use lib\Db;
+use lib\LSql;
 use lib\Sql;
+use PDO;
 
 /**
  * Class Mod
@@ -18,9 +21,10 @@ use lib\Sql;
  */
 class Mod {
 
-    // --- 可继承 ---
+    /** @var string 表名 */
     protected static $_table = '';
-    protected static $_primary = '';
+    /** @var string 主键字段名 */
+    protected static $_primary = 'id';
     /** @var string 设置后将由 _keyGenerator 函数生成唯一字段 */
     protected static $_key = '';
     /** @var bool 可开启软删软更新软新增 */
@@ -31,84 +35,253 @@ class Mod {
     /** @var array 模型获取的属性 */
     protected $_data = [];
 
-    /* @var Db $_conn 数据库连接对象 */
-    protected $_conn = null;
-    /** @var array etc 配置项，其实就是 Sql 对象的配置项 */
-    protected $_etc = null;
+    /* @var Db $_db 数据库连接对象 */
+    protected $_db = null;
 
-    // --- 最后一次执行的 SQL 内容 ---
-    protected $_lastSqlString = '';
-    protected $_lastSqlData = [];
+    // --- 系统自用 ---
 
-    // --- Mutton 独有配置项 [ 开始 ] ---
+    /** @var LSql $_sql Sql 库对象 */
+    protected $_sql = null;
 
-    /* @var Db $__conn Mutton 独有，设置映射静态数据库对象 */
-    protected static $__conn = null;
-    /** @var array Mutton 独有，设置 Sql 库的 etc 配置 */
-    protected static $__etc = null;
+    // --- Mutton PHP 框架配置项 [ 开始 ] ---
 
-    // --- Mutton 独有配置项 [ 结束 ] ---
+    /* @var Db $__db 设置映射静态数据库对象 */
+    protected static $__db = null;
+    /** @var string|null Mutton 独有，设置 Sql 库的 pre 配置 */
+    protected static $__pre = null;
+
+    // --- Mutton PHP 框架配置项 [ 结束 ] ---
 
     /**
      * 构造函数，etc 选项可选
-     * @param array|null $row
+     * @param array $opt
      */
-    public function __construct(array $row = null) {
-        // --- sql 对象配置 ---
-        if (Mod::$__etc !== null) {
-            $this->_etc = Mod::$__etc;
-        }
+    public function __construct(array $opt = []) {
         // --- 导入数据库连接 ---
-        $this->_conn = Mod::$__conn;
+        $this->_db = Mod::$__db;
+        // --- 新建 sql 对象 ---
+        $this->_sql = Sql::get(Mod::$__pre);
         // --- 第三个参数用于内部数据导入，将 data 数据合并到本实例化类 ---
-        if ($row) {
-            foreach ($row as $k => $v) {
+        if (isset($opt['row'])) {
+            foreach ($opt['row'] as $k => $v) {
                 $this->_data[$k] = $v;
                 $this->$k = $v;
             }
         }
+        if (isset($opt['select'])) {
+            $this->_sql->select($opt['select'], static::$_table);
+        }
+        if (isset($opt['where'])) {
+            $this->_sql->select('*', static::$_table);
+            if (is_string($opt['where'])) {
+                // --- 判断是否筛掉已删除的 ---
+                $this->_sql->append(' WHERE (' . $opt['where'] . ')');
+                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
+                    $this->_sql->append(' AND `time_remove` = 0');
+                }
+            } else {
+                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
+                    $opt['where']['time_remove'] = '0';
+                }
+                $this->_sql->where($opt['where']);
+            }
+        }
     }
 
-    // --- Mutton 独有函数 [ 开始 ] ---
+    // --- Mutton PHP 框架函数 [ 开始 ] ---
 
     /**
      * --- 传入数据库对象 ---
-     * @param Db $conn
+     * @param Db $db
      */
-    public static function setConn(Db $conn) {
-        self::$__conn = $conn;
+    public static function setDb(Db $db) {
+        self::$__db = $db;
     }
 
     /**
-     * --- 传入 Sql 所需配置项 ---
-     * @param array $etc
+     * --- 传入 Sql 所需 pre ---
+     * @param string $pre
      */
-    public static function setEtc(array $etc) {
-        self::$__etc = $etc;
+    public static function setPre(string $pre) {
+        self::$__pre = $pre;
     }
 
     /**
      * --- 开启数据库事务 ---
      */
     public static function beginTransaction() {
-        self::$__conn->beginTransaction();
+        self::$__db->beginTransaction();
     }
     public static function commit() {
-        self::$__conn->commit();
+        self::$__db->commit();
     }
     public static function rollBack() {
-        self::$__conn->rollBack();
+        self::$__db->rollBack();
     }
 
-    // --- Mutton 独有函数 [ 结束 ] ---
+    // --- Mutton 框架函数 [ 结束 ] ---
+
+    // --- 静态方法 ---
+
+    /**
+     * --- 添加一个序列 ---
+     * @param array $cs 字段列表
+     * @param array $vs 数据列表
+     * @return bool
+     */
+    public static function insert(array $cs, array $vs = []): bool {
+        $sql = Sql::get(Mod::$__pre);
+        $sql->insert(static::$_table)->values($cs, $vs);
+        $ps = self::$__db->prepare($sql->getSql());
+        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 获取添加一个序列的模拟 SQL ---
+     * @param array $cs 字段列表
+     * @param array $vs 数据列表
+     * @return string
+     */
+    public static function insertSql(array $cs, array $vs = []): string {
+        $sql = Sql::get(Mod::$__pre);
+        $sql->insert(static::$_table)->values($cs, $vs);
+        return $sql->format();
+    }
+
+    /**
+     * --- 插入数据如果唯一键冲突则更新 ---
+     * @param array $data 要插入的数据
+     * @param array $update 要更新的数据
+     * @return bool
+     */
+    public static function insertDuplicate(array $data, array $update) {
+        $sql = Sql::get(Mod::$__pre);
+        $sql->insert(static::$_table)->values($data)->duplicate($update);
+        $ps = self::$__db->prepare($sql->getSql());
+        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 根据条件移除条目 ---
+     * @param string|array $where 筛选条件
+     * @param bool $raw 是否真实
+     * @return bool
+     */
+    public static function removeByWhere($where, ?bool $raw = false): bool {
+        $sql = Sql::get(Mod::$__pre);
+        if (static::$_soft && ($raw === false)) {
+            // --- 软删除 ---
+            $sql->update(static::$_table, [
+                'time_remove' => time()
+            ]);
+            if (is_string($where)) {
+                $sql->append(' WHERE (' . $where . ') AND `time_remove` = 0');
+            } else {
+                $where['time_remove'] = '0';
+                $sql->where($where);
+            }
+        } else {
+            // --- 真删除 ---
+            $sql->delete(static::$_table);
+            if (is_string($where)) {
+                $sql->append(' WHERE ' . $where);
+            } else {
+                $sql->where($where);
+            }
+        }
+        $ps = self::$__db->prepare($sql->getSql());
+        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 根据条件更新数据 ---
+     * @param array $data 要更新的数据
+     * @param array|string $where 筛选条件
+     * @param bool $raw 是否真实
+     * @return bool
+     */
+    public static function updateByWhere(array $data, $where, bool $raw = false): bool {
+        $sql = Sql::get(Mod::$__pre);
+        $sql->update(static::$_table, $data);
+        if (is_string($where)) {
+            $sql->append(' WHERE (' . $where . ')');
+            if (static::$_soft && (!isset($opt['raw']) || $raw === false)) {
+                $sql->append(' AND `time_remove` = 0');
+            }
+        } else {
+            if (static::$_soft && (!isset($opt['raw']) || $raw === false)) {
+                $where['time_remove'] = '0';
+            }
+            $sql->where($where);
+        }
+        $ps = self::$__db->prepare($sql->getSql());
+        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- select 自定字段 ---
+     * @param string|string[] $c 字段字符串或字段数组
+     * @return static
+     */
+    public static function select($c) {
+        return new static([
+            'select' => $c
+        ]);
+    }
+
+    /**
+     * --- 通过 where 条件获取模型 ---
+     * @param array $s
+     * @param bool $raw
+     * @return static
+     */
+    public static function where(array $s, $raw = false) {
+        return new static([
+            'where' => $s,
+            'raw' => $raw
+        ]);
+    }
 
     /**
      * --- 获取创建对象，通常用于新建数据库条目 ---
-     * @return Mod
+     * @return static
      */
     public static function getCreate() {
         return new static();
     }
+
+    /**
+     * --- 根据主键获取对象 ---
+     * @param string|int|float $val 主键值
+     * @param bool $raw
+     * @return bool|Mod|null
+     */
+    public static function find($val, $raw = false) {
+        return (new static([
+            'where' => [
+                static::$_primary => $val
+            ],
+            'raw' => $raw
+        ]))->first();
+    }
+
+    // --- 动态方法 ---
 
     /**
      * --- 设置模型属性 ---
@@ -135,30 +308,148 @@ class Mod {
      * @param string $n 字段名
      * @return mixed
      */
-    public function getVal(string $n) {
+    public function get(string $n) {
         return $this->_data[$n];
+    }
+
+    /**
+     * --- 创建数据 ---
+     * @return bool
+     */
+    public function create(): bool {
+        $updates = [];
+        foreach ($this->_updates as $k => $v) {
+            $updates[$k] = $this->_data[$k];
+        }
+
+        if (static::$_key !== '' && !isset($updates[static::$_key])) {
+            do {
+                $updates[static::$_key] = $this->_keyGenerator();
+                $this->_sql->insert(static::$_table)->values($updates);
+                $ps = $this->_db->prepare($this->_sql->getSql());
+            } while (!$ps->execute($this->_sql->getData()) && ($ps->errorCode() === '23000'));
+        } else {
+            $this->_sql->insert(static::$_table)->values($updates);
+            $ps = $this->_db->prepare($this->_sql->getSql());
+            if (!$ps->execute($this->_sql->getData())) {
+                return false;
+            }
+        }
+        if ($ps->rowCount() > 0) {
+            $this->_updates = [];
+            $this->_data[static::$_primary] = $this->_db->getInsertID();
+            $this->{static::$_primary} = $this->_data[static::$_primary];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 不存在则才会创建成功 ---
+     * @param array $where 限定条件
+     * @param string|null $table 限定表，留空为当前表
+     * @return bool
+     */
+    public function createNotExists(array $where, ?string $table = null) {
+        $updates = [];
+        foreach ($this->_updates as $k => $v) {
+            $updates[$k] = $this->_data[$k];
+        }
+        if ($table === null) {
+            $table = static::$_table;
+        }
+
+        if (static::$_key !== '' && !isset($updates[static::$_key])) {
+            do {
+                $updates[static::$_key] = $this->_keyGenerator();
+                $this->_sql->insert(static::$_table)->notExists($table, $updates, $where);
+                $ps = $this->_db->prepare($this->_sql->getSql());
+            } while (!$ps->execute($this->_sql->getData()) && ($ps->errorCode() === '23000'));
+        } else {
+            $this->_sql->insert(static::$_table)->notExists($table, $updates, $where);
+            $ps = $this->_db->prepare($this->_sql->getSql());
+            if (!$ps->execute($this->_sql->getData())) {
+                return false;
+            }
+        }
+        if ($ps->rowCount() > 0) {
+            $this->_updates = [];
+            $this->_data[static::$_primary] = $this->_db->getInsertID();
+            $this->{static::$_primary} = $this->_data[static::$_primary];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 唯一键冲突则替换，不冲突则创建数据 ---
+     * @return bool
+     */
+    public function replace(): bool {
+        $updates = [];
+        foreach ($this->_updates as $k => $v) {
+            $updates[$k] = $this->_data[$k];
+        }
+
+        $this->_sql->replace(static::$_table)->values($updates);
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if (!$ps->execute($this->_sql->getData())) {
+            return false;
+        }
+
+        if ($ps->rowCount() > 0) {
+            $this->_updates = [];
+            $this->_data[static::$_primary] = $this->_db->getInsertID();
+            $this->{static::$_primary} = $this->_data[static::$_primary];
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * --- 刷新当前模型获取最新数据 ---
+     * @param bool $lock
+     * @return bool|null
+     */
+    public function refresh($lock = false) {
+        $this->_sql->select('*', static::$_table)->where([
+            static::$_primary => $this->_data[static::$_primary]
+        ]);
+        if ($lock) {
+            $this->_sql->lock();
+        }
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if (!$ps->execute($this->_sql->getData())) {
+            return false;
+        }
+        if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
+            return null;
+        }
+        foreach ($row as $k => $v) {
+            $this->_data[$k] = $v;
+            $this->$k = $v;
+        }
+        return true;
     }
 
     /**
      * --- 更新 set 的数据到数据库 ---
      * @return bool
      */
-    public function update(): bool {
+    public function save(): bool {
         $updates = [];
         foreach ($this->_updates as $k => $v) {
             $updates[$k] = $this->_data[$k];
         }
         if(count($updates) > 0) {
-            $sql = Sql::get($this->_etc);
-            $sql->update(static::$_table, $updates)->where([
+            $this->_sql->update(static::$_table, $updates)->where([
                 static::$_primary => $this->_data[static::$_primary]
             ]);
-
-            $this->_lastSqlString = $sql->getSql();
-            $this->_lastSqlData = $sql->getData();
-            $ps = $this->_conn->prepare($sql->getSql());
-
-            if ($ps->execute($sql->getData())) {
+            $ps = $this->_db->prepare($this->_sql->getSql());
+            if ($ps->execute($this->_sql->getData())) {
                 $this->_updates = [];
                 return true;
             } else {
@@ -171,139 +462,140 @@ class Mod {
 
     /**
      * --- 移除本条目 ---
-     * @param boolean|null $raw
+     * @param boolean $raw
      * @return bool
      */
-    public function remove($raw = null): bool {
-        $sql = Sql::get($this->_etc);
-        if (static::$_soft && ($raw !== true)) {
-            $sql->update(static::$_table, [
+    public function remove($raw = false): bool {
+        if (static::$_soft && !$raw) {
+            $this->_sql->update(static::$_table, [
                 'time_remove' => $_SERVER['REQUEST_TIME']
             ])->where([
                 static::$_primary => $this->_data[static::$_primary],
                 'time_remove' => '0'
             ]);
         } else {
-            $sql->delete(static::$_table)->where([
+            $this->_sql->delete(static::$_table)->where([
                 static::$_primary => $this->_data[static::$_primary]
             ]);
         }
-
-        $this->_lastSqlString = $sql->getSql();
-        $this->_lastSqlData = $sql->getData();
-        $ps = $this->_conn->prepare($sql->getSql());
-
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if ($ps->execute($this->_sql->getData()) && ($ps->rowCount() > 0)) {
             return true;
         } else {
             return false;
         }
     }
 
-    /** @var int 创建后不重新获取 */
-    const NORMAL = 0;
-    /** @var int 创建后重新获取并锁定（针对事务） */
-    const LOCK = 1;
-    /** @var int 创建后仅重新获取不锁定 */
-    const RELOAD = 2;
-
     /**
-     * --- 创建条目 ---
-     * @param int $type 创建的类型，表示创建后是否重新获取值，默认不获取
-     * @return bool
+     * --- 获取数据库第一个对象 ---
+     * @return static|false|null
      */
-    public function create(int $type = 0): bool {
-        $updates = [];
-        foreach ($this->_updates as $k => $v) {
-            $updates[$k] = $this->_data[$k];
-        }
-
-        $sql = Sql::get($this->_etc);
-
-        if (static::$_key !== '') {
-            do {
-                $updates[static::$_key] = $this->_keyGenerator();
-                $sql->insert(static::$_table, $updates);
-
-                $this->_lastSqlString = $sql->getSql();
-                $this->_lastSqlData = $sql->getData();
-
-                $ps = $this->_conn->prepare($sql->getSql());
-            } while (!$ps->execute($sql->getData()) && ($this->_conn->getErrorCode() == 1062));
-        } else {
-            $sql->insert(static::$_table, $updates);
-
-            $this->_lastSqlString = $sql->getSql();
-            $this->_lastSqlData = $sql->getData();
-
-            $ps = $this->_conn->prepare($sql->getSql());
-            if (!$ps->execute($sql->getData())) {
-                return false;
-            }
-        }
-        if ($ps->rowCount() > 0) {
-            $this->_updates = [];
-            $this->_data[static::$_primary] = $this->_conn->getInsertID();
-            $this->{static::$_primary} = $this->_conn->getInsertID();
-            // --- 重新获取 ---
-            if ($type === 1 || $type === 2) {
-                $sql->select('*', static::$_table)->where([
-                    static::$_primary => $this->_data[static::$_primary]
-                ]);
-                if ($type === 1) {
-                    $sql->lock();
-                }
-                $ps = $this->_conn->prepare($sql->getSql());
-                $ps->execute($sql->getData());
-                $row = $ps->fetch(\PDO::FETCH_ASSOC);
+    public function first() {
+        $this->_sql->limit(1);
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if ($ps->execute($this->_sql->getData())) {
+            if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
                 foreach ($row as $k => $v) {
                     $this->_data[$k] = $v;
                     $this->$k = $v;
                 }
+                return $this;
+            } else {
+                return null;
             }
-            return true;
         } else {
             return false;
         }
     }
 
     /**
-     * --- 获取最后执行的 SQL 字串 ---
-     * @return string
+     * --- 获取列表 ---
+     * @param string|null $key
+     * @return false|array
      */
-    public function getLastSqlString(): string {
-        return $this->_lastSqlString;
+    public function findList(?string $key = null) {
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if ($ps->execute($this->_sql->getData())) {
+            $list = [];
+            while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+                $obj = new static([
+                    'row' => $row
+                ]);
+                if ($key) {
+                    $list[$row[$key]] = $obj;
+                } else {
+                    $list[] = $obj;
+                }
+            }
+            return $list;
+        } else {
+            return false;
+        }
     }
 
     /**
-     * --- 获取最后执行的 Data 数据 ---
-     * @return array
+     * --- 动态获取列表，大大减少内存的使用量 ---
+     * @return Generator
      */
-    public function getLastSqlData(): array {
-        return $this->_lastSqlData;
+    public function cursor() {
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if ($ps->execute($this->_sql->getData())) {
+            while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+                yield new static([
+                    'row' => $row
+                ]);
+            }
+        }
     }
 
     /**
-     * --- 获取最后一次完整的 SQL 字符串 ---
-     * @return string
+     * --- 获取总条数 ---
+     * @return int
      */
-    public function getLastSqlFormat(): string {
-        return Sql::sFormat($this->_lastSqlString, $this->_lastSqlData);
-    }
-
-    public function __setLastSqlString(string $sql): void {
-        $this->_lastSqlString = $sql;
-    }
-    public function __setLastSqlData(array $data): void {
-        $this->_lastSqlData = $data;
+    public function total(): int {
+        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
+        $sql = preg_replace('/ LIMIT [0-9 ,]+/', '', $sql);
+        $ps = $this->_db->prepare($sql);
+        if ($ps->execute($this->_sql->getData())) {
+            if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+                return (int)$row['count'];
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
     }
 
     /**
-     * --- 当 _key 不为空时，则依据继承此方法的方法自动生成填充 key ---
-     * @return string
+     * @param string $f
+     * @param array $s
+     * @param string $type
+     * @return static
      */
-    protected function _keyGenerator(): string {
-        return '';
+    public function join(string $f, array $s = [], $type = 'INNER') {
+        $this->_sql->join($f, $s, $type);
+        return $this;
+    }
+
+    /**
+     * --- LIMIT ---
+     * @param int $a 起始
+     * @param int $b 长度
+     * @return static
+     */
+    public function limit(int $a, int $b = 0) {
+        $this->_sql->limit($a, $b);
+        return $this;
+    }
+
+    /**
+     * --- 分页 ---
+     * @param int $count 每页条数
+     * @param int $page 当前页数
+     */
+    public function page(int $count, int $page = 1) {
+        $this->_sql->limit($count * ($page - 1), $count);
     }
 
     /**
@@ -314,248 +606,21 @@ class Mod {
         return $this->_data;
     }
 
+    /**
+     * --- 当 _key 不为空时，则依据继承此方法的方法自动生成填充 key ---
+     * @return string
+     */
+    protected function _keyGenerator(): string {
+        return '';
+    }
+
     // --- 以下为静态方法 ---
 
     /**
-     * @param array|string $where
-     * @param array $opt lock: boolean, raw: boolean
-     * @return Mod|null
-     */
-    public static function get($where, array $opt = []) {
-        // $mod = static::class;
-        $sql = Sql::get(Mod::$__etc);
-        $sql->select('*', static::$_table);
-        if (is_string($where)) {
-            // --- 判断是否筛掉已删除的 ---
-            $sql->append(' WHERE (' . $where . ')');
-            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                $sql->append(' AND `time_remove` = 0');
-            }
-        } else {
-            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                $where['time_remove'] = '0';
-            }
-            $sql->where($where);
-        }
-        if (isset($opt['lock']) && $opt['lock']) {
-            $sql->lock();
-        }
-        $ps = self::$__conn->prepare($sql->getSql());
-        if ($ps->execute($sql->getData())) {
-            if ($row = $ps->fetch(\PDO::FETCH_ASSOC)) {
-                return new static($row);
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    /**
-     * --- 添加一个序列 ---
-     * @param array $cs 字段列表
-     * @param array $vs 参数列表
-     * @return bool
-     */
-    public static function insert(array $cs, array $vs = []): bool {
-        $sql = Sql::get(Mod::$__etc);
-        $sql->insert(static::$_table, $cs, $vs);
-        $ps = self::$__conn->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * --- 获取添加一个序列的模拟 SQL ---
-     * @param array $cs 字段列表
-     * @param array $vs 参数列表
-     * @return string
-     */
-    public static function insertSql(array $cs, array $vs = []): string {
-        $sql = Sql::get(Mod::$__etc);
-        $sql->insert(static::$_table, $cs, $vs);
-        return $sql->format();
-    }
-
-    /**
      * --- 获取列表 ---
-     * @param array $opt where, limit, by, group, key, lock, select, raw
+     * @param array $opt where, by, group, lock, raw
      * @return array
      */
-    public static function getList(array $opt = []): array {
-        $sql = Sql::get(Mod::$__etc);
-        $sql->select(isset($opt['select']) ? $opt['select'] : '*', static::$_table);
-        if (isset($opt['where'])) {
-            if (is_string($opt['where'])) {
-                $sql->append(' WHERE (' . $opt['where'] . ')');
-                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                    $sql->append(' AND `time_remove` = 0');
-                }
-            } else {
-                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                    $opt['where']['time_remove'] = '0';
-                }
-                $sql->where($opt['where']);
-            }
-        } else {
-            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                $sql->where([
-                    'time_remove' => '0'
-                ]);
-            }
-        }
-        if(isset($opt['group'])) {
-            $sql->group($opt['group']);
-        }
-        if(isset($opt['by'])) {
-            $sql->by($opt['by'][0], isset($opt['by'][1]) ? $opt['by'][1] : 'DESC');
-        }
-        $total = 0;
-        if(isset($opt['limit'])) {
-            if(isset($opt['limit'][2])) {
-                // --- 分页 ---
-                $sstr = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(0) AS count FROM', $sql->getSql());
-                $ps = self::$__conn->prepare($sstr);
-                $ps->execute($sql->getData());
-                $row = $ps->fetch(\PDO::FETCH_ASSOC);
-                $total = $row['count'] + 0;
-                // --- 计算完整 ---
-                $sql->limit($opt['limit'][1] * ($opt['limit'][2] - 1), $opt['limit'][1]);
-            } else {
-                $sql->limit($opt['limit'][0], $opt['limit'][1]);
-            }
-        }
-        if (isset($opt['lock']) && $opt['lock']) {
-            $sql->lock();
-        }
-
-        // --- 执行查询 ---
-        $ps = self::$__conn->prepare($sql->getSql());
-        $ps->execute($sql->getData());
-
-        $list = [];
-        while ($row = $ps->fetch(\PDO::FETCH_ASSOC)) {
-            $obj = new static($row);
-            $obj->__setLastSqlString($sql->getSql());
-            $obj->__setLastSqlData($sql->getData());
-            if (isset($opt['key'])) {
-                $list[$row[$opt['key']]] = $obj;
-            } else {
-                $list[] = $obj;
-            }
-        }
-        // --- 返回 ---
-        return [
-            'total' => $total == 0 ? count($list) : $total,
-            'list' => $list
-        ];
-    }
-
-    /**
-     * --- 根据条件计算条数 ---
-     * @param array $opt where, lock, select, raw
-     * @return object
-     */
-    public static function count($opt = []) {
-        $sql = Sql::get(Mod::$__etc);
-        $sql->select(isset($opt['select']) ? $opt['select'] : 'COUNT(0) AS count', static::$_table);
-        if (isset($opt['where'])) {
-            if (is_string($opt['where'])) {
-                $sql->append(' WHERE (' . $opt['where'] . ')');
-                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                    $sql->append(' AND `time_remove` = 0');
-                }
-            } else {
-                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                    $opt['where']['time_remove'] = '0';
-                }
-                $sql->where($opt['where']);
-            }
-        } else {
-            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] !== true)) {
-                $sql->where([
-                    'time_remove' => '0'
-                ]);
-            }
-        }
-        // --- 是否锁定 ---
-        if (isset($opt['lock']) && $opt['lock']) {
-            $sql->lock();
-        }
-        // --- 开始 ---
-        $ps = self::$__conn->prepare($sql->getSql());
-        $ps->execute($sql->getData());
-        return $ps->fetchObject();
-    }
-
-    /**
-     * --- 根据条件移除条目 ---
-     * @param string|array $where 筛选条件
-     * @param bool $raw 是否真实
-     * @return bool
-     */
-    public static function removeByWhere($where, ?bool $raw = null): bool {
-        $sql = Sql::get(Mod::$__etc);
-        if (static::$_soft && ($raw !== true)) {
-            // --- 软删除 ---
-            $sql->update(static::$_table, [
-                'time_remove' => $_SERVER['REQUEST_TIME']
-            ]);
-            if (is_string($where)) {
-                $sql->append(' WHERE ('.$where.') AND `time_remove` = 0');
-            } else {
-                $where['time_remove'] = '0';
-                $sql->where($where);
-            }
-        } else {
-            // --- 真删除 ---
-            $sql->delete(static::$_table);
-            if (is_string($where)) {
-                $sql->append(' WHERE ' . $where);
-            } else {
-                $sql->where($where);
-            }
-        }
-        $ps = self::$__conn->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * --- 根据条件更新数据 ---
-     * @param array $data 要更新的数据
-     * @param array|string $where 筛选条件
-     * @param bool $raw 是否真实
-     * @return bool
-     */
-    public static function updateByWhere(array $data, $where, bool $raw = null): bool {
-        $sql = Sql::get(Mod::$__etc);
-        $sql->update(static::$_table, $data);
-        if (is_string($where)) {
-            $sql->append(' WHERE ('.$where.')');
-            if (static::$_soft && (!isset($opt['raw']) || $raw !== true)) {
-                $sql->append(' AND `time_remove` = 0');
-            }
-        } else {
-            if (static::$_soft && (!isset($opt['raw']) || $raw !== true)) {
-                $where['time_remove'] = '0';
-            }
-            $sql->where($where);
-        }
-        $ps = self::$__conn->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
-        } else {
-            return false;
-        }
-    }
 
 }
 

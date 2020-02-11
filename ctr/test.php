@@ -207,9 +207,11 @@ json_encode(\$orig);</pre>" . json_encode($orig);
     }
 
     public function db() {
-        $this->checkInput($_GET, [
-            's' => ['require', ['Mysql', 'Sqlite'], 0, 'Object not found.']
-        ]);
+        if (!$this->checkInput($_GET, [
+            's' => ['require', ['Mysql', 'Sqlite'], [0, 'Object not found.']]
+        ], $return)) {
+            return $return;
+        }
 
         $db = Db::get($_GET['s']);
         if (!($rtn = $db->connect())) {
@@ -249,6 +251,17 @@ exec: " . json_encode($exec) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
+        $exec = $db->exec('REPLACE INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `mu_session` (`id`, `token`, `data`, `time_update`, `time_add`) VALUES (\'" . $insertId . "\', \'test2-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+\$insertId = \$db->getInsertID();</pre>
+exec: " . json_encode($exec) . "<br>
+" . ($exec ? "insertId: " . json_encode($db->getInsertID()) . "<br>" : "") . "
+errorCode: " . json_encode($db->getErrorCode()) . "<br>
+error: ".json_encode($db->getErrorInfo())."<br><br>";
+
+        $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 10;');
+        $this->_dbTable($stmt, $echo);
+
         $exec = $db->exec('DELETE FROM `mu_session` WHERE `id` = \'' . $insertId . '\';');
         $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `mu_session` WHERE `id` = \'$insertId\';');</pre>
 exec: " . $exec . "<br><br>";
@@ -281,9 +294,11 @@ exec: " . $exec . "<br><br>";
     }
 
     public function kv() {
-        $this->checkInput($_GET, [
-            's' => ['require', ['Memcached', 'Redis', 'RedisSimulator'], 0, 'Object not found.']
-        ]);
+        if (!$this->checkInput($_GET, [
+            's' => ['require', ['Memcached', 'Redis', 'RedisSimulator'], [0, 'Object not found.']]
+        ], $return)) {
+            return $return;
+        }
 
         $kv = Kv::get($_GET['s']);
         $db = null;
@@ -695,10 +710,12 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     }
 
     public function session() {
-        $this->checkInput($_GET, [
-            's' => ['require', ['db', 'kv'], 0, 'Object not found.'],
+        if (!$this->checkInput($_GET, [
+            's' => ['require', ['db', 'kv'], [0, 'Object not found.']],
             'value' => []
-        ]);
+        ], $return)) {
+            return $return;
+        }
 
         $echo = ['<pre>'];
 

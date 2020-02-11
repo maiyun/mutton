@@ -65,105 +65,106 @@ class Ctr {
 
     /**
      * --- 检测提交的数据类型 ---
-     * @param array $input
+     * @param array $input 要校验的输入项
      * @param array $rule
-     * @param bool $exit 是否直接退出
-     * @return array
+     * @param array $return 返回值
+     * @return bool
      */
-    protected function checkInput(array &$input, array $rule, bool $exit = true) {
+    protected function checkInput(array &$input, array $rule, &$return) {
         // --- 遍历规则 ---
-        // --- ['xx' => ['require', '> 6', 0, 'xx 必须大于 6']] ---
+        // --- $input, ['xx' => ['require', '> 6', [0, 'xx 必须大于 6']], 'yy' => []], $return ---
         foreach ($rule as $key => $val) {
+            // --- $key 就是上面的 xx ---
             if (!isset($input[$key])) {
                 // --- 原值不存在则设定为空 ---
                 $input[$key] = '';
             }
-            $ci = -1;
-            $count = count($val);
-            if ($count > 2) {
-                $ci = count($val) - 2;
-            } else {
-                continue;
-            }
-            // --- ['require', '> 6', 0, 'xx 必须大于 6'] ---
-            foreach ($val as $k => $v) {
-                if ($k == $ci) {
+            // --- ['require', '> 6', [0, 'xx 必须大于 6']] ---
+            $lastK = count($val) - 1;
+            for ($k = 0; $k <= $lastK; ++$k) {
+                if ($k === $lastK) {
                     break;
                 }
+                $v = $val[$k];
                 if (is_array($v)) {
-                    if (!in_array($input[$key], $v)) {
-                        return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                    if ($input[$key] !== '' && !in_array($input[$key], $v)) {
+                        $return = $val[$lastK];
+                        return false;
                     }
                 } else {
                     switch ($v) {
                         case 'require': {
                             if ($input[$key] == '') {
-                                return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                                $return = $val[$lastK];
+                                return false;
                             }
                             break;
                         }
                         case 'num':
                         case 'number': {
-                            if ($input[$key] != '' && !is_numeric($input[$key])) {
-                                return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                            if ($input[$key] !== '' && !is_numeric($input[$key])) {
+                                $return = $val[$lastK];
+                                return false;
                             }
                             break;
                         }
                         default: {
-                            if ($input[$key] != '') {
-                                if ($v[0] == '/') {
+                            if ($input[$key] !== '') {
+                                if ($v[0] === '/') {
                                     // --- 正则 ---
                                     if (!preg_match($v, $input[$key])) {
-                                        return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                                        $return = $val[$lastK];
+                                        return false;
                                     }
                                 } else if (preg_match('/^([><=]+) *([0-9]+)$/', $input[$key], $match)) {
                                     // --- 判断表达式 ---
-                                    $return = false;
+                                    $needReturn = false;
                                     $inputNum = (float)$input[$key];
                                     $num = (float)$match[2];
                                     switch ($match[1]) {
                                         case '>': {
                                             if ($inputNum <= $num) {
-                                                $return = true;
+                                                $needReturn = true;
                                             }
                                             break;
                                         }
                                         case '<': {
                                             if ($inputNum >= $num) {
-                                                $return = true;
+                                                $needReturn = true;
                                             }
                                             break;
                                         }
                                         case '>=': {
                                             if ($inputNum < $num) {
-                                                $return = true;
+                                                $needReturn = true;
                                             }
                                             break;
                                         }
                                         case '<=': {
                                             if ($inputNum > $num) {
-                                                $return = true;
+                                                $needReturn = true;
                                             }
                                             break;
                                         }
                                         case '=':
                                         case '==':
                                         case '===': {
-                                            if ($inputNum != $num) {
-                                                $return = true;
+                                            if ($inputNum !== $num) {
+                                                $needReturn = true;
                                             }
                                             break;
                                         }
                                         case '!=':
                                         case '<>': {
-                                            if ($inputNum == $num) {
-                                                $return = true;
+                                            if ($inputNum === $num) {
+                                                $needReturn = true;
                                             }
                                             break;
                                         }
                                     }
-                                    if ($return) {
-                                        return $this->_checkInputExit($val[$ci], $val[$ci + 1], $exit);
+                                    if ($needReturn) {
+                                        $return = $val[$lastK];
+                                        return false;
                                     }
                                 }
                             }
@@ -172,19 +173,7 @@ class Ctr {
                 }
             }
         }
-        return [1];
-    }
-    private function _checkInputExit(int $result, string $msg, bool $exit) {
-        if ($exit) {
-            header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
-            header('Cache-Control: no-store');
-            header('Content-type: application/json; charset=utf-8');
-            echo json_encode(['result' => $result, 'msg' => $msg]);
-            exit;
-        } else {
-            return [$result, $msg];
-        }
-
+        return true;
     }
 
     /**

@@ -122,7 +122,7 @@ class Session {
                         'data' => json_encode([]),
                         'time_update' => $time,
                         'time_add' => $time
-                    ]); // --- 不用使用 duplicate，因为 token 已经重新随机了 ---
+                    ]);
                     $ps = self::$_link->prepare(self::$_sql->getSql());
                 } while (!$ps->execute(self::$_sql->getData()));
             }

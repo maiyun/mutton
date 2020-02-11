@@ -139,7 +139,7 @@ class LSql {
     }
 
     /**
-     * --- 替换已经存在的唯一索引数据 ---
+     * --- 替换已经存在的唯一索引数据，不存在则插入 ---
      * @param string $table 表名
      * @return LSql
      */
@@ -225,7 +225,7 @@ class LSql {
      */
     public function duplicate(array $s): LSql {
         if (count($s) > 0) {
-            $sql = ' ON DUPLICATE KEY UPDATE '.$this->_updateSub($s);
+            $sql = ' ON DUPLICATE KEY UPDATE ' . $this->_updateSub($s);
             $this->_sql[] = $sql;
         }
         return $this;
@@ -233,7 +233,7 @@ class LSql {
 
     /**
      * --- '*', 'xx' ---
-     * @param string|string[] $c 字段
+     * @param string|string[] $c 字段字符串或字段数组
      * @param string|string[] $f 表，允许多张表
      * @return LSql
      */
