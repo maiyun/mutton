@@ -175,7 +175,7 @@ class Mod {
      * @param bool $raw 是否真实
      * @return bool
      */
-    public static function removeByWhere($where, ?bool $raw = false): bool {
+    public static function removeByWhere($where, bool $raw = false): bool {
         $sql = Sql::get(Mod::$__pre);
         if (static::$_soft && ($raw === false)) {
             // --- 软删除 ---
@@ -247,11 +247,11 @@ class Mod {
 
     /**
      * --- 通过 where 条件获取模型 ---
-     * @param array $s
-     * @param bool $raw
+     * @param array|string $s 筛选条件数组或字符串
+     * @param bool $raw 是否包含已被软删除的数据
      * @return static
      */
-    public static function where(array $s, $raw = false) {
+    public static function where($s, $raw = false) {
         return new static([
             'where' => $s,
             'raw' => $raw
@@ -269,16 +269,17 @@ class Mod {
     /**
      * --- 根据主键获取对象 ---
      * @param string|int|float $val 主键值
-     * @param bool $raw
+     * @param bool $lock 是否加锁
+     * @param bool $raw 是否获取真实数据
      * @return bool|Mod|null
      */
-    public static function find($val, $raw = false) {
+    public static function find($val, $lock = false, $raw = false) {
         return (new static([
             'where' => [
                 static::$_primary => $val
             ],
             'raw' => $raw
-        ]))->first();
+        ]))->first($lock);
     }
 
     // --- 动态方法 ---
@@ -411,7 +412,7 @@ class Mod {
 
     /**
      * --- 刷新当前模型获取最新数据 ---
-     * @param bool $lock
+     * @param bool $lock 是否加锁
      * @return bool|null
      */
     public function refresh($lock = false) {
@@ -462,7 +463,7 @@ class Mod {
 
     /**
      * --- 移除本条目 ---
-     * @param boolean $raw
+     * @param boolean $raw 是否真实移除
      * @return bool
      */
     public function remove($raw = false): bool {
@@ -488,10 +489,14 @@ class Mod {
 
     /**
      * --- 获取数据库第一个对象 ---
+     * @param bool $lock 是否加锁
      * @return static|false|null
      */
-    public function first() {
+    public function first($lock = false) {
         $this->_sql->limit(1);
+        if ($lock) {
+            $this->_sql->lock();
+        }
         $ps = $this->_db->prepare($this->_sql->getSql());
         if ($ps->execute($this->_sql->getData())) {
             if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
@@ -510,7 +515,7 @@ class Mod {
 
     /**
      * --- 获取列表 ---
-     * @param string|null $key
+     * @param string|null $key 是否以某个字段为主键
      * @return false|array
      */
     public function findList(?string $key = null) {
@@ -549,7 +554,7 @@ class Mod {
     }
 
     /**
-     * --- 获取总条数 ---
+     * --- 获取总条数，自动抛弃 LIMIT，仅适合获取数据的对象使用 ---
      * @return int
      */
     public function total(): int {
@@ -568,13 +573,111 @@ class Mod {
     }
 
     /**
-     * @param string $f
-     * @param array $s
-     * @param string $type
+     * @param string $f 表名
+     * @param array $s ON 信息
+     * @param string $type 类型
      * @return static
      */
     public function join(string $f, array $s = [], $type = 'INNER') {
         $this->_sql->join($f, $s, $type);
+        return $this;
+    }
+
+    /**
+     * --- left join 方法 ---
+     * @param string $f 表名
+     * @param array $s ON 信息
+     * @return static
+     */
+    public function leftJoin(string $f, array $s = []) {
+        $this->_sql->leftJoin($f, $s);
+        return $this;
+    }
+
+    /**
+     * --- right join 方法 ---
+     * @param string $f 表名
+     * @param array $s ON 信息
+     * @return static
+     */
+    public function rightJoin(string $f, array $s = []) {
+        $this->_sql->rightJoin($f, $s);
+        return $this;
+    }
+
+    /**
+     * --- inner join 方法 ---
+     * @param string $f 表名
+     * @param array $s ON 信息
+     * @return static
+     */
+    public function innerJoin(string $f, array $s = []) {
+        $this->_sql->innerJoin($f, $s);
+        return $this;
+    }
+
+    /**
+     * --- full join 方法 --
+     * @param string $f 表名
+     * @param array $s ON 信息
+     * @return static
+     */
+    public function fullJoin(string $f, array $s = []) {
+        $this->_sql->fullJoin($f, $s);
+        return $this;
+    }
+
+    /**
+     * --- cross join 方法 ---
+     * @param string $f 表名
+     * @param array $s ON 信息
+     * @return static
+     */
+    public function crossJoin(string $f, array $s = []) {
+        $this->_sql->crossJoin($f, $s);
+        return $this;
+    }
+
+    /**
+     * --- 筛选器 ---
+     * @param array|string $s 筛选条件数组或字符串
+     * @param bool $raw 是否包含已被软删除的数据
+     * @return static
+     */
+    public function filter($s, $raw = false) {
+        if (is_string($s)) {
+            // --- 判断是否筛掉已删除的 ---
+            $this->_sql->append(' WHERE (' . $s . ')');
+            if (static::$_soft && ($raw === false)) {
+                $this->_sql->append(' AND `time_remove` = 0');
+            }
+        } else {
+            if (static::$_soft && ($raw === false)) {
+                $s['time_remove'] = '0';
+            }
+            $this->_sql->where($s);
+        }
+        return $this;
+    }
+
+    /**
+     * --- ORDER BY ---
+     * @param string|string[] $c 字段字符串或数组
+     * @param string $d 排序规则
+     * @return static
+     */
+    public function by($c, string $d = 'DESC') {
+        $this->_sql->by($c, $d);
+        return $this;
+    }
+
+    /**
+     * --- GROUP BY ---
+     * @param string|string[] $c 字段字符串或数组
+     * @return static
+     */
+    public function group($c) {
+        $this->_sql->group($c);
         return $this;
     }
 
@@ -596,6 +699,16 @@ class Mod {
      */
     public function page(int $count, int $page = 1) {
         $this->_sql->limit($count * ($page - 1), $count);
+    }
+
+    /**
+     * --- 在 sql 最后追加字符串 ---
+     * @param string $sql
+     * @return static
+     */
+    public function append(string $sql) {
+        $this->_sql->append($sql);
+        return $this;
     }
 
     /**

@@ -345,7 +345,7 @@ class LSql {
     /**
      * --- left join 方法 ---
      * @param string $f 表名
-     * @param array $s
+     * @param array $s ON 信息
      * @return LSql
      */
     public function leftJoin(string $f, array $s = []): LSql {
@@ -355,7 +355,7 @@ class LSql {
     /**
      * --- right join 方法 ---
      * @param string $f 表名
-     * @param array $s
+     * @param array $s ON 信息
      * @return LSql
      */
     public function rightJoin(string $f, array $s = []): LSql {
@@ -365,7 +365,7 @@ class LSql {
     /**
      * --- inner join 方法 ---
      * @param string $f 表名
-     * @param array $s
+     * @param array $s ON 信息
      * @return LSql
      */
     public function innerJoin(string $f, array $s = []): LSql {
@@ -375,7 +375,7 @@ class LSql {
     /**
      * --- full join 方法 ---
      * @param string $f 表名
-     * @param array $s
+     * @param array $s ON 信息
      * @return LSql
      */
     public function fullJoin(string $f, array $s = []): LSql {
@@ -385,7 +385,7 @@ class LSql {
     /**
      * --- cross join 方法 ---
      * @param string $f 表名
-     * @param array $s
+     * @param array $s ON 信息
      * @return LSql
      */
     public function crossJoin(string $f, array $s = []): LSql {
