@@ -50,6 +50,11 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/json?type=5">View "test/json?type=5"</a>',
             '<br><a href="'.URL_BASE.'test/json?type=6">View "test/json?type=6"</a>',
 
+            '<br><br><b>Model test:</b>',
+
+            '<br><br><b style="color: red;">In a production environment, please delete the "Mod/Session.php" file.</b>',
+            '<br><a href="'.URL_BASE.'test/mod">Click to see an example of a Session model</a>',
+
             '<br><br><b>Library test:</b>',
 
             '<br><br><b>Captcha:</b>',
@@ -100,11 +105,7 @@ class test extends Ctr {
     }
 
     public function qs() {
-        $this->obStart();
-        echo 'json_encode($_GET): <br><br>';
-        echo json_encode($_GET);
-        $rtn = $this->obEnd();
-        return $rtn . '<br><br>' . $this->_getEnd();
+        return 'json_encode($_GET): <br><br>' . json_encode($_GET) . '<br><br>' . $this->_getEnd();
     }
 
     public function json() {
@@ -126,29 +127,31 @@ class test extends Ctr {
         }
     }
 
+    public function mod() {
+        $echo = ['<b style="color: red;">In a production environment, please delete the "Mod/Session.php file.</b>'];
+    }
+
     public function captchaFastbuild() {
         return Captcha::get(400, 100)->getStream();
     }
 
     public function captchaBase64() {
-        $this->obStart();
-
-        echo "<pre>\$cap = Captcha::get(400, 100);
+        $echo = ["<pre>\$cap = Captcha::get(400, 100);
 \$phrase = \$cap->getPhrase();
 \$base64 = \$cap->getBase64();
-echo \$phrase;</pre>";
+echo \$phrase;</pre>"];
         $cap = Captcha::get(400, 100);
         $phrase = $cap->getPhrase();
         $base64 = $cap->getBase64();
-        echo '<pre>'.$phrase.'</pre>';
+        $echo[] = '<pre>'.$phrase.'</pre>';
 
-        echo 'echo $base64;';
-        echo '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">'.$base64.'</pre>';
+        $echo[] = 'echo $base64;';
+        $echo[] = '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">'.$base64.'</pre>';
 
-        echo '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
-        echo '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
+        $echo[] = '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
+        $echo[] = '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
 
-        return $this->obEnd() . $this->_getEnd();
+        return join('', $echo) . $this->_getEnd();
     }
 
     public function crypto() {
@@ -320,234 +323,166 @@ exec: " . $exec . "<br><br>";
         $kvGet = strtoupper($_GET['s']);
         $kvGet = str_replace('SS', 'S_S', $kvGet);
 
-        $this->obStart();
-
-        echo "<pre>\$kv = Kv::get(Kv::$kvGet);
+        $echo[] = "<pre>\$kv = Kv::get(Kv::$kvGet);
 if (!(\$rtn = \$kv->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
-json_encode(\$kv->getServerList());</pre>";
-        echo json_encode($kv->getServerList());
+json_encode(\$kv->getServerList());</pre>" . json_encode($kv->getServerList());
 
-        echo "<pre>json_encode(\$kv->isConnect());</pre>";
-        echo json_encode($kv->isConnect());
+        $echo[] = "<pre>json_encode(\$kv->isConnect());</pre>";
+        $echo[] = json_encode($kv->isConnect());
 
         if ($ac == 'delete') {
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->delete('test'));</pre>";
-            echo json_encode($kv->delete('test'));
+            $echo[] = "<pre>json_encode(\$kv->delete('test'));</pre>" . json_encode($kv->delete('test'));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
         } else if ($ac == 'incr-decr-replace') {
-            echo "<pre>json_encode(\$kv->getResultCode());
+            $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
-            echo json_encode($kv->getResultCode());
-            echo json_encode($kv->getResultMessage());
-            echo json_encode($kv->getLastError());
+            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
 
-            echo "<pre>json_encode(\$kv->delete('test'));</pre>";
-            echo json_encode($kv->delete('test'));
+            $echo[] = "<pre>json_encode(\$kv->delete('test'));</pre>" . json_encode($kv->delete('test'));
 
-            echo "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>";
-            echo json_encode($kv->replace('test', 'QAQ'));
+            $echo[] = "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>" . json_encode($kv->replace('test', 'QAQ'));
 
-            echo "<pre>json_encode(\$kv->getResultCode());
+            $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
-            echo json_encode($kv->getResultCode());
-            echo json_encode($kv->getResultMessage());
-            echo json_encode($kv->getLastError());
+            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
 
-            echo "<pre>json_encode(\$kv->incr('test'));</pre>";
-            echo json_encode($kv->incr('test'));
+            $echo[] = "<pre>json_encode(\$kv->incr('test'));</pre>" . json_encode($kv->incr('test'));
 
-            echo "<pre>json_encode(\$kv->getResultCode());
+            $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
-            echo json_encode($kv->getResultCode());
-            echo json_encode($kv->getResultMessage());
-            echo json_encode($kv->getLastError());
+            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->set('test', 666));</pre>";
-            echo json_encode($kv->set('test', 666));
+            $echo[] = "<pre>json_encode(\$kv->set('test', 666));</pre>" . json_encode($kv->set('test', 666));
 
-            echo "<pre>json_encode(\$kv->incr('test'));</pre>";
-            echo json_encode($kv->incr('test'));
+            $echo[] = "<pre>json_encode(\$kv->incr('test'));</pre>" . json_encode($kv->incr('test'));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->decr('test', 10));</pre>";
-            echo json_encode($kv->decr('test', 10));
+            $echo[] = "<pre>json_encode(\$kv->decr('test', 10));</pre>" . json_encode($kv->decr('test', 10));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->replace('test', 111));</pre>";
-            echo json_encode($kv->replace('test', 111));
+            $echo[] = "<pre>json_encode(\$kv->replace('test', 111));</pre>" . json_encode($kv->replace('test', 111));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>";
-            echo json_encode($kv->replace('test', 'QAQ'));
+            $echo[] = "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>" . json_encode($kv->replace('test', 'QAQ'));
 
-            echo "<pre>json_encode(\$kv->incr('test', 10));</pre>";
-            echo json_encode($kv->incr('test', 10));
+            $echo[] = "<pre>json_encode(\$kv->incr('test', 10));</pre>" . json_encode($kv->incr('test', 10));
 
-            echo "<pre>json_encode(\$kv->getResultCode());
+            $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
-            echo json_encode($kv->getResultCode());
-            echo json_encode($kv->getResultMessage());
-            echo json_encode($kv->getLastError());
+            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->getResultCode());
+            $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
-            echo json_encode($kv->getResultCode());
-            echo json_encode($kv->getResultMessage());
-            echo json_encode($kv->getLastError());
+            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
         } else if ($ac === 'append-prepend') {
-            echo "<pre>json_encode(\$kv->prepend('test', '0'));</pre>";
-            echo json_encode($kv->prepend('test', '0'));
+            $echo[] = "<pre>json_encode(\$kv->prepend('test', '0'));</pre>" . json_encode($kv->prepend('test', '0'));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->set('test', 'bbb'));</pre>";
-            echo json_encode($kv->set('test', 'bbb'));
+            $echo[] = "<pre>json_encode(\$kv->set('test', 'bbb'));</pre>" . json_encode($kv->set('test', 'bbb'));
 
-            echo "<pre>json_encode(\$kv->append('test', 'end'));</pre>";
-            echo json_encode($kv->append('test', 'end'));
+            $echo[] = "<pre>json_encode(\$kv->append('test', 'end'));</pre>" . json_encode($kv->append('test', 'end'));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->prepend('test', 'pre'));</pre>";
-            echo json_encode($kv->prepend('test', 'pre'));
+            $echo[] = "<pre>json_encode(\$kv->prepend('test', 'pre'));</pre>" . json_encode($kv->prepend('test', 'pre'));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->add('test', 'aaa'));</pre>";
-            echo json_encode($kv->add('test', 'aaa'));
+            $echo[] = "<pre>json_encode(\$kv->add('test', 'aaa'));</pre>" . json_encode($kv->add('test', 'aaa'));
 
-            echo "<pre>json_encode(\$kv->append('tmp_test', 'hehe'));</pre>";
-            echo json_encode($kv->append('tmp_test', 'hehe'));
+            $echo[] = "<pre>json_encode(\$kv->append('tmp_test', 'hehe'));</pre>" . json_encode($kv->append('tmp_test', 'hehe'));
 
-            echo "<pre>json_encode(\$kv->getResultCode());
+            $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
-            echo json_encode($kv->getResultCode());
-            echo json_encode($kv->getResultMessage());
-            echo json_encode($kv->getLastError());
+            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
 
-            echo "<pre>json_encode(\$kv->get('tmp_test'));</pre>";
-            echo json_encode($kv->get('tmp_test'));
+            $echo[] = "<pre>json_encode(\$kv->get('tmp_test'));</pre>" . json_encode($kv->get('tmp_test'));
 
-            echo "<pre>json_encode(\$kv->delete('tmp_test'));</pre>";
-            echo json_encode($kv->delete('tmp_test'));
+            $echo[] = "<pre>json_encode(\$kv->delete('tmp_test'));</pre>" . json_encode($kv->delete('tmp_test'));
         } else if ($ac === 'hash') {
-            echo "<pre>json_encode(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>";
-            echo json_encode($kv->hSet('hTest', 'name', 'Cheng Xin'));
+            $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>" . json_encode($kv->hSet('hTest', 'name', 'Cheng Xin'));
 
-            echo "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
-            echo json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
+            $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>" . json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
 
-            echo "<pre>json_encode(\$kv->hMSet('hTest', [
+            $echo[] = "<pre>json_encode(\$kv->hMSet('hTest', [
     'age' => '16',
     'sex' => 'female'
 ]));</pre>";
-            echo json_encode($kv->hMSet('hTest', [
+            $echo[] = json_encode($kv->hMSet('hTest', [
                 'age' => '16',
                 'sex' => 'female'
             ]));
 
-            echo "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>";
-            echo json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
+            $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>" . json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
 
-            echo "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>";
-            echo json_encode($kv->hGet('hTest', 'name'));
+            $echo[] = "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>" . json_encode($kv->hGet('hTest', 'name'));
 
-            echo "<pre>json_encode(\$kv->hDel('hTest', 'name'));</pre>";
-            echo json_encode($kv->hDel('hTest', 'name'));
+            $echo[] = "<pre>json_encode(\$kv->hDel('hTest', 'name'));</pre>" . json_encode($kv->hDel('hTest', 'name'));
 
-            echo "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>";
-            echo json_encode($kv->hGetAll('hTest'));
+            $echo[] = "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>" . json_encode($kv->hGetAll('hTest'));
 
-            echo "<pre>json_encode(\$kv->hKeys('hTest'));</pre>";
-            echo json_encode($kv->hKeys('hTest'));
+            $echo[] = "<pre>json_encode(\$kv->hKeys('hTest'));</pre>" . json_encode($kv->hKeys('hTest'));
 
-            echo "<pre>json_encode(\$kv->hExists('hTest', 'age'));</pre>";
-            echo json_encode($kv->hExists('hTest', 'age'));
+            $echo[] = "<pre>json_encode(\$kv->hExists('hTest', 'age'));</pre>" . json_encode($kv->hExists('hTest', 'age'));
 
-            echo "<pre>json_encode(\$kv->hMGet('hTest', ['age', 'sex', 'school']));</pre>";
-            echo json_encode($kv->hMGet('hTest', ['age', 'sex', 'school']));
+            $echo[] = "<pre>json_encode(\$kv->hMGet('hTest', ['age', 'sex', 'school']));</pre>" . json_encode($kv->hMGet('hTest', ['age', 'sex', 'school']));
 
-            echo "<pre>json_encode(\$kv->delete('hTest'));</pre>";
-            echo json_encode($kv->delete('hTest'));
+            $echo[] = "<pre>json_encode(\$kv->delete('hTest'));</pre>" . json_encode($kv->delete('hTest'));
 
-            echo "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>";
-            echo json_encode($kv->hGet('hTest', 'name'));
+            $echo[] = "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>" . json_encode($kv->hGet('hTest', 'name'));
 
-            echo "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>";
-            echo json_encode($kv->hGetAll('hTest'));
+            $echo[] = "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>" . json_encode($kv->hGetAll('hTest'));
         } else if ($ac === 'other') {
-            echo "<pre>for (\$i = 0; \$i < 50; ++\$i) {
+            $echo[] = "<pre>for (\$i = 0; \$i < 50; ++\$i) {
     \$kv->add('t' . \$i, \$i, 10);
 }
 echo 'Added.';</pre>";
             for ($i = 0; $i < 50; ++$i) {
                 $kv->add('t' . $i, $i, 10);
             }
-            echo 'Added.';
+            $echo[] = 'Added.';
 
-            echo "<pre>json_encode(\$kv->getAllKeys());</pre>";
-            echo json_encode($kv->getAllKeys());
+            $echo[] = "<pre>json_encode(\$kv->getAllKeys());</pre>" . json_encode($kv->getAllKeys());
 
-            echo "<pre>json_encode(\$kv->keys('t*'));</pre>";
-            echo json_encode($kv->keys('t*'));
+            $echo[] = "<pre>json_encode(\$kv->keys('t*'));</pre>" . json_encode($kv->keys('t*'));
 
-            echo "<pre>json_encode(\$kv->scan());</pre>";
-            echo json_encode($kv->scan());
+            $echo[] = "<pre>json_encode(\$kv->scan());</pre>" . json_encode($kv->scan());
 
-            echo "<pre>json_encode(\$kv->scan('*2*'));</pre>";
-            echo json_encode($kv->scan('*2*'));
+            $echo[] = "<pre>json_encode(\$kv->scan('*2*'));</pre>" . json_encode($kv->scan('*2*'));
 
-            echo "<pre>json_encode(\$kv->scan('*', 3));</pre>";
-            echo json_encode($kv->scan('*', 3));
+            $echo[] = "<pre>json_encode(\$kv->scan('*', 3));</pre>" . json_encode($kv->scan('*', 3));
         } else {
-            echo "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>";
-            echo json_encode($kv->exists(['test', 'heheda']));
+            $echo[] = "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>" . json_encode($kv->exists(['test', 'heheda']));
 
-            echo "<pre>json_encode(\$kv->mget(['test', 'heheda']));</pre>";
-            echo json_encode($kv->mget(['test', 'heheda']));
+            $echo[] = "<pre>json_encode(\$kv->mget(['test', 'heheda']));</pre>" . json_encode($kv->mget(['test', 'heheda']));
 
-            echo "<pre>json_encode(\$kv->getMulti(['test', 'heheda']));</pre>";
-            echo json_encode($kv->getMulti(['test', 'heheda']));
+            $echo[] = "<pre>json_encode(\$kv->getMulti(['test', 'heheda']));</pre>" . json_encode($kv->getMulti(['test', 'heheda']));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            echo "<pre>json_encode(\$kv->set('test', \$value ? \$value : 'ok'));</pre>";
-            echo json_encode($kv->set('test', $value ? $value : 'ok'));
+            $echo[] = "<pre>json_encode(\$kv->set('test', \$value ? \$value : 'ok'));</pre>" . json_encode($kv->set('test', $value ? $value : 'ok'));
 
-            echo "<pre>json_encode(\$kv->get('test'));</pre>";
-            echo json_encode($kv->get('test'));
+            $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
         }
-
-        echo "<br><br>";
 
         return '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'">Default</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&value=aaa">Set "aaa"</a> | ' .
@@ -557,7 +492,7 @@ echo 'Added.';</pre>";
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=append-prepend">Append/Prepend</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=hash">Hash</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=other">Other</a> | ' .
-            '<a href="'.URL_BASE.'test">Return</a>' . $this->obEnd() . $this->_getEnd();
+            '<a href="'.URL_BASE.'test">Return</a>' . join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
     public function net() {
