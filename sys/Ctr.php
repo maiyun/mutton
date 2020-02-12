@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35
  */
 declare(strict_types = 1);
 
@@ -13,20 +13,28 @@ use lib\Text;
 class Ctr {
 
     /** @var array 路由参数序列数组 */
-    public $param = [];
+    public $_param = [];
     /** @var string 当前的 action 名 */
-    public $action = '';
+    public $_action = '';
+    /** @var array GET 数据 */
+    public $_get = [];
+    /** @var array POST 数据 */
+    public $_post = [];
     /** @var array 原始 POST 数据 */
-    public $rawPost = [];
+    public $_rawPost = [];
+    /** @var array 上传的文件列表 */
+    public $_files = [];
+    /** @var array 请求的 header 列表 */
+    public $_headers = [];
     /** @var int 页面浏览器客户端缓存 */
-    public $cacheTTL = CACHE_TTL;
+    public $_cacheTTL = CACHE_TTL;
 
     /**
      * --- 获取截止当前时间的总运行时间 ---
      * @param bool $ms
      * @return float
      */
-    protected function getRunTime(bool $ms = false): float {
+    protected function _getRunTime(bool $ms = false): float {
         $t = microtime(true) - START_TIME;
         return $ms ? $t * 1000 : $t;
     }
@@ -35,7 +43,7 @@ class Ctr {
      * --- 获取截止当前内存的使用情况 ---
      * @return int
      */
-    protected function getMemoryUsage(): int {
+    protected function _getMemoryUsage(): int {
         return memory_get_usage() - START_MEMORY;
     }
 
@@ -45,7 +53,7 @@ class Ctr {
      * @param array $data
      * @return string
      */
-    protected function loadView(string $path, $data = []) {
+    protected function _loadView(string $path, $data = []) {
         // --- 重构 loadView(string $path, bool $return) ---
         extract($data);
         ob_start();
@@ -56,10 +64,10 @@ class Ctr {
     /**
      * --- 获取页面内容方法 ---
      */
-    protected function obStart(): void {
+    protected function _obStart(): void {
         ob_start();
     }
-    protected function obEnd(): string {
+    protected function _obEnd(): string {
         return ob_get_clean();
     }
 
@@ -70,7 +78,7 @@ class Ctr {
      * @param array $return 返回值
      * @return bool
      */
-    protected function checkInput(array &$input, array $rule, &$return) {
+    protected function _checkInput(array &$input, array $rule, &$return) {
         // --- 遍历规则 ---
         // --- $input, ['xx' => ['require', '> 6', [0, 'xx 必须大于 6']], 'yy' => []], $return ---
         foreach ($rule as $key => $val) {
@@ -181,7 +189,7 @@ class Ctr {
      * @param string $path
      * @return mixed|null
      */
-    protected function loadData(string $path) {
+    protected function _loadData(string $path) {
         if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
             return json_decode($f);
         } else {
@@ -193,7 +201,7 @@ class Ctr {
      * --- 强制 https 下访问 ---
      * @return bool
      */
-    public function mustHttps(): bool {
+    public function _mustHttps(): bool {
         if (HTTPS) {
             return true;
         } else {
@@ -208,7 +216,7 @@ class Ctr {
      * --- 跳转（302临时跳转），支持相对和绝对路径 ---
      * @param string $url
      */
-    protected function location(string $url): void {
+    protected function _location(string $url): void {
         http_response_code(302);
         header('Location: '.Text::urlResolve(URL_BASE, $url));
     }
@@ -217,7 +225,7 @@ class Ctr {
      * --- 设置当前时区 ---
      * @param string $timezone_identifier
      */
-    protected function setTimezone(string $timezone_identifier): void{
+    protected function _setTimezone(string $timezone_identifier): void{
         date_default_timezone_set($timezone_identifier);
     }
 
@@ -229,7 +237,7 @@ class Ctr {
      * @param string $pkg 包名，为空自动填充为 default
      * @return bool
      */
-    protected function loadLocale(string $locale, string $pkg = ''): bool {
+    protected function _loadLocale(string $locale, string $pkg = ''): bool {
         global $__LOCALE, $__LOCALE_OBJ, $__LOCALE_OVER;
 
         if ($pkg === '') {
@@ -238,7 +246,7 @@ class Ctr {
         /** @var string $lName 语言名.包名 */
         $lName = $locale . '.' . $pkg;
         if (!in_array($lName, $__LOCALE_OVER)) {
-            if (($locData = $this->loadData('locale/'.$lName)) === false) {
+            if (($locData = $this->_loadData('locale/'.$lName)) === false) {
                 return false;
             }
             if (!isset($__LOCALE_OBJ[$locale])) {
@@ -268,7 +276,7 @@ class Ctr {
      * --- 获取当前语言名 ---
      * @return string
      */
-    protected function getLocale(): string {
+    protected function _getLocale(): string {
         global $__LOCALE;
         return $__LOCALE;
     }

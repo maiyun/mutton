@@ -11,9 +11,17 @@ use lib\Net;
 use lib\Session;
 use lib\Sql;
 use lib\Text;
+use PDO;
+use PDOStatement;
 use sys\Ctr;
 
 class test extends Ctr {
+
+    public function _load() {
+        if (HOST !== '127.0.0.1') {
+            return [0, 'Please use 127.0.0.1 to access the file.'];
+        }
+    }
 
     public function index() {
         $echo = [
@@ -29,6 +37,8 @@ class test extends Ctr {
             '<br><br>URL_BASE: ' . URL_BASE,
             '<br>URI: ' . URI,
             '<br>URL_FULL: ' . URL_FULL,
+
+            '<br><br>headers:' . htmlspecialchars(json_encode($this->_headers)),
 
             '<br><br><b style="color: red;">Tips: The file can be deleted.</b>',
 
@@ -101,11 +111,11 @@ class test extends Ctr {
     }
 
     public function article() {
-        return 'Article ID: ' . $this->param[0] . '<br><br>' . $this->_getEnd();
+        return 'Article ID: ' . htmlspecialchars($this->_param[0]) . '<br><br>' . $this->_getEnd();
     }
 
     public function qs() {
-        return 'json_encode($_GET): <br><br>' . json_encode($_GET) . '<br><br>' . $this->_getEnd();
+        return 'json_encode($_GET): <br><br>' . htmlspecialchars(json_encode($_GET)) . '<br><br>' . $this->_getEnd();
     }
 
     public function json() {
@@ -210,7 +220,7 @@ json_encode(\$orig);</pre>" . json_encode($orig);
     }
 
     public function db() {
-        if (!$this->checkInput($_GET, [
+        if (!$this->_checkInput($_GET, [
             's' => ['require', ['Mysql', 'Sqlite'], [0, 'Object not found.']]
         ], $return)) {
             return $return;
@@ -274,7 +284,7 @@ exec: " . $exec . "<br><br>";
 
         return join('', $echo) . "<br>" . $this->_getEnd();
     }
-    private function _dbTable(\PDOStatement $stmt, &$echo) {
+    private function _dbTable(PDOStatement $stmt, &$echo) {
         $echo[] = '<table style="width: 100%;"><tr>';
         if ($stmt->getColumnMeta(0)) {
             $cc = $stmt->columnCount();
@@ -283,7 +293,7 @@ exec: " . $exec . "<br><br>";
             }
             $echo[] = "</tr>";
 
-            while ($row = $stmt->fetch(\PDO::FETCH_ASSOC)) {
+            while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $echo[] = '<tr>';
                 foreach ($row as $key => $val) {
                     $echo[] = '<td>' . htmlspecialchars($val) . '</td>';
@@ -297,7 +307,7 @@ exec: " . $exec . "<br><br>";
     }
 
     public function kv() {
-        if (!$this->checkInput($_GET, [
+        if (!$this->_checkInput($_GET, [
             's' => ['require', ['Memcached', 'Redis', 'RedisSimulator'], [0, 'Object not found.']]
         ], $return)) {
             return $return;
@@ -469,7 +479,7 @@ echo 'Added.';</pre>";
 
             $echo[] = "<pre>json_encode(\$kv->scan('*2*'));</pre>" . json_encode($kv->scan('*2*'));
 
-            $echo[] = "<pre>json_encode(\$kv->scan('*', 3));</pre>" . json_encode($kv->scan('*', 3));
+            $echo[] = "<pre>json_encode(\$kv->scan('*'));</pre>" . json_encode($kv->scan('*'));
         } else {
             $echo[] = "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>" . json_encode($kv->exists(['test', 'heheda']));
 
@@ -641,11 +651,11 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         return join('', $echo) . $this->_getEnd();
     }
     public function netSave1() {
-        $this->location(URL_STC . 'index.js');
+        $this->_location(URL_STC . 'index.js');
     }
 
     public function session() {
-        if (!$this->checkInput($_GET, [
+        if (!$this->_checkInput($_GET, [
             's' => ['require', ['db', 'kv'], [0, 'Object not found.']],
             'value' => []
         ], $return)) {
@@ -679,7 +689,7 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
         return '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '">Default</a> | ' .
         '<a href="'.URL_BASE.'test/session?s=' . $_GET['s'] . '&value=aaa">Set "aaa"</a> | ' .
         '<a href="'.URL_BASE.'test/session?s=' . $_GET['s'] . '&value=bbb">Set "bbb"</a> | ' .
-        '<a href="'.URL_BASE.'test">Return</a>' . join('',  $echo) . '<br><br>' . $this->obEnd() . $this->_getEnd();
+        '<a href="'.URL_BASE.'test">Return</a>' . join('',  $echo) . '<br><br>' . $this->_getEnd();
     }
 
     public function sql() {
@@ -892,8 +902,8 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
     // --- END ---
     private function _getEnd(): string {
-        $rt = $this->getRunTime();
-        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding: 10px;background-color:rgba(0,0,0,.07);}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style>';
+        $rt = $this->_getRunTime();
+        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding: 10px;background-color:rgba(0,0,0,.07);}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style>';
     }
 
 }

@@ -52,7 +52,7 @@ class Route {
         /** @var Ctr $ctr */
         $ctr = new $ctr();
         // --- 强制 HTTPS ---
-        if (MUST_HTTPS && !$ctr->mustHttps()) {
+        if (MUST_HTTPS && !$ctr->_mustHttps()) {
             return;
         }
         // --- 检测 action 是否存在 ---
@@ -66,12 +66,26 @@ class Route {
         }
         // --- 对信息进行初始化 ---
         // --- 路由定义的参数序列 ---
-        $ctr->param = $param;
+        $ctr->_param = $param;
         // --- action 名 ---
-        $ctr->action = $pathRight;
-        // --- 处理 POST、GET、FILE ---
-        $ctr->rawPost = $_POST;
-        $contentType = isset($_SERVER['CONTENT_TYPE']) ? strtolower($_SERVER['CONTENT_TYPE']) : (isset($_SERVER['HTTP_CONTENT_TYPE']) ? strtolower($_SERVER['HTTP_CONTENT_TYPE']) : '');
+        $ctr->_action = $pathRight;
+        // --- 原始 POST ---
+        $ctr->_rawPost = $_POST;
+        // --- 原始 GET ---
+        $ctr->_get = $_GET;
+        // --- 处理 headers ---
+        foreach ($_SERVER as $key => $val) {
+            if ($key === 'CONTENT_TYPE') {
+                $ctr->_headers['content-type'] = $val;
+                continue;
+            }
+            if (substr($key, 0, 5) !== 'HTTP_') {
+                continue;
+            }
+            $ctr->_headers[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
+        }
+        // --- 处理 POST 的值 JSON 或 FILE ---
+        $contentType = isset($ctr->_headers['content-type']) ? strtolower($ctr->_headers['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
             $_POST = file_get_contents('php://input');
@@ -96,19 +110,23 @@ class Route {
                 }
                 $_FILES[$key] = $files;
             }
+            $ctr->_files = $_FILES;
         }
-
+        // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
+        $ctr->_post = $_POST;
         // --- 检测是否有 onLoad，有则优先执行一下 ---
-        if (method_exists($ctr, 'onLoad')) {
-            $ctr->onLoad();
+        if (method_exists($ctr, '_load')) {
+            $rtn = $ctr->_load();
         }
-        // --- 执行 action ---
-        $rtn = $ctr->$pathRight();
+        if (!isset($rtn)) {
+            // --- 执行 action ---
+            $rtn = $ctr->$pathRight();
+        }
         // --- 在返回值输出之前，设置缓存 ---
-        if ($ctr->cacheTTL > 0) {
-            header('Expires: ' . gmdate('D, d M Y H:i:s', $_SERVER['REQUEST_TIME'] + $ctr->cacheTTL) . ' GMT');
-            header('Cache-Control: max-age=' . $ctr->cacheTTL);
+        if ($ctr->_cacheTTL > 0) {
+            header('Expires: ' . gmdate('D, d M Y H:i:s', $_SERVER['REQUEST_TIME'] + $ctr->_cacheTTL) . ' GMT');
+            header('Cache-Control: max-age=' . $ctr->_cacheTTL);
         } else {
             header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
             header('Cache-Control: no-store');
