@@ -31,6 +31,7 @@ namespace lib;
 
 use lib\Kv\IKv;
 use PDO;
+use sys\Ctr;
 
 require ETC_PATH.'session.php';
 
@@ -41,66 +42,73 @@ require ETC_PATH.'session.php';
 class Session {
 
     /* @var $_link IKv|Db */
-    private static $_link = null;
+    private $_link = null;
     /* @var $_sql LSql */
-    private static $_sql = null;
+    private $_sql = null;
 
     /** @var string Session 在前端或 Kv 中储存的名前缀 */
-    private static $_name = '';
+    private $_name = '';
     /** @var string 当前 Session 的 token */
-    private static $_token = '';
+    private $_token = '';
     /** @var int Session 有效期 */
-    private static $_ttl = 0;
+    private $_ttl = 0;
 
     /**
-     * @param IKv|Db $link
-     * @param array $opt
+     * Session constructor.
+     * @param Ctr $ctr 模型实例
+     * @param IKv|Db $link Kv 或 Db 实例
+     * @param bool $auth 设为 true 则从头 Authorization 或 post _auth 值读取 token
+     * @param array $opt name, ttl, ssl
      */
-    public static function start($link, array $opt = []): void {
+    public function __construct(&$ctr, $link, bool $auth = false, array $opt = []) {
         $time = time();
-        self::$_name = isset($opt['name']) ? $opt['name'] : SESSION_NAME;
         $ssl = isset($opt['ssl']) ? $opt['ssl'] : SESSION_SSL;
-        self::$_ttl = isset($opt['ttl']) ? $opt['ttl'] : SESSION_TTL;
+        $pre = isset($opt['pre']) ? $opt['pre'] : null;
+        $this->_name = isset($opt['name']) ? $opt['name'] : SESSION_NAME;
+        $this->_ttl = isset($opt['ttl']) ? $opt['ttl'] : SESSION_TTL;
 
-        if (isset($_POST[self::$_name])) {
-            self::$_token = $_POST[self::$_name];
-        } else if (isset($_COOKIE[self::$_name])) {
-            self::$_token = $_COOKIE[self::$_name];
+        if ($auth) {
+            if (($a = $ctr->_getAuthorization()) && ($a['user'] === 'token')) {
+                $this->_token = $a['pwd'];
+            }
+        } else if (isset($_COOKIE[$this->_name])) {
+            $this->_token = $_COOKIE[$this->_name];
         }
 
-        self::$_link = $link;
+        $this->_link = $link;
         if ($link instanceof Db) {
-            self::$_sql = Sql::get();
-            self::_gc();    // --- 执行 gc ---
+            $this->_sql = Sql::get($pre);
+            $this->_gc();    // --- 执行 gc ---
         }
 
         // --- 初始化 Session 数组 ---
         $_SESSION = [];
         $needInsert = false;
         // --- 有 token 则查看 token 的信息是否存在
-        if (self::$_token != '') {
+        if ($this->_token !== '') {
             // --- 如果启用了内存加速则在内存找 ---
-            if (self::$_link instanceof IKv) {
+            if ($this->_link instanceof IKv) {
                 // --- Kv ---
-                if(($data = self::$_link->getJson(self::$_name . '_' . self::$_token)) === false) {
+                if(($data = $this->_link->getJson($this->_name . '_' . $this->_token)) === false) {
                     $needInsert = true;
                 } else {
                     $_SESSION = $data;
                 }
             } else {
                 // --- 数据库 ---
-                self::$_sql->select('*', 'session')->where([
-                    'token' => self::$_token,
-                    ['time_update', '>=', $time - self::$_ttl]
+                $this->_sql->select('*', 'session')->where([
+                    'token' => $this->_token,
+                    ['time_update', '>=', $time - $this->_ttl]
                 ]);
-                $ps = self::$_link->prepare(self::$_sql->getSql());
-                $ps->execute(self::$_sql->getData());
+                $ps = $this->_link->prepare($this->_sql->getSql());
+                $ps->execute($this->_sql->getData());
                 if ($data = $ps->fetch(PDO::FETCH_ASSOC)) {
                     $_SESSION = json_decode($data['data'], true);
                 } else {
                     $needInsert = true;
                 }
             }
+            $ctr->_session = &$_SESSION;
         } else {
             // --- 全新的机子 ---
             $needInsert = true;
@@ -110,45 +118,53 @@ class Session {
         // --- 数据库的 Session 已经过期加新 Session ---
         // --- 如果不存在不允许加新则返回错误 ---
         if ($needInsert) {
-            if(self::$_link instanceof IKv) {
+            if ($this->_link instanceof IKv) {
                 do {
-                    self::$_token = self::_random();
-                } while (!self::$_link->set(self::$_name . '_' . self::$_token, [], self::$_ttl, 'nx'));
+                    $this->_token = $ctr->_random(16, Ctr::RANDOM_LUN);
+                } while (!$this->_link->set($this->_name . '_' . $this->_token, [], $this->_ttl, 'nx'));
             } else {
                 do {
-                    self::$_token = self::_random();
-                    self::$_sql->insert('session')->values([
-                        'token' => self::$_token,
+                    $this->_token = $ctr->_random(16, Ctr::RANDOM_LUN);
+                    $this->_sql->insert('session')->values([
+                        'token' => $this->_token,
                         'data' => json_encode([]),
                         'time_update' => $time,
                         'time_add' => $time
                     ]);
-                    $ps = self::$_link->prepare(self::$_sql->getSql());
-                } while (!$ps->execute(self::$_sql->getData()));
+                    $ps = $this->_link->prepare($this->_sql->getSql());
+                } while (!$ps->execute($this->_sql->getData()));
             }
         }
 
-        setcookie(self::$_name, self::$_token, $time + self::$_ttl, '/' ,'', $ssl, true);
+        setcookie($this->_name, $this->_token, $time + $this->_ttl, '/' ,'', $ssl, true);
 
-        register_shutdown_function([self::class, '_update']);
+        register_shutdown_function([$this, '__update']); // self::class
+    }
+
+    /**
+     * --- 获取当前的 token 值 ---
+     * @return string
+     */
+    public function getToken(): string {
+        return $this->_token;
     }
 
     /**
      * --- 页面整体结束时，要写入到 Redis 或 数据库 ---
      */
-    public static function _update(): void {
+    public function __update(): void {
         // --- 写入内存或数据库 ---
-        if(self::$_link instanceof IKv) {
-            self::$_link->set(self::$_name . '_' . self::$_token, $_SESSION, self::$_ttl);
+        if($this->_link instanceof IKv) {
+            $this->_link->set($this->_name . '_' . $this->_token, $_SESSION, $this->_ttl);
         } else {
-            self::$_sql->update('session', [
+            $this->_sql->update('session', [
                 'data' => json_encode($_SESSION),
                 'time_update' => time()
             ])->where([
-                'token' => self::$_token
+                'token' => $this->_token
             ]);
-            $ps = self::$_link->prepare(self::$_sql->getSql());
-            $ps->execute(self::$_sql->getData());
+            $ps = $this->_link->prepare($this->_sql->getSql());
+            $ps->execute($this->_sql->getData());
         }
     }
 
@@ -156,28 +172,14 @@ class Session {
      * --- 根据情况清空 Db 状态下的 session 表垃圾数据 ---
      * --- 仅能在 Db 模式执行，本函数不进行判断是否是 Db 模式 ---
      */
-    private static function _gc(): void {
+    private function _gc(): void {
         if(rand(0, 20) == 10) {
-            self::$_sql->delete('session')->where([
-                ['time_update', '<', time() - self::$_ttl]
+            $this->_sql->delete('session')->where([
+                ['time_update', '<', time() - $this->_ttl]
             ]);
-            $ps = self::$_link->prepare(self::$_sql->getSql());
-            $ps->execute(self::$_sql->getData());
+            $ps = $this->_link->prepare($this->_sql->getSql());
+            $ps->execute($this->_sql->getData());
         }
-    }
-
-    /**
-     * --- 返回随机数 ---
-     * @return string
-     */
-    private static function _random(): string {
-        $s = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        $sl = strlen($s);
-        $t = '';
-        for ($i = 16; $i; --$i) {
-            $t .= $s[rand(0, $sl - 1)];
-        }
-        return $t;
     }
 
 }

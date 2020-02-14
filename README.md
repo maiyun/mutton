@@ -65,7 +65,7 @@ For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay p
 ### Generate 16-bit random numbers
 
 ```php
-$str = Text::random(16, Text::RANDOM_N);
+$str = $this->_random(16, Ctr::RANDOM_N);
 ```
 
 ### Generate a verification code picture

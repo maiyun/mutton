@@ -59,7 +59,7 @@ Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net,
 ### 生成 16 位亂數
 
 ```php
-$str = Text::random(16, Text::RANDOM_N);
+$str = $this->_random(16, Ctr::RANDOM_N);
 ```
 
 ### 生成驗證碼圖片

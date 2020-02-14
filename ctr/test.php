@@ -94,6 +94,8 @@ class test extends Ctr {
             '<br><br><b>Session:</b>',
             '<br><br><a href="'.URL_BASE.'test/session?s=db">View "test/session?s=db"</a>',
             '<br><a href="'.URL_BASE.'test/session?s=kv">View "test/session?s=kv"</a>',
+            '<br><a href="'.URL_BASE.'test/session?s=db&auth=1">View "test/session?s=db&auth=1" Header Authorization</a>',
+            '<br><a href="'.URL_BASE.'test/session?s=kv&auth=1">View "test/session?s=kv&auth=1" Header Authorization</a>',
 
             '<br><br><b>Sql:</b>',
             '<br><br><a href="'.URL_BASE.'test/sql?type=insert">View "test/sql?type=insert"</a>',
@@ -657,6 +659,7 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     public function session() {
         if (!$this->_checkInput($_GET, [
             's' => ['require', ['db', 'kv'], [0, 'Object not found.']],
+            'auth' => [['', '1'], [0, 'Bad request.']],
             'value' => []
         ], $return)) {
             return $return;
@@ -678,18 +681,43 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
             }
             $echo[] = "\$link = Kv::get(Kv::REDIS);\n";
         }
-        Session::start($link, ['ttl' => 60]);
-        $echo[] = "Session::start(\$link, ['ttl' => 60]);
+
+        if ($_GET['auth'] === '') {
+            $this->_startSession($link, false, ['ttl' => 60]);
+            $echo[] = "\$this->_startSession(\$link, false, ['ttl' => 60]);
 json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
-        $_SESSION['value'] = $_GET['value'] ? $_GET['value'] : 'ok';
-        $echo[] = "<pre>\$_SESSION['value'] = '" . ($_GET['value'] ? $_GET['value'] : 'ok') . "';
+            $_SESSION['value'] = $_GET['value'] ? $_GET['value'] : 'ok';
+            $echo[] = "<pre>\$_SESSION['value'] = '" . ($_GET['value'] ? $_GET['value'] : 'ok') . "';
 json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
-        return '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '">Default</a> | ' .
-        '<a href="'.URL_BASE.'test/session?s=' . $_GET['s'] . '&value=aaa">Set "aaa"</a> | ' .
-        '<a href="'.URL_BASE.'test/session?s=' . $_GET['s'] . '&value=bbb">Set "bbb"</a> | ' .
-        '<a href="'.URL_BASE.'test">Return</a>' . join('',  $echo) . '<br><br>' . $this->_getEnd();
+            return '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '">Default</a> | ' .
+                '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '&value=aaa">Set "aaa"</a> | ' .
+                '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '&value=bbb">Set "bbb"</a> | ' .
+                '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . '<br><br>' . $this->_getEnd();
+        } else {
+            // --- AUTH 模式 ---
+            $session = $this->_startSession($link, true, ['ttl' => 60]);
+            if (count($_POST) > 0) {
+                return [1, 'txt' => "\$_SESSION: " . json_encode($_SESSION) . "\nToken: " . $session->getToken(), 'token' => $session->getToken(), '_auth' => $this->_getBasicAuth('token', $session->getToken())];
+            } else {
+                $echo[] = '<script>document.write((typeof fetch !== "function") ? "<script src=\\"https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/dist/fetch.umd.min.js\\">" : "")</script>';
+
+                $echo[] = "\$this->_startSession(\$link, true, ['ttl' => 60]);
+json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
+
+                $_SESSION['value'] = date('H:i:s');
+                $echo[] = "<pre>\$_SESSION['value'] = '" . date('H:i:s') . "';
+json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
+
+                $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',headers:{'Authorization':document.getElementById('_auth').innerText,'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;document.getElementById('token').innerText=j.token;document.getElementById('_auth').innerText=j._auth;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>
+Token: <span id=\"token\">" . $session->getToken() . "</span><br>
+Post Authorization header: <span id=\"_auth\">" . $this->_getBasicAuth('token', $session->getToken()) . "</span><br><br>
+Result:<pre id=\"result\">Nothing.</pre>";
+
+                return '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . $this->_getEnd();
+            }
+        }
     }
 
     public function sql() {
@@ -881,8 +909,8 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
     }
 
     public function text() {
-        $echo = "<pre>Text::random(16, Text::RANDOM_LUNS);</pre>
-" . htmlspecialchars(Text::random(16, Text::RANDOM_LUNS)) . "
+        $echo = "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>
+" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) . "
 <pre>json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))) . "
 <pre>json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))</pre>

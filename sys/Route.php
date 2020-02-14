@@ -13,6 +13,7 @@ require ETC_PATH.'route.php';
 class Route {
 
     public static function run(): void {
+        $time = time();
         // --- URI 是安全的，不会是 ../../ 来访问到了外层，Apache Nginx 都会做处理的 ---
         $path = URI;
         // --- 如果为空则定义为 @ ---
@@ -56,6 +57,12 @@ class Route {
             return;
         }
         // --- 检测 action 是否存在 ---
+        if ($pathRight[0] === '_') {
+            // --- _ 开头的 action 是内部方法，不允许访问 ---
+            http_response_code(404);
+            echo '[Error] Action not found.';
+            return;
+        }
         $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
             return strtoupper($matches[1]);
         }, $pathRight);
@@ -72,7 +79,17 @@ class Route {
         // --- 原始 POST ---
         $ctr->_rawPost = $_POST;
         // --- 原始 GET ---
-        $ctr->_get = $_GET;
+        $ctr->_get = &$_GET;
+        // --- Cookie ---
+        $ctr->_cookie = &$_COOKIE;
+        // --- 设置 XSRF 值 ---
+        if (!isset($_COOKIE['XSRF-TOKEN'])) {
+            $ctr->_xsrf = $ctr->_random(16, Ctr::RANDOM_LUN);
+            setcookie('XSRF-TOKEN', $ctr->_xsrf, 0, '/' ,'', false, true);
+            $_COOKIE['XSRF-TOKEN'] = $ctr->_xsrf;
+        } else {
+            $ctr->_xsrf = $_COOKIE['XSRF-TOKEN'];
+        }
         // --- 处理 headers ---
         foreach ($_SERVER as $key => $val) {
             if ($key === 'CONTENT_TYPE') {
@@ -83,6 +100,9 @@ class Route {
                 continue;
             }
             $ctr->_headers[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
+        }
+        if (!isset($ctr->_headers['authorization'])) {
+            $ctr->_headers['authorization'] = '';
         }
         // --- 处理 POST 的值 JSON 或 FILE ---
         $contentType = isset($ctr->_headers['content-type']) ? strtolower($ctr->_headers['content-type']) : '';
@@ -110,22 +130,26 @@ class Route {
                 }
                 $_FILES[$key] = $files;
             }
-            $ctr->_files = $_FILES;
+            $ctr->_files = &$_FILES;
         }
         // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
-        $ctr->_post = $_POST;
+        $ctr->_post = &$_POST;
+        // --- 检测 CSRF ---
+        if ((count($ctr->_post) > 0 || count($ctr->_files) > 0)) {
+
+        }
         // --- 检测是否有 onLoad，有则优先执行一下 ---
-        if (method_exists($ctr, '_load')) {
+        if (!isset($rtn) && method_exists($ctr, '_load')) {
             $rtn = $ctr->_load();
         }
+        // --- 执行 action ---
         if (!isset($rtn)) {
-            // --- 执行 action ---
             $rtn = $ctr->$pathRight();
         }
         // --- 在返回值输出之前，设置缓存 ---
         if ($ctr->_cacheTTL > 0) {
-            header('Expires: ' . gmdate('D, d M Y H:i:s', $_SERVER['REQUEST_TIME'] + $ctr->_cacheTTL) . ' GMT');
+            header('Expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->_cacheTTL) . ' GMT');
             header('Cache-Control: max-age=' . $ctr->_cacheTTL);
         } else {
             header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');

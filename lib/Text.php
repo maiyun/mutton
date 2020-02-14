@@ -11,33 +11,6 @@ namespace lib;
 
 class Text {
 
-    // --- 随机 ---
-    const RANDOM_N = '0123456789';
-    const RANDOM_U = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const RANDOM_L = 'abcdefghijklmnopqrstuvwxyz';
-
-    const RANDOM_UN = self::RANDOM_U . self::RANDOM_N;
-    const RANDOM_LN = self::RANDOM_L . self::RANDOM_N;
-    const RANDOM_LU = self::RANDOM_L . self::RANDOM_U;
-    const RANDOM_LUN = self::RANDOM_L . self::RANDOM_U . self::RANDOM_N;
-    const RANDOM_V = 'ACEFGHJKLMNPRSTWXY34567';
-    const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]';
-
-    /**
-     * --- 生成随机字符串 ---
-     * @param int $length 长度
-     * @param string $source 采样值
-     * @return string
-     */
-    public static function random(int $length = 8, string $source = self::RANDOM_LN): string {
-        $len = strlen($source);
-        $temp = '';
-        for ($i = 0; $i < $length; ++$i) {
-            $temp .= $source[rand(0, $len - 1)];
-        }
-        return $temp;
-    }
-
     /**
      * --- 将文件大小格式化为容量显示字符串 ---
      * @param float $size
