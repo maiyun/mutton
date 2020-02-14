@@ -60,6 +60,10 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/json?type=5">View "test/json?type=5"</a>',
             '<br><a href="'.URL_BASE.'test/json?type=6">View "test/json?type=6"</a>',
 
+            '<br><br><b>Ctr:</b>',
+            '<br><br><a href="'.URL_BASE.'test/ctr-random">View "test/ctr-random"</a>',
+            '<br><a href="'.URL_BASE.'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
+
             '<br><br><b>Model test:</b>',
 
             '<br><br><b style="color: red;">In a production environment, please delete the "Mod/Session.php" file.</b>',
@@ -137,6 +141,26 @@ class test extends Ctr {
             default:
                 return [];
         }
+    }
+
+    public function ctrRandom() {
+        return "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) . "
+<pre>\$this->_random(4, Ctr::RANDOM_V);</pre>" . htmlspecialchars($this->_random(4, Ctr::RANDOM_V)). "<br><br>" . $this->_getEnd();
+    }
+
+    public function ctrXsrf() {
+        return "XSRF-TOKEN: " . $this->_xsrf . "<br><br>
+<input type=\"button\" value=\"Post with xsrf token\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/ctr-xsrf1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val&_xsrf=".$this->_xsrf."'}).then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\">
+<input type='button' value=\"Post without xsrf token\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/ctr-xsrf1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\"><br><br>
+Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
+    }
+    public function ctrXsrf1() {
+        if (!$this->_checkInput($_POST, [
+            '_xsrf' => []
+        ], $return)) {
+            return $return;
+        }
+        return [1, 'post' => $_POST];
     }
 
     public function mod() {
@@ -699,6 +723,11 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
             // --- AUTH 模式 ---
             $session = $this->_startSession($link, true, ['ttl' => 60]);
             if (count($_POST) > 0) {
+                if (!isset($_SESSION['count'])) {
+                    $_SESSION['count'] = 1;
+                } else {
+                    ++$_SESSION['count'];
+                }
                 return [1, 'txt' => "\$_SESSION: " . json_encode($_SESSION) . "\nToken: " . $session->getToken(), 'token' => $session->getToken(), '_auth' => $this->_getBasicAuth('token', $session->getToken())];
             } else {
                 $echo[] = '<script>document.write((typeof fetch !== "function") ? "<script src=\\"https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/dist/fetch.umd.min.js\\">" : "")</script>';
@@ -909,9 +938,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
     }
 
     public function text() {
-        $echo = "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>
-" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) . "
-<pre>json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))</pre>
+        $echo = "<pre>json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))) . "
 <pre>json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))) . "

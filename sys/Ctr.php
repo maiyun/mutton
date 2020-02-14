@@ -98,7 +98,7 @@ class Ctr {
             }
             // --- 判断 xsrf ---
             if ($key === '_xsrf') {
-                if (!isset($this->_cookie['_xsrf']) || ($this->_cookie['_xsrf'] !== $input['_xsrf'])) {
+                if (!isset($this->_cookie['XSRF-TOKEN']) || ($this->_cookie['XSRF-TOKEN'] !== $input['_xsrf'])) {
                     $return = [0, 'Exception request, no permission.'];
                     return false;
                 }
