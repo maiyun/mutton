@@ -222,7 +222,7 @@ class Ctr {
      */
     public function _loadData(string $path) {
         if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
-            return json_decode($f);
+            return json_decode($f, true);
         } else {
             return null;
         }

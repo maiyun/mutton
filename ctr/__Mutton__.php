@@ -11,7 +11,7 @@ class __Mutton__ extends Ctr {
 
     private $_hasConfig = false;
 
-    public function onLoad() {
+    public function _load() {
         if (is_file(ETC_PATH.'__mutton__.php')) {
             $this->_hasConfig = true;
             require_once ETC_PATH.'__mutton__.php';
@@ -21,12 +21,12 @@ class __Mutton__ extends Ctr {
         if (!in_array($l, ['en', 'zh-CN', 'zh-TW'])) {
             $l = 'en';
         }
-        $this->loadLocale($l, '__Mutton__');
+        $this->_loadLocale($l, '__Mutton__');
     }
 
     // --- Index page ---
     public function index() {
-        $this->loadView('__Mutton__/index', [
+        return $this->_loadView('__Mutton__/index', [
             'hasConfig' => $this->_hasConfig
         ]);
     }
@@ -34,7 +34,7 @@ class __Mutton__ extends Ctr {
     // --- API ---
 
     public function apiCheckRefresh() {
-        if (!$this->checkInput($_POST, [
+        if (!$this->_checkInput($_POST, [
             'password' => ['require', [0, l('Please input password')]]
         ], $return)) {
             return $return;
@@ -49,7 +49,7 @@ class __Mutton__ extends Ctr {
         $json = json_decode($res->content);
         $list = [];
         foreach ($json as $item) {
-            preg_match('/[0-9\\.]+/', $item->tag_name, $matches);
+            preg_match('/[0-9.]+/', $item->tag_name, $matches);
             $list[] = [
                 'value' => $matches[0],
                 'label' => $item->name
@@ -59,7 +59,7 @@ class __Mutton__ extends Ctr {
     }
 
     public function apiCheck() {
-        if (!$this->checkInput($_POST, [
+        if (!$this->_checkInput($_POST, [
             'password' => ['require', [0, l('Please input password')]],
             'ver' => ['require', [0, l('System error')]]
         ], $return)) {
@@ -71,7 +71,7 @@ class __Mutton__ extends Ctr {
         if (version_compare($_POST['ver'], '5.2.0', '<')) {
             return [0, 'Version must be >= 5.2.0.'];
         }
-        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton/doc/mblob/'.$this->post('ver').'.mblob');
+        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton/doc/mblob/'.$_POST['ver'].'.mblob');
         if (!$res->content) {
             return [0, l('Network error, please try again')];
         }
@@ -105,7 +105,7 @@ class __Mutton__ extends Ctr {
                     '/^etc\\/(?!const\\.php).+/',
                     '/^stc\\/index\\.js/'
                 ];
-                if ($this->post('mode') === '1') {
+                if ($_POST['mode'] === '1') {
                     // --- online，忽略 stc-ts 文件夹下所有文件 ---
                     $match[] = '/^stc-ts\\/.+/';
                 } else {
@@ -126,7 +126,7 @@ class __Mutton__ extends Ctr {
         }
         // --- 缺失文件文件夹序列 ---
         foreach ($json['folders'] as $k => $v) {
-            if (($this->post('mode') === '1') && Text::match($k, [
+            if (($_POST['mode'] === '1') && Text::match($k, [
                     '/^stc-ts\\/.*/',
                     '/^\\.gitignore/'
                 ])) {
@@ -136,7 +136,7 @@ class __Mutton__ extends Ctr {
             }
         }
         foreach ($json['files'] as $k => $v) {
-            if (($this->post('mode') === '1') && Text::match($k, [
+            if (($_POST['mode'] === '1') && Text::match($k, [
                     '/^stc-ts\\/.*/'
                 ])) {
                 // --- 在线模式，不计算 stc-ts 目录 ---
