@@ -15,7 +15,6 @@ class Session extends Mod {
 
     protected function _keyGenerator(): string {
         return 'test_' . rand(0, 3);
-        // return Ctr::_getRandom(16, Ctr::RANDOM_LUN);
     }
 
 }
