@@ -323,11 +323,19 @@ class Mod {
             $updates[$k] = $this->_data[$k];
         }
 
+        $ps = null;
         if (static::$_key !== '' && !isset($updates[static::$_key])) {
+            $count = 0;
             do {
+                if ($count === 20) {
+                    break;
+                }
                 $updates[static::$_key] = $this->_keyGenerator();
+                $this->_data[static::$_key] = $updates[static::$_key];
+                $this->{static::$_key} = $updates[static::$_key];
                 $this->_sql->insert(static::$_table)->values($updates);
                 $ps = $this->_db->prepare($this->_sql->getSql());
+                ++$count;
             } while (!$ps->execute($this->_sql->getData()) && ($ps->errorCode() === '23000'));
         } else {
             $this->_sql->insert(static::$_table)->values($updates);
@@ -336,7 +344,7 @@ class Mod {
                 return false;
             }
         }
-        if ($ps->rowCount() > 0) {
+        if ($ps && ($ps->rowCount() > 0)) {
             $this->_updates = [];
             $this->_data[static::$_primary] = $this->_db->getInsertID();
             $this->{static::$_primary} = $this->_data[static::$_primary];
@@ -361,11 +369,19 @@ class Mod {
             $table = static::$_table;
         }
 
+        $ps = null;
         if (static::$_key !== '' && !isset($updates[static::$_key])) {
+            $count = 0;
             do {
+                if ($count === 20) {
+                    break;
+                }
                 $updates[static::$_key] = $this->_keyGenerator();
+                $this->_data[static::$_key] = $updates[static::$_key];
+                $this->{static::$_key} = $updates[static::$_key];
                 $this->_sql->insert(static::$_table)->notExists($table, $updates, $where);
                 $ps = $this->_db->prepare($this->_sql->getSql());
+                ++$count;
             } while (!$ps->execute($this->_sql->getData()) && ($ps->errorCode() === '23000'));
         } else {
             $this->_sql->insert(static::$_table)->notExists($table, $updates, $where);
@@ -374,7 +390,7 @@ class Mod {
                 return false;
             }
         }
-        if ($ps->rowCount() > 0) {
+        if ($ps && ($ps->rowCount() > 0)) {
             $this->_updates = [];
             $this->_data[static::$_primary] = $this->_db->getInsertID();
             $this->{static::$_primary} = $this->_data[static::$_primary];

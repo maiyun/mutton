@@ -370,6 +370,16 @@ class Ctr {
      * @return string
      */
     public function _random(int $length = 8, string $source = self::RANDOM_LN): string {
+        return self::_getRandom($length, $source);
+    }
+
+    /**
+     * --- 生成随机字符串 ---
+     * @param int $length 长度
+     * @param string $source 采样值
+     * @return string
+     */
+    public static function _getRandom(int $length = 8, string $source = self::RANDOM_LN): string {
         $len = strlen($source);
         $temp = '';
         for ($i = 0; $i < $length; ++$i) {

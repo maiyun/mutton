@@ -3,7 +3,7 @@
  * --- Mysql ---
 CREATE TABLE `session` (
   `id` int(10) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  `token` varchar(255) NOT NULL UNIQUE KEY,
+  `token` varchar(16) NOT NULL UNIQUE KEY,
   `data` text NOT NULL,
   `time_update` int(10) UNSIGNED NOT NULL,
   `time_add` int(10) UNSIGNED NOT NULL
@@ -12,7 +12,7 @@ CREATE TABLE `session` (
  * --- Sqlite ---
 CREATE TABLE `session` (
   `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `token` VARCHAR(255) UNIQUE NOT NULL,
+  `token` VARCHAR(16) UNIQUE NOT NULL,
   `data` TEXT NOT NULL,
   `time_update` INT(10) NOT NULL,
   `time_add` INT(10) NOT NULL

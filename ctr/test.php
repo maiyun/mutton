@@ -11,6 +11,7 @@ use lib\Net;
 use lib\Session;
 use lib\Sql;
 use lib\Text;
+use mod\Mod;
 use PDO;
 use PDOStatement;
 use sys\Ctr;
@@ -164,7 +165,63 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
     }
 
     public function mod() {
+        if (!($this->_checkInput($_GET, [
+            'action' => [['', 'remove'], [0, 'Error']]
+        ], $return))) {
+            return $return;
+        }
+
         $echo = ['<b style="color: red;">In a production environment, please delete the "Mod/Session.php file.</b>'];
+
+        $db = Db::get(Db::MYSQL);
+        if (!($rtn = $db->connect())) {
+            return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
+        }
+
+        if (!($stmt = $db->query('SELECT * FROM `mu_session` WHERE `token` LIMIT 1;'))) {
+            return [0 ,'Failed("mu_session" not found).'];
+        }
+
+        Mod::setDb($db);
+
+        if ($_GET['action'] === 'remove') {
+            \mod\Session::removeByWhere([
+                ['token', 'LIKE', 'test_%']
+            ]);
+            $this->_location('test/mod');
+        } else {
+
+            $time = time();
+            $session = \mod\Session::getCreate();
+            $session->set([
+                'data' => json_encode(['test' => $this->_random(4)]),
+                'time_update' => $time,
+                'time_add' => $time
+            ]);
+            $result = $session->create();
+
+            $echo[] = "<pre>Mod::setDb(\$db);
+\$time = time();
+\$session = \mod\Session::getCreate();
+\$session->set([
+    'data' => json_encode(['ok' => '1']),
+    'time_update' => \$time,
+    'time_add' => \$time
+]);
+\$result = \$session->create();
+json_encode(\$result);</pre>" . json_encode($result);
+
+            $echo[] = "<pre>json_encode(\$session->toArray());</pre>" . htmlspecialchars(json_encode($session->toArray()));
+
+            $echo[] = "<br><br>Session table:";
+
+            $stmt = $db->query('SELECT * FROM `mu_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
+            $this->_dbTable($stmt, $echo);
+
+            $echo[] = "<br><a href=\"".URL_BASE."test/mod?action=remove\">Remove all test data</a> | <a href=\"".URL_BASE."test\">Return</a>";
+
+            return join('', $echo) . '<br><br>' . $this->_getEnd();
+        }
     }
 
     public function captchaFastbuild() {
@@ -280,7 +337,7 @@ insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 1;');
         $this->_dbTable($stmt, $echo);
 
         $exec = $db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
