@@ -589,6 +589,24 @@ class Mod {
     }
 
     /**
+     * --- 根据当前条件，筛选出当前条目该有的数据条数 ---
+     * @return int
+     */
+    public function count(): int {
+        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
+        $ps = $this->_db->prepare($sql);
+        if ($ps->execute($this->_sql->getData())) {
+            if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+                return (int)$row['count'];
+            } else {
+                return 0;
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    /**
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $type 类型
