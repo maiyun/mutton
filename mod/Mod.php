@@ -743,9 +743,11 @@ class Mod {
      * --- 分页 ---
      * @param int $count 每页条数
      * @param int $page 当前页数
+     * @return static
      */
     public function page(int $count, int $page = 1) {
         $this->_sql->limit($count * ($page - 1), $count);
+        return $this;
     }
 
     /**
