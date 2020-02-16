@@ -1,8 +1,8 @@
 <?php
 /**
- * User: JianSuoQiYue
+ * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-16 11:20:11
  */
 declare(strict_types = 1);
 
@@ -271,7 +271,7 @@ class Mod {
      * @param string|int|float $val 主键值
      * @param bool $lock 是否加锁
      * @param bool $raw 是否获取真实数据
-     * @return bool|Mod|null
+     * @return bool|null|static
      */
     public static function find($val, $lock = false, $raw = false) {
         return (new static([
@@ -280,6 +280,19 @@ class Mod {
             ],
             'raw' => $raw
         ]))->first($lock);
+    }
+
+    /**
+     * --- 通过 where 条件筛选单条数据 ---
+     * @param array|string $s 筛选条件数组或字符串
+     * @param bool $raw 是否包含已被软删除的数据
+     * @return false|null|static
+     */
+    public static function one($s, $raw = false) {
+        return (new static([
+            'where' => $s,
+            'raw' => $raw
+        ]))->first();
     }
 
     // --- 动态方法 ---

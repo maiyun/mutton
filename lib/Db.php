@@ -42,7 +42,7 @@ class Db {
      * @param string $core
      * @return Db
      */
-    public static function get(string $core): Db {
+    public static function get(string $core = self::MYSQL): Db {
         return new Db($core);
     }
 
