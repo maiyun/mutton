@@ -547,7 +547,7 @@ class Mod {
      * @param string|null $key 是否以某个字段为主键
      * @return false|array
      */
-    public function findList(?string $key = null) {
+    public function all(?string $key = null) {
         $ps = $this->_db->prepare($this->_sql->getSql());
         if ($ps->execute($this->_sql->getData())) {
             $list = [];
