@@ -115,7 +115,7 @@ class Text {
      * @return bool
      */
     public static function isEMail(string $email): bool {
-        return preg_match('/^[-_\w\\.]+\\@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
+        return preg_match('/^[-_\w.]+@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
     }
 
     /**
