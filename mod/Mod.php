@@ -127,14 +127,18 @@ class Mod {
      * --- 添加一个序列 ---
      * @param array $cs 字段列表
      * @param array $vs 数据列表
-     * @return bool
+     * @return bool|null
      */
-    public static function insert(array $cs, array $vs = []): bool {
+    public static function insert(array $cs, array $vs = []) {
         $sql = Sql::get(Mod::$__pre);
         $sql->insert(static::$_table)->values($cs, $vs);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
+        if ($ps->execute($sql->getData())) {
+            if ($ps->rowCount() > 0) {
+                return true;
+            } else {
+                return null;
+            }
         } else {
             return false;
         }
@@ -156,14 +160,18 @@ class Mod {
      * --- 插入数据如果唯一键冲突则更新 ---
      * @param array $data 要插入的数据
      * @param array $update 要更新的数据
-     * @return bool
+     * @return bool|null
      */
     public static function insertDuplicate(array $data, array $update) {
         $sql = Sql::get(Mod::$__pre);
         $sql->insert(static::$_table)->values($data)->duplicate($update);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
+        if ($ps->execute($sql->getData())) {
+            if ($ps->rowCount() > 0) {
+                return true;
+            } else {
+                return null;
+            }
         } else {
             return false;
         }
@@ -173,9 +181,9 @@ class Mod {
      * --- 根据条件移除条目 ---
      * @param string|array $where 筛选条件
      * @param bool $raw 是否真实
-     * @return bool
+     * @return bool|null
      */
-    public static function removeByWhere($where, bool $raw = false): bool {
+    public static function removeByWhere($where, bool $raw = false) {
         $sql = Sql::get(Mod::$__pre);
         if (static::$_soft && ($raw === false)) {
             // --- 软删除 ---
@@ -198,8 +206,12 @@ class Mod {
             }
         }
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
+        if ($ps->execute($sql->getData())) {
+            if ($ps->rowCount() > 0) {
+                return true;
+            } else {
+                return null;
+            }
         } else {
             return false;
         }
@@ -210,9 +222,9 @@ class Mod {
      * @param array $data 要更新的数据
      * @param array|string $where 筛选条件
      * @param bool $raw 是否真实
-     * @return bool
+     * @return bool|null
      */
-    public static function updateByWhere(array $data, $where, bool $raw = false): bool {
+    public static function updateByWhere(array $data, $where, bool $raw = false) {
         $sql = Sql::get(Mod::$__pre);
         $sql->update(static::$_table, $data);
         if (is_string($where)) {
@@ -227,8 +239,12 @@ class Mod {
             $sql->where($where);
         }
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData()) && ($ps->rowCount() > 0)) {
-            return true;
+        if ($ps->execute($sql->getData())) {
+            if ($ps->rowCount() > 0) {
+                return true;
+            } else{
+                return null;
+            }
         } else {
             return false;
         }
