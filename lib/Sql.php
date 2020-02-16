@@ -400,12 +400,20 @@ class LSql {
      * --- 4. ['city' => 'bj', 'type' => ['1', '2']] ---
      * --- 5. ['$or' => [['city' => 'bj'], ['city' => 'sh']], 'type' => '2'] ---
      * --- 6. ['city_in' => '#city_out'] ---
-     * @param array $s 筛选数据
+     * @param array|string $s 筛选数据
      * @return LSql
      */
-    public function where(array $s): LSql {
-        if (count($s) > 0) {
-            $this->_sql[] = ' WHERE ' . $this->_whereSub($s);
+    public function where($s): LSql {
+        if (is_string($s)) {
+            // --- string ---
+            if ($s !== '') {
+                $this->_sql = ' WHERE ' . $s;
+            }
+        } else {
+            // --- array ---
+            if (count($s) > 0) {
+                $this->_sql[] = ' WHERE ' . $this->_whereSub($s);
+            }
         }
         return $this;
     }
