@@ -246,10 +246,12 @@ class Ctr {
     /**
      * --- 跳转（302临时跳转），支持相对和绝对路径 ---
      * @param string $url
+     * @return false
      */
-    public function _location(string $url): void {
+    public function _location(string $url) {
         http_response_code(302);
         header('Location: '.Text::urlResolve(URL_BASE, $url));
+        return false;
     }
 
     /**

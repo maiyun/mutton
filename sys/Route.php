@@ -140,7 +140,7 @@ class Route {
             $rtn = $ctr->_load();
         }
         // --- 执行 action ---
-        if (!isset($rtn) || !$rtn) {
+        if (!isset($rtn) || $rtn === true) {
             $rtn = $ctr->$pathRight();
         }
         // --- 在返回值输出之前，设置缓存 ---
@@ -152,7 +152,7 @@ class Route {
             header('Cache-Control: no-store');
         }
         // --- 判断返回值 ---
-        if (!isset($rtn) || !$rtn) {
+        if (!isset($rtn) || is_bool($rtn) || $rtn === null) {
             return;
         }
         if (is_string($rtn)) {
