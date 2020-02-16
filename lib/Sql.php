@@ -619,12 +619,11 @@ class LSql {
      */
     public function field(string $str, string $pre = ''): string {
         $str = trim($str);
-        // $str = str_replace('`', '', $str);  // --- 替换 ` 防止字段内部包含 ` ---
         $str = preg_replace('/  {2,}/', ' ', $str);
         if (preg_match('/^[a-zA-Z0-9`_ .-]+?$/', $str)) {
             $loStr = strtolower($str);
             $asPos = strpos($loStr, ' as ');
-            $left = '';
+            // $left = '';
             $right = '';
             if ($asPos !== false) {
                 $left = substr($str, 0, $asPos);
@@ -675,7 +674,7 @@ class LSql {
                 // --- 是 field ---
                 $data = [];
                 $str = substr($str, 1);
-                $str = preg_replace_callback('/\\{##\\{([\\S\\s]+?)\\}##\\}/', function ($matches) use (&$data) {
+                $str = preg_replace_callback('/{##{([\\S\\s]+?)}##}/', function ($matches) use (&$data) {
                     $data[] = $matches[1];
                     return '?';
                 }, $str);
