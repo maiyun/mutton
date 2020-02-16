@@ -255,7 +255,7 @@ class Mod {
      * @param bool $raw 是否包含已被软删除的数据
      * @return static
      */
-    public static function where($s, $raw = false) {
+    public static function where($s = '', $raw = false) {
         return new static([
             'where' => $s,
             'raw' => $raw
