@@ -403,7 +403,7 @@ class LSql {
      * @param array|string $s 筛选数据
      * @return LSql
      */
-    public function where($s): LSql {
+    public function where($s = ''): LSql {
         if (is_string($s)) {
             // --- string ---
             if ($s !== '') {
