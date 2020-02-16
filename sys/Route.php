@@ -135,16 +135,12 @@ class Route {
         // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
         $ctr->_post = &$_POST;
-        // --- 检测 CSRF ---
-        if ((count($ctr->_post) > 0 || count($ctr->_files) > 0)) {
-
-        }
         // --- 检测是否有 onLoad，有则优先执行一下 ---
-        if (!isset($rtn) && method_exists($ctr, '_load')) {
+        if (method_exists($ctr, '_load')) {
             $rtn = $ctr->_load();
         }
         // --- 执行 action ---
-        if (!isset($rtn)) {
+        if (!isset($rtn) || !$rtn) {
             $rtn = $ctr->$pathRight();
         }
         // --- 在返回值输出之前，设置缓存 ---
@@ -156,7 +152,7 @@ class Route {
             header('Cache-Control: no-store');
         }
         // --- 判断返回值 ---
-        if (!isset($rtn)) {
+        if (!isset($rtn) || !$rtn) {
             return;
         }
         if (is_string($rtn)) {

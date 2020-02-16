@@ -39,7 +39,7 @@ class test extends Ctr {
             '<br>URI: ' . URI,
             '<br>URL_FULL: ' . URL_FULL,
 
-            '<br><br>headers:' . htmlspecialchars(json_encode($this->_headers)),
+            '<br><br>headers: ' . htmlspecialchars(json_encode($this->_headers)),
 
             '<br><br><b style="color: red;">Tips: The file can be deleted.</b>',
 
@@ -1008,7 +1008,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <pre>Text::urlResolve('http://www.url.com/path', 'https://www.url.com/path');</pre>
 " . htmlspecialchars(Text::urlResolve('http://www.url.com/path', 'https://www.url.com/path')) . "
 <pre>Text::urlResolve('http://www.url.com/path?ok=b', '?do=some');</pre>
-" . htmlspecialchars(Text::urlResolve('http://www.url.com/path?ok=b', '?do=some'));
+" . htmlspecialchars(Text::urlResolve('http://www.url.com/path?ok=b', '?do=some')) . "
+<pre>Text::urlResolve('/abc/def/', '');</pre>
+" . htmlspecialchars(Text::urlResolve('/abc/def/', ''));
         return $echo . '<br><br>' . $this->_getEnd();
     }
 
