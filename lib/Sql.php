@@ -407,7 +407,7 @@ class LSql {
         if (is_string($s)) {
             // --- string ---
             if ($s !== '') {
-                $this->_sql = ' WHERE ' . $s;
+                $this->_sql[] = ' WHERE ' . $s;
             }
         } else {
             // --- array ---

@@ -73,18 +73,14 @@ class Mod {
         }
         if (isset($opt['where'])) {
             $this->_sql->select('*', static::$_table);
-            if (is_string($opt['where'])) {
-                // --- 判断是否筛掉已删除的 ---
-                $this->_sql->append(' WHERE (' . $opt['where'] . ')');
-                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
-                    $this->_sql->append(' AND `time_remove` = 0');
-                }
-            } else {
-                if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
+            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
+                if (is_string($opt['where'])) {
+                    $opt['where'] = '(' . $opt['where'] . ') AND `time_remove` = 0';
+                } else {
                     $opt['where']['time_remove'] = '0';
                 }
-                $this->_sql->where($opt['where']);
             }
+            $this->_sql->where($opt['where']);
         }
     }
 
@@ -191,20 +187,15 @@ class Mod {
                 'time_remove' => time()
             ]);
             if (is_string($where)) {
-                $sql->append(' WHERE (' . $where . ') AND `time_remove` = 0');
+                $where = '(' . $where . ') AND `time_remove` = 0';
             } else {
                 $where['time_remove'] = '0';
-                $sql->where($where);
             }
         } else {
             // --- 真删除 ---
             $sql->delete(static::$_table);
-            if (is_string($where)) {
-                $sql->append(' WHERE ' . $where);
-            } else {
-                $sql->where($where);
-            }
         }
+        $sql->where($where);
         $ps = self::$__db->prepare($sql->getSql());
         if ($ps->execute($sql->getData())) {
             if ($ps->rowCount() > 0) {
@@ -227,22 +218,19 @@ class Mod {
     public static function updateByWhere(array $data, $where, bool $raw = false) {
         $sql = Sql::get(Mod::$__pre);
         $sql->update(static::$_table, $data);
-        if (is_string($where)) {
-            $sql->append(' WHERE (' . $where . ')');
-            if (static::$_soft && (!isset($opt['raw']) || $raw === false)) {
-                $sql->append(' AND `time_remove` = 0');
-            }
-        } else {
-            if (static::$_soft && (!isset($opt['raw']) || $raw === false)) {
+        if (static::$_soft && ($raw === false)) {
+            if (is_string($where)) {
+                $where = '(' . $where . ') AND `time_remove` = 0';
+            } else {
                 $where['time_remove'] = '0';
             }
-            $sql->where($where);
         }
+        $sql->where($where);
         $ps = self::$__db->prepare($sql->getSql());
         if ($ps->execute($sql->getData())) {
             if ($ps->rowCount() > 0) {
                 return true;
-            } else{
+            } else {
                 return null;
             }
         } else {
@@ -512,7 +500,7 @@ class Mod {
      * @return bool
      */
     public function remove($raw = false): bool {
-        if (static::$_soft && !$raw) {
+        if (static::$_soft && ($raw === false)) {
             $this->_sql->update(static::$_table, [
                 'time_remove' => $_SERVER['REQUEST_TIME']
             ])->where([
@@ -708,18 +696,14 @@ class Mod {
      * @return static
      */
     public function filter($s, $raw = false) {
-        if (is_string($s)) {
-            // --- 判断是否筛掉已删除的 ---
-            $this->_sql->append(' WHERE (' . $s . ')');
-            if (static::$_soft && ($raw === false)) {
-                $this->_sql->append(' AND `time_remove` = 0');
-            }
-        } else {
-            if (static::$_soft && ($raw === false)) {
+        if (static::$_soft && ($raw === false)) {
+            if (is_string($s)) {
+                $s = '(' . $s . ') AND `time_remove` = 0';
+            } else {
                 $s['time_remove'] = '0';
             }
-            $this->_sql->where($s);
         }
+        $this->_sql->where($s);
         return $this;
     }
 
