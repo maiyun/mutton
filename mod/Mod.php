@@ -773,14 +773,5 @@ class Mod {
     protected function _keyGenerator(): string {
         return '';
     }
-
-    // --- 以下为静态方法 ---
-
-    /**
-     * --- 获取列表 ---
-     * @param array $opt where, by, group, lock, raw
-     * @return array
-     */
-
 }
 
