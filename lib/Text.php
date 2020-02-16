@@ -63,6 +63,9 @@ class Text {
      * @return string
      */
     public static function urlResolve(string $from, string $to): string {
+        if ($to === '') {
+            return $from;
+        }
         // --- 获取 scheme, host, path ---
         $f = Text::parseUrl($from);
         // --- 以 // 开头的，加上 from 的 protocol 返回 ---
@@ -74,7 +77,7 @@ class Text {
             return $to;
         }
         // --- # 或 ? 替换后返回 ---
-        if ($to[0] == '#' || $to[0] == '?') {
+        if ($to[0] === '#' || $to[0] === '?') {
             $sp = strpos($from, $to[0]);
             if ($sp !== false) {
                 return substr($from, 0, $sp) . $to;
