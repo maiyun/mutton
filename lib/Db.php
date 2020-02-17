@@ -133,7 +133,7 @@ class Db {
                     $name = isset($opt['name']) ? $opt['name'] : MY_NAME;
                     $charset = isset($opt['charset']) ? $opt['charset'] : MY_CHARSET;
 
-                    if ($this->_link = new PDO('mysql: host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
+                    if ($this->_link = new PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
                         return true;
                     } else {
                         return false;
