@@ -153,7 +153,7 @@ class Db {
             }
             return null;
         } catch (Exception $exception) {
-            log(json_encode($exception), '-error');
+            log('[Db]'.$exception->getMessage(), '-error');
             return null;
         }
     }
