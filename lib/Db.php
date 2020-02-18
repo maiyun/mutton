@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.1","folder":true} - END
  * Date: 2015/7/7 17:59
- * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04
+ * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04, 2020-2-17 23:26:01
  */
 declare(strict_types = 1);
 
@@ -22,12 +22,8 @@ class Db {
     const MYSQL = 'Mysql';
     const SQLITE = 'Sqlite';
 
-    /** @var int query 次数 */
+    /** @var int SQL 执行次数 */
     private $_queries = 0;
-    /** @var int exec 次数 */
-    private $_executions = 0;
-    /** @var int 影响行数 */
-    private $_affectRows = 0;
 
     /* @var PDO */
     private $_link;
@@ -97,8 +93,8 @@ class Db {
      * @return false|int
      */
     public function exec(string $sql) {
-        ++$this->_executions;
-        return $this->_affectRows = $this->_link->exec($sql);
+        ++$this->_queries;
+        return $this->_link->exec($sql);
     }
 
     /**
@@ -167,27 +163,11 @@ class Db {
     }
 
     /**
-     * --- 获取影响行数 ---
-     * @return int
-     */
-    public function getAffectRows(): int {
-        return $this->_affectRows;
-    }
-
-    /**
-     * --- 获取 query 次数 ---
+     * --- 获取 SQL 执行次数 ---
      * @return int
      */
     public function getQueries(): int {
         return $this->_queries;
-    }
-
-    /**
-     * --- 获取 exec 次数 ---
-     * @return int
-     */
-    public function getExecutions(): int {
-        return $this->_executions;
     }
 
     /**
@@ -210,6 +190,7 @@ class Db {
      * @return PDOStatement
      */
     public function prepare(string $sql): PDOStatement {
+        ++$this->_queries;
         return $this->_link->prepare($sql);
     }
 
