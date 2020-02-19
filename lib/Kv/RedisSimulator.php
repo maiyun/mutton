@@ -23,7 +23,7 @@ CREATE TABLE `redis` (
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/09/29 15:26
- * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-8 09:55:57
+ * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47
  */
 declare(strict_types = 1);
 
@@ -83,7 +83,7 @@ class RedisSimulator implements IKv {
         $this->_link = $opt['db'];
         $this->_index = $index;
 
-        $sqlPre = isset($opt['sqlPre']) ? $opt['sqlPre'] : '';
+        $sqlPre = isset($opt['sqlPre']) ? $opt['sqlPre'] : SQL_PRE;
         $this->_sql = Sql::get($sqlPre);
         if (isset($opt['table'])) {
             $this->_table = $opt['table'];
@@ -157,7 +157,7 @@ class RedisSimulator implements IKv {
                 }
             } else {
                 $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_resultMessage = $ps->errorInfo()[2];
                 $this->_lastError = $this->_resultMessage;
                 return false;
             }
@@ -183,7 +183,7 @@ class RedisSimulator implements IKv {
                 }
             } else {
                 $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_resultMessage = $ps->errorInfo()[2];
                 $this->_lastError = $this->_resultMessage;
                 return false;
             }
@@ -203,7 +203,7 @@ class RedisSimulator implements IKv {
                 return true;
             } else {
                 $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_resultMessage = $ps->errorInfo()[2];
                 $this->_lastError = $this->_resultMessage;
                 return false;
             }
@@ -255,7 +255,7 @@ class RedisSimulator implements IKv {
             return true;
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -289,7 +289,7 @@ class RedisSimulator implements IKv {
             }
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -325,7 +325,7 @@ class RedisSimulator implements IKv {
             return $i;
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return 0;
         }
@@ -350,13 +350,13 @@ class RedisSimulator implements IKv {
                 return $obj->value;
             } else {
                 $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_resultMessage = $ps->errorInfo()[2];
                 $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -393,7 +393,7 @@ class RedisSimulator implements IKv {
             }
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
         }
         return $rtn;
@@ -458,7 +458,7 @@ class RedisSimulator implements IKv {
             }
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -523,13 +523,13 @@ class RedisSimulator implements IKv {
                 return (int)($ps->fetch(PDO::FETCH_ASSOC)['value']);
             } else {
                 $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[0];
+                $this->_resultMessage = $ps->errorInfo()[2];
                 $this->_lastError = $this->_resultMessage;
                 return false;
             }
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -556,7 +556,7 @@ class RedisSimulator implements IKv {
             return true;
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -599,7 +599,7 @@ class RedisSimulator implements IKv {
         $ps = $this->_link->prepare($this->_sql->getSql());
         if (!$ps->execute($this->_sql->getData())) {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
@@ -635,7 +635,7 @@ class RedisSimulator implements IKv {
             return true;
         } else {
             $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[0];
+            $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
             return false;
         }
