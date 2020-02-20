@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-16 11:20:11
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14
  */
 declare(strict_types = 1);
 
@@ -297,6 +297,26 @@ class Mod {
             'where' => $s,
             'raw' => $raw
         ]))->first();
+    }
+
+    /**
+     * --- 根据 where 条件获取主键值列表 ---
+     * @param string $s where 条件
+     * @return array|false
+     */
+    public static function primarys($s = '') {
+        $sql = Sql::get(Mod::$__pre);
+        $sql->select(self::$_primary, static::$_table)->where($s);
+        $ps = self::$__db->prepare($sql->getSql());
+        if ($ps->execute($sql->getData())) {
+            $primarys = [];
+            while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+                $primarys[] = $row[self::$_primary];
+            }
+            return $primarys;
+        } else {
+            return false;
+        }
     }
 
     // --- 动态方法 ---
