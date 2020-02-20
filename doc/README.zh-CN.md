@@ -71,13 +71,11 @@ Captcha::get(400, 100)->getStream();
 ### 根据条件从数据库获取列表
 
 ```php
-$userList = User::getList([
-    'where' => [
-        ['state', '!=', '0'],
-        'type' => ['1', '2', '3'],
-        'is_lock' => '0'
-    ]
-]);
+$userList = User::where([
+    ['state', '!=', '0'],
+    'type' => ['1', '2', '3'],
+    'is_lock' => '0'
+])->all();
 ```
 
 注：框架的所有数据库操作已经做了防注入安全处理。

@@ -77,13 +77,11 @@ Captcha::get(400, 100)->getStream();
 ### Get a list from the database
 
 ```php
-$userList = User::getList([
-    'where' => [
-        ['state', '!=', '0'],
-        'type' => ['1', '2', '3'],
-        'is_lock' => '0'
-    ]
-]);
+$userList = User::where([
+    ['state', '!=', '0'],
+    'type' => ['1', '2', '3'],
+    'is_lock' => '0'
+])->all();
 ```
 
 Note: All database operations are secure in this framework.
