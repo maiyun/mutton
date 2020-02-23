@@ -18,9 +18,10 @@ $__LOCALE_OVER = [];
 /**
  * --- 获取语言包值 ---
  * @param string $key
+ * @param array|null $data 要替换的数据
  * @return string
  */
-function l(string $key): string {
+function l(string $key, ?array $data = null): string {
     global $__LOCALE, $__LOCALE_OBJ;
     if (!isset($__LOCALE_OBJ[$__LOCALE])) {
         return 'LocaleError';
@@ -28,6 +29,18 @@ function l(string $key): string {
     if (!isset($__LOCALE_OBJ[$__LOCALE][$key])) {
         return 'LocaleError';
     }
-    return $__LOCALE_OBJ[$__LOCALE][$key];
+    if ($data) {
+        $i = -1;
+        return preg_replace_callback('/\\?/', function () use (&$i, $data) {
+            ++$i;
+            if (isset($data[$i])) {
+                return $data[$i];
+            } else {
+                return '';
+            }
+        }, $__LOCALE_OBJ[$__LOCALE][$key]);
+    } else {
+        return $__LOCALE_OBJ[$__LOCALE][$key];
+    }
 }
 

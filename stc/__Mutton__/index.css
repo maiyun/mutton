@@ -168,6 +168,7 @@ textarea {
 }
 .window__controls {
     text-align: center;
+    padding-bottom: 5px;
 }
 
 /* --- Line --- */

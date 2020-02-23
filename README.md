@@ -101,3 +101,10 @@ This library is published under [Apache-2.0](./LICENSE) license.
 ## Name meaning
 
 Sheep are so cute.
+
+## 参与翻译
+
+我们工作基于中文语言环境，若对本项目感兴趣并对除中文简体、中文繁体之外语种熟悉的朋友，欢迎一起参与翻译工作，感兴趣的朋友可以加入以下群组。
+
+除中国大陆之外翻译 Telegram 群组：[https://t.me/maiyunlocal](https://t.me/maiyunlocal)  
+中国大陆翻译 QQ 群：24158113
