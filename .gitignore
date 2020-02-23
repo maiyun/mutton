@@ -2,6 +2,6 @@
 .project
 .buildpath
 .settings/
-etc/__mutton__.php
+etc/__*
 log/*
 !log/index.html

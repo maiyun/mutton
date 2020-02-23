@@ -96,13 +96,6 @@ class Ctr {
                 // --- 原值不存在则设定为空 ---
                 $input[$key] = '';
             }
-            // --- 判断 xsrf ---
-            if ($key === '_xsrf') {
-                if (!isset($this->_cookie['XSRF-TOKEN']) || ($this->_cookie['XSRF-TOKEN'] !== $input['_xsrf'])) {
-                    $return = [0, 'Bad request, no permission.'];
-                    return false;
-                }
-            }
             // --- 判断是否需要遍历 val ---
             $c = count($val);
             if ($c === 0) {
@@ -195,6 +188,11 @@ class Ctr {
                                         $return = $val[$lastK];
                                         return false;
                                     }
+                                } else {
+                                    if ($input[$key] !== $v) {
+                                        $return = $val[$lastK];
+                                        return false;
+                                    }
                                 }
                             }
                         }
@@ -203,6 +201,20 @@ class Ctr {
             }
         }
         return true;
+    }
+
+    /**
+     * --- 检测提交的数据类型（会检测 XSRF） ---
+     * @param array $input 要校验的输入项
+     * @param array $rule
+     * @param array $return 返回值
+     * @return bool
+     */
+    public function _checkXInput(array &$input, array $rule, &$return) {
+        if (!isset($rule['_xsrf'])) {
+            $rule['_xsrf'] = ['require', $this->_cookie['XSRF-TOKEN'], [0, 'Bad request, no permission.']];
+        }
+        return $this->_checkInput($input, $rule, $return);
     }
 
     /**

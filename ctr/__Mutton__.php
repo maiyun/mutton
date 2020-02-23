@@ -34,8 +34,11 @@ class __Mutton__ extends Ctr {
     // --- API ---
 
     public function apiCheckRefresh() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the file first.')];
+        }
         if (!$this->_checkInput($_POST, [
-            'password' => ['require', [0, l('Please input password')]]
+            'password' => ['require', [0, l('Please input password.')]]
         ], $return)) {
             return $return;
         }

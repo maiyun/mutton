@@ -156,9 +156,7 @@ class test extends Ctr {
 Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
     }
     public function ctrXsrf1() {
-        if (!$this->_checkInput($_POST, [
-            '_xsrf' => []
-        ], $return)) {
+        if (!$this->_checkXInput($_POST, [], $return)) {
             return $return;
         }
         return [1, 'post' => $_POST];
