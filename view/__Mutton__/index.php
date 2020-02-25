@@ -55,7 +55,7 @@
                                 <mu-button @click.native="check()" style="margin-left: 10px;"><?php echo l('Check') ?></mu-button>
                             </div>
                             <div style="margin: 10px 0;"><?php echo l('Abnormal file:') ?></div>
-                            <mu-list :list="list"></mu-list>
+                            <mu-list :list="infoList"></mu-list>
                         </div>
                         <!-- System -->
                         <div class="tab__panel__item" v-else-if="tab == 2">
