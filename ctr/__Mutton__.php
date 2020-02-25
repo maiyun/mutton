@@ -28,7 +28,9 @@ class __Mutton__ extends Ctr {
     public function index() {
         return $this->_loadView('__Mutton__/index', [
             'hasConfig' => $this->_hasConfig,
-            'local' => $this->_getLocale()
+            'local' => $this->_getLocale(),
+            '' => '',
+            '_xsrf' => $this->_xsrf
         ]);
     }
 
@@ -71,10 +73,10 @@ class __Mutton__ extends Ctr {
         ], $return)) {
             return $return;
         }
-        if (version_compare($_POST['ver'], '5.2.0', '<')) {
-            return [0, 'Version must be >= 5.2.0.'];
+        if (version_compare($_POST['ver'], '5.5.0', '<')) {
+            return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
-        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton/doc/mblob/'.$_POST['ver'].'.mblob');
+        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['ver'] . '/doc/mblob');
         if (!$res->content) {
             return [0, l('Network error, please try again.')];
         }
@@ -84,91 +86,67 @@ class __Mutton__ extends Ctr {
         if (!($json = json_decode($blob, true))) {
             return [0, l('The downloaded data is incomplete, please try again.')];
         }
-        $list = [];     // --- 有差异的文件 ---
-        $qlist = [];    // --- 缺失的文件（夹） ---
-        $dlist = [];    // --- 多余的文件（夹） ---
-        $qlistConst = [];
-        $dlistConst = [];
 
-        $nowList = $this->_buildList();
+        // --- json 键：file, lib ---
 
-        // --- 先判断目录结构 ---
-        foreach ($nowList['folders'] as $k => $v) {
-            if (isset($json['folders'][$k])) {
-                unset($json['folders'][$k]);
-            } else {
-                // --- 本地多出目录 ---
-                $dlist[] = $k;
-            }
-        }
-        // --- 校验 md5，校验文件是否多出和缺失 ---
-        foreach ($nowList['files'] as $k => $v) {
-            if (isset($json['files'][$k])) {
-                $match = [
-                    '/^etc\\/(?!const\\.php).+/',
-                    '/^stc\\/index\\.js/'
-                ];
-                if ($_POST['mode'] === '1') {
-                    // --- online，忽略 stc-ts 文件夹下所有文件 ---
-                    $match[] = '/^stc-ts\\/.+/';
+        // --- 要展示给用户的 ---
+        $noMatch = [];      // --- 有差异的文件 ---
+        $miss = [];         // --- 缺失的文件 ---
+        $missConst = [];    // --- 缺少的常量 ---
+        $lib = [];          // --- 需要更新的库 ---
+        $libFolder = [];    // --- 库存在但附属文件夹缺失 ---
+
+        // --- 判断是否有缺失文件、差异文件 ---
+        foreach ($json['file'] as $file => $item) {
+            if ($item[0] === 'must') {
+                // --- 文件必须存在，并且要与框架原内容保持一致（md5 必须一样） ---
+                if (is_file(ROOT_PATH . $file)) {
+                    // --- 检查内容是否一致 ---
+                    if (md5_file(ROOT_PATH . $file) !== $item[1]) {
+                        $noMatch[] = $file;
+                    }
                 } else {
-                    // --- offline，只忽略 stc-ts 下面3个的文件比对 ---
-                    $match[] = '/^stc-ts\\/(index\\.ts|tsconfig\\.js|tslint\\.json)/';
+                    $miss[] = $file;
                 }
-                if (!Text::match($k, $match)) {
-                    if ($json['files'][$k] !== $v) {
-                        // --- 有差异 ---
-                        $list[] = $k;
+            } else if ($item[0] === 'md5') {
+                // --- 若存在则校验 md5，否则不校验 ---
+                if (is_file(ROOT_PATH . $file) && (md5_file(ROOT_PATH . $file) !== $item[1])) {
+                    $noMatch[] = $file;
+                }
+            } else if ($item[0] === 'const-must' || $item[0] === 'const') {
+                // --- 常量文件，必须存在 ---
+                if (is_file(ROOT_PATH . $file)) {
+                    // --- 存在，则判断 const 是否都存在 ---
+                    $local = $this->_getConstList(file_get_contents(ROOT_PATH . $file));
+                    $res = $this->_checkMissConst($item[1], $local);
+                    if (count($res) > 0) {
+                        $missConst[$file] = $res;
                     }
-                }
-                unset($json['files'][$k]);
-            } else {
-                // --- 本地多出文件 ---
-                $dlist[] = $k;
-            }
-        }
-        // --- 缺失文件文件夹序列 ---
-        foreach ($json['folders'] as $k => $v) {
-            if (($_POST['mode'] === '1') && Text::match($k, [
-                    '/^stc-ts\\/.*/',
-                    '/^\\.gitignore/'
-                ])) {
-                // --- 在线模式，不计算 stc-ts 目录 ---
-            } else {
-                $qlist[] = $k;
-            }
-        }
-        foreach ($json['files'] as $k => $v) {
-            if (($_POST['mode'] === '1') && Text::match($k, [
-                    '/^stc-ts\\/.*/'
-                ])) {
-                // --- 在线模式，不计算 stc-ts 目录 ---
-            } else {
-                $qlist[] = $k;
-            }
-        }
-        // --- 校验 const ---
-        foreach ($nowList['const'] as $k => $arr) {
-            // --- 文件存在才判断 const ---
-            if (isset($json['const'][$k])) {
-                foreach ($arr as $i => $v2) {
-                    if (in_array($v2, $json['const'][$k])) {
-                        unset($json['const'][$k][$i]);
-                    } else {
-                        // --- 本地多出本常量 ---
-                        // --- [文件路径，常量名] ---
-                        $dlistConst[] = [$k, $v2];
+                } else {
+                    if ($item[0] === 'const-must') {
+                        $miss[] = $file;
                     }
                 }
             }
         }
-        // --- 缺失的常量 ---
-        foreach ($json['const'] as $k => $arr) {
-            foreach ($arr as $i => $v2) {
-                $qlistConst[] = [$k, $v2];
+        // --- 判断库是否有更新 ---
+        $local = $this->_getLibList();
+        foreach ($json['lib'] as $name => $data) {
+            if (!isset($local[$name])) {
+                continue;
             }
+            if (version_compare($local[$name], $data['ver'], '>=')) {
+                // --- 本地库版本大于等于线上库版本 ---
+                if ($local['folder'] && !is_dir(LIB_PATH . $name)) {
+                    $libFolder[] = $local;
+                }
+                continue;
+            }
+            // --- 本地库小于线上库，需要更新 ---
+            $data['localVer'] = $local[$name]['ver'];
+            $lib[] = $data;
         }
-        return [1, 'list' => $list, 'qlist' => $qlist, 'dlist' => $dlist, 'qlistConst' => $qlistConst, 'dlistConst' => $dlistConst, 'library' => $nowList['library']];
+        return [1, 'noMatch' => $noMatch, 'miss' => $miss, 'missConst' => $missConst, 'lib' => $lib, 'libFolder' => $libFolder];
     }
 
     // --- 自动升级 ---
@@ -335,120 +313,104 @@ class __Mutton__ extends Ctr {
         return [1, 'version' => $version];
     }
 
+    // --- 以下是内部工具方法 ---
+
+    /**
+     * --- 通过字符串获取定义的常量列表 ---
+     * @param string $content
+     * @return array
+     */
+    private function _getConstList(string $content): array {
+        $constList = [];
+        $content = str_replace("\r\n", "\n", $content);
+        $content = str_replace("\r", "\n", $content);
+        $content = preg_replace('/\/\/.+?(\n|$)/', '', $content);
+        preg_match_all('/(define|const)[(\'\s]+([A-Za-z0-9_]+)[\s\'][\s=,]+([\S\s]+?)\)?;/i', $content, $matches);
+        if (count($matches[0]) > 0) {
+            foreach ($matches[0] as $k => $v) {
+                $constList[] = $matches[2][$k];
+            }
+        }
+        return $constList;
+    }
+
+    /**
+     * --- 根据 base 查找 arr 中缺失的 const ---
+     * @param array $base
+     * @param array $arr
+     * @return array
+     */
+    private function _checkMissConst(array $base, array $arr): array {
+        $miss = [];
+        foreach ($base as $val) {
+            if (!in_array($val, $arr)) {
+                $miss[] = $val;
+            }
+        }
+        return $miss;
+    }
+
+    /**
+     * --- 获取所有库的列表和信息 ---
+     * @return array
+     */
+    private function _getLibList(): array {
+        $lib = [];
+        $libDir = dir(LIB_PATH);
+        while (($file = $libDir->read()) !== false) {
+            if (($file === '.') || ($file === '..')) {
+                continue;
+            }
+            if (!is_file(LIB_PATH . $file)) {
+                continue;
+            }
+            $name = explode('.', $file)[0];
+            $content = file_get_contents($name);
+            preg_match('/CONF - (.+?) - END/', $content, $match);
+            $lib[$name] = json_decode($match[1], true);
+        }
+        $libDir->close();
+        return $lib;
+    }
+
     /**
      * --- 建立本地的路径 ---
      * @return array
      */
-    private function _buildList(): array {
+    private function _buildMBlob(): array {
         $list = [
-            'files' => [],
-            'folders' => [],
-            'const' => [],
-            'library' => []
+            'file' => [
+                'ctr/__Mutton__.php' => ['md5', ''],
+                'data/index.html' => ['must', ''],
+                'etc/const.php' => ['must', ''],
+                'etc/db.php' => ['const', []],
+                'etc/kv.php' => ['const', []],
+                'etc/route.php' => ['const', []],
+                'etc/session.php' => ['const', []],
+                'etc/set.php' => ['const-must', []],
+                'etc/sql.php' => ['const', []],
+                'log/index.html' => ['must', ''],
+                'mod/Mod.php' => ['must', ''],
+                'stc/__Mutton__/index.css' => ['md5', ''],
+                'stc/__Mutton__/index.js' => ['md5', ''],
+                'stc/index.html' => ['must', ''],
+                'stc/__Mutton__/index.ts' => ['md5', ''],
+                'sys/Boot.php' => ['must', ''],
+                'sys/Ctr.php' => ['must', ''],
+                'sys/Locale.php' => ['must', ''],
+                'sys/Route.php' => ['must', ''],
+                'view/__Mutton__/index.php' => ['md5', ''],
+                '.htaccess' => ['md5', ''],
+                'index.php' => ['must', '']
+            ],
+            'lib' => $this->_getLibList()
         ];
-        // --- 本地库 ---
-        $dir = dir(LIB_PATH);
-        while (($name = $dir->read()) !== false) {
-            if (($name === '.') || ($name === '..')) {
-                continue;
-            }
-            if (!is_file(LIB_PATH.$name)) {
-                continue;
-            }
-            $list['library'][] = explode('.', $name)[0];
-        }
-        // --- 序列 ---
-        $dir = dir(ROOT_PATH);
-        while (($name = $dir->read()) !== false) {
-            if (($name === '.') || ($name === '..')) {
-                continue;
-            }
-            if (is_file(ROOT_PATH.$name)) {
-                if (!in_array($name, ['.project', 'LICENSE', 'README.md'])) {
-                    $list['files'][$name] = md5_file(ROOT_PATH . $name);
-                }
-            } else {
-                if ($name[0] === '_' && $name[1] === '_') {
-                    continue;
-                }
-                $deep = $this->_buildListDeep($name.'/');
-                $list['folders'] = array_merge($list['folders'], $deep['folders']);
-                $list['files'] = array_merge($list['files'], $deep['files']);
-            }
-        }
-        $dir->close();
-        // --- 常量 ---
-        $dir = dir(ETC_PATH);
-        while (($name = $dir->read()) !== false) {
-            if (($name === '.') || ($name === '..')) {
-                continue;
-            }
-            if ($name[0] === '_') {
-                continue;
-            }
-            if ($name === 'const.php') {
-                continue;
-            }
-            $file = ETC_PATH . $name;
-            if (!is_file($file)) {
-                continue;
-            }
-            $arr = [];
-            $content = file_get_contents($file);
-
-            preg_match_all('/(define|const)[(\\\'\s]+([A-Za-z0-9_]+)[\s\\\'][\s=,]+([\S\s]+?)\)?;/i', $content, $matches);
-            if (count($matches[0]) > 0) {
-                foreach ($matches[0] as $k => $v) {
-                    $arr[] = $matches[2][$k];
-                }
-            }
-
-            $list['const']['etc/'.$name] = $arr;
-        }
-        $dir->close();
-        return $list;
-    }
-    private function _buildListDeep(string $path): array {
-        $list = [
-            'files' => [],
-            'folders' => []
-        ];
-        // --- 以下正则代表排除的文件夹，排除的文件夹不做比对 ---
-        if (Text::match($path, [
-            '/^\\.git\\//',
-            '/^doc\\//',
-            '/^\\.idea\\//',
-            '/^ctr\\/.+/',
-            '/^data\\/(?!locale\\/).+/',
-            '/^log\\/.+/',
-            '/^stc\\/(?!__Mutton__\\/).+/',
-            '/^stc-ts\\/(?!__Mutton__\\/|types\\/).+/',
-            '/^view\\/(?!__Mutton__\\/).+/'
-        ])) {
-            return $list;
-        }
-        $list['folders'][$path] = '';
-        $dir = dir(ROOT_PATH.$path);
-        while (($name = $dir->read()) !== false) {
-            if (($name === '.') || ($name === '..')) {
-                continue;
-            }
-            if (is_file(ROOT_PATH.$path.$name)) {
-                if (Text::match($path.$name, [
-                    '/^ctr\\/(?!__).+/',
-                    '/^data\\/(?!index\\.html|locale\\/index.html|locale\\/.+?__Mutton__.+?).+/',
-                    '/^mod\\/(?!Mod\\.php).+/',
-                    '/^stc\\/(?!__Mutton__\\/|index\\.html|index\\.js).+/',
-                    '/^stc-ts\\/(?!__Mutton__\\/|types\\/any\\.d\\.ts|types\\/vue\\.d\\.ts|index\\.ts|tsconfig\\.json|tslint\\.json).+/',
-                    '/^view\\/(?!__Mutton__\\/).+/'
-                ])) {
-                    continue;
-                }
-                $list['files'][$path.$name] = md5_file(ROOT_PATH.$path.$name);
-            } else {
-                $deep = $this->_buildListDeep($path.$name.'/');
-                $list['folders'] = array_merge($list['folders'], $deep['folders']);
-                $list['files'] = array_merge($list['files'], $deep['files']);
+        // --- 获取 md5 和 const ---
+        foreach ($list['file'] as $file => $item) {
+            if ($item[0] === 'must' || $item[0] === 'md5') {
+                $list['file'][$file][1] = md5_file(ROOT_PATH . $file);
+            } else if ($item[0] === 'const' || $item[0] === 'const-must') {
+                $list['file'][$file][1] = $this->_getConstList(file_get_contents(ROOT_PATH . $file));
             }
         }
         return $list;

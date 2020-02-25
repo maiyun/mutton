@@ -48,6 +48,7 @@ var __Mutton__;
     var headElement;
     document.addEventListener("DOMContentLoaded", function () {
         return __awaiter(this, void 0, void 0, function () {
+            var vueEl;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -102,8 +103,10 @@ var __Mutton__;
                                 "</div>" +
                                 "</div>"
                         });
+                        vueEl = document.getElementById("vue");
+                        vueEl.innerHTML = vueEl.innerHTML.replace(/>\s+?</g, "><");
                         new Vue({
-                            el: "#vue",
+                            el: vueEl,
                             data: {
                                 mask: false,
                                 alert: "",
@@ -142,9 +145,9 @@ var __Mutton__;
                                 check: function (mode) {
                                     if (mode === void 0) { mode = 0; }
                                     return __awaiter(this, void 0, void 0, function () {
-                                        var j, list, _i, _a, v, _b, _c, v, _d, _e, v, _f, _g, v, _h, _j, v;
-                                        return __generator(this, function (_k) {
-                                            switch (_k.label) {
+                                        var j, list, _i, _a, file, _b, _c, file, file, _d, _e, lib, _f, _g, lib;
+                                        return __generator(this, function (_h) {
+                                            switch (_h.label) {
                                                 case 0:
                                                     if (!this.mlist[this.mindex]) {
                                                         this.alert = "Please select version.";
@@ -153,36 +156,35 @@ var __Mutton__;
                                                     this.mask = true;
                                                     return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex].value, mode: mode })];
                                                 case 1:
-                                                    j = _k.sent();
+                                                    j = _h.sent();
                                                     this.mask = false;
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
                                                     }
                                                     list = [];
-                                                    for (_i = 0, _a = j.list; _i < _a.length; _i++) {
-                                                        v = _a[_i];
-                                                        list.push("Cannot match \"" + v + "\".");
+                                                    for (_i = 0, _a = j.noMatch; _i < _a.length; _i++) {
+                                                        file = _a[_i];
+                                                        list.push(file + " - " + l("File mismatch."));
                                                     }
-                                                    for (_b = 0, _c = j.qlist; _b < _c.length; _b++) {
-                                                        v = _c[_b];
-                                                        list.push("Does not exist \"" + v + "\".");
+                                                    for (_b = 0, _c = j.miss; _b < _c.length; _b++) {
+                                                        file = _c[_b];
+                                                        list.push(file + " - " + l("File does not exist."));
                                                     }
-                                                    for (_d = 0, _e = j.dlist; _d < _e.length; _d++) {
-                                                        v = _e[_d];
-                                                        list.push("Extra \"" + v + "\".");
+                                                    for (file in j.missConst) {
+                                                        list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(",")]));
                                                     }
-                                                    for (_f = 0, _g = j.qlistConst; _f < _g.length; _f++) {
-                                                        v = _g[_f];
-                                                        list.push("Does not exist const \"" + v[1] + "\" on \"" + v[0] + "\".");
+                                                    for (_d = 0, _e = j.lib; _d < _e.length; _d++) {
+                                                        lib = _e[_d];
+                                                        list.push(l("Library: ?, current version: ?, latest version: ?.", [lib, j.lib[lib].localVer, j.lib[lib].ver]));
                                                     }
-                                                    for (_h = 0, _j = j.dlistConst; _h < _j.length; _h++) {
-                                                        v = _j[_h];
-                                                        list.push("Extra const \"" + v[1] + "\" on \"" + v[0] + "\".");
+                                                    for (_f = 0, _g = j.libFolder; _f < _g.length; _f++) {
+                                                        lib = _g[_f];
+                                                        list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                                                     }
                                                     this.list = list;
                                                     if (list.length === 0) {
-                                                        this.alert = "All content is normal.";
+                                                        this.alert = l("No problem.");
                                                     }
                                                     return [2];
                                             }
@@ -426,6 +428,7 @@ var __Mutton__;
                                 body.append(k, data[k]);
                             }
                         }
+                        body.append("_xsrf", _xsrf);
                         return [4, fetch(url + "?l=" + local, {
                                 method: "POST",
                                 headers: header,

@@ -1,6 +1,7 @@
 <?php
 /** @var bool $hasConfig */
 /** @var string $local */
+/** @var string $_xsrf */
 ?>
 <!DOCTYPE HTML>
 <html>
@@ -12,6 +13,7 @@
     <script>
         var tab = <?php echo $hasConfig ? '0' : '3' ?>;
         var local = '<?php echo $local ?>';
+        var _xsrf = '<?php echo $_xsrf ?>';
         var URL_BASE = '<?php echo URL_BASE ?>';
     </script>
     <script src="<?php echo URL_STC ?>__Mutton__/index.js?<?php echo VER ?>"></script>
@@ -45,13 +47,13 @@
                         </div>
                         <!-- Check -->
                         <div class="tab__panel__item" v-else-if="tab == 1">
-                            <div style="padding-bottom: 10px;"><?php echo l('Please click "Refresh" and select below:') ?></div>
+                            <div style="margin-bottom: 10px;"><?php echo l('Please click refresh and select the version below:') ?></div>
                             <mu-list :list="mlist" v-model="mindex"></mu-list>
                             <div style="text-align: center; margin-top: 10px;">
                                 <mu-button @click.native="refresh()"><?php echo l('Refresh') ?></mu-button>
                                 <mu-button @click.native="check()" style="margin-left: 10px;"><?php echo l('Check') ?></mu-button>
                             </div>
-                            <div style="margin-top: 10px;"><?php echo l('Mismatch file list:') ?></div>
+                            <div style="margin: 10px 0;"><?php echo l('Abnormal file:') ?></div>
                             <mu-list :list="list"></mu-list>
                         </div>
                         <!-- System -->
@@ -77,7 +79,7 @@
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column; align-items: center;">
-                                <div><?php echo l('Build a ".mblob" file:') ?></div>
+                                <div><?php echo l('Build a "mblob" file:') ?></div>
                                 <div style="text-align: center; margin-top: 10px;">
                                     <mu-button @click.native="build()"><?php echo l('Build') ?></mu-button>
                                 </div>

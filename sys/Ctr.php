@@ -357,6 +357,19 @@ class Ctr {
     }
 
     /**
+     * --- 根据当前后台语言包设置情况获取 JSON 字符串传输到前台 ---
+     * @return string
+     */
+    public function _getLocaleJsonString(): string {
+        global $__LOCALE, $__LOCALE_OBJ;
+        if (isset($__LOCALE_OBJ[$__LOCALE])) {
+            return json_encode($__LOCALE_OBJ[$__LOCALE]);
+        } else {
+            return '{}';
+        }
+    }
+
+    /**
      * --- 获取当前语言名 ---
      * @return string
      */

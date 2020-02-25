@@ -63,8 +63,12 @@ namespace __Mutton__ {
                 `</div>` +
             `</div>`
         });
+        // --- 清除空白 ---
+        let vueEl = <HTMLDivElement>document.getElementById("vue");
+        vueEl.innerHTML = vueEl.innerHTML.replace(/>\s+?</g, "><");
+        // --- 创建 Vue 对象 ---
         new Vue({
-            el: "#vue",
+            el: vueEl,
             data: {
                 mask: false,
                 alert: "",
@@ -107,24 +111,24 @@ namespace __Mutton__ {
                         return;
                     }
                     let list = [];
-                    for (let v of j.list) {
-                        list.push(`Cannot match "${v}".`);
+                    for (let file of j.noMatch) {
+                        list.push(file + " - " + l("File mismatch."));
                     }
-                    for (let v of j.qlist) {
-                        list.push(`Does not exist "${v}".`);
+                    for (let file of j.miss) {
+                        list.push(file + " - " + l("File does not exist."));
                     }
-                    for (let v of j.dlist) {
-                        list.push(`Extra "${v}".`);
+                    for (let file in j.missConst) {
+                        list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(",")]));
                     }
-                    for (let v of j.qlistConst) {
-                        list.push(`Does not exist const "${v[1]}" on "${v[0]}".`);
+                    for (let lib of j.lib) {
+                        list.push(l("Library: ?, current version: ?, latest version: ?.", [lib, j.lib[lib].localVer, j.lib[lib].ver]));
                     }
-                    for (let v of j.dlistConst) {
-                        list.push(`Extra const "${v[1]}" on "${v[0]}".`);
+                    for (let lib of j.libFolder) {
+                        list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                     }
                     this.list = list;
                     if (list.length === 0) {
-                        this.alert = "All content is normal.";
+                        this.alert = l("No problem.");
                     }
                 },
                 // --- System ---
@@ -288,6 +292,7 @@ namespace __Mutton__ {
                         body.append(k, data[k]);
                     }
                 }
+                body.append("_xsrf", _xsrf);
                 let res = await fetch(url + "?l=" + local, {
                     method: "POST",
                     headers: header,
