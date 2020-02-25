@@ -5,6 +5,7 @@
     "System error.": "系统错误。",
     "The downloaded data is incomplete, please try again.": "下载的数据不完整，请重试。",
     "Version must be >= ?.": "版本必须大于等于 ?。",
+    "No server write permissions.": "无服务器写入权限。",
 
     "Password": "密码",
     "Check": "检查",
@@ -12,6 +13,8 @@
     "Profile": "配置",
     "Alert": "提示",
     "OK": "好的",
+    "Confirm": "询问",
+    "Cancel": "取消",
 
     "Please enter your password:": "请输入你的密码：",
     "When the input is complete, you can use other features.": "当密码输入正确时，其他功能即可使用。",
@@ -29,14 +32,14 @@
     "Build a \"mblob\" file:": "创建一个“mblob”文件：",
     "Build": "创建",
 
-    "Please place the following on \"etc/__mutton__.php\" to use this portal.": "请将以下内容放置在“etc/__mutton__.php”然后再使用本面板。"，,
+    "Please place the following on \"etc/__mutton__.php\" to use this portal.": "请将以下内容放置在“etc/__mutton__.php”然后再使用本面板。",
 
-    "js": {
-        "File mismatch.": "文件不匹配。",
-        "File does not exist.": "文件不存在。",
-        "Missing constants: ?.": "缺失常量：?。",
-        "Library: ?, current version: ?, latest version: ?.": "库：?，当前版本：?，最新版本：?。",
-        "Library: ?, existing but missing satellite folders.": "库：?，存在但是缺失附属文件夹。",
-        "No problem.": "没有问题。"
-    }
+    "File mismatch.": "文件不匹配。",
+    "File does not exist.": "文件不存在。",
+    "Missing constants: ?.": "缺失常量：?。",
+    "Library: ?, current version: ?, latest version: ?.": "库：?，当前版本：?，最新版本：?。",
+    "Library: ?, existing but missing satellite folders.": "库：?，存在但是缺失附属文件夹。",
+    "No problem.": "没有问题。",
+    "Successful.": "成功。",
+    "Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\".": "请选择一个已经发布的版本进行检查或升级，“master”为最新的代码不一定正常运行。若要继续使用“master”请点击“好的”，否则点击“取消”。"
 }

@@ -111,6 +111,8 @@ var __Mutton__;
                                 mask: false,
                                 alert: "",
                                 tab: tab,
+                                confirmTxt: "",
+                                confirmResolve: null,
                                 password: "",
                                 mindex: 0,
                                 mlist: [],
@@ -135,8 +137,10 @@ var __Mutton__;
                                                     this.mask = false;
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
+                                                        return [2];
                                                     }
                                                     this.mlist = j.list;
+                                                    this.mlist.unshift({ value: "master", label: "master" });
                                                     return [2];
                                             }
                                         });
@@ -145,41 +149,51 @@ var __Mutton__;
                                 check: function (mode) {
                                     if (mode === void 0) { mode = 0; }
                                     return __awaiter(this, void 0, void 0, function () {
-                                        var j, list, _i, _a, file, _b, _c, file, file, _d, _e, lib, _f, _g, lib;
-                                        return __generator(this, function (_h) {
-                                            switch (_h.label) {
+                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib;
+                                        return __generator(this, function (_j) {
+                                            switch (_j.label) {
                                                 case 0:
                                                     if (!this.mlist[this.mindex]) {
                                                         this.alert = "Please select version.";
                                                         return [2];
                                                     }
+                                                    _a = (this.mlist[this.mindex].value === "master");
+                                                    if (!_a) return [3, 2];
+                                                    return [4, this.confirm(l("Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\"."))];
+                                                case 1:
+                                                    _a = (!(_j.sent()));
+                                                    _j.label = 2;
+                                                case 2:
+                                                    if (_a) {
+                                                        return [2];
+                                                    }
                                                     this.mask = true;
                                                     return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex].value, mode: mode })];
-                                                case 1:
-                                                    j = _h.sent();
+                                                case 3:
+                                                    j = _j.sent();
                                                     this.mask = false;
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
                                                     }
                                                     list = [];
-                                                    for (_i = 0, _a = j.noMatch; _i < _a.length; _i++) {
-                                                        file = _a[_i];
+                                                    for (_i = 0, _b = j.noMatch; _i < _b.length; _i++) {
+                                                        file = _b[_i];
                                                         list.push(file + " - " + l("File mismatch."));
                                                     }
-                                                    for (_b = 0, _c = j.miss; _b < _c.length; _b++) {
-                                                        file = _c[_b];
+                                                    for (_c = 0, _d = j.miss; _c < _d.length; _c++) {
+                                                        file = _d[_c];
                                                         list.push(file + " - " + l("File does not exist."));
                                                     }
                                                     for (file in j.missConst) {
                                                         list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(",")]));
                                                     }
-                                                    for (_d = 0, _e = j.lib; _d < _e.length; _d++) {
-                                                        lib = _e[_d];
+                                                    for (_e = 0, _f = j.lib; _e < _f.length; _e++) {
+                                                        lib = _f[_e];
                                                         list.push(l("Library: ?, current version: ?, latest version: ?.", [lib, j.lib[lib].localVer, j.lib[lib].ver]));
                                                     }
-                                                    for (_f = 0, _g = j.libFolder; _f < _g.length; _f++) {
-                                                        lib = _g[_f];
+                                                    for (_g = 0, _h = j.libFolder; _g < _h.length; _g++) {
+                                                        lib = _h[_g];
                                                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                                                     }
                                                     this.list = list;
@@ -227,122 +241,30 @@ var __Mutton__;
                                                         this.alert = j.msg;
                                                         return [2];
                                                     }
-                                                    this.alert = "Successful.";
+                                                    this.alert = l("Successful.");
                                                     return [2];
                                             }
                                         });
                                     });
                                 },
+                                confirm: function (txt) {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        var _this = this;
+                                        return __generator(this, function (_a) {
+                                            return [2, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                                                    return __generator(this, function (_a) {
+                                                        this.confirmTxt = txt;
+                                                        this.confirmResolve = resolve;
+                                                        return [2];
+                                                    });
+                                                }); })];
+                                        });
+                                    });
+                                },
                                 update: function () {
                                     return __awaiter(this, void 0, void 0, function () {
-                                        var version, j, listArr, qdlistConst, _i, _a, v, _b, _c, v, _d, _e, _f, lk, ln, list, _g, _h, _j, k, v, retry, path, j2;
-                                        return __generator(this, function (_k) {
-                                            switch (_k.label) {
-                                                case 0:
-                                                    if (this.updateing) {
-                                                        this.alert = "Upgrade running...";
-                                                        return [2];
-                                                    }
-                                                    if (!this.mlist[this.updateIndex]) {
-                                                        this.alert = "Please select version.";
-                                                        return [2];
-                                                    }
-                                                    this.updateing = true;
-                                                    this.mask = true;
-                                                    version = this.mlist[this.updateIndex].value;
-                                                    this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: version, mode: "0" })];
-                                                case 1:
-                                                    j = _k.sent();
-                                                    this.mask = false;
-                                                    if (j.result <= 0) {
-                                                        this.alert = j.msg;
-                                                        this.updateing = false;
-                                                        return [2];
-                                                    }
-                                                    this.updateList = [];
-                                                    listArr = ["list", "qlist", "dlist", "qdlistConst"];
-                                                    qdlistConst = {};
-                                                    for (_i = 0, _a = j.qlistConst; _i < _a.length; _i++) {
-                                                        v = _a[_i];
-                                                        if (!qdlistConst[v[0]]) {
-                                                            qdlistConst[v[0]] = "";
-                                                        }
-                                                    }
-                                                    for (_b = 0, _c = j.dlistConst; _b < _c.length; _b++) {
-                                                        v = _c[_b];
-                                                        if (!qdlistConst[v[0]]) {
-                                                            qdlistConst[v[0]] = "";
-                                                        }
-                                                    }
-                                                    j.qdlistConst = qdlistConst;
-                                                    _d = [];
-                                                    for (_e in listArr)
-                                                        _d.push(_e);
-                                                    _f = 0;
-                                                    _k.label = 2;
-                                                case 2:
-                                                    if (!(_f < _d.length)) return [3, 12];
-                                                    lk = _d[_f];
-                                                    ln = listArr[lk];
-                                                    list = j[ln];
-                                                    _g = [];
-                                                    for (_h in list)
-                                                        _g.push(_h);
-                                                    _j = 0;
-                                                    _k.label = 3;
-                                                case 3:
-                                                    if (!(_j < _g.length)) return [3, 11];
-                                                    k = _g[_j];
-                                                    v = list[k];
-                                                    retry = true;
-                                                    _k.label = 4;
-                                                case 4:
-                                                    if (!retry) return [3, 10];
-                                                    path = v;
-                                                    switch (ln) {
-                                                        case "list":
-                                                            this.updateList.unshift("Replace the file \"" + path + "\"...");
-                                                            break;
-                                                        case "qlist":
-                                                            this.updateList.unshift("Download or create \"" + path + "\"...");
-                                                            break;
-                                                        case "dlist":
-                                                            this.updateList.unshift("Remove the object \"" + path + "\"...");
-                                                            break;
-                                                        case "qdlistConst":
-                                                            path = k;
-                                                            this.updateList.unshift("Update configuration file \"" + path + "\"...");
-                                                            break;
-                                                    }
-                                                    return [4, post(URL_BASE + "__Mutton__/apiUpdate", { password: this.password, ver: version, mode: lk, path: path, library: JSON.stringify(j.library) })];
-                                                case 5:
-                                                    j2 = _k.sent();
-                                                    if (!(j2.result <= 0)) return [3, 7];
-                                                    this.updateList.unshift("Error: " + j2.msg + " retry after 2 seconds.");
-                                                    return [4, sleep(2000)];
-                                                case 6:
-                                                    _k.sent();
-                                                    return [3, 9];
-                                                case 7:
-                                                    this.updateList.unshift(j2.msg);
-                                                    retry = false;
-                                                    return [4, sleep(500)];
-                                                case 8:
-                                                    _k.sent();
-                                                    _k.label = 9;
-                                                case 9: return [3, 4];
-                                                case 10:
-                                                    _j++;
-                                                    return [3, 3];
-                                                case 11:
-                                                    _f++;
-                                                    return [3, 2];
-                                                case 12:
-                                                    this.alert = "Update completed, please refresh the page.";
-                                                    this.updateing = false;
-                                                    return [2];
-                                            }
+                                        return __generator(this, function (_a) {
+                                            return [2];
                                         });
                                     });
                                 }
@@ -470,5 +392,21 @@ var __Mutton__;
                 return [2];
             });
         }); });
+    }
+    function l(key, data) {
+        if (data === void 0) { data = null; }
+        if (!__LOCALE_OBJ[key]) {
+            return "LocaleError";
+        }
+        if (data) {
+            var str = __LOCALE_OBJ[key];
+            for (var i = 0; i < data.length; ++i) {
+                str.replace("?", data[i]);
+            }
+            return str;
+        }
+        else {
+            return __LOCALE_OBJ[key];
+        }
     }
 })(__Mutton__ || (__Mutton__ = {}));

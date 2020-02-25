@@ -73,6 +73,8 @@ namespace __Mutton__ {
                 mask: false,
                 alert: "",
                 tab: tab,
+                confirmTxt: "",
+                confirmResolve: null,
                 // --- Password ---
                 password: "",
                 // --- Check ---
@@ -95,12 +97,17 @@ namespace __Mutton__ {
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
+                        return;
                     }
                     this.mlist = j.list;
+                    this.mlist.unshift({value: "master", label: "master"});
                 },
                 check: async function (this: any, mode: number = 0) {
                     if (!this.mlist[this.mindex]) {
                         this.alert = "Please select version.";
+                        return;
+                    }
+                    if ((this.mlist[this.mindex].value === "master") && (!await this.confirm(l(`Please select a published version to check or upgrade, and "master" for the latest code does not necessarily work correctly. To continue using "master", click "OK" or click "Cancel".`)))) {
                         return;
                     }
                     this.mask = true;
@@ -150,84 +157,18 @@ namespace __Mutton__ {
                         this.alert = j.msg;
                         return;
                     }
-                    this.alert = "Successful.";
+                    this.alert = l("Successful.");
+                },
+                // --- 询问对话框 ---
+                confirm: async function(this: any, txt: string) {
+                    return new Promise(async (resolve, reject) => {
+                        this.confirmTxt = txt;
+                        this.confirmResolve = resolve;
+                    });
                 },
                 // --- 自动升级 ---
                 update: async function (this: any) {
-                    if (this.updateing) {
-                        this.alert = "Upgrade running...";
-                        return;
-                    }
-                    if (!this.mlist[this.updateIndex]) {
-                        this.alert = "Please select version.";
-                        return;
-                    }
-                    this.updateing = true;
-                    this.mask = true;
-                    let version: string = this.mlist[this.updateIndex].value;
-                    // --- 获取差异列表 ---
-                    this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: version, mode: "0"}); // mode 0 代表全部，1 代表 online
-                    this.mask = false;
-                    if (j.result <= 0) {
-                        this.alert = j.msg;
-                        this.updateing = false;
-                        return;
-                    }
-                    // --- 分别下载相关文件，并传入相关地方 ---
-                    // --- 可能会有网络波动导致的异常，会需要重试，所以，进行自动网络重试机制 ---
-                    // --- 差异，直接替换文件 ---
-                    this.updateList = [];
-                    let listArr = ["list", "qlist", "dlist", "qdlistConst"];
-                    let qdlistConst: any = {};
-                    for (let v of j.qlistConst) {
-                        if (!qdlistConst[v[0]]) {
-                            qdlistConst[v[0]] = "";
-                        }
-                    }
-                    for (let v of j.dlistConst) {
-                        if (!qdlistConst[v[0]]) {
-                            qdlistConst[v[0]] = "";
-                        }
-                    }
-                    j.qdlistConst = qdlistConst;
-                    for (let lk in listArr) {
-                        let ln = listArr[lk];
-                        let list = j[ln];
-                        for (let k in list) {
-                            let v = list[k];
-                            let retry: boolean = true;
-                            while (retry) {
-                                let path = v;
-                                switch (ln) {
-                                    case "list":
-                                        this.updateList.unshift(`Replace the file "${path}"...`);
-                                        break;
-                                    case "qlist":
-                                        this.updateList.unshift(`Download or create "${path}"...`);
-                                        break;
-                                    case "dlist":
-                                        this.updateList.unshift(`Remove the object "${path}"...`);
-                                        break;
-                                    case "qdlistConst":
-                                        path = k;
-                                        this.updateList.unshift(`Update configuration file "${path}"...`);
-                                        break;
-                                }
-                                let j2 = await post(URL_BASE + "__Mutton__/apiUpdate", {password: this.password, ver: version, mode: lk, path: path, library: JSON.stringify(j.library)});
-                                if (j2.result <= 0) {
-                                    this.updateList.unshift(`Error: ${j2.msg} retry after 2 seconds.`);
-                                    await sleep(2000);
-                                } else {
-                                    this.updateList.unshift(j2.msg);
-                                    retry = false;
-                                    await sleep(500);
-                                }
-                            }
-                        }
-                    }
-                    this.alert = "Update completed, please refresh the page.";
-                    this.updateing = false;
+                    
                 }
             }
         });
@@ -323,6 +264,26 @@ namespace __Mutton__ {
                 resolve();
             }, timeout);
         });
+    }
+
+    /**
+     * --- 获取语言包值 ---
+     * @param key
+     * @param data 要替换的数据
+     */
+    function l(key: string, data: any[]|null = null): string {
+        if (!__LOCALE_OBJ[key]) {
+            return "LocaleError";
+        }
+        if (data) {
+            let str = __LOCALE_OBJ[key];
+            for (let i = 0; i < data.length; ++i) {
+                str.replace("?", data[i]);
+            }
+            return str;
+        } else {
+            return __LOCALE_OBJ[key];
+        }
     }
 
 }

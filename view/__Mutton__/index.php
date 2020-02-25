@@ -15,6 +15,7 @@
         var local = '<?php echo $local ?>';
         var _xsrf = '<?php echo $_xsrf ?>';
         var URL_BASE = '<?php echo URL_BASE ?>';
+        var __LOCALE_OBJ = <?php echo $__LOCALE_OBJ ?>;
     </script>
     <script src="<?php echo URL_STC ?>__Mutton__/index.js?<?php echo VER ?>"></script>
 </head>
@@ -100,9 +101,22 @@
         <div class="window">
             <div class="window__in">
                 <div class="window__title"><?php echo l('Alert') ?></div>
-                <div class="window__panel" style="min-width: 250px;">{{alert}}</div>
+                <div class="window__panel" style="min-width: 250px; max-width: 550px;">{{alert}}</div>
                 <div class="window__controls">
                     <mu-button @click.native="alert=''"><?php echo l('OK') ?></mu-button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- alert -->
+    <div v-if="confirmTxt!=''" class="alert">
+        <div class="window">
+            <div class="window__in">
+                <div class="window__title"><?php echo l('Confirm') ?></div>
+                <div class="window__panel" style="min-width: 250px; max-width: 550px;">{{confirmTxt}}</div>
+                <div class="window__controls">
+                    <mu-button @click.native="confirmTxt='';confirmResolve(true);"><?php echo l('OK') ?></mu-button>
+                    <mu-button @click.native="confirmTxt='';confirmResolve(false);" style="margin-left: 10px;"><?php echo l('Cancel') ?></mu-button>
                 </div>
             </div>
         </div>

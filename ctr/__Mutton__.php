@@ -29,7 +29,7 @@ class __Mutton__ extends Ctr {
         return $this->_loadView('__Mutton__/index', [
             'hasConfig' => $this->_hasConfig,
             'local' => $this->_getLocale(),
-            '' => '',
+            '__LOCALE_OBJ' => $this->_getLocaleJsonString(),
             '_xsrf' => $this->_xsrf
         ]);
     }
@@ -73,7 +73,7 @@ class __Mutton__ extends Ctr {
         ], $return)) {
             return $return;
         }
-        if (version_compare($_POST['ver'], '5.5.0', '<')) {
+        if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
             return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
         $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['ver'] . '/doc/mblob');
@@ -151,123 +151,17 @@ class __Mutton__ extends Ctr {
 
     // --- 自动升级 ---
     public function apiUpdate() {
-        if ($this->post('password') !== __MUTTON__PWD) {
-            return [0, 'Password is incorrect.'];
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
         }
-        if (!$this->isWritable(ROOT_PATH.'ctr/')) {
-            return [0, 'Server cannot be written.'];
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
+            'ver' => ['require', [0, l('System error.')]]
+        ], $return)) {
+            return $return;
         }
-        // --- ["list", "qlist", "dlist", "qdlistConst"] ---
-        $mode = $this->post('mode');
-        $ver = $this->post('ver');
-        $path = $this->post('path');
-        $library = json_decode($this->post('library'), true); // 本地已装 library
-        $isFile = substr($path, -1) === '/' ? false : true;
 
-        $res = new \stdClass();
-        if (in_array($mode, [0, 1, 3])) {
-            if ($isFile) {
-                $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@v' . $ver . '/' . $path);
-                if (!$res->content) {
-                    return [0, 'Network error.'];
-                }
-            }
-        }
-        switch ($mode) {
-            case 0:
-                // --- md5 不同，直接替换 ---
-                $match = [
-                    '/^etc\\/(?!const\\.php).+/',
-                    '/^stc\\/index\\.js/',
-                    '/^stc-ts\\/(index\\.ts|tsconfig\\.js|tslint\\.json)/'
-                ];
-                if (!Text::match($path, $match)) {
-                    file_put_contents(ROOT_PATH.$path, $res->content);
-                }
-                return [1, 'File "'.$path.'" replacement success.'];
-            case 1:
-                // --- 本地缺失文件/文件夹，如果不是 lib，则直接补，如果是 lib，则判断是否安装了相应 lib，安装了直接补 ---
-                if (substr($path, 0, 4) !== 'lib/') {
-                    if ($isFile) {
-                        file_put_contents(ROOT_PATH.$path, $res->content);
-                        return [1, 'File "'.$path.'" replacement success.'];
-                    } else {
-                        $this->mkdir(ROOT_PATH.$path, 0755);
-                        return [1, 'Folder "'.$path.'" has been created.'];
-                    }
-                } else {
-                    // --- 判断缺失的文件，lib 是否是已安装的 lib ---
-                    if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
-                        if (in_array($matches[0], $library)) {
-                            if ($isFile) {
-                                file_put_contents(ROOT_PATH.$path, $res->content);
-                                return [1, 'File "'.$path.'" replacement success.'];
-                            } else {
-                                $this->mkdir(ROOT_PATH.$path, 0755);
-                                return [1, 'Folder "'.$path.'" has been created.'];
-                            }
-                        } else {
-                            // --- 没有安装 ---
-                            return [1, 'Lib "'.$matches[0].'" not installed.'];
-                        }
-                    } else {
-                        // --- 无需替换 ---
-                        return [1, 'Lib "'.$matches[0].'" not installed.'];
-                    }
-                }
-            case 2:
-                // --- 多出来的文件/文件夹 ---
-                // 多出来理应删掉（ctr 等之类的不会被删掉，因为压根不会统计出来），但，如果不是 lib 里的直接删，如果是 lib，则判断是否安装了相应 lib，安装了直接删 ---
-                if (substr($path, 0, 4) !== 'lib/') {
-                    if ($isFile) {
-                        unlink(ROOT_PATH.$path);
-                        return [1, 'File "'.$path.'" deleted.'];
-                    } else {
-                        $this->rmdir(ROOT_PATH.$path);
-                        return [1, 'Folder "'.$path.'" deleted.'];
-                    }
-                } else {
-                    // --- 判断多出来的文件，是否 lib 已安装 ---
-                    if (preg_match('/^lib\\/(.+?)\\//', $path, $matches)) {
-                        if (in_array($matches[0], $library)) {
-                            if ($isFile) {
-                                unlink(ROOT_PATH.$path);
-                                return [1, 'File "'.$path.'" deleted.'];
-                            } else {
-                                $this->rmdir(ROOT_PATH.$path);
-                                return [1, 'Folder "'.$path.'" deleted.'];
-                            }
-                        } else {
-                            // --- 没有安装 ---
-                            return [1, 'Lib "'.$matches[0].'" not installed.'];
-                        }
-                    } else {
-                        // --- 无需删除 ---
-                        return [1, 'Lib "'.$matches[0].'" not installed.'];
-                    }
-                }
-            default:
-                // --- 常量缺失/多出 ---
-                // --- 多出无所谓，就看缺失的 ---
-                // --- 先把原常量内容都遍历出来 ---
-                $arr = [];
-                $content = file_get_contents(ROOT_PATH.$path);
-                preg_match_all('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)\)?;/i', $content, $matches);
-                if (count($matches[0]) > 0) {
-                    foreach ($matches[0] as $k => $v) {
-                        $arr[$matches[3][$k]] = $matches[5][$k];
-                    }
-                }
-
-                // --- 开始组成新的文件 ---
-                // --- 多出和缺失都无所谓，把过去文件的数据替换进去就可以了 ---
-                $content = $res->content;
-                foreach ($arr as $k => $v) {
-                    $content = preg_replace('/(define|const)([(\\\'\s]+)([A-Za-z0-9_]+)([\s\\\'][\s=,]+)([\S\s]+?)(\)?;)/i', '$1$2$3$4'.$v.'$6', $content);
-                }
-                file_put_contents(ROOT_PATH.$path, $content);
-                return [1, 'File "'.$path.'" repair is complete.'];
-        }
+        // --- TODO ---
     }
 
     /**
@@ -275,23 +169,19 @@ class __Mutton__ extends Ctr {
      * @return array
      */
     public function apiBuild() {
-        if ($this->post('password') !== __MUTTON__PWD) {
-            return [0, 'Password is incorrect.'];
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
         }
-        $mode = $this->post('mode');
-        $json = $this->_buildList();
-        if ($mode === '0') {
-            $blob = gzdeflate(json_encode($json));
-            return [1, 'blob' => base64_encode($blob), 'ver' => VER];
-        } else if ($mode === '2') {
-            return [1, 'blob' => base64_encode(json_encode($json)), 'ver' => VER];
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]]
+        ], $return)) {
+            return $return;
+        }
+
+        if (file_put_contents(ROOT_PATH.'doc/mblob', gzdeflate(json_encode($this->_buildMBlobData()), 9)) === false) {
+            return [0, l('No server write permissions.')];
         } else {
-            $blob = gzdeflate(json_encode($json));
-            if (file_put_contents(ROOT_PATH.'doc/mblob/'.VER.'.mblob', $blob) === false) {
-                return [0, 'Permission denied.'];
-            } else {
-                return [1, 'source' => $json];
-            }
+            return [1];
         }
     }
 
@@ -365,7 +255,7 @@ class __Mutton__ extends Ctr {
                 continue;
             }
             $name = explode('.', $file)[0];
-            $content = file_get_contents($name);
+            $content = file_get_contents(LIB_PATH . $file);
             preg_match('/CONF - (.+?) - END/', $content, $match);
             $lib[$name] = json_decode($match[1], true);
         }
@@ -377,10 +267,13 @@ class __Mutton__ extends Ctr {
      * --- 建立本地的路径 ---
      * @return array
      */
-    private function _buildMBlob(): array {
+    private function _buildMBlobData(): array {
         $list = [
             'file' => [
                 'ctr/__Mutton__.php' => ['md5', ''],
+                'data/locale/en.__Mutton__.json' => ['md5', ''],
+                'data/locale/zh-CN.__Mutton__.json' => ['md5', ''],
+                'data/locale/zh-TW.__Mutton__.json' => ['md5', ''],
                 'data/index.html' => ['must', ''],
                 'etc/const.php' => ['must', ''],
                 'etc/db.php' => ['const', []],
@@ -394,7 +287,7 @@ class __Mutton__ extends Ctr {
                 'stc/__Mutton__/index.css' => ['md5', ''],
                 'stc/__Mutton__/index.js' => ['md5', ''],
                 'stc/index.html' => ['must', ''],
-                'stc/__Mutton__/index.ts' => ['md5', ''],
+                'stc-ts/__Mutton__/index.ts' => ['md5', ''],
                 'sys/Boot.php' => ['must', ''],
                 'sys/Ctr.php' => ['must', ''],
                 'sys/Locale.php' => ['must', ''],
