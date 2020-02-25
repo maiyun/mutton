@@ -30,7 +30,7 @@
                     <div class="tab__top">
                         <div class="tab__top__item" :class="{'selected': tab == 0}" @click="tab = 0"><div class="tab__top__item__in"><?php echo l('Password') ?></div></div>
                         <div class="tab__top__item" :class="{'selected': tab == 1}" @click="tab = 1"><div class="tab__top__item__in"><?php echo l('Check') ?></div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2"><div class="tab__top__item__in"><?php echo l('System') ?></div></div>
+                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2;getLocalLibs();"><div class="tab__top__item__in"><?php echo l('System') ?></div></div>
                         <div class="tab__top__item" :class="{'selected': tab == 3}" @click="tab = 3"><div class="tab__top__item__in"><?php echo l('Profile') ?></div></div>
                     </div>
                     <div class="tab__panel">
@@ -49,7 +49,7 @@
                         <!-- Check -->
                         <div class="tab__panel__item" v-else-if="tab == 1">
                             <div style="margin-bottom: 10px;"><?php echo l('Please click refresh and select the version below:') ?></div>
-                            <mu-list :list="mlist" v-model="mindex"></mu-list>
+                            <mu-list :list="verList" v-model="verIndex"></mu-list>
                             <div style="text-align: center; margin-top: 10px;">
                                 <mu-button @click.native="refresh()"><?php echo l('Refresh') ?></mu-button>
                                 <mu-button @click.native="check()" style="margin-left: 10px;"><?php echo l('Check') ?></mu-button>
@@ -67,16 +67,21 @@
                                 <mu-button @click.native="getLatestVer()" style="margin-top: 10px;"><?php echo l('Get latest versions') ?></mu-button>
                             </div>
                             <mu-line></mu-line>
+                            <div style="display: flex;">
+                                <div style="flex: 1;">
+                                    <?php echo l('Online library:') ?>
+                                    <mu-list :list="onlineLibs" v-model="onlineLibsIndex" style="margin-top: 10px;"></mu-list>
+                                </div>
+                                <div style="flex: 1;">
+                                    <?php echo l('Local library:') ?>
+                                    <mu-list :list="localLibs" v-model="localLibsIndex" style="margin: 10px 0 0 10px;"></mu-list>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px;"><?php echo l('To get online library information, click the "Check" tab, select the appropriate version, and then click the "Check" button.') ?></div>
+                            <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column;">
                                 <?php echo l('Automatic upgrade (used only on local testing):') ?><br>
-                                <div style="display: flex; margin-top: 10px;">
-                                    <mu-list :list="mlist" v-model="updateIndex" style="flex: 1;"></mu-list>
-                                    <mu-list :list="updateList" style="margin-left: 10px; flex: 2;"></mu-list>
-                                </div>
-                                <div style="margin-top: 10px; text-align: center;">
-                                    <mu-button @click.native="refresh()"><?php echo l('Refresh') ?></mu-button>
-                                    <mu-button @click.native="update()" style="margin-left: 10px;">{{updateing ? '<?php echo l('Running...') ?>' : '<?php echo l('Start') ?>'}}</mu-button>
-                                </div>
+                                1234.
                             </div>
                             <mu-line></mu-line>
                             <div style="display: flex; flex-direction: column; align-items: center;">

@@ -78,14 +78,15 @@ namespace __Mutton__ {
                 // --- Password ---
                 password: "",
                 // --- Check ---
-                mindex: 0,
-                mlist: [],
-                list: [],
+                verIndex: 0,
+                verList: [],
+                infoList: [],
                 // --- System ---
                 latestVer: "0",
-                updateList: [],
-                updateing: false,
-                updateIndex: 0,
+                onlineLibs: [],
+                localLibs: [],
+                onlineLibsIndex: 0,
+                localLibsIndex: 0,
                 // --- Config ---
                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
             },
@@ -99,19 +100,19 @@ namespace __Mutton__ {
                         this.alert = j.msg;
                         return;
                     }
-                    this.mlist = j.list;
-                    this.mlist.unshift({value: "master", label: "master"});
+                    this.verList = j.list;
+                    this.verList.unshift({value: "master", label: "master"});
                 },
                 check: async function (this: any, mode: number = 0) {
-                    if (!this.mlist[this.mindex]) {
+                    if (!this.verList[this.verIndex]) {
                         this.alert = "Please select version.";
                         return;
                     }
-                    if ((this.mlist[this.mindex].value === "master") && (!await this.confirm(l(`Please select a published version to check or upgrade, and "master" for the latest code does not necessarily work correctly. To continue using "master", click "OK" or click "Cancel".`)))) {
+                    if ((this.verList[this.verIndex].value === "master") && (!await this.confirm(l(`Please select a published version to check or upgrade, and "master" for the latest code does not necessarily work correctly. To continue using "master", click "OK" or click "Cancel".`)))) {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.mlist[this.mindex].value, mode: mode});
+                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, mode: mode});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -133,7 +134,11 @@ namespace __Mutton__ {
                     for (let lib of j.libFolder) {
                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                     }
-                    this.list = list;
+                    this.infoList = list;
+                    this.onlineLibs = [];
+                    for (let lib in j.onlineLibs) {
+                        this.onlineLibs.push({value: lib, label: lib + " " + j.onlineLibs[lib].ver});
+                    }
                     if (list.length === 0) {
                         this.alert = l("No problem.");
                     }
@@ -159,16 +164,23 @@ namespace __Mutton__ {
                     }
                     this.alert = l("Successful.");
                 },
+                // --- 获取本地库列表 ---
+                getLocalLibs: async function (this: any) {
+                    this.mask = true;
+                    let j = await post(URL_BASE + "__Mutton__/apiGetLocalLibs", {password: this.password});
+                    this.mask = false;
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    this.localLibs = j.list;
+                },
                 // --- 询问对话框 ---
                 confirm: async function(this: any, txt: string) {
                     return new Promise(async (resolve, reject) => {
                         this.confirmTxt = txt;
                         this.confirmResolve = resolve;
                     });
-                },
-                // --- 自动升级 ---
-                update: async function (this: any) {
-                    
                 }
             }
         });

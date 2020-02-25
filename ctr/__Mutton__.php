@@ -130,38 +130,31 @@ class __Mutton__ extends Ctr {
             }
         }
         // --- 判断库是否有更新 ---
-        $local = $this->_getLibList();
+        $localLibs = $this->_getLibList();
         foreach ($json['lib'] as $name => $data) {
-            if (!isset($local[$name])) {
+            if (!isset($localLibs[$name])) {
                 continue;
             }
-            if (version_compare($local[$name], $data['ver'], '>=')) {
-                // --- 本地库版本大于等于线上库版本 ---
-                if ($local['folder'] && !is_dir(LIB_PATH . $name)) {
-                    $libFolder[] = $local;
+            if (version_compare($localLibs[$name]['ver'], $data['ver'], '>=')) {
+                // --- 本地库版本大于等于线上库版本，不需要更新，检测附属文件夹是否存在 ---
+                if ($localLibs[$name]['folder'] && !is_dir(LIB_PATH . $name)) {
+                    $libFolder[$name] = $localLibs[$name];
                 }
                 continue;
             }
             // --- 本地库小于线上库，需要更新 ---
-            $data['localVer'] = $local[$name]['ver'];
-            $lib[] = $data;
+            $data['localVer'] = $localLibs[$name]['ver'];
+            $lib[$name] = $data;
         }
-        return [1, 'noMatch' => $noMatch, 'miss' => $miss, 'missConst' => $missConst, 'lib' => $lib, 'libFolder' => $libFolder];
-    }
+        return [1,
+            'noMatch' => $noMatch,
+            'miss' => $miss,
+            'missConst' => $missConst,
+            'lib' => $lib,
+            'libFolder' => $libFolder,
 
-    // --- 自动升级 ---
-    public function apiUpdate() {
-        if (!$this->_hasConfig) {
-            return [0, l('Please place the profile first.')];
-        }
-        if (!$this->_checkXInput($_POST, [
-            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
-            'ver' => ['require', [0, l('System error.')]]
-        ], $return)) {
-            return $return;
-        }
-
-        // --- TODO ---
+            'onlineLibs' => $json['lib']
+        ];
     }
 
     /**
@@ -190,17 +183,47 @@ class __Mutton__ extends Ctr {
      * @return array
      */
     public function apiGetLatestVer() {
-        if ($this->post('password') !== __MUTTON__PWD) {
-            return [0, 'Password is incorrect.'];
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]]
+        ], $return)) {
+            return $return;
         }
         $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/releases/latest');
         if (!$res->content) {
-            return [0, 'Network error, please try again.'];
+            return [0, l('Network error, please try again.')];
         }
-        $json = json_decode($res->content);
-        preg_match('/[0-9\\.]+/', $json->tag_name, $matches);
+        $json = json_decode($res->content, true);
+        preg_match('/[0-9.]+/', $json['tag_name'], $matches);
         $version = $matches[0];
         return [1, 'version' => $version];
+    }
+
+    /**
+     * --- 获取本地库列表 ---
+     * @return array
+     */
+    public function apiGetLocalLibs() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]]
+        ], $return)) {
+            return $return;
+        }
+        $libs = $this->_getLibList();
+        $list = [];
+        foreach ($libs as $lib => $data) {
+            if ($data['folder'] && !is_dir(LIB_PATH . $lib)) {
+                $list[] = ['label' => $lib . ' ' . $data['ver'] . ' ' . l('(The satellite folder was not found)')];
+            } else {
+                $list[] = ['label' => $lib . ' ' . $data['ver']];
+            }
+        }
+        return [1, 'list' => $list];
     }
 
     // --- 以下是内部工具方法 ---

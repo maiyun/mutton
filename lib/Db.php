@@ -1,7 +1,7 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":true} - END
+ * CONF - {"ver":"0.1","folder":false} - END
  * Date: 2015/7/7 17:59
  * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04, 2020-2-17 23:26:01
  */

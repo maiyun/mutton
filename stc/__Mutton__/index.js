@@ -114,13 +114,14 @@ var __Mutton__;
                                 confirmTxt: "",
                                 confirmResolve: null,
                                 password: "",
-                                mindex: 0,
-                                mlist: [],
-                                list: [],
+                                verIndex: 0,
+                                verList: [],
+                                infoList: [],
                                 latestVer: "0",
-                                updateList: [],
-                                updateing: false,
-                                updateIndex: 0,
+                                onlineLibs: [],
+                                localLibs: [],
+                                onlineLibsIndex: 0,
+                                localLibsIndex: 0,
                                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                             },
                             methods: {
@@ -139,8 +140,8 @@ var __Mutton__;
                                                         this.alert = j.msg;
                                                         return [2];
                                                     }
-                                                    this.mlist = j.list;
-                                                    this.mlist.unshift({ value: "master", label: "master" });
+                                                    this.verList = j.list;
+                                                    this.verList.unshift({ value: "master", label: "master" });
                                                     return [2];
                                             }
                                         });
@@ -149,15 +150,15 @@ var __Mutton__;
                                 check: function (mode) {
                                     if (mode === void 0) { mode = 0; }
                                     return __awaiter(this, void 0, void 0, function () {
-                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib;
+                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib, lib;
                                         return __generator(this, function (_j) {
                                             switch (_j.label) {
                                                 case 0:
-                                                    if (!this.mlist[this.mindex]) {
+                                                    if (!this.verList[this.verIndex]) {
                                                         this.alert = "Please select version.";
                                                         return [2];
                                                     }
-                                                    _a = (this.mlist[this.mindex].value === "master");
+                                                    _a = (this.verList[this.verIndex].value === "master");
                                                     if (!_a) return [3, 2];
                                                     return [4, this.confirm(l("Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\"."))];
                                                 case 1:
@@ -168,7 +169,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.mlist[this.mindex].value, mode: mode })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, mode: mode })];
                                                 case 3:
                                                     j = _j.sent();
                                                     this.mask = false;
@@ -196,7 +197,11 @@ var __Mutton__;
                                                         lib = _h[_g];
                                                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                                                     }
-                                                    this.list = list;
+                                                    this.infoList = list;
+                                                    this.onlineLibs = [];
+                                                    for (lib in j.onlineLibs) {
+                                                        this.onlineLibs.push({ value: lib, label: lib + " " + j.onlineLibs[lib].ver });
+                                                    }
                                                     if (list.length === 0) {
                                                         this.alert = l("No problem.");
                                                     }
@@ -247,6 +252,27 @@ var __Mutton__;
                                         });
                                     });
                                 },
+                                getLocalLibs: function () {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        var j;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    this.mask = true;
+                                                    return [4, post(URL_BASE + "__Mutton__/apiGetLocalLibs", { password: this.password })];
+                                                case 1:
+                                                    j = _a.sent();
+                                                    this.mask = false;
+                                                    if (j.result <= 0) {
+                                                        this.alert = j.msg;
+                                                        return [2];
+                                                    }
+                                                    this.localLibs = j.list;
+                                                    return [2];
+                                            }
+                                        });
+                                    });
+                                },
                                 confirm: function (txt) {
                                     return __awaiter(this, void 0, void 0, function () {
                                         var _this = this;
@@ -258,13 +284,6 @@ var __Mutton__;
                                                         return [2];
                                                     });
                                                 }); })];
-                                        });
-                                    });
-                                },
-                                update: function () {
-                                    return __awaiter(this, void 0, void 0, function () {
-                                        return __generator(this, function (_a) {
-                                            return [2];
                                         });
                                     });
                                 }
