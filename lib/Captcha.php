@@ -1,7 +1,15 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":true,"url":"https://github.com/Gregwar/Captcha/archive/v1.1.7.zip"} - END
+ * CONF - {
+    "ver": "0.1",
+    "folder": true,
+    "url": {
+        "https://github.com/Gregwar/Captcha/archive/v1.1.7.zip": {
+            "action": "unzip"
+        }
+    }
+} - END
  * Date: 2018-7-4 09:37
  * Last: 2019-1-29 16:10:50
  */

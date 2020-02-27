@@ -71,10 +71,16 @@
                                 <div style="flex: 1;">
                                     <?php echo l('Online library:') ?>
                                     <mu-list :list="onlineLibs" v-model="onlineLibsIndex" style="margin-top: 10px;"></mu-list>
+                                    <div style="margin-top: 10px;">
+
+                                    </div>
                                 </div>
                                 <div style="flex: 1;">
                                     <?php echo l('Local library:') ?>
                                     <mu-list :list="localLibs" v-model="localLibsIndex" style="margin: 10px 0 0 10px;"></mu-list>
+                                    <div style="margin-top: 10px;">
+                                        <mu-button @click.native="reinstallFolder()"><?php echo l('Reinstall folder') ?></mu-button>
+                                    </div>
                                 </div>
                             </div>
                             <div style="margin-top: 10px;"><?php echo l('To get online library information, click the "Check" tab, select the appropriate version, and then click the "Check" button.') ?></div>

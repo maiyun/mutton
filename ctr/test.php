@@ -8,10 +8,10 @@ use lib\Captcha;
 use lib\Db;
 use lib\Kv;
 use lib\Net;
-use lib\Session;
 use lib\Sql;
 use lib\Text;
 use mod\Mod;
+use mod\Session;
 use PDO;
 use PDOStatement;
 use sys\Ctr;
@@ -95,6 +95,7 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'test/net-upload">View "test/net-upload"</a>',
             '<br><a href="'.URL_BASE.'test/net-cookie">View "test/net-cookie"</a>',
             '<br><a href="'.URL_BASE.'test/net-save">View "test/net-save"</a>',
+            '<br><a href="'.URL_BASE.'test/net-reuse">View "test/net-reuse"</a>',
 
             '<br><br><b>Session:</b>',
             '<br><br><a href="'.URL_BASE.'test/session?s=db">View "test/session?s=db"</a>',
@@ -183,14 +184,14 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
         Mod::setDb($db);
 
         if ($_GET['action'] === 'remove') {
-            \mod\Session::removeByWhere([
+            Session::removeByWhere([
                 ['token', 'LIKE', 'test_%']
             ]);
-            $this->_location('test/mod');
+            return $this->_location('test/mod');
         } else {
 
             $time = time();
-            $session = \mod\Session::getCreate();
+            $session = Session::getCreate();
             $session->set([
                 'data' => json_encode(['test' => $this->_random(4)]),
                 'time_update' => $time,
@@ -733,6 +734,49 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     }
     public function netSave1() {
         $this->_location(URL_STC . 'index.js');
+    }
+
+    public function netReuse() {
+        $echo = [];
+
+        $echo[] = '<strong>Normal:</strong>';
+
+        $time0 = microtime(true);
+        Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json');
+        $time1 = microtime(true);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json');</pre>" . round(($time1 - $time0) * 1000, 4) . 'ms.';
+
+        $time0 = microtime(true);
+        Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/README.md');
+        $time1 = microtime(true);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/README.md');</pre>" . round(($time1 - $time0) * 1000, 4) . 'ms.';
+
+        $time0 = microtime(true);
+        Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/LICENSE');
+        $time1 = microtime(true);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/LICENSE');</pre>" . round(($time1 - $time0) * 1000, 4) . 'ms.<hr>';
+
+        $echo[] = '<strong>Reuse:</strong>';
+
+        $time0 = microtime(true);
+        Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', ['reuse' => true]);
+        $time1 = microtime(true);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', ['reuse' => true]);</pre>" . round(($time1 - $time0) * 1000, 4) . 'ms.';
+
+        $time0 = microtime(true);
+        Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/README.md', ['reuse' => true]);
+        $time1 = microtime(true);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/README.md', ['reuse' => true]);</pre>" . round(($time1 - $time0) * 1000, 4) . 'ms.';
+
+        $time0 = microtime(true);
+        Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/LICENSE', ['reuse' => true]);
+        $time1 = microtime(true);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/LICENSE', ['reuse' => true]);</pre>" . round(($time1 - $time0) * 1000, 4) . 'ms.';
+
+        Net::closeAll();
+        $echo[] = "<pre>Net::closeAll();</pre>";
+
+        return join('', $echo) . $this->_getEnd();
     }
 
     public function session() {

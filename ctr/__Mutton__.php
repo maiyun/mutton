@@ -3,9 +3,11 @@ declare(strict_types = 1);
 
 namespace ctr;
 
+use lib\Fs;
 use lib\Net;
 use lib\Text;
 use sys\Ctr;
+use ZipArchive;
 
 class __Mutton__ extends Ctr {
 
@@ -202,6 +204,31 @@ class __Mutton__ extends Ctr {
     }
 
     /**
+     * --- 重装文件夹 ---
+     * @return array
+     */
+    public function apiReinstallFolder() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
+            'lib' => ['require', [0, l('System error.')]]
+        ], $return)) {
+            return $return;
+        }
+        if (!is_file(LIB_PATH . $_POST['lib'] . '.php')) {
+            return [0, l('Library does not exist.')];
+        }
+        $data = $this->_getLibData(file_get_contents(LIB_PATH . $_POST['lib'] . '.php'));
+        if ($data['folder']) {
+            return $this->_installFolder($_POST['lib'], $data);
+        } else {
+            return [1];
+        }
+    }
+
+    /**
      * --- 获取本地库列表 ---
      * @return array
      */
@@ -278,12 +305,75 @@ class __Mutton__ extends Ctr {
                 continue;
             }
             $name = explode('.', $file)[0];
-            $content = file_get_contents(LIB_PATH . $file);
-            preg_match('/CONF - (.+?) - END/', $content, $match);
-            $lib[$name] = json_decode($match[1], true);
+            $lib[$name] = $this->_getLibData(file_get_contents(LIB_PATH . $file));
         }
         $libDir->close();
         return $lib;
+    }
+
+    /**
+     * --- 获取库的 CONF 数据 ---
+     * @param string $content
+     * @return array
+     */
+    private function _getLibData(string $content): array {
+        preg_match('/CONF - ([\s\S]+?) - END/', $content, $match);
+        return json_decode($match[1], true);
+    }
+
+    private function _installFolder(string $lib, array $data) {
+        // --- 如果本来有目录，则先删除，相当于重装目录 ---
+        if (is_dir(LIB_PATH . $lib) && !Fs::rmdir(LIB_PATH . $lib)) {
+            return [0, l('No server write permissions.')];
+        }
+        // --- 创建目录 ---
+        if (!@mkdir(LIB_PATH . $lib)) {
+            return [0, l('No server write permissions.')];
+        }
+        if (!@chmod(LIB_PATH . $lib, 0755)) {
+            return [0, l('No server write permissions.')];
+        }
+        // --- 循环遍历 ---
+        foreach ($data['url'] as $file => $item) {
+            // --- 是否创建子目录 ---
+            $path = '';
+            if (isset($item['path'])) {
+                Fs::mkdir(LIB_PATH . $item['path']);
+                $path = $item['path'];
+            }
+            // --- 保存的文件名 ---
+            if (isset($item['save'])) {
+                $name = $item['save'];
+            } else {
+                $name = 'tmp' . rand(1000, 9999);
+            }
+            // --- 下载文件 ---
+            $r = Net::get($file, [
+                'follow' => true,
+                'save' => LIB_PATH . $path . $name,
+                'reuse' => true
+            ]);
+            if ($r->content === '') {
+                Net::closeAll();
+                return [0, l('File "?" download failed.', [$file])];
+            }
+            // --- 是否解压 ---
+            if ($item['action'] === 'unzip') {
+                $zip = new ZipArchive();
+                if ($zip->open(LIB_PATH . $path . $name) !== true) {
+                    Net::closeAll();
+                    return [0, l('The decompression failed.')];
+                }
+                if (!$zip->extractTo(LIB_PATH . $path)) {
+                    Net::closeAll();
+                    return [0, l('The decompression failed.')];
+                }
+                $zip->close();
+                @unlink(LIB_PATH . $path . $name);
+            }
+        }
+        Net::closeAll();
+        return [1];
     }
 
     /**

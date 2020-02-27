@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.1","folder":false} - END
  * Dat: 2019-12-14 16:10:54
- * Las: 2019-12-14 16:10:58
+ * Las: 2019-12-14 16:10:58, 2020-2-27 18:46:35
  */
 declare(strict_types = 1);
 
@@ -17,7 +17,7 @@ class Fs {
      * @param int $mode
      * @return bool
      */
-    public function mkdir(string $path, int $mode = 0755): bool {
+    public static function mkdir(string $path, int $mode = 0755): bool {
         $path = str_replace('\\', '/', $path);
         $dirs = explode('/', $path);
         $tpath = '';
@@ -27,10 +27,10 @@ class Fs {
             }
             $tpath .= $v . '/';
             if (!is_dir($tpath)) {
-                if (!mkdir($tpath)) {
+                if (!@mkdir($tpath)) {
                     return false;
                 }
-                chmod($tpath, $mode);
+                @chmod($tpath, $mode);
             }
         }
         return true;
@@ -41,7 +41,7 @@ class Fs {
      * @param string $path
      * @return bool
      */
-    protected function rmdir(string $path): bool {
+    public static function rmdir(string $path): bool {
         $path = str_replace('\\', '/', $path);
         if (substr($path, -1) !== '/') {
             $path .= '/';
@@ -59,7 +59,7 @@ class Fs {
                     return false;
                 }
             } else {
-                if (!$this->rmdir($path.$name.'/')) {
+                if (!self::rmdir($path.$name.'/')) {
                     return false;
                 }
             }
@@ -73,7 +73,7 @@ class Fs {
      * @param string $path
      * @return bool
      */
-    protected function isWritable(string $path): bool {
+    public static function isWritable(string $path): bool {
         // If we're on a Unix server with safe_mode off we call is_writable
         if (DIRECTORY_SEPARATOR == '/' AND @ini_get("safe_mode") == false) {
             return is_writable($path);

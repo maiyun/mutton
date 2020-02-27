@@ -1,18 +1,69 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":true} - END
+ * CONF - {
+    "ver": "0.1",
+    "folder": true,
+    "url": {
+        "https://curl.haxx.se/ca/cacert.pem": {
+            "action": "down",
+            "save": "cacert.pem"
+        },
+        "https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@{ver}/lib/Net/Response.php": {
+            "action": "down",
+            "save": "Response.php"
+        }
+    }
+} - END
  * Date: 2015/10/26 14:23
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-01-21 00:35:21
- * CA: https://curl.haxx.se/ca/cacert.pem
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-2-26 22:29:36
  */
 declare(strict_types = 1);
 
 namespace lib;
 
+use CURLFile;
 use lib\Net\Response;
 
 class Net {
+
+    /** @var array 连接池 */
+    private static $_pool = [];
+
+    /**
+     * --- 获取链接 ---
+     * @param string $host
+     * @return resource
+     */
+    public static function getLink(string $host) {
+        if (isset(self::$_pool[$host])) {
+            return self::$_pool[$host];
+        } else {
+            self::$_pool[$host] = curl_init();
+            return self::$_pool[$host];
+        }
+    }
+
+    /**
+     * --- 手段关闭复用连接 ---
+     * @param string $host
+     */
+    public static function closeLink(string $host) {
+        if (isset(self::$_pool[$host])) {
+            curl_close(self::$_pool[$host]);
+            unset(self::$_pool[$host]);
+        }
+    }
+
+    /**
+     * --- 关闭所有复用连接 ---
+     */
+    public static function closeAll() {
+        foreach (self::$_pool as $host => $link) {
+            curl_close($link);
+            unset(self::$_pool[$host]);
+        }
+    }
 
     /**
      * --- 发起 GET 请求 ---
@@ -29,7 +80,7 @@ class Net {
      * --- 发起 POST 请求 ---
      * @param string $url
      * @param array $data
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
@@ -42,7 +93,7 @@ class Net {
      * --- 发起 JSON 请求 ---
      * @param string $url
      * @param array $data
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
@@ -56,11 +107,12 @@ class Net {
      * --- 发起请求 ---
      * @param string $url 提交的 url
      * @param array|null $data 提交的 data 数据
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
     public static function request(string $url, ?array $data = null, array $opt = [], ?array &$cookie = null): Response {
+        $uri = parse_url($url);
         $isSsl = false;
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
         $type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
@@ -68,7 +120,8 @@ class Net {
         $follow = isset($opt['follow']) ? $opt['follow'] : false;
         $hosts = isset($opt['hosts']) ? $opt['hosts'] : null;
         // $raw = isset($opt['raw']) ? $opt['raw'] : false; // --- 不应该依赖 raw，依赖本服务器的压缩 ---
-        $save = isset($opt['save']) ? $opt['save'] : null;
+        $save = isset($opt['save']) ? $opt['save'] : null;      // 直接保存到文件
+        $reuse = isset($opt['reuse']) ? $opt['reuse'] : false;  // 是否连接复用
         $headers = [];
         if (isset($opt['headers'])) {
             foreach ($opt['headers'] as $key => $val) {
@@ -78,23 +131,28 @@ class Net {
         if (!isset($headers['user-agent'])) {
             $headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36';
         }
+        if ($reuse) {
+            $ch = self::getLink($uri['host'] . (isset($uri['port']) ? ':' . $uri['port'] : ''));
+        } else {
+            $ch = curl_init();
+        }
         if ($method == 'GET') {
-            $ch = curl_init($url . ($data !== null ? '?' . http_build_query($data) : ''));
+            curl_setopt($ch, CURLOPT_URL, $url . ($data !== null ? '?' . http_build_query($data) : ''));
         } else {
             // --- POST ---
-            $ch = curl_init($url);
+            curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, true);
             $upload = false;
             if ($data !== null) {
                 foreach ($data as $key => $val) {
                     if (is_array($val)) {
                         foreach ($val as $k => $v) {
-                            if ($v instanceof \CURLFile) {
+                            if ($v instanceof CURLFile) {
                                 $upload = true;
                                 break;
                             }
                         }
-                    } else if ($val instanceof \CURLFile) {
+                    } else if ($val instanceof CURLFile) {
                         $upload = true;
                         break;
                     }
@@ -134,7 +192,6 @@ class Net {
         }
         // --- 重定义 IP ---
         if ($hosts) {
-            $uri = parse_url($url);
             $host = strtolower($uri['host']);
             if (isset($hosts[$host])) {
                 $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
@@ -194,12 +251,14 @@ class Net {
         if ($fh) {
             fclose($fh);
         }
-        $res = Response::get([
+        $res = new Response([
             'error' => curl_error($ch),
             'errno' => curl_errno($ch),
             'info' => curl_getinfo($ch)
         ]);
-        curl_close($ch);
+        if (!$reuse) {
+            curl_close($ch);
+        }
         // --- 处理返回值 ---
         if ($resHeaders === '') {
             if ($output === false) {
@@ -209,6 +268,8 @@ class Net {
             $resHeaders = substr($output, 0, $sp);
             $content = substr($output, $sp + 4);
             $res->content = $content;
+        } else {
+            $res->content = 'OK';
         }
         $res->headers = self::_formatHeader($resHeaders, $url);
         // --- 是否追踪 cookie ---

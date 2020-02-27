@@ -147,8 +147,7 @@ var __Mutton__;
                                         });
                                     });
                                 },
-                                check: function (mode) {
-                                    if (mode === void 0) { mode = 0; }
+                                check: function () {
                                     return __awaiter(this, void 0, void 0, function () {
                                         var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib, lib;
                                         return __generator(this, function (_j) {
@@ -169,7 +168,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, mode: mode })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value })];
                                                 case 3:
                                                     j = _j.sent();
                                                     this.mask = false;
@@ -226,6 +225,30 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.latestVer = j.version;
+                                                    return [2];
+                                            }
+                                        });
+                                    });
+                                },
+                                reinstallFolder: function () {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        var j;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    this.mask = true;
+                                                    return [4, post(URL_BASE + "__Mutton__/apiReinstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
+                                                case 1:
+                                                    j = _a.sent();
+                                                    this.mask = false;
+                                                    if (j.result <= 0) {
+                                                        this.alert = j.msg;
+                                                        return [2];
+                                                    }
+                                                    return [4, this.getLocalLibs()];
+                                                case 2:
+                                                    _a.sent();
+                                                    this.alert = l("Successful.");
                                                     return [2];
                                             }
                                         });

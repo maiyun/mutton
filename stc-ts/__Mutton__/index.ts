@@ -103,7 +103,7 @@ namespace __Mutton__ {
                     this.verList = j.list;
                     this.verList.unshift({value: "master", label: "master"});
                 },
-                check: async function (this: any, mode: number = 0) {
+                check: async function (this: any) {
                     if (!this.verList[this.verIndex]) {
                         this.alert = "Please select version.";
                         return;
@@ -112,7 +112,7 @@ namespace __Mutton__ {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, mode: mode});
+                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -154,6 +154,19 @@ namespace __Mutton__ {
                     }
                     this.latestVer = j.version;
                 },
+                // --- 重装文件夹 ---
+                reinstallFolder: async function (this: any) {
+                    this.mask = true;
+                    let j = await post(URL_BASE + "__Mutton__/apiReinstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
+                    this.mask = false;
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    await this.getLocalLibs();
+                    this.alert = l("Successful.");
+                },
+                // --- 创建 mblob 文件 ---
                 build: async function (this: any) {
                     this.mask = true;
                     let j = await post(URL_BASE + "__Mutton__/apiBuild", {password: this.password});
