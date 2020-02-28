@@ -60,7 +60,7 @@ var __Mutton__;
                         _a.label = 2;
                     case 2:
                         Vue.component("mu-button", {
-                            template: "<div class=\"button\" tabindex=\"0\"><div class=\"button__in\"><div class=\"button__txt\"><slot></div></div></div>"
+                            template: "<div class=\"button-out\" tabindex=\"0\"><div class=\"button\"><div class=\"button-in\"><slot></div></div></div>"
                         });
                         Vue.component("mu-line", {
                             template: "<div class=\"line\"></div>"
@@ -98,8 +98,8 @@ var __Mutton__;
                                 }
                             },
                             template: "<div class=\"list\" tabindex=\"0\">" +
-                                "<div class=\"list__in\" :style=\"{'height': height}\">" +
-                                "<div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"click(index)\">{{val.label || val}}</div>" +
+                                "<div class=\"list-in\" :style=\"{'height': height}\">" +
+                                "<div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"click(index)\"><div class=\"list__item-in\">{{val.label || val}}</div></div>" +
                                 "</div>" +
                                 "</div>"
                         });
@@ -235,7 +235,7 @@ var __Mutton__;
                                         var j;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
-                                                case 0: return [4, this.confirm(l("Are you sure?"))];
+                                                case 0: return [4, this.confirm(l("Are you sure you're reinstalling the folder? Please be patient when the installation time may be long."))];
                                                 case 1:
                                                     if (!(_a.sent())) {
                                                         return [2];

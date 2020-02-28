@@ -18,7 +18,7 @@ namespace __Mutton__ {
         // --- 组件注册 ---
         // --- Button ---
         Vue.component("mu-button", {
-            template: `<div class="button" tabindex="0"><div class="button__in"><div class="button__txt"><slot></div></div></div>`
+            template: `<div class="button-out" tabindex="0"><div class="button"><div class="button-in"><slot></div></div></div>`
         });
         // --- Line ---
         Vue.component("mu-line", {
@@ -58,8 +58,8 @@ namespace __Mutton__ {
                 }
             },
             template: `<div class="list" tabindex="0">` +
-                `<div class="list__in" :style="{\'height\': height}">` +
-                    `<div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="click(index)">{{val.label || val}}</div>` +
+                `<div class="list-in" :style="{\'height\': height}">` +
+                    `<div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="click(index)"><div class="list__item-in">{{val.label || val}}</div></div>` +
                 `</div>` +
             `</div>`
         });
@@ -156,7 +156,7 @@ namespace __Mutton__ {
                 },
                 // --- 重装文件夹 ---
                 reinstallFolder: async function (this: any) {
-                    if (!await this.confirm(l("Are you sure?"))) {
+                    if (!await this.confirm(l("Are you sure you're reinstalling the folder? Please be patient when the installation time may be long."))) {
                         return;
                     }
                     this.mask = true;

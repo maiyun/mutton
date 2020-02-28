@@ -348,7 +348,9 @@ class __Mutton__ extends Ctr {
                 $name = 'tmp' . rand(1000, 9999);
             }
             // --- 下载文件 ---
+            set_time_limit(70);
             $r = Net::get($file, [
+                'timeout' => 60,
                 'follow' => true,
                 'save' => LIB_PATH . $lib . '/' . $name,
                 'reuse' => true

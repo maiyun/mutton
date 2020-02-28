@@ -22,22 +22,38 @@
 <body>
 <div id="vue">
     <div class="window">
-        <div class="window__in">
+        <div class="window-in">
             <div class="window__title">Mutton Portal</div>
             <div class="window__panel">
                 <div class="title">Mutton Portal</div>
                 <div class="tab">
                     <div class="tab__top">
-                        <div class="tab__top__item" :class="{'selected': tab == 0}" @click="tab = 0"><div class="tab__top__item__in"><?php echo l('Password') ?></div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 1}" @click="tab = 1"><div class="tab__top__item__in"><?php echo l('Check') ?></div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 2}" @click="tab = 2;getLocalLibs();"><div class="tab__top__item__in"><?php echo l('System') ?></div></div>
-                        <div class="tab__top__item" :class="{'selected': tab == 3}" @click="tab = 3"><div class="tab__top__item__in"><?php echo l('Profile') ?></div></div>
+                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 0}" @mousedown="tab = 0">
+                            <div class="tab__top__item">
+                                <div class="tab__top__item-in"><?php echo l('Password') ?></div>
+                            </div>
+                        </div>
+                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 1}" @mousedown="tab = 1">
+                            <div class="tab__top__item">
+                                <div class="tab__top__item-in"><?php echo l('Check') ?></div>
+                            </div>
+                        </div>
+                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 2}" @mousedown="tab = 2;getLocalLibs();">
+                            <div class="tab__top__item">
+                                <div class="tab__top__item-in"><?php echo l('System') ?></div>
+                            </div>
+                        </div>
+                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 3}" @mousedown="tab = 3">
+                            <div class="tab__top__item">
+                                <div class="tab__top__item-in"><?php echo l('Profile') ?></div>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab__panel">
                         <!-- Password -->
                         <div class="tab__panel__item" v-if="tab == 0">
                             <div style="padding-bottom: 10px;"><?php echo l('Please enter your password:') ?></div>
-                            <div class="textbox"><input class="textbox__in" type="password" v-model="password"></div>
+                            <div class="textbox"><input class="textbox-in" type="password" v-model="password"></div>
                             <div style="padding-top: 10px;"><?php echo l('When the input is complete, you can use other features.') ?></div>
                             <mu-line></mu-line>
                             <div style="text-align: center;">
@@ -75,9 +91,9 @@
 
                                     </div>
                                 </div>
-                                <div style="flex: 1;">
+                                <div style="flex: 1; margin-left: 10px;">
                                     <?php echo l('Local library:') ?>
-                                    <mu-list :list="localLibs" v-model="localLibsIndex" style="margin: 10px 0 0 10px;"></mu-list>
+                                    <mu-list :list="localLibs" v-model="localLibsIndex" style="margin-top: 10px;"></mu-list>
                                     <div style="margin-top: 10px;">
                                         <mu-button @click.native="reinstallFolder()"><?php echo l('Reinstall folder') ?></mu-button>
                                     </div>
@@ -100,7 +116,7 @@
                         <!-- Profile -->
                         <div class="tab__panel__item" v-else-if="tab == 3">
                             <div style="padding-bottom: 10px;"><?php echo l('Please place the following on "etc/__mutton__.php" to use this portal.') ?></div>
-                            <div class="textbox"><textarea class="textbox__in" rows="10" readonly v-model="configTxt" style="resize: none;"></textarea></div>
+                            <div class="textbox"><textarea class="textbox-in" rows="15" readonly v-model="configTxt"></textarea></div>
                         </div>
                     </div>
                 </div>
@@ -110,7 +126,7 @@
     <!-- alert -->
     <div v-if="alert!=''" class="alert">
         <div class="window">
-            <div class="window__in">
+            <div class="window-in">
                 <div class="window__title"><?php echo l('Alert') ?></div>
                 <div class="window__panel" style="min-width: 250px; max-width: 550px;">{{alert}}</div>
                 <div class="window__controls">
@@ -122,7 +138,7 @@
     <!-- alert -->
     <div v-if="confirmTxt!=''" class="alert">
         <div class="window">
-            <div class="window__in">
+            <div class="window-in">
                 <div class="window__title"><?php echo l('Confirm') ?></div>
                 <div class="window__panel" style="min-width: 250px; max-width: 550px;">{{confirmTxt}}</div>
                 <div class="window__controls">

@@ -6,6 +6,7 @@
     "folder": true,
     "url": {
         "https://github.com/Gregwar/Captcha/archive/v1.1.7.zip": {
+            "mirror-cn": "https://gitee.com/zohegs/mirrors/raw/master/Gregwar/Captcha/Captcha-1.1.7.zip",
             "action": "unzip"
         }
     }

@@ -51,5 +51,5 @@
     "No problem.": "没有问题。",
     "Successful.": "成功。",
     "Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\".": "请选择一个已经发布的版本进行检查或升级，“master”为最新的代码不一定正常运行。若要继续使用“master”请点击“好的”，否则点击“取消”。",
-    "Are you sure?": "确定吗？"
+    "Are you sure you're reinstalling the folder? Please be patient when the installation time may be long.": "确定重新安装文件夹吗？安装时间可能较长，请耐心等待。"
 }
