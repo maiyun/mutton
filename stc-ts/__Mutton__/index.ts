@@ -156,6 +156,9 @@ namespace __Mutton__ {
                 },
                 // --- 重装文件夹 ---
                 reinstallFolder: async function (this: any) {
+                    if (!await this.confirm(l("Are you sure?"))) {
+                        return;
+                    }
                     this.mask = true;
                     let j = await post(URL_BASE + "__Mutton__/apiReinstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
                     this.mask = false;

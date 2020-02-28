@@ -235,10 +235,14 @@ var __Mutton__;
                                         var j;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
-                                                case 0:
+                                                case 0: return [4, this.confirm(l("Are you sure?"))];
+                                                case 1:
+                                                    if (!(_a.sent())) {
+                                                        return [2];
+                                                    }
                                                     this.mask = true;
                                                     return [4, post(URL_BASE + "__Mutton__/apiReinstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
-                                                case 1:
+                                                case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
                                                     if (j.result <= 0) {
@@ -246,7 +250,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     return [4, this.getLocalLibs()];
-                                                case 2:
+                                                case 3:
                                                     _a.sent();
                                                     this.alert = l("Successful.");
                                                     return [2];

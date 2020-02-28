@@ -218,9 +218,10 @@ class Net {
         /** @var resource $fh */
         $fh = false;
         $resHeaders = '';
+        $total = 0;
         if ($save !== null) {
             $isBody = false;
-            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fh, &$save, &$resHeaders, &$isBody) {
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fh, &$save, &$resHeaders, &$isBody, &$total) {
                 $len = strlen($data);
                 if ($isBody) {
                     if ($data !== '') {
@@ -228,6 +229,7 @@ class Net {
                             $fh = fopen($save, 'w');
                         }
                         fwrite($fh, $data);
+                        $total += $len;
                     }
                 } else {
                     $resHeaders .= $data;
@@ -238,7 +240,8 @@ class Net {
                         $resHeaders = substr($resHeaders, 0, $pos);
                         if ($body !== '') {
                             $fh = fopen($save, 'w');
-                            fwrite($fh, substr($resHeaders, $pos + 4));
+                            fwrite($fh, $body);
+                            $total += strlen($body);
                         }
                     }
                 }
@@ -269,7 +272,7 @@ class Net {
             $content = substr($output, $sp + 4);
             $res->content = $content;
         } else {
-            $res->content = 'OK';
+            $res->content = (string)$total;
         }
         $res->headers = self::_formatHeader($resHeaders, $url);
         // --- 是否追踪 cookie ---
@@ -292,6 +295,7 @@ class Net {
             'follow' => $follow,
             'hosts' => $hosts,
             'save' => $save,
+            'reuse' => $reuse,
             'headers' => $headers
         ], $cookie);
     }
@@ -456,6 +460,12 @@ class Net {
         $header = explode("\r\n", $header);
         foreach ($header as $val) {
             $sp = strpos($val, ': ');
+            $spl = 2;
+            if ($sp === false) {
+                // --- 有些后面再没有跟值的话，就得用这样的分割 ---
+                $sp = strpos($val, ':');
+                $spl = 1;
+            }
             if (!$sp) {
                 preg_match('/HTTP\\/([0-9.]+) ([0-9]+)/', $val, $match);
                 $h['http-version'] = $match[1];
@@ -468,9 +478,9 @@ class Net {
                 if (!isset($h[$k])) {
                     $h[$k] = [];
                 }
-                $h[$k][] = substr($val, $sp + 2);
+                $h[$k][] = substr($val, $sp + $spl);
             } else {
-                $h[$k] = substr($val, $sp + 2);
+                $h[$k] = substr($val, $sp + $spl);
             }
         }
         return $h;

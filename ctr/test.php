@@ -716,13 +716,13 @@ setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
     public function netSave() {
         $echo = [];
 
-        $res = Net::get(URL_FULL . 'test/net-save1', [
+        $res = Net::get('https://github.com/MaiyunNET/Mutton/raw/master/README.md', [
             'follow' => true,
-            'save' => LOG_PATH . 'tmp-index.js'
+            'save' => LOG_PATH . 'test-must-remove.md'
         ]);
-        $echo[] = "<pre>Net::get('" . URL_FULL . "test/net-save1', [
+        $echo[] = "<pre>Net::get('https://github.com/MaiyunNET/Mutton/raw/master/README.md', [
     'follow' => true,
-    'save' => LOG_PATH . 'tmp-index.js'
+    'save' => LOG_PATH . 'test-must-remove.md'
 ]);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
@@ -731,9 +731,6 @@ errno: " . json_encode($res->errno) . "<br>
 info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
-    }
-    public function netSave1() {
-        $this->_location(URL_STC . 'index.js');
     }
 
     public function netReuse() {

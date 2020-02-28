@@ -224,7 +224,7 @@ class __Mutton__ extends Ctr {
         if ($data['folder']) {
             return $this->_installFolder($_POST['lib'], $data);
         } else {
-            return [1];
+            return [0, l('This library does not have a satellite folder.')];
         }
     }
 
@@ -245,9 +245,9 @@ class __Mutton__ extends Ctr {
         $list = [];
         foreach ($libs as $lib => $data) {
             if ($data['folder'] && !is_dir(LIB_PATH . $lib)) {
-                $list[] = ['label' => $lib . ' ' . $data['ver'] . ' ' . l('(The satellite folder was not found)')];
+                $list[] = ['label' => $lib . ' ' . $data['ver'] . ' ' . l('(The satellite folder was not found)'), 'value' => $lib];
             } else {
-                $list[] = ['label' => $lib . ' ' . $data['ver']];
+                $list[] = ['label' => $lib . ' ' . $data['ver'], 'value' => $lib];
             }
         }
         return [1, 'list' => $list];
@@ -338,7 +338,7 @@ class __Mutton__ extends Ctr {
             // --- 是否创建子目录 ---
             $path = '';
             if (isset($item['path'])) {
-                Fs::mkdir(LIB_PATH . $item['path']);
+                Fs::mkdir(LIB_PATH . $lib . '/' . $item['path']);
                 $path = $item['path'];
             }
             // --- 保存的文件名 ---
@@ -350,7 +350,7 @@ class __Mutton__ extends Ctr {
             // --- 下载文件 ---
             $r = Net::get($file, [
                 'follow' => true,
-                'save' => LIB_PATH . $path . $name,
+                'save' => LIB_PATH . $lib . '/' . $name,
                 'reuse' => true
             ]);
             if ($r->content === '') {
@@ -360,16 +360,16 @@ class __Mutton__ extends Ctr {
             // --- 是否解压 ---
             if ($item['action'] === 'unzip') {
                 $zip = new ZipArchive();
-                if ($zip->open(LIB_PATH . $path . $name) !== true) {
+                if ($zip->open(LIB_PATH . $lib . '/' . $name) !== true) {
                     Net::closeAll();
                     return [0, l('The decompression failed.')];
                 }
-                if (!$zip->extractTo(LIB_PATH . $path)) {
+                if (!$zip->extractTo(LIB_PATH . $lib . '/' . $path)) {
                     Net::closeAll();
                     return [0, l('The decompression failed.')];
                 }
                 $zip->close();
-                @unlink(LIB_PATH . $path . $name);
+                @unlink(LIB_PATH . $lib . '/' . $path . $name);
             }
         }
         Net::closeAll();
