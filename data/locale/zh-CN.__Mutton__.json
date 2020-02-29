@@ -59,5 +59,6 @@
     "Are you sure you're reinstalling the folder? Please be patient when the installation time may be long.": "确定重新安装文件夹吗？安装时间可能较长，请耐心等待。",
     "Please select the version first.": "请先选择版本。",
     "My Documents": "我的文档",
-    "Recycle Bin": "回收站"
+    "Recycle Bin": "回收站",
+    "The \"mblob\" file was last updated:": "“mblob”文件最后更新时间："
 }

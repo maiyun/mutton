@@ -240,6 +240,7 @@ var __Mutton__;
                                                     if (list.length === 0) {
                                                         this.alert = l("No problem.");
                                                     }
+                                                    this.list.push(l("The \"mblob\" file was last updated:") + " " + j.lastTime);
                                                     return [2];
                                             }
                                         });

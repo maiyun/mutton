@@ -172,6 +172,7 @@ class __Mutton__ extends Ctr {
         }
 
         return [1,
+            'lastTime' => date('Y-m-d H:i:s', $json['lastTime']),
             'noMatch' => $noMatch,
             'miss' => $miss,
             'missConst' => $missConst,
@@ -427,6 +428,8 @@ class __Mutton__ extends Ctr {
                 $list['file'][$file][1] = $this->_getConstList(file_get_contents(ROOT_PATH . $file));
             }
         }
+        // --- 当前编译时间 ---
+        $list['lastTime'] = time();
         return $list;
     }
 
