@@ -65,6 +65,21 @@ var __Mutton__;
                         Vue.component("mu-line", {
                             template: "<div class=\"line\"></div>"
                         });
+                        Vue.component("mu-radio", {
+                            model: {
+                                prop: "checked",
+                                event: "change"
+                            },
+                            props: {
+                                value: {
+                                    default: ""
+                                },
+                                checked: {
+                                    default: false
+                                }
+                            },
+                            template: "<div class=\"radio\" :class=\"{'selected': checked === value}\" tabindex=\"0\" @click=\"$emit('change', value)\"><div class=\"radio__left-out\"><div class=\"radio__left\"><div class=\"radio__left-in\"></div></div></div><div class=\"radio__right\"><div class=\"radio__right-in\"><slot></div></div></div>"
+                        });
                         Vue.component("mu-list", {
                             model: {
                                 prop: "value",
@@ -104,7 +119,7 @@ var __Mutton__;
                                 "</div>"
                         });
                         vueEl = document.getElementById("vue");
-                        vueEl.innerHTML = vueEl.innerHTML.replace(/>\s+?</g, "><");
+                        vueEl.innerHTML = vueEl.innerHTML.replace(/>\s+/g, ">").replace(/\s+</g, "<");
                         new Vue({
                             el: vueEl,
                             data: {
@@ -113,18 +128,40 @@ var __Mutton__;
                                 tab: tab,
                                 confirmTxt: "",
                                 confirmResolve: null,
+                                zoom: 1,
                                 password: "",
                                 verIndex: 0,
                                 verList: [],
                                 infoList: [],
-                                latestVer: "0",
+                                latestVer: "",
+                                selectedVer: "",
+                                mirror: "global",
                                 onlineLibs: [],
                                 localLibs: [],
                                 onlineLibsIndex: 0,
                                 localLibsIndex: 0,
                                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                             },
+                            mounted: function () {
+                                return __awaiter(this, void 0, void 0, function () {
+                                    return __generator(this, function (_a) {
+                                        switch (_a.label) {
+                                            case 0: return [4, this.$nextTick()];
+                                            case 1:
+                                                _a.sent();
+                                                if (window.devicePixelRatio < 2) {
+                                                    this.zoom = 1 / window.devicePixelRatio;
+                                                }
+                                                return [2];
+                                        }
+                                    });
+                                });
+                            },
                             methods: {
+                                l: function (key, data) {
+                                    if (data === void 0) { data = null; }
+                                    return l(key, data);
+                                },
                                 refresh: function () {
                                     return __awaiter(this, void 0, void 0, function () {
                                         var j;
@@ -132,7 +169,7 @@ var __Mutton__;
                                             switch (_a.label) {
                                                 case 0:
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiRefresh", { password: this.password })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiRefresh", { password: this.password, mirror: this.mirror })];
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -142,6 +179,7 @@ var __Mutton__;
                                                     }
                                                     this.verList = j.list;
                                                     this.verList.unshift({ value: "master", label: "master" });
+                                                    this.latestVer = j.latestVer;
                                                     return [2];
                                             }
                                         });
@@ -149,12 +187,12 @@ var __Mutton__;
                                 },
                                 check: function () {
                                     return __awaiter(this, void 0, void 0, function () {
-                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib, lib;
+                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib;
                                         return __generator(this, function (_j) {
                                             switch (_j.label) {
                                                 case 0:
                                                     if (!this.verList[this.verIndex]) {
-                                                        this.alert = "Please select version.";
+                                                        this.alert = l("Please select the version first.");
                                                         return [2];
                                                     }
                                                     _a = (this.verList[this.verIndex].value === "master");
@@ -168,7 +206,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label })];
                                                 case 3:
                                                     j = _j.sent();
                                                     this.mask = false;
@@ -176,6 +214,7 @@ var __Mutton__;
                                                         this.alert = j.msg;
                                                         return [2];
                                                     }
+                                                    this.selectedVer = this.verList[this.verIndex].label;
                                                     list = [];
                                                     for (_i = 0, _b = j.noMatch; _i < _b.length; _i++) {
                                                         file = _b[_i];
@@ -197,34 +236,10 @@ var __Mutton__;
                                                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                                                     }
                                                     this.infoList = list;
-                                                    this.onlineLibs = [];
-                                                    for (lib in j.onlineLibs) {
-                                                        this.onlineLibs.push({ value: lib, label: lib + " " + j.onlineLibs[lib].ver });
-                                                    }
+                                                    this.onlineLibs = j.onlineLibs;
                                                     if (list.length === 0) {
                                                         this.alert = l("No problem.");
                                                     }
-                                                    return [2];
-                                            }
-                                        });
-                                    });
-                                },
-                                getLatestVer: function () {
-                                    return __awaiter(this, void 0, void 0, function () {
-                                        var j;
-                                        return __generator(this, function (_a) {
-                                            switch (_a.label) {
-                                                case 0:
-                                                    this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiGetLatestVer", { password: this.password })];
-                                                case 1:
-                                                    j = _a.sent();
-                                                    this.mask = false;
-                                                    if (j.result <= 0) {
-                                                        this.alert = j.msg;
-                                                        return [2];
-                                                    }
-                                                    this.latestVer = j.version;
                                                     return [2];
                                             }
                                         });
@@ -241,7 +256,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiReinstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiReinstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;

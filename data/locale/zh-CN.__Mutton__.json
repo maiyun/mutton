@@ -7,6 +7,7 @@
     "Version must be >= ?.": "版本必须大于等于 ?。",
     "No server write permissions.": "无服务器写入权限。",
     "(The satellite folder was not found)": "（未找到附属文件夹）",
+    "(Contains folders.)": "（包含文件夹）",
     "Library does not exist.": "库不存在。",
     "File \"?\" download failed.": "文件“?”下载失败。",
     "The decompression failed.": "解压失败",
@@ -23,6 +24,10 @@
 
     "Please enter your password:": "请输入你的密码：",
     "When the input is complete, you can use other features.": "当密码输入正确时，其他功能即可使用。",
+    "Installation and access sources:": "安装与访问源：",
+    "Global": "国际",
+    "Mainland China": "中国大陆",
+    "If the current server is in Mainland China, select \"Mainland China\" for better speed.": "若当前服务器在中国大陆境内，请选择“中国大陆”以获得更好的速度。",
 
     "Please click refresh and select the version below:": "请点击“刷新”并在下方选择版本：",
     "Refresh": "刷新",
@@ -51,5 +56,8 @@
     "No problem.": "没有问题。",
     "Successful.": "成功。",
     "Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\".": "请选择一个已经发布的版本进行检查或升级，“master”为最新的代码不一定正常运行。若要继续使用“master”请点击“好的”，否则点击“取消”。",
-    "Are you sure you're reinstalling the folder? Please be patient when the installation time may be long.": "确定重新安装文件夹吗？安装时间可能较长，请耐心等待。"
+    "Are you sure you're reinstalling the folder? Please be patient when the installation time may be long.": "确定重新安装文件夹吗？安装时间可能较长，请耐心等待。",
+    "Please select the version first.": "请先选择版本。",
+    "My Documents": "我的文档",
+    "Recycle Bin": "回收站"
 }

@@ -24,6 +24,22 @@ namespace __Mutton__ {
         Vue.component("mu-line", {
             template: `<div class="line"></div>`
         });
+        // --- Button ---
+        Vue.component("mu-radio", {
+            model: {
+                prop: "checked",
+                event: "change"
+            },
+            props: {
+                value: {
+                    default: ""
+                },
+                checked: {
+                    default: false
+                }
+            },
+            template: `<div class="radio" :class="{'selected': checked === value}" tabindex="0" @click="$emit('change', value)"><div class="radio__left-out"><div class="radio__left"><div class="radio__left-in"></div></div></div><div class="radio__right"><div class="radio__right-in"><slot></div></div></div>`
+        });
         // --- List ---
         Vue.component("mu-list", {
             model: {
@@ -65,7 +81,7 @@ namespace __Mutton__ {
         });
         // --- 清除空白 ---
         let vueEl = <HTMLDivElement>document.getElementById("vue");
-        vueEl.innerHTML = vueEl.innerHTML.replace(/>\s+?</g, "><");
+        vueEl.innerHTML = vueEl.innerHTML.replace(/>\s+/g, ">").replace(/\s+</g, "<");
         // --- 创建 Vue 对象 ---
         new Vue({
             el: vueEl,
@@ -75,6 +91,7 @@ namespace __Mutton__ {
                 tab: tab,
                 confirmTxt: "",
                 confirmResolve: null,
+                zoom: 1,
                 // --- Password ---
                 password: "",
                 // --- Check ---
@@ -82,7 +99,9 @@ namespace __Mutton__ {
                 verList: [],
                 infoList: [],
                 // --- System ---
-                latestVer: "0",
+                latestVer: "",
+                selectedVer: "",
+                mirror: "global",
                 onlineLibs: [],
                 localLibs: [],
                 onlineLibsIndex: 0,
@@ -90,11 +109,20 @@ namespace __Mutton__ {
                 // --- Config ---
                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
             },
+            mounted: async function (this: any) {
+                await this.$nextTick();
+                if (window.devicePixelRatio < 2) {
+                    this.zoom = 1 / window.devicePixelRatio;
+                }
+            },
             methods: {
+                l: function (key: string, data: any[]|null = null) {
+                    return l(key, data);
+                },
                 // --- Check ---
                 refresh: async function (this: any) {
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiRefresh", {password: this.password});
+                    let j = await post(URL_BASE + "__Mutton__/apiRefresh", {password: this.password, mirror: this.mirror});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
@@ -102,22 +130,24 @@ namespace __Mutton__ {
                     }
                     this.verList = j.list;
                     this.verList.unshift({value: "master", label: "master"});
+                    this.latestVer = j.latestVer;
                 },
                 check: async function (this: any) {
                     if (!this.verList[this.verIndex]) {
-                        this.alert = "Please select version.";
+                        this.alert = l("Please select the version first.");
                         return;
                     }
                     if ((this.verList[this.verIndex].value === "master") && (!await this.confirm(l(`Please select a published version to check or upgrade, and "master" for the latest code does not necessarily work correctly. To continue using "master", click "OK" or click "Cancel".`)))) {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value});
+                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
                     }
+                    this.selectedVer = this.verList[this.verIndex].label;
                     let list = [];
                     for (let file of j.noMatch) {
                         list.push(file + " - " + l("File mismatch."));
@@ -135,32 +165,19 @@ namespace __Mutton__ {
                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                     }
                     this.infoList = list;
-                    this.onlineLibs = [];
-                    for (let lib in j.onlineLibs) {
-                        this.onlineLibs.push({value: lib, label: lib + " " + j.onlineLibs[lib].ver});
-                    }
+                    this.onlineLibs = j.onlineLibs;
                     if (list.length === 0) {
                         this.alert = l("No problem.");
                     }
                 },
                 // --- System ---
-                getLatestVer: async function (this: any) {
-                    this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiGetLatestVer", {password: this.password});
-                    this.mask = false;
-                    if (j.result <= 0) {
-                        this.alert = j.msg;
-                        return;
-                    }
-                    this.latestVer = j.version;
-                },
                 // --- 重装文件夹 ---
                 reinstallFolder: async function (this: any) {
                     if (!await this.confirm(l("Are you sure you're reinstalling the folder? Please be patient when the installation time may be long."))) {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiReinstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
+                    let j = await post(URL_BASE + "__Mutton__/apiReinstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror});
                     this.mask = false;
                     if (j.result <= 0) {
                         this.alert = j.msg;

@@ -19,6 +19,37 @@ html,body,input,textarea {
     font-size: 24px; text-align: center; font-weight: bold; margin-bottom: 10px;
 }
 
+/* --- 图标 --- */
+
+.icon-out {
+    display: inline-flex; flex-direction: column; align-items: center; outline: none;
+}
+.icon {
+    width: 32px; height: 32px; background-position: 0 0; background-size: 32px 64px;
+}
+.icon.document {
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAACACAMAAACMX59YAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAACcUExURQAAAHuMrf///xgpMf/OnEpaMZycAHuMe///nHtzezExAGNzrWOMrc7O/87//0JSMYSEAGNzYzFCe87OY2NjnEpalJyczhharQAQMTGc/wApSjFzrQAAAEparRgQewAxMWPO/zGMrZyc/xgplDEAnGP//0qMrUpzrRhzrTExzpz//5zO/zHO/2OErc7v/wBCrQgICGNzSs7OMQBj/7uVpu8AAAABdFJOUwBA5thmAAACrUlEQVRo3u2W63LaMBCFnWApsV3XV24pkBRICim5v/+71ctGyLJkBkWroT9yZmzLQucbndUy4yD471XX5wWMRmnqhHAEjEY/GzkgHAFgv2z0ZYQ1IFck7BYIR0CeXx9UVcI+bQSjExCOALRXe3Eu7Y+Pz891fUIMEoDZft+ormUMUWRfANUO5r97tWPAujy/vaUHvL9LOwDuPrXbfXyAebs9giABCDsshWdd73ZgR+N2u1zKUvoAYPumjdbr5TJNcTSdrtdyDu/iOOkA3FICQQXg/NJKUGxEzGZ0gGtNYSju4pKz0PAthCeASRIKAES8vlIC1I2KN1MIzrHVOhGcAX0l1H/DMh45RiuAijCbuvNhyPlsFse0ANUmDThqtxS8cR7H1ABzhC5IXFXlB2BqHrl9NQQloF1GfXFfIX0ATK1sioCCg6QFqH/Y9rbNEegB+tHpIXDzspnpAIDoK56pkf0AQkvRA+xFCwiC2Fqdj11nwLf6VZbnBQyHSeKEcAQMhz8aOSAcAWC/aPRlhDUgUyTsFghHQJZdHVQUwj5uBKMTEI4AtBd7MSbtDw9PT2V5QgwSgNn+u1FZyhiiyL4Aqh3Mf/Zqx4B1WXZzQw94e5N2APz61Gbz8gLm1eoIggQg7LAUnmW52YAdjavVfC5L6QOA7Zs0Wizm8yTB0Xi8WMg5vIvjpAMwSwkEFYCxCytBsRExmdABrjRFkbiLS85Cw7cQngAmSSgADghCgLpR8WYKwRi2WieCM6CvhPpvWMYjx2gFUBFmU3c+ihibTAYDWoBqkwYctVsK3hgbDKgB5ghdkLiKwg/A1Dxy+2oISkC7jPrivkL6AJha2RQBBQdJC1D/sO1tmyPQA/Sj00Pg5mUz0wEA0Vc8UyP7AUSWogfYixYQBANrdT52nQFn0z8hTd2171AVUAAAAABJRU5ErkJggg==);
+}
+.icon.recycle {
+    background-image: url(data:image/png;base64,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);
+}
+.icon__txt {
+    color: #FFF; margin-top: 4px; line-height: 1;
+}
+.icon__txt-in {
+    border: dotted 1px transparent; padding: 1px;
+}
+
+.icon-out:focus .icon {
+    background-position: 0 32px;
+}
+.icon-out:focus .icon__txt {
+    background-color: #0a246a;
+}
+.icon-out:focus .icon__txt-in {
+    border-color: #f5db95;
+}
+
 /* --- Tab 选项卡 --- */
 
 .tab__top {
@@ -89,14 +120,14 @@ html,body,input,textarea {
 
 /* --- Textbox --- */
 
-.textbox, .list {
+.textbox, .list, .radio__left-out {
     border: solid 1px #FFF; border-top-color: #808080; border-left-color: #808080;
 }
-.textbox-in, .list-in {
-    border: solid 1px #404040; border-bottom-color: #d4d0c8; border-right-color: #d4d0c8; line-height: 1; padding: 2px; -webkit-appearance: none; border-radius: 0;
+.textbox-in, .list-in, .radio__left {
+    border: solid 1px #404040; border-bottom-color: #d4d0c8; border-right-color: #d4d0c8; line-height: 1; padding: 2px; background-color: #FFF;
 }
 .textbox-in {
-    outline: none; width: 100%;
+    outline: none; width: 100%; -webkit-appearance: none; border-radius: 0;
 }
 textarea.textbox-in {
     resize: none; vertical-align: middle;
@@ -108,7 +139,7 @@ textarea.textbox-in {
     outline: none;
 }
 .list-in {
-    background-color: #FFF; overflow-y: auto;
+    overflow-y: auto;
 }
 .list__item-in {
     border: dotted 1px transparent; padding: 4px;
@@ -121,6 +152,39 @@ textarea.textbox-in {
 }
 .list:focus > .list-in > .list__item.selected > .list__item-in {
     border-color: #f5db95;
+}
+
+/* --- Radio --- */
+
+.radio {
+    vertical-align: middle; display: inline-flex; align-items: center; outline: none;
+}
+.radio__left-out {
+    width: 12px; height: 12px; border-radius: 6px;
+}
+.radio__left {
+    width: 10px; height: 10px; border-radius: 5px; padding: 2px;
+}
+.radio__left-in {
+    width: 4px; height: 4px; border-radius: 2px;
+}
+.radio__right {
+    padding-left: 5px;
+}
+.radio__right-in {
+    border: dotted 1px transparent; line-height: 1; padding: 1px;
+}
+
+.radio.selected .radio__left-in {
+    background-color: #000000;
+}
+
+.radio:active .radio__left {
+    background-color: #d4d0c8;
+}
+
+.radio:focus .radio__right-in {
+    border-color: #000;
 }
 
 /* --- Window --- */

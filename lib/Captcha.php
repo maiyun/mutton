@@ -12,7 +12,7 @@
     }
 } - END
  * Date: 2018-7-4 09:37
- * Last: 2019-1-29 16:10:50
+ * Last: 2019-1-29 16:10:50, 2020-2-28 23:49:30
  */
 declare(strict_types = 1);
 
@@ -21,10 +21,10 @@ namespace lib;
 use Gregwar\Captcha\CaptchaBuilder;
 use Gregwar\Captcha\PhraseBuilder;
 
-require LIB_PATH . 'Captcha/src/Gregwar/Captcha/CaptchaBuilderInterface.php';
-require LIB_PATH . 'Captcha/src/Gregwar/Captcha/CaptchaBuilder.php';
-require LIB_PATH . 'Captcha/src/Gregwar/Captcha/PhraseBuilderInterface.php';
-require LIB_PATH . 'Captcha/src/Gregwar/Captcha/PhraseBuilder.php';
+require LIB_PATH . 'Captcha/Captcha-1.1.7/src/Gregwar/Captcha/CaptchaBuilderInterface.php';
+require LIB_PATH . 'Captcha/Captcha-1.1.7/src/Gregwar/Captcha/CaptchaBuilder.php';
+require LIB_PATH . 'Captcha/Captcha-1.1.7/src/Gregwar/Captcha/PhraseBuilderInterface.php';
+require LIB_PATH . 'Captcha/Captcha-1.1.7/src/Gregwar/Captcha/PhraseBuilder.php';
 
 class Captcha {
 

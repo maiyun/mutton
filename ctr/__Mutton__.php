@@ -44,24 +44,39 @@ class __Mutton__ extends Ctr {
             return [0, l('Please place the profile first.')];
         }
         if (!$this->_checkXInput($_POST, [
-            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]]
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
+            'mirror' => ['require', ['global', 'cn'], [0, l('System error.')]]
         ], $return)) {
             return $return;
         }
-        $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/releases');
+        $url = '';
+        if ($_POST['mirror'] === 'global') {
+            $url = 'https://api.github.com/repos/MaiyunNET/Mutton/tags';
+        } else if ($_POST['mirror'] === 'cn') {
+            $url = 'https://gitee.com/api/v5/repos/zohegs/Mutton/tags';
+        }
+        $res = Net::get($url);
         if (!$res->content) {
             return [0, l('Network error, please try again.')];
         }
-        $json = json_decode($res->content);
+        $json = json_decode($res->content, true);
+        if ($_POST['mirror'] === 'cn') {
+            $json = array_reverse($json);
+        }
+
+        $latestVer = '';
         $list = [];
         foreach ($json as $item) {
-            preg_match('/[0-9.]+/', $item->tag_name, $matches);
+            preg_match('/[0-9.]+/', $item['name'], $matches);
+            if ($latestVer === '') {
+                $latestVer = $matches[0];
+            }
             $list[] = [
                 'value' => $matches[0],
-                'label' => $item->name
+                'label' => $item['name']
             ];
         }
-        return [1, 'list' => $list];
+        return [1, 'list' => $list, 'latestVer' => $latestVer];
     }
 
     // --- 检查 - 检查按钮 ---
@@ -71,14 +86,15 @@ class __Mutton__ extends Ctr {
         }
         if (!$this->_checkXInput($_POST, [
             'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
-            'ver' => ['require', [0, l('System error.')]]
+            'ver' => ['require', [0, l('System error.')]],
+            'verName' => ['require', [0, l('System error.')]]
         ], $return)) {
             return $return;
         }
         if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
             return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
-        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['ver'] . '/doc/mblob');
+        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['verName'] . '/doc/mblob');
         if (!$res->content) {
             return [0, l('Network error, please try again.')];
         }
@@ -148,6 +164,13 @@ class __Mutton__ extends Ctr {
             $data['localVer'] = $localLibs[$name]['ver'];
             $lib[$name] = $data;
         }
+
+        // --- 以下显示“系统”选项卡线上库列表里 ---
+        $onlineLibs = [];
+        foreach ($json['lib'] as $name => $data) {
+            $onlineLibs[] = ['label' => $name . ' ' . $data['ver'] . ($data['folder'] ? ' ' . l('(Contains folders.)') : ''), 'value' => $name];
+        }
+
         return [1,
             'noMatch' => $noMatch,
             'miss' => $miss,
@@ -155,7 +178,7 @@ class __Mutton__ extends Ctr {
             'lib' => $lib,
             'libFolder' => $libFolder,
 
-            'onlineLibs' => $json['lib']
+            'onlineLibs' => $onlineLibs
         ];
     }
 
@@ -181,29 +204,6 @@ class __Mutton__ extends Ctr {
     }
 
     /**
-     * --- 获取最新版本号 ---
-     * @return array
-     */
-    public function apiGetLatestVer() {
-        if (!$this->_hasConfig) {
-            return [0, l('Please place the profile first.')];
-        }
-        if (!$this->_checkXInput($_POST, [
-            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]]
-        ], $return)) {
-            return $return;
-        }
-        $res = Net::get('https://api.github.com/repos/MaiyunNET/Mutton/releases/latest');
-        if (!$res->content) {
-            return [0, l('Network error, please try again.')];
-        }
-        $json = json_decode($res->content, true);
-        preg_match('/[0-9.]+/', $json['tag_name'], $matches);
-        $version = $matches[0];
-        return [1, 'version' => $version];
-    }
-
-    /**
      * --- 重装文件夹 ---
      * @return array
      */
@@ -213,7 +213,8 @@ class __Mutton__ extends Ctr {
         }
         if (!$this->_checkXInput($_POST, [
             'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
-            'lib' => ['require', [0, l('System error.')]]
+            'lib' => ['require', [0, l('System error.')]],
+            'mirror' => ['require', ['global', 'cn'], [0, l('System error.')]]
         ], $return)) {
             return $return;
         }
@@ -222,7 +223,7 @@ class __Mutton__ extends Ctr {
         }
         $data = $this->_getLibData(file_get_contents(LIB_PATH . $_POST['lib'] . '.php'));
         if ($data['folder']) {
-            return $this->_installFolder($_POST['lib'], $data);
+            return $this->_installFolder($_POST['lib'], $data, $_POST['mirror']);
         } else {
             return [0, l('This library does not have a satellite folder.')];
         }
@@ -247,7 +248,7 @@ class __Mutton__ extends Ctr {
             if ($data['folder'] && !is_dir(LIB_PATH . $lib)) {
                 $list[] = ['label' => $lib . ' ' . $data['ver'] . ' ' . l('(The satellite folder was not found)'), 'value' => $lib];
             } else {
-                $list[] = ['label' => $lib . ' ' . $data['ver'], 'value' => $lib];
+                $list[] = ['label' => $lib . ' ' . $data['ver'] . ($data['folder'] ? ' ' . l('(Contains folders.)') : ''), 'value' => $lib];
             }
         }
         return [1, 'list' => $list];
@@ -321,7 +322,7 @@ class __Mutton__ extends Ctr {
         return json_decode($match[1], true);
     }
 
-    private function _installFolder(string $lib, array $data) {
+    private function _installFolder(string $lib, array $data, string $mirror) {
         // --- 如果本来有目录，则先删除，相当于重装目录 ---
         if (is_dir(LIB_PATH . $lib) && !Fs::rmdir(LIB_PATH . $lib)) {
             return [0, l('No server write permissions.')];
@@ -348,9 +349,14 @@ class __Mutton__ extends Ctr {
                 $name = 'tmp' . rand(1000, 9999);
             }
             // --- 下载文件 ---
-            set_time_limit(70);
+            set_time_limit(60);
+            if ($mirror !== 'global') {
+                if (isset($item['mirror-' . $mirror])) {
+                    $file = $item['mirror-' . $mirror];
+                }
+            }
             $r = Net::get($file, [
-                'timeout' => 60,
+                'timeout' => 50,
                 'follow' => true,
                 'save' => LIB_PATH . $lib . '/' . $name,
                 'reuse' => true

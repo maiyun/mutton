@@ -19,104 +19,125 @@
     </script>
     <script src="<?php echo URL_STC ?>__Mutton__/index.js?<?php echo VER ?>"></script>
 </head>
-<body>
-<div id="vue">
-    <div class="window">
-        <div class="window-in">
-            <div class="window__title">Mutton Portal</div>
-            <div class="window__panel">
-                <div class="title">Mutton Portal</div>
-                <div class="tab">
-                    <div class="tab__top">
-                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 0}" @mousedown="tab = 0">
-                            <div class="tab__top__item">
-                                <div class="tab__top__item-in"><?php echo l('Password') ?></div>
-                            </div>
-                        </div>
-                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 1}" @mousedown="tab = 1">
-                            <div class="tab__top__item">
-                                <div class="tab__top__item-in"><?php echo l('Check') ?></div>
-                            </div>
-                        </div>
-                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 2}" @mousedown="tab = 2;getLocalLibs();">
-                            <div class="tab__top__item">
-                                <div class="tab__top__item-in"><?php echo l('System') ?></div>
-                            </div>
-                        </div>
-                        <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 3}" @mousedown="tab = 3">
-                            <div class="tab__top__item">
-                                <div class="tab__top__item-in"><?php echo l('Profile') ?></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tab__panel">
-                        <!-- Password -->
-                        <div class="tab__panel__item" v-if="tab == 0">
-                            <div style="padding-bottom: 10px;"><?php echo l('Please enter your password:') ?></div>
-                            <div class="textbox"><input class="textbox-in" type="password" v-model="password"></div>
-                            <div style="padding-top: 10px;"><?php echo l('When the input is complete, you can use other features.') ?></div>
-                            <mu-line></mu-line>
-                            <div style="text-align: center;">
-                                <mu-button @click.native="window.location.href='?l=en'">English</mu-button>
-                                <mu-button @click.native="window.location.href='?l=zh-CN'" style="margin-left: 10px;">简体中文</mu-button>
-                                <mu-button @click.native="window.location.href='?l=zh-TW'" style="margin-left: 10px;">繁體中文</mu-button>
-                            </div>
-                        </div>
-                        <!-- Check -->
-                        <div class="tab__panel__item" v-else-if="tab == 1">
-                            <div style="margin-bottom: 10px;"><?php echo l('Please click refresh and select the version below:') ?></div>
-                            <mu-list :list="verList" v-model="verIndex"></mu-list>
-                            <div style="text-align: center; margin-top: 10px;">
-                                <mu-button @click.native="refresh()"><?php echo l('Refresh') ?></mu-button>
-                                <mu-button @click.native="check()" style="margin-left: 10px;"><?php echo l('Check') ?></mu-button>
-                            </div>
-                            <div style="margin: 10px 0;"><?php echo l('Abnormal file:') ?></div>
-                            <mu-list :list="infoList"></mu-list>
-                        </div>
-                        <!-- System -->
-                        <div class="tab__panel__item" v-else-if="tab == 2">
-                            <div style="display: flex; flex-direction: column; align-items: center;">
-                                <div>
-                                    <?php echo l('Current version:') ?> <?php echo VER ?><br>
-                                    <?php echo l('Latest versions:') ?> {{latestVer}}<br>
-                                </div>
-                                <mu-button @click.native="getLatestVer()" style="margin-top: 10px;"><?php echo l('Get latest versions') ?></mu-button>
-                            </div>
-                            <mu-line></mu-line>
-                            <div style="display: flex;">
-                                <div style="flex: 1;">
-                                    <?php echo l('Online library:') ?>
-                                    <mu-list :list="onlineLibs" v-model="onlineLibsIndex" style="margin-top: 10px;"></mu-list>
-                                    <div style="margin-top: 10px;">
-
-                                    </div>
-                                </div>
-                                <div style="flex: 1; margin-left: 10px;">
-                                    <?php echo l('Local library:') ?>
-                                    <mu-list :list="localLibs" v-model="localLibsIndex" style="margin-top: 10px;"></mu-list>
-                                    <div style="margin-top: 10px;">
-                                        <mu-button @click.native="reinstallFolder()"><?php echo l('Reinstall folder') ?></mu-button>
-                                    </div>
+<body oncontextmenu="return false;">
+<div id="vue" :style="{'zoom': zoom}">
+    <!-- 图标 -->
+    <div style="display: inline-flex; flex-direction: column; align-items: center;">
+        <div class="icon-out" tabindex="0" @dblclick="alert=l('System error.')">
+            <div class="icon document"></div>
+            <div class="icon__txt"><div class="icon__txt-in"><?php echo l('My Documents') ?></div></div>
+        </div>
+        <div class="icon-out" tabindex="0" @dblclick="alert=l('System error.')" style="margin-top: 25px;">
+            <div class="icon recycle"></div>
+            <div class="icon__txt"><div class="icon__txt-in"><?php echo l('Recycle Bin') ?></div></div>
+        </div>
+    </div>
+    <!-- 窗体 -->
+    <div style="position: absolute; left: 0; top: 20px; width: 100%; pointer-events: none;">
+        <div class="window" style="max-width: 800px; margin: auto; pointer-events: initial;">
+            <div class="window-in">
+                <div class="window__title">Mutton Portal</div>
+                <div class="window__panel">
+                    <div class="title">Mutton Portal</div>
+                    <div class="tab">
+                        <div class="tab__top">
+                            <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 0}" @mousedown="tab = 0">
+                                <div class="tab__top__item">
+                                    <div class="tab__top__item-in"><?php echo l('Password') ?></div>
                                 </div>
                             </div>
-                            <div style="margin-top: 10px;"><?php echo l('To get online library information, click the "Check" tab, select the appropriate version, and then click the "Check" button.') ?></div>
-                            <mu-line></mu-line>
-                            <div style="display: flex; flex-direction: column;">
-                                <?php echo l('Automatic upgrade (used only on local testing):') ?><br>
-                                1234.
+                            <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 1}" @mousedown="tab = 1">
+                                <div class="tab__top__item">
+                                    <div class="tab__top__item-in"><?php echo l('Check') ?></div>
+                                </div>
                             </div>
-                            <mu-line></mu-line>
-                            <div style="display: flex; flex-direction: column; align-items: center;">
-                                <div><?php echo l('Build a "mblob" file:') ?></div>
+                            <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 2}" @mousedown="tab = 2;getLocalLibs();">
+                                <div class="tab__top__item">
+                                    <div class="tab__top__item-in"><?php echo l('System') ?></div>
+                                </div>
+                            </div>
+                            <div tabindex="0" class="tab__top__item-out" :class="{'selected': tab == 3}" @mousedown="tab = 3">
+                                <div class="tab__top__item">
+                                    <div class="tab__top__item-in"><?php echo l('Profile') ?></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab__panel">
+                            <!-- Password -->
+                            <div class="tab__panel__item" v-if="tab == 0">
+                                <div style="padding-bottom: 10px;"><?php echo l('Please enter your password:') ?></div>
+                                <div class="textbox"><input class="textbox-in" type="password" v-model="password"></div>
+                                <div style="padding-top: 10px;"><?php echo l('When the input is complete, you can use other features.') ?></div>
+                                <mu-line></mu-line>
+                                <?php echo l('Installation and access sources:') ?>
+                                <div style="margin-top: 10px; text-align: center;">
+                                    <mu-radio v-model="mirror" value="global"><?php echo l('Global') ?> (Github)</mu-radio>
+                                    <mu-radio v-model="mirror" value="cn" style="margin-left: 20px;"><?php echo l('Mainland China') ?> (Gitee)</mu-radio>
+                                </div>
+                                <div style="margin-top: 10px;"><?php echo l('If the current server is in Mainland China, select "Mainland China" for better speed.') ?></div>
+                                <mu-line></mu-line>
+                                <div style="text-align: center;">
+                                    <mu-button @click.native="window.location.href='?l=en'">English</mu-button>
+                                    <mu-button @click.native="window.location.href='?l=zh-CN'" style="margin-left: 10px;">简体中文</mu-button>
+                                    <mu-button @click.native="window.location.href='?l=zh-TW'" style="margin-left: 10px;">繁體中文</mu-button>
+                                </div>
+                            </div>
+                            <!-- Check -->
+                            <div class="tab__panel__item" v-else-if="tab == 1">
+                                <div style="margin-bottom: 10px;"><?php echo l('Please click refresh and select the version below:') ?></div>
+                                <mu-list :list="verList" v-model="verIndex"></mu-list>
                                 <div style="text-align: center; margin-top: 10px;">
-                                    <mu-button @click.native="build()"><?php echo l('Build') ?></mu-button>
+                                    <mu-button @click.native="refresh()"><?php echo l('Refresh') ?></mu-button>
+                                    <mu-button @click.native="check()" style="margin-left: 10px;"><?php echo l('Check') ?></mu-button>
+                                </div>
+                                <div style="margin: 10px 0;"><?php echo l('Abnormal file:') ?></div>
+                                <mu-list :list="infoList"></mu-list>
+                            </div>
+                            <!-- System -->
+                            <div class="tab__panel__item" v-else-if="tab == 2">
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <div>
+                                        <?php echo l('Current version:') ?> <?php echo VER ?><br>
+                                        <?php echo l('Latest versions:') ?> {{latestVer}}<br>
+                                    </div>
+                                    <mu-button @click.native="refresh()" style="margin-top: 10px;"><?php echo l('Refresh') ?></mu-button>
+                                </div>
+                                <mu-line></mu-line>
+                                <div style="display: flex;">
+                                    <div style="flex: 1;">
+                                        <?php echo l('Online library:') ?> {{selectedVer !== '' ? '(' + selectedVer + ')' : ''}}
+                                        <mu-list :list="onlineLibs" v-model="onlineLibsIndex" style="margin-top: 10px;"></mu-list>
+                                        <div style="margin-top: 10px;">
+
+                                        </div>
+                                    </div>
+                                    <div style="flex: 1; margin-left: 10px;">
+                                        <?php echo l('Local library:') ?>
+                                        <mu-list :list="localLibs" v-model="localLibsIndex" style="margin-top: 10px;"></mu-list>
+                                        <div style="margin-top: 10px;">
+                                            <mu-button @click.native="reinstallFolder()"><?php echo l('Reinstall folder') ?></mu-button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="margin-top: 10px;"><?php echo l('To get online library information, click the "Check" tab, select the appropriate version, and then click the "Check" button.') ?></div>
+                                <mu-line></mu-line>
+                                <div style="display: flex; flex-direction: column;">
+                                    <?php echo l('Automatic upgrade (used only on local testing):') ?><br>
+                                    1234.
+                                </div>
+                                <mu-line></mu-line>
+                                <div style="display: flex; flex-direction: column; align-items: center;">
+                                    <div><?php echo l('Build a "mblob" file:') ?></div>
+                                    <div style="text-align: center; margin-top: 10px;">
+                                        <mu-button @click.native="build()"><?php echo l('Build') ?></mu-button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <!-- Profile -->
-                        <div class="tab__panel__item" v-else-if="tab == 3">
-                            <div style="padding-bottom: 10px;"><?php echo l('Please place the following on "etc/__mutton__.php" to use this portal.') ?></div>
-                            <div class="textbox"><textarea class="textbox-in" rows="15" readonly v-model="configTxt"></textarea></div>
+                            <!-- Profile -->
+                            <div class="tab__panel__item" v-else-if="tab == 3">
+                                <div style="padding-bottom: 10px;"><?php echo l('Please place the following on "etc/__mutton__.php" to use this portal.') ?></div>
+                                <div class="textbox"><textarea class="textbox-in" rows="15" readonly v-model="configTxt"></textarea></div>
+                            </div>
                         </div>
                     </div>
                 </div>
