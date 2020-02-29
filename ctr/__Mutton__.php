@@ -94,7 +94,12 @@ class __Mutton__ extends Ctr {
         if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
             return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
-        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['verName'] . '/doc/mblob');
+        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['verName'] . '/doc/mblob.json', [
+            'headers' => [
+                'cache-control' => 'no-cache',
+                'pragma' => 'no-cache'
+            ]
+        ]);
         if (!$res->content) {
             return [0, l('Network error, please try again.')];
         }
@@ -197,7 +202,7 @@ class __Mutton__ extends Ctr {
             return $return;
         }
 
-        if (file_put_contents(ROOT_PATH.'doc/mblob', gzdeflate(json_encode($this->_buildMBlobData()), 9)) === false) {
+        if (file_put_contents(ROOT_PATH.'doc/mblob.json', json_encode($this->_buildMBlobData(), 9)) === false) {
             return [0, l('No server write permissions.')];
         } else {
             return [1];
