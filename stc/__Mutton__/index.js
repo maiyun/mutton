@@ -85,11 +85,6 @@ var __Mutton__;
                                 prop: "value",
                                 event: "change"
                             },
-                            data: function () {
-                                return {
-                                    selectedIndex: 0
-                                };
-                            },
                             props: {
                                 list: {
                                     default: []
@@ -101,20 +96,28 @@ var __Mutton__;
                                     default: 0
                                 }
                             },
-                            watch: {
-                                value: function () {
-                                    this.selectedIndex = this.value;
-                                }
-                            },
                             methods: {
-                                click: function (index) {
-                                    this.selectedIndex = index;
-                                    this.$emit("change", index);
+                                mousedown: function (index) {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0:
+                                                    this.$emit("change", index);
+                                                    return [4, this.$nextTick()];
+                                                case 1:
+                                                    _a.sent();
+                                                    if (this.value !== index) {
+                                                        this.value = index;
+                                                    }
+                                                    return [2];
+                                            }
+                                        });
+                                    });
                                 }
                             },
                             template: "<div class=\"list\" tabindex=\"0\">" +
                                 "<div class=\"list-in\" :style=\"{'height': height}\">" +
-                                "<div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': selectedIndex === index}\" @click=\"click(index)\"><div class=\"list__item-in\">{{val.label || val}}</div></div>" +
+                                "<div v-for=\"(val, index) of list\" class=\"list__item\" :class=\"{'selected': value === index}\" @mousedown=\"mousedown(index)\"><div class=\"list__item-in\">{{val.label || val}}</div></div>" +
                                 "</div>" +
                                 "</div>"
                         });
@@ -235,12 +238,12 @@ var __Mutton__;
                                                         lib = _h[_g];
                                                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                                                     }
-                                                    this.infoList = list;
-                                                    this.onlineLibs = j.onlineLibs;
                                                     if (list.length === 0) {
                                                         this.alert = l("No problem.");
                                                     }
-                                                    this.list.push(l("The \"mblob\" file was last updated:") + " " + j.lastTime);
+                                                    list.unshift(l("The \"mblob\" file was last updated:") + " " + j.lastTime);
+                                                    this.infoList = list;
+                                                    this.onlineLibs = j.onlineLibs;
                                                     return [2];
                                             }
                                         });

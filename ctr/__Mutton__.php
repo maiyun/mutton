@@ -94,19 +94,11 @@ class __Mutton__ extends Ctr {
         if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
             return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
-        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['verName'] . '/doc/mblob.json', [
-            'headers' => [
-                'cache-control' => 'no-cache',
-                'pragma' => 'no-cache'
-            ]
-        ]);
+        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['verName'] . '/doc/mblob.json');
         if (!$res->content) {
             return [0, l('Network error, please try again.')];
         }
-        if (!($blob = @gzinflate($res->content))) {
-            return [0, l('The downloaded data is incomplete, please try again.')];
-        }
-        if (!($json = json_decode($blob, true))) {
+        if (!($json = json_decode($res->content, true))) {
             return [0, l('The downloaded data is incomplete, please try again.')];
         }
 

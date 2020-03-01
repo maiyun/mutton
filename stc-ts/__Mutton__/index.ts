@@ -46,11 +46,6 @@ namespace __Mutton__ {
                 prop: "value",
                 event: "change"
             },
-            data: function () {
-                return {
-                    selectedIndex: 0
-                };
-            },
             props: {
                 list: {
                     default: []
@@ -62,20 +57,18 @@ namespace __Mutton__ {
                     default: 0
                 }
             },
-            watch: {
-                value: function (this: any) {
-                    this.selectedIndex = this.value;
-                }
-            },
             methods: {
-                click: function(this: any, index: number) {
-                    this.selectedIndex = index;
+                mousedown: async function(this: any, index: number) {
                     this.$emit("change", index);
+                    await this.$nextTick();
+                    if (this.value !== index) {
+                        this.value = index;
+                    }
                 }
             },
             template: `<div class="list" tabindex="0">` +
                 `<div class="list-in" :style="{\'height\': height}">` +
-                    `<div v-for="(val, index) of list" class="list__item" :class="{\'selected\': selectedIndex === index}" @click="click(index)"><div class="list__item-in">{{val.label || val}}</div></div>` +
+                    `<div v-for="(val, index) of list" class="list__item" :class="{\'selected\': value === index}" @mousedown="mousedown(index)"><div class="list__item-in">{{val.label || val}}</div></div>` +
                 `</div>` +
             `</div>`
         });
@@ -164,12 +157,12 @@ namespace __Mutton__ {
                     for (let lib of j.libFolder) {
                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                     }
-                    this.infoList = list;
-                    this.onlineLibs = j.onlineLibs;
                     if (list.length === 0) {
                         this.alert = l("No problem.");
                     }
-                    this.list.push(l(`The "mblob" file was last updated:`) + " " + j.lastTime);
+                    list.unshift(l(`The "mblob" file was last updated:`) + " " + j.lastTime);
+                    this.infoList = list;
+                    this.onlineLibs = j.onlineLibs;
                 },
                 // --- System ---
                 // --- 重装文件夹 ---
