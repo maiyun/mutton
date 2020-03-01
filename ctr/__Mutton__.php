@@ -23,6 +23,10 @@ class __Mutton__ extends Ctr {
             $l = 'en';
         }
         $this->_loadLocale($l, '__Mutton__');
+
+        if (__MUTTON__PWD === 'Your password') {
+            return [0, l('The password cannot be set to "?".', ['Your password'])];
+        }
     }
 
     // --- Index page ---
@@ -213,30 +217,108 @@ class __Mutton__ extends Ctr {
         }
     }
 
-    /**
-     * --- 重装文件夹 ---
-     * @return array
-     */
-    public function apiReinstallFolder() {
+    public function apiInstallLib() {
         if (!$this->_hasConfig) {
             return [0, l('Please place the profile first.')];
         }
         if (!$this->_checkXInput($_POST, [
             'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
             'lib' => ['require', [0, l('System error.')]],
+            'verName' => ['require', [0, l('System error.')]],
             'mirror' => ['require', ['global', 'cn'], [0, l('System error.')]]
         ], $return)) {
             return $return;
         }
-        if (!is_file(LIB_PATH . $_POST['lib'] . '.php')) {
-            return [0, l('Library does not exist.')];
+        $url = '';
+        if ($_POST['mirror'] === 'global') {
+            $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
+        } else if ($_POST['mirror'] === 'cn') {
+            $url = 'https://gitee.com/zohegs/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         }
-        $data = $this->_getLibData(file_get_contents(LIB_PATH . $_POST['lib'] . '.php'));
+        $res = Net::get($url, [
+            'timeout' => 10,
+            'follow' => true,
+            'reuse' => true
+        ]);
+        if (!$res->content) {
+            Net::closeAll();
+            return [0, l('Network error, please try again.').'('.$res->error.')'];
+        }
+        if (!($data = $this->_getLibData($res->content))) {
+            Net::closeAll();
+            return [0, l('The downloaded data is incomplete, please try again.')];
+        }
+        // --- 先写入本地文件 ---
+        if (file_put_contents(LIB_PATH . $_POST['lib'] . '.php', $res->content) === false) {
+            Net::closeAll();
+            return [0, l('No server write permissions.')];
+        }
+        // --- 如果本来有目录，不管是否重装目录，都删除 ---
+        if (is_dir(LIB_PATH . $_POST['lib']) && !Fs::rmdir(LIB_PATH .  $_POST['lib'])) {
+            Net::closeAll();
+            return [0, l('No server write permissions.')];
+        }
+        // --- 判断是否有目录 ---
         if ($data['folder']) {
-            return $this->_installFolder($_POST['lib'], $data, $_POST['mirror']);
-        } else {
-            return [0, l('This library does not have a satellite folder.')];
+            set_time_limit(120);
+            // --- 创建目录 ---
+            if (!@mkdir(LIB_PATH . $_POST['lib'])) {
+                Net::closeAll();
+                return [0, l('No server write permissions.')];
+            }
+            if (!@chmod(LIB_PATH . $_POST['lib'], 0755)) {
+                Net::closeAll();
+                return [0, l('No server write permissions.')];
+            }
+            // --- 循环遍历 ---
+            foreach ($data['url'] as $file => $item) {
+                // --- 是否创建子目录 ---
+                $path = '';
+                if (isset($item['path'])) {
+                    Fs::mkdir(LIB_PATH . $_POST['lib'] . '/' . $item['path']);
+                    $path = $item['path'];
+                }
+                // --- 保存的文件名是否有约定，还是随意保存名字 ---
+                if (isset($item['save'])) {
+                    // --- 有约定 ---
+                    $name = $item['save'];
+                } else {
+                    $name = 'tmp' . rand(1000, 9999);
+                }
+                // --- 下载文件 ---
+                if ($_POST['mirror'] !== 'global') {
+                    if (isset($item['mirror-' . $_POST['mirror']])) {
+                        $file = $item['mirror-' . $_POST['mirror']];
+                    }
+                }
+                $r = Net::get($file, [
+                    'timeout' => 50,
+                    'follow' => true,
+                    'save' => LIB_PATH . $_POST['lib'] . '/' . $path . $name,
+                    'reuse' => true
+                ]);
+                if ($r->content === '') {
+                    Net::closeAll();
+                    return [0, l('File "?" download failed.', [$file])];
+                }
+                // --- 是否解压 ---
+                if ($item['action'] === 'unzip') {
+                    $zip = new ZipArchive();
+                    if ($zip->open(LIB_PATH . $_POST['lib'] . '/' . $path . $name) !== true) {
+                        Net::closeAll();
+                        return [0, l('The decompression failed.')];
+                    }
+                    if (!$zip->extractTo(LIB_PATH . $_POST['lib'] . '/' . $path)) {
+                        Net::closeAll();
+                        return [0, l('The decompression failed.')];
+                    }
+                    $zip->close();
+                    @unlink(LIB_PATH . $_POST['lib'] . '/' . $path . $name);
+                }
+            }
         }
+        Net::closeAll();
+        return [1];
     }
 
     /**
@@ -325,73 +407,14 @@ class __Mutton__ extends Ctr {
     /**
      * --- 获取库的 CONF 数据 ---
      * @param string $content
-     * @return array
+     * @return array|false
      */
     private function _getLibData(string $content): array {
         preg_match('/CONF - ([\s\S]+?) - END/', $content, $match);
+        if (!isset($match[1])) {
+            return false;
+        }
         return json_decode($match[1], true);
-    }
-
-    private function _installFolder(string $lib, array $data, string $mirror) {
-        // --- 如果本来有目录，则先删除，相当于重装目录 ---
-        if (is_dir(LIB_PATH . $lib) && !Fs::rmdir(LIB_PATH . $lib)) {
-            return [0, l('No server write permissions.')];
-        }
-        // --- 创建目录 ---
-        if (!@mkdir(LIB_PATH . $lib)) {
-            return [0, l('No server write permissions.')];
-        }
-        if (!@chmod(LIB_PATH . $lib, 0755)) {
-            return [0, l('No server write permissions.')];
-        }
-        // --- 循环遍历 ---
-        foreach ($data['url'] as $file => $item) {
-            // --- 是否创建子目录 ---
-            $path = '';
-            if (isset($item['path'])) {
-                Fs::mkdir(LIB_PATH . $lib . '/' . $item['path']);
-                $path = $item['path'];
-            }
-            // --- 保存的文件名 ---
-            if (isset($item['save'])) {
-                $name = $item['save'];
-            } else {
-                $name = 'tmp' . rand(1000, 9999);
-            }
-            // --- 下载文件 ---
-            set_time_limit(60);
-            if ($mirror !== 'global') {
-                if (isset($item['mirror-' . $mirror])) {
-                    $file = $item['mirror-' . $mirror];
-                }
-            }
-            $r = Net::get($file, [
-                'timeout' => 50,
-                'follow' => true,
-                'save' => LIB_PATH . $lib . '/' . $name,
-                'reuse' => true
-            ]);
-            if ($r->content === '') {
-                Net::closeAll();
-                return [0, l('File "?" download failed.', [$file])];
-            }
-            // --- 是否解压 ---
-            if ($item['action'] === 'unzip') {
-                $zip = new ZipArchive();
-                if ($zip->open(LIB_PATH . $lib . '/' . $name) !== true) {
-                    Net::closeAll();
-                    return [0, l('The decompression failed.')];
-                }
-                if (!$zip->extractTo(LIB_PATH . $lib . '/' . $path)) {
-                    Net::closeAll();
-                    return [0, l('The decompression failed.')];
-                }
-                $zip->close();
-                @unlink(LIB_PATH . $lib . '/' . $path . $name);
-            }
-        }
-        Net::closeAll();
-        return [1];
     }
 
     /**
@@ -413,6 +436,17 @@ class __Mutton__ extends Ctr {
                 'etc/session.php' => ['const', []],
                 'etc/set.php' => ['const-must', []],
                 'etc/sql.php' => ['const', []],
+
+                'lib/Captcha.php' => ['md5', ''],
+                'lib/Crypto.php' => ['md5', ''],
+                'lib/Db.php' => ['md5', ''],
+                'lib/Fs.php' => ['md5', ''],
+                'lib/Kv.php' => ['md5', ''],
+                'lib/Net.php' => ['md5', ''],
+                'lib/Session.php' => ['md5', ''],
+                'lib/Sql.php' => ['md5', ''],
+                'lib/Text.php' => ['md5', ''],
+
                 'log/index.html' => ['must', ''],
                 'mod/Mod.php' => ['must', ''],
                 'stc/__Mutton__/index.css' => ['md5', ''],

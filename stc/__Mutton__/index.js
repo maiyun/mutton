@@ -257,18 +257,18 @@ var __Mutton__;
                                         });
                                     });
                                 },
-                                reinstallFolder: function () {
+                                install: function () {
                                     return __awaiter(this, void 0, void 0, function () {
                                         var j;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
-                                                case 0: return [4, this.confirm(l("Are you sure you're reinstalling the folder? Please be patient when the installation time may be long."))];
+                                                case 0: return [4, this.confirm(l("Are you sure you want to install \"?\"? This will take some time.", [this.localLibs[this.localLibsIndex].value]))];
                                                 case 1:
                                                     if (!(_a.sent())) {
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiReinstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiInstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -284,6 +284,20 @@ var __Mutton__;
                                                 case 3:
                                                     _a.sent();
                                                     this.alert = l("Successful.");
+                                                    return [2];
+                                            }
+                                        });
+                                    });
+                                },
+                                uninstall: function () {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4, this.confirm(l("Are you sure you want to uninstall \"?\"?", [this.localLibs[this.localLibsIndex].value]))];
+                                                case 1:
+                                                    if (!(_a.sent())) {
+                                                        return [2];
+                                                    }
                                                     return [2];
                                             }
                                         });
@@ -487,7 +501,7 @@ var __Mutton__;
         if (data) {
             var str = __LOCALE_OBJ[key];
             for (var i = 0; i < data.length; ++i) {
-                str.replace("?", data[i]);
+                str = str.replace("?", data[i]);
             }
             return str;
         }

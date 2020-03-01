@@ -112,14 +112,14 @@
                                         <?php echo l('Online library:') ?> {{selectedVer !== '' ? '(' + selectedVer + ')' : ''}}
                                         <mu-list :list="onlineLibs" v-model="onlineLibsIndex" style="margin-top: 10px;"></mu-list>
                                         <div style="margin-top: 10px;">
-
+                                            <mu-button @click.native="install()"><?php echo l('Install/Reinstall') ?></mu-button>
                                         </div>
                                     </div>
                                     <div style="flex: 1; margin-left: 10px;">
                                         <?php echo l('Local library:') ?>
                                         <mu-list :list="localLibs" v-model="localLibsIndex" style="margin-top: 10px;"></mu-list>
                                         <div style="margin-top: 10px;">
-                                            <mu-button @click.native="reinstallFolder()"><?php echo l('Reinstall folder') ?></mu-button>
+                                            <mu-button @click.native="uninstall()"><?php echo l('Uninstall') ?></mu-button>
                                         </div>
                                     </div>
                                 </div>

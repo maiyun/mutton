@@ -173,13 +173,13 @@ namespace __Mutton__ {
                     this.onlineLibs = j.onlineLibs;
                 },
                 // --- System ---
-                // --- 重装文件夹 ---
-                reinstallFolder: async function (this: any) {
-                    if (!await this.confirm(l("Are you sure you're reinstalling the folder? Please be patient when the installation time may be long."))) {
+                // --- 安装库 ---
+                install: async function (this: any) {
+                    if (!await this.confirm(l(`Are you sure you want to install "?"? This will take some time.`, [this.localLibs[this.localLibsIndex].value]))) {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiReinstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror});
+                    let j = await post(URL_BASE + "__Mutton__/apiInstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -191,6 +191,11 @@ namespace __Mutton__ {
                     }
                     await this.getLocalLibs();
                     this.alert = l("Successful.");
+                },
+                uninstall: async function (this: any) {
+                    if (!await this.confirm(l(`Are you sure you want to uninstall "?"?`, [this.localLibs[this.localLibsIndex].value]))) {
+                        return;
+                    }
                 },
                 // --- 创建 mblob 文件 ---
                 build: async function (this: any) {
@@ -339,7 +344,7 @@ namespace __Mutton__ {
         if (data) {
             let str = __LOCALE_OBJ[key];
             for (let i = 0; i < data.length; ++i) {
-                str.replace("?", data[i]);
+                str = str.replace("?", data[i]);
             }
             return str;
         } else {
