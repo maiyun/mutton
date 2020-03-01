@@ -5,7 +5,6 @@ namespace ctr;
 
 use lib\Fs;
 use lib\Net;
-use lib\Text;
 use sys\Ctr;
 use ZipArchive;
 
@@ -57,7 +56,7 @@ class __Mutton__ extends Ctr {
         }
         $res = Net::get($url);
         if (!$res->content) {
-            return [0, l('Network error, please try again.')];
+            return [0, l('Network error, please try again.') . '(' . $res->error . ')'];
         }
         $json = json_decode($res->content, true);
         if ($_POST['mirror'] === 'cn') {
@@ -87,18 +86,31 @@ class __Mutton__ extends Ctr {
         if (!$this->_checkXInput($_POST, [
             'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
             'ver' => ['require', [0, l('System error.')]],
-            'verName' => ['require', [0, l('System error.')]]
+            'verName' => ['require', [0, l('System error.')]],
+            'mirror' => ['require', ['global', 'cn'], [0, l('System error.')]]
         ], $return)) {
             return $return;
         }
         if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
             return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
-        $res = Net::get('https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@' . $_POST['verName'] . '/doc/mblob.json');
-        if (!$res->content) {
-            return [0, l('Network error, please try again.')];
+        $url = '';
+        if ($_POST['mirror'] === 'global') {
+            $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/doc/mblob';
+        } else if ($_POST['mirror'] === 'cn') {
+            $url = 'https://gitee.com/zohegs/Mutton/raw/'.$_POST['verName'].'/doc/mblob';
         }
-        if (!($json = json_decode($res->content, true))) {
+        $res = Net::get($url, [
+            'timeout' => 10,
+            'follow' => true
+        ]);
+        if (!$res->content) {
+            return [0, l('Network error, please try again.').'('.$res->error.')'];
+        }
+        if (!($blob = @gzinflate($res->content))) {
+            return [0, l('The downloaded data is incomplete, please try again.')];
+        }
+        if (!($json = json_decode($blob, true))) {
             return [0, l('The downloaded data is incomplete, please try again.')];
         }
 
@@ -194,7 +206,7 @@ class __Mutton__ extends Ctr {
             return $return;
         }
 
-        if (file_put_contents(ROOT_PATH.'doc/mblob.json', json_encode($this->_buildMBlobData(), 9)) === false) {
+        if (file_put_contents(ROOT_PATH.'doc/mblob', gzdeflate(json_encode($this->_buildMBlobData()), 9)) === false) {
             return [0, l('No server write permissions.')];
         } else {
             return [1];

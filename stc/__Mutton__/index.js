@@ -176,6 +176,10 @@ var __Mutton__;
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
@@ -209,10 +213,14 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror })];
                                                 case 3:
                                                     j = _j.sent();
                                                     this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
@@ -264,6 +272,10 @@ var __Mutton__;
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
@@ -288,6 +300,10 @@ var __Mutton__;
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
@@ -309,6 +325,10 @@ var __Mutton__;
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
                                                     if (j.result <= 0) {
                                                         this.alert = j.msg;
                                                         return [2];
@@ -341,15 +361,19 @@ var __Mutton__;
         });
     });
     document.addEventListener("touchstart", function () { });
+    document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+    });
     function loadScript(paths) {
         var _this = this;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var _i, paths_1, path, pathLio, e_1;
+            var _i, paths_1, path, pathLio;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 5, , 6]);
-                        if (!(paths.length > 0)) return [3, 4];
+                        if (paths.length === 0) {
+                            resolve(true);
+                        }
                         _i = 0, paths_1 = paths;
                         _a.label = 1;
                     case 1:
@@ -364,19 +388,16 @@ var __Mutton__;
                         }
                         return [4, _loadScript(path)];
                     case 2:
-                        _a.sent();
+                        if ((_a.sent()) === false) {
+                            resolve(false);
+                        }
                         _a.label = 3;
                     case 3:
                         _i++;
                         return [3, 1];
                     case 4:
-                        resolve();
-                        return [3, 6];
-                    case 5:
-                        e_1 = _a.sent();
-                        reject(e_1);
-                        return [3, 6];
-                    case 6: return [2];
+                        resolve(true);
+                        return [2];
                 }
             });
         }); });
@@ -389,10 +410,10 @@ var __Mutton__;
                 script = document.createElement("script");
                 script.setAttribute("data-res", path);
                 script.addEventListener("load", function () {
-                    resolve();
+                    resolve(true);
                 });
                 script.addEventListener("error", function (e) {
-                    reject(e);
+                    reject(false);
                 });
                 script.src = path;
                 headElement.appendChild(script);
@@ -403,7 +424,7 @@ var __Mutton__;
     function post(url, data) {
         var _this = this;
         return new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-            var header, body, k, res, text, ct, e_2;
+            var header, body, k, res, text, ct, e_1;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -439,8 +460,8 @@ var __Mutton__;
                         resolve(text);
                         return [3, 7];
                     case 6:
-                        e_2 = _a.sent();
-                        reject(e_2);
+                        e_1 = _a.sent();
+                        resolve(false);
                         return [3, 7];
                     case 7: return [2];
                 }

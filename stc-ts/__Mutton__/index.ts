@@ -10,7 +10,7 @@ namespace __Mutton__ {
 
     /** head 标签 */
     let headElement: HTMLHeadElement;
-    document.addEventListener("DOMContentLoaded", async function() {
+    document.addEventListener("DOMContentLoaded", async function () {
         headElement = document.getElementsByTagName("head")[0];
         if (typeof fetch !== "function") {
             await loadScript(["https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/fetch.min.js"]);
@@ -58,7 +58,7 @@ namespace __Mutton__ {
                 }
             },
             methods: {
-                mousedown: async function(this: any, index: number) {
+                mousedown: async function (this: any, index: number) {
                     this.$emit("change", index);
                     await this.$nextTick();
                     if (this.value !== index) {
@@ -117,6 +117,10 @@ namespace __Mutton__ {
                     this.mask = true;
                     let j = await post(URL_BASE + "__Mutton__/apiRefresh", {password: this.password, mirror: this.mirror});
                     this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
@@ -134,8 +138,12 @@ namespace __Mutton__ {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label});
+                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror});
                     this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
@@ -173,6 +181,10 @@ namespace __Mutton__ {
                     this.mask = true;
                     let j = await post(URL_BASE + "__Mutton__/apiReinstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror});
                     this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
@@ -185,6 +197,10 @@ namespace __Mutton__ {
                     this.mask = true;
                     let j = await post(URL_BASE + "__Mutton__/apiBuild", {password: this.password});
                     this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
@@ -196,6 +212,10 @@ namespace __Mutton__ {
                     this.mask = true;
                     let j = await post(URL_BASE + "__Mutton__/apiGetLocalLibs", {password: this.password});
                     this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
                     if (j.result <= 0) {
                         this.alert = j.msg;
                         return;
@@ -203,7 +223,7 @@ namespace __Mutton__ {
                     this.localLibs = j.list;
                 },
                 // --- 询问对话框 ---
-                confirm: async function(this: any, txt: string) {
+                confirm: async function (this: any, txt: string) {
                     return new Promise(async (resolve, reject) => {
                         this.confirmTxt = txt;
                         this.confirmResolve = resolve;
@@ -212,45 +232,47 @@ namespace __Mutton__ {
             }
         });
     });
-    document.addEventListener("touchstart", function() {});
+    document.addEventListener("touchstart", function () {});
+    document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+    });
 
     /**
      * --- 顺序加载 js ---
      * @param paths 要加载文件的路径数组
      */
-    function loadScript(paths: string[]): Promise<void> {
+    function loadScript(paths: string[]): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
-            try {
-                if (paths.length > 0) {
-                    for (let path of paths) {
-                        let pathLio = path.lastIndexOf("?");
-                        if (pathLio !== -1) {
-                            path = path.slice(0, pathLio);
-                        }
-                        if (headElement.querySelector(`[data-res="${path}"]`)) {
-                            continue;
-                        }
-                        await _loadScript(path);
-                    }
-                }
-                resolve();
-            } catch (e) {
-                reject(e);
+            if (paths.length === 0) {
+                resolve(true);
             }
+            for (let path of paths) {
+                let pathLio = path.lastIndexOf("?");
+                if (pathLio !== -1) {
+                    path = path.slice(0, pathLio);
+                }
+                if (headElement.querySelector(`[data-res="${path}"]`)) {
+                    continue;
+                }
+                if (await _loadScript(path) === false) {
+                    resolve(false);
+                }
+            }
+            resolve(true);
         });
     }
     /**
      * 加载 script 标签并等待返回成功（无视是否已经加载过）
      */
-    function _loadScript(path: string): Promise<void> {
+    function _loadScript(path: string): Promise<boolean> {
         return new Promise(async (resolve, reject) => {
             let script = document.createElement("script");
             script.setAttribute("data-res", path);
             script.addEventListener("load", () => {
-                resolve();
+                resolve(true);
             });
             script.addEventListener("error", (e) => {
-                reject(e);
+                reject(false);
             });
             script.src = path;
             headElement.appendChild(script);
@@ -288,7 +310,7 @@ namespace __Mutton__ {
                 }
                 resolve(text);
             } catch (e) {
-                reject(e);
+                resolve(false);
             }
         });
     }

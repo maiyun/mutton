@@ -38,7 +38,6 @@
     "Get latest versions": "获取最新版本",
     "Online library:": "线上库：",
     "Local library:": "本地库：",
-    "Reinstall folder": "重装文件夹",
     "To get online library information, click the \"Check\" tab, select the appropriate version, and then click the \"Check\" button.": "获取线上版本库信息，请点击“检查”选项卡，并选择相应版本，然后点击“检查”按钮。",
     "Automatic upgrade (used only on local testing):": "自动升级（仅在本地测试时使用）：",
     "Start": "开始",
@@ -56,9 +55,10 @@
     "No problem.": "没有问题。",
     "Successful.": "成功。",
     "Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\".": "请选择一个已经发布的版本进行检查或升级，“master”为最新的代码不一定正常运行。若要继续使用“master”请点击“好的”，否则点击“取消”。",
-    "Are you sure you're reinstalling the folder? Please be patient when the installation time may be long.": "确定重新安装文件夹吗？安装时间可能较长，请耐心等待。",
     "Please select the version first.": "请先选择版本。",
     "My Documents": "我的文档",
+    "My Computer": "我的电脑",
     "Recycle Bin": "回收站",
-    "The \"mblob\" file was last updated:": "“mblob”文件最后更新时间："
+    "The \"mblob\" file was last updated:": "“mblob”文件最后更新时间：",
+    "The network connection failed.": "网络连接失败。"
 }

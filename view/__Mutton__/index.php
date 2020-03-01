@@ -19,7 +19,7 @@
     </script>
     <script src="<?php echo URL_STC ?>__Mutton__/index.js?<?php echo VER ?>"></script>
 </head>
-<body oncontextmenu="return false;">
+<body>
 <div id="vue" :style="{'zoom': zoom}">
     <!-- 图标 -->
     <div style="display: inline-flex; flex-direction: column; align-items: center;">
@@ -27,7 +27,11 @@
             <div class="icon document"></div>
             <div class="icon__txt"><div class="icon__txt-in"><?php echo l('My Documents') ?></div></div>
         </div>
-        <div class="icon-out" tabindex="0" @dblclick="alert=l('System error.')" style="margin-top: 25px;">
+        <div class="icon-out" tabindex="0" @dblclick="alert=l('System error.')" style="margin-top: 28px;">
+            <div class="icon computer"></div>
+            <div class="icon__txt"><div class="icon__txt-in"><?php echo l('My Computer') ?></div></div>
+        </div>
+        <div class="icon-out" tabindex="0" @dblclick="alert=l('System error.')" style="margin-top: 28px;">
             <div class="icon recycle"></div>
             <div class="icon__txt"><div class="icon__txt-in"><?php echo l('Recycle Bin') ?></div></div>
         </div>
