@@ -58,6 +58,7 @@
     "Successful.": "成功。",
     "Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\".": "请选择一个已经发布的版本进行检查或升级，“master”为最新的代码不一定正常运行。若要继续使用“master”请点击“好的”，否则点击“取消”。",
     "Please select the version first.": "请先选择版本。",
+    "Please select the library first.": "请先选择库。",
     "My Documents": "我的文档",
     "My Computer": "我的电脑",
     "Recycle Bin": "回收站",

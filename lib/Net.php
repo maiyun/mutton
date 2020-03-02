@@ -5,17 +5,20 @@
     "ver": "0.1",
     "folder": true,
     "url": {
-        "https://curl.haxx.se/ca/cacert.pem": {
+        "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem": {
+            "mirror-cn": "https://gitee.com/zohegs/Mutton/raw/{ver}/lib/Net/cacert.pem",
             "action": "down",
             "save": "cacert.pem"
         },
-        "https://cdn.jsdelivr.net/gh/MaiyunNET/Mutton@{ver}/lib/Net/Response.php": {
+        "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php": {
+            "mirror-cn": "https://gitee.com/zohegs/Mutton/raw/{ver}/lib/Net/Response.php",
             "action": "down",
             "save": "Response.php"
         }
     }
 } - END
  * Date: 2015/10/26 14:23
+ * CA: https://curl.haxx.se/ca/cacert.pem
  * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-2-26 22:29:36
  */
 declare(strict_types = 1);

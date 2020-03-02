@@ -175,11 +175,15 @@ namespace __Mutton__ {
                 // --- System ---
                 // --- 安装库 ---
                 install: async function (this: any) {
-                    if (!await this.confirm(l(`Are you sure you want to install "?"? This will take some time.`, [this.localLibs[this.localLibsIndex].value]))) {
+                    if (!this.onlineLibs[this.onlineLibsIndex]) {
+                        this.alert = l("Please select the library first.");
+                        return;
+                    }
+                    if (!await this.confirm(l(`Are you sure you want to install "?"? This will take some time.`, [this.onlineLibs[this.onlineLibsIndex].value]))) {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiInstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror});
+                    let j = await post(URL_BASE + "__Mutton__/apiInstallLib", {password: this.password, lib: this.onlineLibs[this.onlineLibsIndex].value, verName: this.selectedVer, mirror: this.mirror});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -193,11 +197,15 @@ namespace __Mutton__ {
                     this.alert = l("Successful.");
                 },
                 uninstall: async function (this: any) {
+                    if (!this.localLibs[this.localLibsIndex]) {
+                        this.alert = l("Please select the library first.");
+                        return;
+                    }
                     if (!await this.confirm(l(`Are you sure you want to uninstall "?"?`, [this.localLibs[this.localLibsIndex].value]))) {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiInstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
+                    let j = await post(URL_BASE + "__Mutton__/apiUninstallLib", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");

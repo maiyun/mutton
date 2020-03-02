@@ -262,13 +262,18 @@ var __Mutton__;
                                         var j;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
-                                                case 0: return [4, this.confirm(l("Are you sure you want to install \"?\"? This will take some time.", [this.localLibs[this.localLibsIndex].value]))];
+                                                case 0:
+                                                    if (!this.onlineLibs[this.onlineLibsIndex]) {
+                                                        this.alert = l("Please select the library first.");
+                                                        return [2];
+                                                    }
+                                                    return [4, this.confirm(l("Are you sure you want to install \"?\"? This will take some time.", [this.onlineLibs[this.onlineLibsIndex].value]))];
                                                 case 1:
                                                     if (!(_a.sent())) {
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiInstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value, mirror: this.mirror })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiInstallLib", { password: this.password, lib: this.onlineLibs[this.onlineLibsIndex].value, verName: this.selectedVer, mirror: this.mirror })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -294,13 +299,18 @@ var __Mutton__;
                                         var j;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
-                                                case 0: return [4, this.confirm(l("Are you sure you want to uninstall \"?\"?", [this.localLibs[this.localLibsIndex].value]))];
+                                                case 0:
+                                                    if (!this.localLibs[this.localLibsIndex]) {
+                                                        this.alert = l("Please select the library first.");
+                                                        return [2];
+                                                    }
+                                                    return [4, this.confirm(l("Are you sure you want to uninstall \"?\"?", [this.localLibs[this.localLibsIndex].value]))];
                                                 case 1:
                                                     if (!(_a.sent())) {
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiInstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
+                                                    return [4, post(URL_BASE + "__Mutton__/apiUninstallLib", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
