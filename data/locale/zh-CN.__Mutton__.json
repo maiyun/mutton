@@ -13,6 +13,7 @@
     "The decompression failed.": "解压失败",
     "This library does not have a satellite folder.": "这个库没有附属文件夹。",
     "The password cannot be set to \"?\".": "密码不可设置为“?”。",
+    "The library cannot be uninstalled.": "此库不能被卸载。",
 
     "Password": "密码",
     "Check": "检查",

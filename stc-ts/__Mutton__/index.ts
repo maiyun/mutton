@@ -196,6 +196,19 @@ namespace __Mutton__ {
                     if (!await this.confirm(l(`Are you sure you want to uninstall "?"?`, [this.localLibs[this.localLibsIndex].value]))) {
                         return;
                     }
+                    this.mask = true;
+                    let j = await post(URL_BASE + "__Mutton__/apiInstallFolder", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
+                    this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    await this.getLocalLibs();
+                    this.alert = l("Successful.");
                 },
                 // --- 创建 mblob 文件 ---
                 build: async function (this: any) {

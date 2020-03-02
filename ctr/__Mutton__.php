@@ -217,6 +217,43 @@ class __Mutton__ extends Ctr {
         }
     }
 
+    /**
+     * --- 卸载本地库 ---
+     * @return array
+     */
+    public function apiUninstallLib() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
+            'lib' => ['require', [0, l('System error.')]]
+        ], $return)) {
+            return $return;
+        }
+        if (in_array($_POST['lib'], ['Fs', 'Net'])) {
+            return [0, l('The library cannot be uninstalled.')];
+        }
+        if (!is_file(LIB_PATH . $_POST['lib'] . '.php')) {
+            // --- 库本来就不存在，无需删除 ---
+            return [1];
+        }
+        if (!@unlink(LIB_PATH . $_POST['lib'] . '.php')) {
+            return [0, l('No server write permissions.')];
+        }
+        if (!is_dir(LIB_PATH . $_POST['lib'])) {
+            return [1];
+        }
+        if (!Fs::rmdir(LIB_PATH . $_POST['lib'])) {
+            return [0, l('No server write permissions.')];
+        }
+        return [1];
+    }
+
+    /**
+     * --- 安装库 ---
+     * @return array
+     */
     public function apiInstallLib() {
         if (!$this->_hasConfig) {
             return [0, l('Please place the profile first.')];

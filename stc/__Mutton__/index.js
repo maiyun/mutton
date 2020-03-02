@@ -291,6 +291,7 @@ var __Mutton__;
                                 },
                                 uninstall: function () {
                                     return __awaiter(this, void 0, void 0, function () {
+                                        var j;
                                         return __generator(this, function (_a) {
                                             switch (_a.label) {
                                                 case 0: return [4, this.confirm(l("Are you sure you want to uninstall \"?\"?", [this.localLibs[this.localLibsIndex].value]))];
@@ -298,6 +299,23 @@ var __Mutton__;
                                                     if (!(_a.sent())) {
                                                         return [2];
                                                     }
+                                                    this.mask = true;
+                                                    return [4, post(URL_BASE + "__Mutton__/apiInstallFolder", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
+                                                case 2:
+                                                    j = _a.sent();
+                                                    this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
+                                                    if (j.result <= 0) {
+                                                        this.alert = j.msg;
+                                                        return [2];
+                                                    }
+                                                    return [4, this.getLocalLibs()];
+                                                case 3:
+                                                    _a.sent();
+                                                    this.alert = l("Successful.");
                                                     return [2];
                                             }
                                         });
