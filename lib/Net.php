@@ -119,7 +119,7 @@ class Net {
         $isSsl = false;
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
         $type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
-        $timeout = isset($opt['timeout']) ? $opt['timeout'] : 5;
+        $timeout = isset($opt['timeout']) ? $opt['timeout'] : 10;
         $follow = isset($opt['follow']) ? $opt['follow'] : false;
         $hosts = isset($opt['hosts']) ? $opt['hosts'] : null;
         // $raw = isset($opt['raw']) ? $opt['raw'] : false; // --- 不应该依赖 raw，依赖本服务器的压缩 ---

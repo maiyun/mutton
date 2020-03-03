@@ -105,7 +105,6 @@ class __Mutton__ extends Ctr {
             $url = 'https://gitee.com/zohegs/Mutton/raw/'.$_POST['verName'].'/doc/mblob';
         }
         $res = Net::get($url, [
-            'timeout' => 10,
             'follow' => true
         ]);
         if (!$res->content) {
@@ -273,7 +272,6 @@ class __Mutton__ extends Ctr {
             $url = 'https://gitee.com/zohegs/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         }
         $res = Net::get($url, [
-            'timeout' => 10,
             'follow' => true,
             'reuse' => true
         ]);

@@ -46,19 +46,25 @@ function log(string $msg, string $fend = ''): void {
     list($y, $m, $d) = explode('-', date('Y-m-d'));
     $path = LOG_PATH . $y . '/';
     if(!is_dir($path)) {
-        mkdir($path, 0777);
-        chmod($path, 0777);
+        if (!@mkdir($path, 0777)) {
+            return;
+        }
+        @chmod($path, 0777);
     }
     $path .= $m . '/';
     if(!is_dir($path)) {
-        mkdir($path, 0777);
-        chmod($path, 0777);
+        if (!@mkdir($path, 0777)) {
+            return;
+        }
+        @chmod($path, 0777);
     }
     $path .= $d . $fend . '.csv';
 
     if(!is_file($path)) {
-        file_put_contents($path, 'TIME,URL,COOKIE,USER_AGENT,REALIP,TWOIP,CLIENTIP,MESSAGE'."\n");
-        chmod($path, 0777);
+        if (!@file_put_contents($path, 'TIME,URL,COOKIE,USER_AGENT,REALIP,TWOIP,CLIENTIP,MESSAGE'."\n")) {
+            return;
+        }
+        @chmod($path, 0777);
     }
     @file_put_contents($path, '"' . date('H:i:s') . '","' . URL_FULL . URI . (count($_GET) ? '?' . str_replace('"', '""', http_build_query($_GET)) : '') . '","' . str_replace('"', '""', http_build_query($_COOKIE)) . '","' . str_replace('"', '""', (isset($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : 'No HTTP_USER_AGENT') . '","' . str_replace('"', '""', $realIp) . '","' . str_replace('"', '""', $twoIp) . '","' . str_replace('"', '""', $clientIp) . '","' . str_replace('"', '""', $msg) . "\"\n", FILE_APPEND);
 
