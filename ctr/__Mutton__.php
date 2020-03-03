@@ -1,4 +1,9 @@
 <?php
+/**
+ * Project: Mutton, User: JianSuoQiYue
+ * Date: 2018-10-17
+ * Last: 2020-3-3 17:03:21
+ */
 declare(strict_types = 1);
 
 namespace ctr;
@@ -326,6 +331,8 @@ class __Mutton__ extends Ctr {
                         $file = $item['mirror-' . $_POST['mirror']];
                     }
                 }
+                $file = str_replace('{ver}', $_POST['verName'], $file);
+                // --- 下载 ---
                 $r = Net::get($file, [
                     'timeout' => 50,
                     'follow' => true,
