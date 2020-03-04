@@ -357,7 +357,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     if (j.list.length === 0) {
-                                                        this.alert = l("No problem.");
+                                                        this.alert = l("No upgrade is required.");
                                                         return [2];
                                                     }
                                                     this.upgradeInfoList = [];
@@ -379,7 +379,7 @@ var __Mutton__;
                                                         this.upgradeInfoList.unshift(l("The network connection failed."));
                                                         return [3, 5];
                                                     }
-                                                    if (j.result <= 0) {
+                                                    if (j1.result <= 0) {
                                                         this.upgradeInfoList.unshift(l("Failed(?).", [j.msg]));
                                                         return [3, 5];
                                                     }

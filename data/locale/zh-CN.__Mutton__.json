@@ -71,5 +71,6 @@
     "Are you sure you want to install \"?\"? This will take some time.": "你确定安装“?”吗？这需要一些时间。",
     "Are you sure you want to uninstall \"?\"?": "确定要卸载“?”吗？",
     "Do you really want to automatically update to the version \"?\"? Files in the \"etc\" directory are not updated.": "真的要自动更新到版本“?”吗？“etc”目录中的文件不会被更新。",
-    "The upgrade was successful.": "升级成功。"
+    "The upgrade was successful.": "升级成功。",
+    "No upgrade is required.": "不需要升级。"
 }

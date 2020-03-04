@@ -238,7 +238,7 @@ namespace __Mutton__ {
                         return;
                     }
                     if (j.list.length === 0) {
-                        this.alert = l("No problem.");
+                        this.alert = l("No upgrade is required.");
                         return;
                     }
                     this.upgradeInfoList = [];
@@ -251,7 +251,7 @@ namespace __Mutton__ {
                             this.upgradeInfoList.unshift(l("The network connection failed."));
                             continue;
                         }
-                        if (j.result <= 0) {
+                        if (j1.result <= 0) {
                             this.upgradeInfoList.unshift(l("Failed(?).", [j.msg]));
                             continue;
                         }
