@@ -103,24 +103,10 @@ class __Mutton__ extends Ctr {
         if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
             return [0, l('Version must be >= ?.', ['5.5.0'])];
         }
-        $url = '';
-        if ($_POST['mirror'] === 'global') {
-            $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/doc/mblob';
-        } else if ($_POST['mirror'] === 'cn') {
-            $url = 'https://gitee.com/zohegs/Mutton/raw/'.$_POST['verName'].'/doc/mblob';
+        if (($data = $this->_getOnlineMblobData($_POST['mirror'], $_POST['verName']))[0] === 0) {
+            return $data;
         }
-        $res = Net::get($url, [
-            'follow' => true
-        ]);
-        if (!$res->content) {
-            return [0, l('Network error, please try again.').'('.$res->error.')'];
-        }
-        if (!($blob = @gzinflate($res->content))) {
-            return [0, l('The downloaded data is incomplete, please try again.')];
-        }
-        if (!($json = json_decode($blob, true))) {
-            return [0, l('The downloaded data is incomplete, please try again.')];
-        }
+        $data = $data[1];
 
         // --- json 键：file, lib ---
 
@@ -132,14 +118,15 @@ class __Mutton__ extends Ctr {
         $libFolder = [];    // --- 库存在但附属文件夹缺失 ---
 
         // --- 判断是否有缺失文件、差异文件 ---
-        foreach ($json['file'] as $file => $item) {
+        foreach ($data['file'] as $file => $item) {
             if ($item[0] === 'must') {
                 // --- 文件必须存在，并且要与框架原内容保持一致（md5 必须一样） ---
                 if (is_file(ROOT_PATH . $file)) {
-                    // --- 检查内容是否一致 ---
+                    // --- 文件存在，判断是否匹配 ---
                     if (md5_file(ROOT_PATH . $file) !== $item[1]) {
                         $noMatch[] = $file;
                     }
+                    // --- 不能和 is_file 一块写，因为文件存在，并且匹配，则不做任何处理 ---
                 } else {
                     $miss[] = $file;
                 }
@@ -166,11 +153,11 @@ class __Mutton__ extends Ctr {
         }
         // --- 判断库是否有更新 ---
         $localLibs = $this->_getLibList();
-        foreach ($json['lib'] as $name => $data) {
+        foreach ($data['lib'] as $name => $item) {
             if (!isset($localLibs[$name])) {
                 continue;
             }
-            if (version_compare($localLibs[$name]['ver'], $data['ver'], '>=')) {
+            if (version_compare($localLibs[$name]['ver'], $item['ver'], '>=')) {
                 // --- 本地库版本大于等于线上库版本，不需要更新，检测附属文件夹是否存在 ---
                 if ($localLibs[$name]['folder'] && !is_dir(LIB_PATH . $name)) {
                     $libFolder[$name] = $localLibs[$name];
@@ -178,18 +165,18 @@ class __Mutton__ extends Ctr {
                 continue;
             }
             // --- 本地库小于线上库，需要更新 ---
-            $data['localVer'] = $localLibs[$name]['ver'];
-            $lib[$name] = $data;
+            $item['localVer'] = $localLibs[$name]['ver'];
+            $lib[$name] = $item;
         }
 
         // --- 以下显示“系统”选项卡线上库列表里 ---
         $onlineLibs = [];
-        foreach ($json['lib'] as $name => $data) {
-            $onlineLibs[] = ['label' => $name . ' ' . $data['ver'] . ($data['folder'] ? ' ' . l('(Contains folders.)') : ''), 'value' => $name];
+        foreach ($data['lib'] as $name => $item) {
+            $onlineLibs[] = ['label' => $name . ' ' . $item['ver'] . ($item['folder'] ? ' ' . l('(Contains folders.)') : ''), 'value' => $name];
         }
 
         return [1,
-            'lastTime' => date('Y-m-d H:i:s', $json['lastTime']),
+            'lastTime' => date('Y-m-d H:i:s', $data['lastTime']),
             'noMatch' => $noMatch,
             'miss' => $miss,
             'missConst' => $missConst,
@@ -198,6 +185,99 @@ class __Mutton__ extends Ctr {
 
             'onlineLibs' => $onlineLibs
         ];
+    }
+
+    /**
+     * --- 获取需要自动更新的文件列表 ---
+     * @return array
+     */
+    public function apiGetUpgradeList() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
+            'verName' => ['require', [0, l('System error.')]],
+            'mirror' => ['require', ['global', 'cn'], [0, l('System error.')]]
+        ], $return)) {
+            return $return;
+        }
+        $ver = 'master';
+        if ($_POST['verName'] !== 'master') {
+            preg_match('/[0-9.]+/', $_POST['verName'], $matches);
+            $ver = $matches[0];
+        }
+        if (($ver !== 'master') && version_compare($ver, '5.5.0', '<')) {
+            return [0, l('Version must be >= ?.', ['5.5.0'])];
+        }
+        if (($data = $this->_getOnlineMblobData($_POST['mirror'], $_POST['verName']))[0] === 0) {
+            return $data;
+        }
+        $data = $data[1];
+
+        $list = [];
+        foreach ($data['file'] as $file => $item) {
+            if (($item[0] !== 'must') && ($item[0] !== 'md5')) {
+                continue;
+            }
+            if (substr($file, 0, 4) === 'lib/') {
+                continue;
+            }
+            $url = '';
+            if ($item[0] === 'must') {
+                if (!is_file(ROOT_PATH . $file) || (md5_file(ROOT_PATH . $file) !== $item[1])) {
+                    $url = $file;
+                }
+            } else if ($item[0] === 'md5') {
+                if (is_file(ROOT_PATH . $file) && (md5_file(ROOT_PATH . $file) !== $item[1])) {
+                    $url = $file;
+                }
+            }
+            if ($url !== '') {
+                if ($_POST['mirror'] === 'global') {
+                    $list[$file] = 'https://github.com/MaiyunNET/Mutton/raw/' . $_POST['verName'] . '/' . $url;
+                } else if ($_POST['mirror'] === 'cn') {
+                    $list[$file] = 'https://gitee.com/zohegs/Mutton/raw/' . $_POST['verName'] . '/' . $url;
+                }
+            }
+        }
+
+        return [1, 'list' => $list];
+    }
+
+    /**
+     * --- 执行升级操作的函数，敏感 ---
+     * @return array
+     */
+    public function apiUpgrade() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]],
+            'file' => ['require', [0, l('System error.')]],
+            'url' => ['require', [0, l('System error.')]]
+        ], $return)) {
+            return $return;
+        }
+        if (strpos($_POST['file'], '..') !== false || strpos($_POST['file'], './') !== false) {
+            return [0, l('System error.')];
+        }
+        $checkUrl = substr($_POST['url'], 0, 35);
+        if (($checkUrl !== 'https://github.com/MaiyunNET/Mutton') && ($checkUrl !== 'https://gitee.com/zohegs/Mutton/raw')) {
+            return [0, l('System error.')];
+        }
+        // --- 下载 ---
+        $r = Net::get($_POST['url'], [
+            'timeout' => 50,
+            'follow' => true,
+            'save' => ROOT_PATH . $_POST['file'],
+            'reuse' => true
+        ]);
+        if ($r->content === '') {
+            return [0, l('File "?" download failed.', [$_POST['file']])];
+        }
+        return [1];
     }
 
     /**
@@ -457,6 +537,34 @@ class __Mutton__ extends Ctr {
             return false;
         }
         return json_decode($match[1], true);
+    }
+
+    /**
+     * --- 获取线上 Mblob 文件的 data，返回 true 代表成功，数组为失败 ---
+     * @param string $mirror 源
+     * @param string $verName 版本名
+     * @return array|true
+     */
+    private function _getOnlineMblobData(string $mirror, string $verName) {
+        $url = '';
+        if ($mirror === 'global') {
+            $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$verName.'/doc/mblob';
+        } else if ($mirror === 'cn') {
+            $url = 'https://gitee.com/zohegs/Mutton/raw/'.$verName.'/doc/mblob';
+        }
+        $res = Net::get($url, [
+            'follow' => true
+        ]);
+        if (!$res->content) {
+            return [0, l('Network error, please try again.').'('.$res->error.')'];
+        }
+        if (!($blob = @gzinflate($res->content))) {
+            return [0, l('The downloaded data is incomplete, please try again.')];
+        }
+        if (!($data = json_decode($blob, true))) {
+            return [0, l('The downloaded data is incomplete, please try again.')];
+        }
+        return [1, $data];
     }
 
     /**

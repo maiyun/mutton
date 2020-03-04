@@ -126,8 +126,11 @@
                                 <div style="margin-top: 10px;"><?php echo l('To get online library information, click the "Check" tab, select the appropriate version, and then click the "Check" button.') ?></div>
                                 <mu-line></mu-line>
                                 <div style="display: flex; flex-direction: column;">
-                                    <?php echo l('Automatic upgrade (used only on local testing):') ?><br>
-                                    1234.
+                                    <?php echo l('Automatic upgrade (library will not be upgraded, the above is required to upgrade library):') ?><br>
+                                    <mu-list :list="upgradeInfoList" style="margin-top: 10px;"></mu-list>
+                                    <div style="margin-top: 10px; text-align: center;">
+                                        <mu-button :class="{'disabled': selectedVer === '' || upgradeRunning}" @click.native="upgrade()"><?php echo l('Start upgrade') ?></mu-button>
+                                    </div>
                                 </div>
                                 <mu-line></mu-line>
                                 <div style="display: flex; flex-direction: column; align-items: center;">

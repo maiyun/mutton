@@ -41,8 +41,9 @@
     "Online library:": "线上库：",
     "Local library:": "本地库：",
     "To get online library information, click the \"Check\" tab, select the appropriate version, and then click the \"Check\" button.": "获取线上版本库信息，请点击“检查”选项卡，并选择相应版本，然后点击“检查”按钮。",
-    "Automatic upgrade (used only on local testing):": "自动升级（仅在本地测试时使用）：",
-    "Start": "开始",
+    "Automatic upgrade (library will not be upgraded, the above is required to upgrade library):": "自动升级（不会升级库，升级库需要使用上方功能）：",
+    "Update \"?\"...": "更新“?”……",
+    "Start upgrade": "开始升级",
     "Running...": "运行中……",
     "Build a \"mblob\" file:": "创建一个“mblob”文件：",
     "Build": "创建",
@@ -56,6 +57,7 @@
     "Library: ?, existing but missing satellite folders.": "库：?，存在但是缺失附属文件夹。",
     "No problem.": "没有问题。",
     "Successful.": "成功。",
+    "Failed(?).": "失败（?）。",
     "Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\".": "请选择一个已经发布的版本进行检查或升级，“master”为最新的代码不一定正常运行。若要继续使用“master”请点击“好的”，否则点击“取消”。",
     "Please select the version first.": "请先选择版本。",
     "Please select the library first.": "请先选择库。",
@@ -67,5 +69,7 @@
     "Install/Reinstall": "安装/重装",
     "Uninstall": "卸载",
     "Are you sure you want to install \"?\"? This will take some time.": "你确定安装“?”吗？这需要一些时间。",
-    "Are you sure you want to uninstall \"?\"?": "确定要卸载“?”吗？"
+    "Are you sure you want to uninstall \"?\"?": "确定要卸载“?”吗？",
+    "Do you really want to automatically update to the version \"?\"? Files in the \"etc\" directory are not updated.": "真的要自动更新到版本“?”吗？“etc”目录中的文件不会被更新。",
+    "The upgrade was successful.": "升级成功。"
 }

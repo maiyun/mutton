@@ -101,26 +101,30 @@ html,body,input,textarea {
     border: solid 1px transparent; padding: 5px 25px;
 }
 
-.button-out:focus {
+.button-out.disabled {
+    color: #808080; text-shadow: 1px 1px 0 #FFF; pointer-events: none;
+}
+
+.button-out:not(.disabled):focus {
     border-color: #000;
 }
-.button-out:focus > .button {
+.button-out:not(.disabled):focus  > .button {
     border-color: #FFF #404040 #404040 #FFF;
 }
-.button-out:focus > .button > .button-in {
+.button-out:not(.disabled):focus > .button > .button-in {
     border-color: transparent #808080 #808080 transparent;
 }
-.button-out:focus:after {
+.button-out:not(.disabled):focus:after {
     content: ''; position: absolute; width: calc(100% - 8px); height: calc(100% - 8px); border: dotted 1px #000; left: 3px; top: 3px;
 }
 
-.button-out:active {
+.button-out:not(.disabled):active {
     border-color: #000;
 }
-.button-out:active > .button {
+.button-out:not(.disabled):active > .button {
     border-color: #808080;
 }
-.button-out:active > .button > .button-in {
+.button-out:not(.disabled):active > .button > .button-in {
     border-color: transparent; padding: 6px 24px 4px 26px;
 }
 

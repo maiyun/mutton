@@ -99,6 +99,8 @@ namespace __Mutton__ {
                 localLibs: [],
                 onlineLibsIndex: 0,
                 localLibsIndex: 0,
+                upgradeInfoList: [],
+                upgradeRunning: false,
                 // --- Config ---
                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
             },
@@ -157,7 +159,7 @@ namespace __Mutton__ {
                         list.push(file + " - " + l("File does not exist."));
                     }
                     for (let file in j.missConst) {
-                        list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(",")]));
+                        list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(", ")]));
                     }
                     for (let lib of j.lib) {
                         list.push(l("Library: ?, current version: ?, latest version: ?.", [lib, j.lib[lib].localVer, j.lib[lib].ver]));
@@ -217,6 +219,46 @@ namespace __Mutton__ {
                     }
                     await this.getLocalLibs();
                     this.alert = l("Successful.");
+                },
+                // --- 自动升级 ---
+                upgrade: async function (this: any) {
+                    if (!await this.confirm(l(`Do you really want to automatically update to the version "?"? Files in the "etc" directory are not updated.`, [this.selectedVer]))) {
+                        return;
+                    }
+                    // --- 获取要更新的文件，2 个为一组，进行更新 ---
+                    this.mask = true;
+                    let j = await post(URL_BASE + "__Mutton__/apiGetUpgradeList", {password: this.password, verName: this.selectedVer, mirror: this.mirror});
+                    this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    if (j.list.length === 0) {
+                        this.alert = l("No problem.");
+                        return;
+                    }
+                    this.upgradeInfoList = [];
+                    this.upgradeRunning = true;
+                    for (let file in j.list) {
+                        let url = j.list[file];
+                        this.upgradeInfoList.unshift(l(`Update "?"...`, [file]));
+                        let j1 = await post(URL_BASE + "__Mutton__/apiUpgrade", {password: this.password, file: file, url: url});
+                        if (j1 === false) {
+                            this.upgradeInfoList.unshift(l("The network connection failed."));
+                            continue;
+                        }
+                        if (j.result <= 0) {
+                            this.upgradeInfoList.unshift(l("Failed(?).", [j.msg]));
+                            continue;
+                        }
+                        this.upgradeInfoList.unshift(l(`Successful.`));
+                    }
+                    this.upgradeInfoList.unshift(l(`The upgrade was successful.`));
+                    this.upgradeRunning = false;
                 },
                 // --- 创建 mblob 文件 ---
                 build: async function (this: any) {

@@ -143,6 +143,8 @@ var __Mutton__;
                                 localLibs: [],
                                 onlineLibsIndex: 0,
                                 localLibsIndex: 0,
+                                upgradeInfoList: [],
+                                upgradeRunning: false,
                                 configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
                             },
                             mounted: function () {
@@ -236,7 +238,7 @@ var __Mutton__;
                                                         list.push(file + " - " + l("File does not exist."));
                                                     }
                                                     for (file in j.missConst) {
-                                                        list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(",")]));
+                                                        list.push(file + " - " + l("Missing constants: ?.", [j.missConst[file].join(", ")]));
                                                     }
                                                     for (_e = 0, _f = j.lib; _e < _f.length; _e++) {
                                                         lib = _f[_e];
@@ -326,6 +328,69 @@ var __Mutton__;
                                                 case 3:
                                                     _a.sent();
                                                     this.alert = l("Successful.");
+                                                    return [2];
+                                            }
+                                        });
+                                    });
+                                },
+                                upgrade: function () {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        var j, _a, _b, _i, file, url, j1;
+                                        return __generator(this, function (_c) {
+                                            switch (_c.label) {
+                                                case 0: return [4, this.confirm(l("Do you really want to automatically update to the version \"?\"? Files in the \"etc\" directory are not updated.", [this.selectedVer]))];
+                                                case 1:
+                                                    if (!(_c.sent())) {
+                                                        return [2];
+                                                    }
+                                                    this.mask = true;
+                                                    return [4, post(URL_BASE + "__Mutton__/apiGetUpgradeList", { password: this.password, verName: this.selectedVer, mirror: this.mirror })];
+                                                case 2:
+                                                    j = _c.sent();
+                                                    this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
+                                                    if (j.result <= 0) {
+                                                        this.alert = j.msg;
+                                                        return [2];
+                                                    }
+                                                    if (j.list.length === 0) {
+                                                        this.alert = l("No problem.");
+                                                        return [2];
+                                                    }
+                                                    this.upgradeInfoList = [];
+                                                    this.upgradeRunning = true;
+                                                    _a = [];
+                                                    for (_b in j.list)
+                                                        _a.push(_b);
+                                                    _i = 0;
+                                                    _c.label = 3;
+                                                case 3:
+                                                    if (!(_i < _a.length)) return [3, 6];
+                                                    file = _a[_i];
+                                                    url = j.list[file];
+                                                    this.upgradeInfoList.unshift(l("Update \"?\"...", [file]));
+                                                    return [4, post(URL_BASE + "__Mutton__/apiUpgrade", { password: this.password, file: file, url: url })];
+                                                case 4:
+                                                    j1 = _c.sent();
+                                                    if (j1 === false) {
+                                                        this.upgradeInfoList.unshift(l("The network connection failed."));
+                                                        return [3, 5];
+                                                    }
+                                                    if (j.result <= 0) {
+                                                        this.upgradeInfoList.unshift(l("Failed(?).", [j.msg]));
+                                                        return [3, 5];
+                                                    }
+                                                    this.upgradeInfoList.unshift(l("Successful."));
+                                                    _c.label = 5;
+                                                case 5:
+                                                    _i++;
+                                                    return [3, 3];
+                                                case 6:
+                                                    this.upgradeInfoList.unshift(l("The upgrade was successful."));
+                                                    this.upgradeRunning = false;
                                                     return [2];
                                             }
                                         });
