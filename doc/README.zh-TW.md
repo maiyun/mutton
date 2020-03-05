@@ -171,7 +171,7 @@ $userList = User::where([
 
 ## 許可
 
-基於 [Apache-2.0](./LICENSE) 許可。
+基於 [Apache-2.0](../LICENSE) 許可。
 
 ## 名稱含義
 

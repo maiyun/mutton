@@ -4,6 +4,10 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 6.0.0
+
+[+] A large number of updates, kernel optimization, more flexible and easy to use.
+
 ## 5.3.1
 
 [+] Add the lock method in the Sql library.  
