@@ -13,7 +13,7 @@
 
 ## 環境
 
-PHP 7.3+
+PHP 7.3+  
 Nginx/Apache
 
 ## 安裝
