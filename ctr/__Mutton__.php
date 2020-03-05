@@ -172,7 +172,7 @@ class __Mutton__ extends Ctr {
         // --- 以下显示“系统”选项卡线上库列表里 ---
         $onlineLibs = [];
         foreach ($data['lib'] as $name => $item) {
-            $onlineLibs[] = ['label' => $name . ' ' . $item['ver'] . ($item['folder'] ? ' ' . l('(Contains folders.)') : ''), 'value' => $name];
+            $onlineLibs[] = ['label' => $name . ' ' . $item['ver'] . ($item['folder'] ? ' ' . l('(Contains folders)') : ''), 'value' => $name];
         }
 
         return [1,
@@ -462,7 +462,7 @@ class __Mutton__ extends Ctr {
             if ($data['folder'] && !is_dir(LIB_PATH . $lib)) {
                 $list[] = ['label' => $lib . ' ' . $data['ver'] . ' ' . l('(The satellite folder was not found)'), 'value' => $lib];
             } else {
-                $list[] = ['label' => $lib . ' ' . $data['ver'] . ($data['folder'] ? ' ' . l('(Contains folders.)') : ''), 'value' => $lib];
+                $list[] = ['label' => $lib . ' ' . $data['ver'] . ($data['folder'] ? ' ' . l('(Contains folders)') : ''), 'value' => $lib];
             }
         }
         return [1, 'list' => $list];

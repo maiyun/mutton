@@ -5,18 +5,22 @@
 [![GitHub Releases](https://img.shields.io/github/release/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/releases "Stable Release")
 [![GitHub Pre-Releases](https://img.shields.io/github/release/MaiyunNET/Mutton/all.svg)](https://github.com/MaiyunNET/Mutton/releases "Pre-Release")
 
-簡單，易用，功能完整開袋即食的 PHP 框架。
+簡單、易用且功能完整的 PHP 框架。
 
-## 安裝
+## 語言
 
-下載最新的 release 版，隨即開始做你想做的。
+[English] (.. /README.md) | [简体中文](README.zh-CN.md)
 
 ## 環境
 
-PHP 7.2+  
+PHP 7.3+
 Nginx/Apache
 
-> 注意：在 Nginx 下，需要您手動設定重寫規則，重寫規則如下：
+## 安裝
+
+下載最新的發行包，解壓後即可。
+
+> 提示：在 Nginx 中，你需要將以下規則添加到重新規則檔內：
 
 ```
 if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.txt\??.*)$) {
@@ -28,47 +32,124 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net, Session, Sql, Text.
 
-## 部分特性
+## 特性
 
-### 兩眼發黑
+### 開袋即食
 
-基於兩眼發黑的原則，無需動腦子，官方封裝了擁有統一代碼風格常用庫，可直接食用。
+秉持開袋即食的原則，封裝了大量介面，簡約而不簡單，並且擁有豐富的代碼提示（基於 PHPDoc）。
 
-### 自動加載
+### 自動載入
 
-直接瀟灑的使用庫，不需要手動 require。
+直接使用各種庫，系統會自動載入它。
 
-### UI 主控台
+### Mutton Portal
 
-包含了一個 UI 介面的主控台，可對 Mutton 的最新版本進行自動比對，檢測哪些檔案被修改或需要更新。
+基於 GUI 優先原則，Mutton 附帶視覺化主控台，可以進行本地代碼檔與線上版本檔異同檢測、版本檢測以及框架升級等功能。
 
-### Net 類庫包含完整 Cookie 實現
+[![Mutton Portal](portal-check-zh-TW.png)](portal-check-zh-TW.png)
 
-可將 Cookie 直接獲取為一個變數陣列，可存在資料庫、記憶體等任何地方。
+[![Mutton Portal](portal-system-zh-TW.png)](portal-system-zh-TW.png)
 
-### 完善的筛选器
+### 超好用 Net 庫
 
-合理的運用篩選器，可以快速的篩選資料庫條目。
+可以這樣用：
 
-### 大陸類庫支援
+```php
+$res = Net::open('https://xxx/test')->post()->data(['a' => '1', 'b' => '2'])->request();
+```
 
-對微信支付、微信登錄、阿裡雲 OSS、騰訊雲 COS、支付寶支付（即將支援）已經完成封裝集成。
+也可以這樣用：
 
-## 代碼演示
+```php
+$res = Net::get('https://xxx/test');
+```
 
-### 生成 16 位亂數
+
+可以設置自訂的解析結果：
+
+```php
+$res = Net::get('https://xxx/test', [
+    'hosts' => [
+        'xxx' => '111.111.111.111'
+    ]
+]);
+```
+
+也可以選擇本地的其他網卡來訪問：
+
+```php
+$res = Net::get('https://xxx/test', [
+    'local' => '123.123.123.123'
+]);
+```
+
+更可以在訪問多條 url 時進行連結複用，大大加快存取速度：
+
+```php
+$res1 = Net::get('https://xxx/test1', [
+    'reuse' => true
+]);
+$res2 = Net::get('https://xxx/test2', [
+    'reuse' => true
+]);
+Net::closeAll();
+```
+
+[![Mutton Portal](test-net-reuse.png)](test-net-reuse.png)
+
+更擁有完整的 Cookie 管理器，可以輕鬆將 Cookie 獲取並存在任何地方，發送請求時，系統也會根據 Cookie 設置的功能變數名稱、路徑等來選擇發送，並且 Set-Cookie 如果有非法跨域設置，也會被捨棄不會被記錄，就像真正的瀏覽器一樣：
+
+```php
+$res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
+$res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
+```
+
+### 好用的 Db 庫
+
+擁有大量好用的介面，可以輕鬆的從資料庫篩選出需要的資料：
+
+```php
+$ls = Order::where([
+    'state' => '1'
+])->by('id', 'DESC')->page(10, 1);
+$list = $ls->all();
+$count = $ls->count();
+$total = $ls->total();
+```
+
+獲取一個使用者：
+
+```php
+$user = User::select(['id', 'user'])->filter([
+    ['time_add', '>=', '1583405134']
+])->first();
+```
+
+### XSRF 檢測
+
+使用 checkXInput 方法，可以進行 XSRF 檢測，防止惡意訪問。
+
+### 中國大陸庫支援
+
+完整封裝了微信支付、微信登錄、阿裡雲 OSS、騰訊雲 COS、阿裡巴巴等中國特有服務的支援。（因內核框架更新升級，這些庫還未來得及更新，暫時移除，將很快進行更新）
+
+#### 還有更多特性等你探索
+
+## 部分示例
+
+### 創建 16 位亂數
 
 ```php
 $str = $this->_random(16, Ctr::RANDOM_N);
 ```
 
-### 生成驗證碼圖片
+### 創建一個驗證碼
 
 ```php
 Captcha::get(400, 100)->getStream();
 ```
 
-### 根據條件從資料庫獲取清單
+### 獲取一個清單
 
 ```php
 $userList = User::where([
@@ -78,20 +159,27 @@ $userList = User::where([
 ])->all();
 ```
 
-注：框架的所有資料庫操作已經做了防注入安全處理。
+提示：所有資料庫操作都已經做了安全防注入處理。
 
-### 其他演示
+## 其他示例
 
-可以下載後訪問首頁和查看首頁代碼（ctr/test.php）看更多示例。
+你可以訪問 ctr/test.php 來查看更多示例。
 
-## 更新日志
+## 更新日誌
 
-[更新日誌](CHANGELOG.zh-TW.md)
+[更新日誌] (doc/CHANGELOG.zh-TW.md)
 
 ## 許可
 
-本框架基於 [Apache-2.0](../LICENSE) 許可。
+基於 [Apache-2.0](./LICENSE) 許可。
 
-## 名字含義
+## 名稱含義
 
-羊肉真香 XD。
+作者愛吃羊 XD。
+
+## 參與翻譯
+
+我們工作基於中文語言環境，若對本專案感興趣並對除中文簡體、中文繁體之外語種熟悉的朋友，歡迎一起參與翻譯工作，感興趣的朋友可以加入以下群組。
+
+除中國大陸之外翻譯 Telegram 群組：[HTTPs://t.me/maiyunlocal](HTTPs://t.me/maiyunlocal)  
+中國大陸翻譯 QQ 群：24158113

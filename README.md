@@ -11,14 +11,14 @@ Simple, easy to use, full functionality of the PHP framework.
 
 [简体中文](doc/README.zh-CN.md) | [繁體中文](doc/README.zh-TW.md)
 
+## Requirement
+
+PHP 7.3+  
+Nginx/Apache
+
 ## Installation
 
-Download the latest release and put it to directory, then to start development.
-
-## Environment
-
-PHP 7.2+  
-Nginx/Apache
+Download the latest release and put it to directory, then enjoy.
 
 > Note: Under Nginx, you need to manually configure the rewrite rule with the following rewrite rules:
 
@@ -36,27 +36,101 @@ Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net,
 
 ### No brains
 
-Based on the idea of not using the brain, the commonly used and uniform style of the library has been encapsulated.
+Simple and easy-to-use interface with rich code tips (phpDoc-based).
 
-### Library auto load
+### Autoload
 
-You can use the library directly without having to manually include them.
+Using the various libraries directly, the system loads them automatically.
 
-### UI Console
+### Mutton Portal
 
-A console that contains a UI interface that automatically pairs the latest version of Mutton to detect which files have been modified or need to be upgraded.
+In Mutton Portal, it includes file anomaly detection, version detection, upgrade, and more.
 
-### Net Library contains full Cookie implementation
+[![Mutton Portal](doc/portal-check.png)](doc/portal-check.png)
 
-Cookies can be obtained directly as an array of variables, which can exist anywhere, such as databases, memory, and so on.
+[![Mutton Portal](doc/portal-system.png)](doc/portal-system.png)
 
-### Perfect filter
+### Super-friendly Net library
 
-Reasonable use of filters, you can quickly filter database entries.
+You can use like:
 
-### China Library Support
+```php
+$res = Net::open('https://xxx/test')->post()->data(['a' => '1', 'b' => '2'])->request();
+```
 
-For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment (forthcoming support) has been completed package.
+You can also use like:
+
+```php
+$res = Net::get('https://xxx/test');
+```
+
+You can set custom dns results:
+
+```php
+$res = Net::get('https://xxx/test', [
+    'hosts' => [
+        'xxx' => '111.111.111.111'
+    ]
+]);
+```
+
+You can also select another local network interface card:
+
+```php
+$res = Net::get('https://xxx/test', [
+    'local' => '123.123.123.123'
+]);
+```
+
+You can also possible to reuse links when accessing multiple urls, greatly speeding up access:
+
+```php
+$res1 = Net::get('https://xxx/test1', [
+    'reuse' => true
+]);
+$res2 = Net::get('https://xxx/test2', [
+    'reuse' => true
+]);
+Net::closeAll();
+```
+
+[![Mutton Portal](test-net-reuse.png)](test-net-reuse.png)
+
+With a complete cookie manager, cookies can be easily obtained and exist anywhere, when a request is sent, the system will also choose to send based on the domain name, path, etc. set by the cookie, and Set-Cookie will be discarded if it is set illegally across domains. Just like a real browser:
+
+```php
+$res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
+$res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
+```
+
+### Perfect Db library
+
+With a number of useful interfaces, you can easily filter out the required data from the database:
+
+```php
+$ls = Order::where([
+    'state' => '1'
+])->by('id', 'DESC')->page(10, 1);
+$list = $ls->all();
+$count = $ls->count();
+$total = $ls->total();
+```
+
+Get a user:
+
+```php
+$user = User::select(['id', 'user'])->filter([
+    ['time_add', '>=', '1583405134']
+])->first();
+```
+
+### XSRF
+
+The checkXInput method enables XSRF detection to prevent malicious access.
+
+### Mainland China library support
+
+For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment (forthcoming support) has been completed package.(Due to the kernel framework update upgrade, these libraries have not yet been updated, temporarily removed, will be updated soon)
 
 #### And more...
 
@@ -74,7 +148,7 @@ $str = $this->_random(16, Ctr::RANDOM_N);
 Captcha::get(400, 100)->getStream();
 ```
 
-### Get a list from the database
+### Get a list
 
 ```php
 $userList = User::where([
