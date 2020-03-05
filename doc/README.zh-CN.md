@@ -166,7 +166,7 @@ $userList = User::where([
 
 ## 更新日志
 
-[更新日志](doc/CHANGELOG.zh-CN.md)
+[更新日志](CHANGELOG.zh-CN.md)
 
 ## 许可
 
