@@ -91,6 +91,7 @@ class test extends Ctr {
             '<br><br><b>Net:</b>',
             '<br><br><a href="'.URL_BASE.'test/net">View "test/net"</a>',
             '<br><a href="'.URL_BASE.'test/net-post">View "test/net-post"</a>',
+            '<br><a href="'.URL_BASE.'test/net-open">View "test/net-open"</a>',
             '<br><a href="'.URL_BASE.'test/net-form-test">View "test/net-form-test"</a>',
             '<br><a href="'.URL_BASE.'test/net-upload">View "test/net-upload"</a>',
             '<br><a href="'.URL_BASE.'test/net-cookie">View "test/net-cookie"</a>',
@@ -616,7 +617,18 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     }
 
     public function netPost1() {
-        return json_encode($_POST);
+        return "\$_POST:\n\n" . json_encode($_POST) . "\n\nRequest headers:\n\n" . json_encode($this->_headers, JSON_PRETTY_PRINT) . "\n\nIP: " . $_SERVER['REMOTE_ADDR'];
+    }
+
+    public function netOpen() {
+        $echo = [];
+
+        $res = Net::open(URL_FULL . 'test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();
+        $echo[] = "<pre>Net::open(URL_FULL . 'test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . $res->content . "</pre>";
+
+        return join('', $echo) . $this->_getEnd();
     }
 
     public function netFormTest() {

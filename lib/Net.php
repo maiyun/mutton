@@ -26,6 +26,7 @@ declare(strict_types = 1);
 namespace lib;
 
 use CURLFile;
+use lib\Net\Request;
 use lib\Net\Response;
 
 class Net {
@@ -69,9 +70,18 @@ class Net {
     }
 
     /**
+     * --- 创建一个请求对象 ---
+     * @param string $url
+     * @return Request
+     */
+    public static function open(string $url) {
+        return new Request($url);
+    }
+
+    /**
      * --- 发起 GET 请求 ---
      * @param string $url
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
@@ -83,7 +93,7 @@ class Net {
      * --- 发起 POST 请求 ---
      * @param string $url
      * @param array $data
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
@@ -96,7 +106,7 @@ class Net {
      * --- 发起 JSON 请求 ---
      * @param string $url
      * @param array $data
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
@@ -110,7 +120,7 @@ class Net {
      * --- 发起请求 ---
      * @param string $url 提交的 url
      * @param array|null $data 提交的 data 数据
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
@@ -122,9 +132,10 @@ class Net {
         $timeout = isset($opt['timeout']) ? $opt['timeout'] : 10;
         $follow = isset($opt['follow']) ? $opt['follow'] : false;
         $hosts = isset($opt['hosts']) ? $opt['hosts'] : null;
-        // $raw = isset($opt['raw']) ? $opt['raw'] : false; // --- 不应该依赖 raw，依赖本服务器的压缩 ---
-        $save = isset($opt['save']) ? $opt['save'] : null;      // 直接保存到文件
-        $reuse = isset($opt['reuse']) ? $opt['reuse'] : false;  // 是否连接复用
+        // $raw = isset($opt['raw']) ? $opt['raw'] : false;                 // --- 不应该依赖 raw，依赖本服务器的压缩 ---
+        $save = isset($opt['save']) ? $opt['save'] : null;                  // --- 直接保存到文件的实体地址 ---
+        $local = isset($opt['local']) ? $opt['local'] : null;               // --- 使用的本地网卡 IP ---
+        $reuse = isset($opt['reuse']) ? $opt['reuse'] : false;              // --- 是否连接复用 ---
         $headers = [];
         if (isset($opt['headers'])) {
             foreach ($opt['headers'] as $key => $val) {
@@ -186,6 +197,10 @@ class Net {
         curl_setopt($ch, CURLOPT_ENCODING, 'gzip, deflate');
         curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
         // curl_setopt($ch, CURLOPT_HTTP_VERSION, HTTP_VERSION_2_0);
+        // --- local ---
+        if ($local !== null) {
+            curl_setopt($ch, CURLOPT_INTERFACE, $local);
+        }
         // --- ssl ---
         if (substr($url, 0, 6) === 'https:') {
             $isSsl = true;
