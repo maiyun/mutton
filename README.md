@@ -94,7 +94,7 @@ $res2 = Net::get('https://xxx/test2', [
 Net::closeAll();
 ```
 
-[![Mutton Portal](test-net-reuse.png)](test-net-reuse.png)
+[![Mutton Portal](doc/test-net-reuse.png)](test-net-reuse.png)
 
 With a complete cookie manager, cookies can be easily obtained and exist anywhere, when a request is sent, the system will also choose to send based on the domain name, path, etc. set by the cookie, and Set-Cookie will be discarded if it is set illegally across domains. Just like a real browser:
 
