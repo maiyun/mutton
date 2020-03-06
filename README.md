@@ -46,7 +46,9 @@ Using the various libraries directly, the system loads them automatically.
 
 In Mutton Portal, it includes file anomaly detection, version detection, upgrade, and more.
 
+<div style="width: 463px; margin: auto;">  
 [![Mutton Portal](doc/portal-check.png)](doc/portal-check.png)
+</div>
 
 [![Mutton Portal](doc/portal-system.png)](doc/portal-system.png)
 
