@@ -94,7 +94,7 @@ $res2 = Net::get('https://xxx/test2', [
 Net::closeAll();
 ```
 
-[![Mutton Portal](test-net-reuse.png)](test-net-reuse.png)
+[![Net reuse test](test-net-reuse.png)](test-net-reuse.png)
 
 更拥有完整的 Cookie 管理器，可以轻松将 Cookie 获取并存在任何地方，发送请求时，系统也会根据 Cookie 设置的域名、路径等来选择发送，并且 Set-Cookie 如果有非法跨域设置，也会被舍弃不会被记录，就像真正的浏览器一样：
 
