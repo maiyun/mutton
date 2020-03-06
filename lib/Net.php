@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.2",
+    "ver": "0.3",
     "folder": true,
     "url": {
         "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem": {
@@ -19,7 +19,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-2-26 22:29:36
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-6 21:12:03
  */
 declare(strict_types = 1);
 
@@ -37,25 +37,33 @@ class Net {
     /**
      * --- 获取链接 ---
      * @param string $host
+     * @param string|null $local
      * @return resource
      */
-    public static function getLink(string $host) {
-        if (isset(self::$_pool[$host])) {
-            return self::$_pool[$host];
+    public static function getLink(string $host, ?string $local = null) {
+        if ($local === null) {
+            $local = '';
+        }
+        if (isset(self::$_pool[$host . '-' . $local])) {
+            return self::$_pool[$host . '-' . $local];
         } else {
-            self::$_pool[$host] = curl_init();
-            return self::$_pool[$host];
+            self::$_pool[$host . '-' . $local] = curl_init();
+            return self::$_pool[$host . '-' . $local];
         }
     }
 
     /**
      * --- 手段关闭复用连接 ---
      * @param string $host
+     * @param string|null $local
      */
-    public static function closeLink(string $host) {
-        if (isset(self::$_pool[$host])) {
-            curl_close(self::$_pool[$host]);
-            unset(self::$_pool[$host]);
+    public static function closeLink(string $host, ?string $local = null) {
+        if ($local === null) {
+            $local = '';
+        }
+        if (isset(self::$_pool[$host . '-' . $local])) {
+            curl_close(self::$_pool[$host . '-' . $local]);
+            unset(self::$_pool[$host . '-' . $local]);
         }
     }
 
@@ -63,9 +71,9 @@ class Net {
      * --- 关闭所有复用连接 ---
      */
     public static function closeAll() {
-        foreach (self::$_pool as $host => $link) {
+        foreach (self::$_pool as $key => $link) {
             curl_close($link);
-            unset(self::$_pool[$host]);
+            unset(self::$_pool[$key]);
         }
     }
 
@@ -146,7 +154,7 @@ class Net {
             $headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36';
         }
         if ($reuse) {
-            $ch = self::getLink($uri['host'] . (isset($uri['port']) ? ':' . $uri['port'] : ''));
+            $ch = self::getLink($uri['host'] . (isset($uri['port']) ? ':' . $uri['port'] : ''), $local);
         } else {
             $ch = curl_init();
         }

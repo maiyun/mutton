@@ -3,6 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-10-17
  * Last: 2020-3-3 17:03:21
+ * --- 发布流程：修改 const.php 版本号，添加 CHANGELOG，创建 mblob 文件 ---
  */
 declare(strict_types = 1);
 

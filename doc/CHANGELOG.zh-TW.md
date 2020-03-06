@@ -4,6 +4,10 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.zh-CN.md)
 
+## 6.0.2
+
+[\*] 修復 reuse 的一些問題在 Net 庫。
+
 ## 6.0.1
 
 [\*] 修改中國大陸的更新源。

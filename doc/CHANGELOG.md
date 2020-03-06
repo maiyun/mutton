@@ -4,6 +4,10 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+## 6.0.2
+
+[\*] Fix reuse's issues of the Net library.
+
 ## 6.0.1
 
 [\*] Modify the update source for Mainland China.
