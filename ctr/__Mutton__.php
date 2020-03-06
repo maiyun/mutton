@@ -61,7 +61,7 @@ class __Mutton__ extends Ctr {
         if ($_POST['mirror'] === 'global') {
             $url = 'https://api.github.com/repos/MaiyunNET/Mutton/tags';
         } else if ($_POST['mirror'] === 'cn') {
-            $url = 'https://gitee.com/api/v5/repos/zohegs/Mutton/tags';
+            $url = 'https://gitee.com/api/v5/repos/MaiyunNET/Mutton/tags';
         }
         $res = Net::get($url);
         if (!$res->content) {
@@ -100,8 +100,8 @@ class __Mutton__ extends Ctr {
         ], $return)) {
             return $return;
         }
-        if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '5.5.0', '<')) {
-            return [0, l('Version must be >= ?.', ['5.5.0'])];
+        if (($_POST['ver'] !== 'master') && version_compare($_POST['ver'], '6.0.0', '<')) {
+            return [0, l('Version must be >= ?.', ['6.0.0'])];
         }
         if (($data = $this->_getOnlineMblobData($_POST['mirror'], $_POST['verName']))[0] === 0) {
             return $data;
@@ -207,8 +207,8 @@ class __Mutton__ extends Ctr {
             preg_match('/[0-9.]+/', $_POST['verName'], $matches);
             $ver = $matches[0];
         }
-        if (($ver !== 'master') && version_compare($ver, '5.5.0', '<')) {
-            return [0, l('Version must be >= ?.', ['5.5.0'])];
+        if (($ver !== 'master') && version_compare($ver, '6.0.0', '<')) {
+            return [0, l('Version must be >= ?.', ['6.0.0'])];
         }
         if (($data = $this->_getOnlineMblobData($_POST['mirror'], $_POST['verName']))[0] === 0) {
             return $data;
@@ -237,7 +237,7 @@ class __Mutton__ extends Ctr {
                 if ($_POST['mirror'] === 'global') {
                     $list[$file] = 'https://github.com/MaiyunNET/Mutton/raw/' . $_POST['verName'] . '/' . $url;
                 } else if ($_POST['mirror'] === 'cn') {
-                    $list[$file] = 'https://gitee.com/zohegs/Mutton/raw/' . $_POST['verName'] . '/' . $url;
+                    $list[$file] = 'https://gitee.com/MaiyunNET/Mutton/raw/' . $_POST['verName'] . '/' . $url;
                 }
             }
         }
@@ -264,7 +264,7 @@ class __Mutton__ extends Ctr {
             return [0, l('System error.')];
         }
         $checkUrl = substr($_POST['url'], 0, 35);
-        if (($checkUrl !== 'https://github.com/MaiyunNET/Mutton') && ($checkUrl !== 'https://gitee.com/zohegs/Mutton/raw')) {
+        if (($checkUrl !== 'https://github.com/MaiyunNET/Mutton') && ($checkUrl !== 'https://gitee.com/MaiyunNET/Mutton/')) {
             return [0, l('System error.')];
         }
         // --- 下载 ---
@@ -354,7 +354,7 @@ class __Mutton__ extends Ctr {
         if ($_POST['mirror'] === 'global') {
             $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         } else if ($_POST['mirror'] === 'cn') {
-            $url = 'https://gitee.com/zohegs/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
+            $url = 'https://gitee.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         }
         $res = Net::get($url, [
             'follow' => true,
@@ -550,7 +550,7 @@ class __Mutton__ extends Ctr {
         if ($mirror === 'global') {
             $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$verName.'/doc/mblob';
         } else if ($mirror === 'cn') {
-            $url = 'https://gitee.com/zohegs/Mutton/raw/'.$verName.'/doc/mblob';
+            $url = 'https://gitee.com/MaiyunNET/Mutton/raw/'.$verName.'/doc/mblob';
         }
         $res = Net::get($url, [
             'follow' => true

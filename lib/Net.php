@@ -2,16 +2,16 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.1",
+    "ver": "0.2",
     "folder": true,
     "url": {
         "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem": {
-            "mirror-cn": "https://gitee.com/zohegs/Mutton/raw/{ver}/lib/Net/cacert.pem",
+            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem",
             "action": "down",
             "save": "cacert.pem"
         },
         "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php": {
-            "mirror-cn": "https://gitee.com/zohegs/Mutton/raw/{ver}/lib/Net/Response.php",
+            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php",
             "action": "down",
             "save": "Response.php"
         }
