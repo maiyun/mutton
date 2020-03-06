@@ -1,4 +1,4 @@
-# Mutton
+<p align="center"><img src="doc/logo.png" width="260" height="70" alt="Mutton"></p>
 
 [![License](https://img.shields.io/github/license/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/issues)
@@ -46,9 +46,9 @@ Using the various libraries directly, the system loads them automatically.
 
 In Mutton Portal, it includes file anomaly detection, version detection, upgrade, and more.
 
-<p style="text-align: center;"><a href="doc/portal-check.png"><img alt="Mutton Portal" src="doc/portal-check.png" width="463"></a></p>
+[![Mutton Portal](doc/portal-check.png)](doc/portal-check.png)
 
-<p style="text-align: center;"><a href="doc/portal-system.png"><img alt="Mutton Portal" src="doc/doc/portal-system.png" width="463"></a></p>
+[![Mutton Portal](doc/portal-system.png)](doc/portal-system.png)
 
 ### Super-friendly Net library
 
@@ -102,6 +102,8 @@ With a complete cookie manager, cookies can be easily obtained and exist anywher
 $res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
 $res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
 ```
+
+> Tip: Net library support both incoming options and open chain operation, such as Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();.
 
 ### Perfect Db library
 

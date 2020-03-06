@@ -1,4 +1,4 @@
-# Mutton
+<p align="center"><img src="logo.png" width="260" height="70" alt="Mutton"></p>
 
 [![License](https://img.shields.io/github/license/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/MaiyunNET/Mutton.svg)](https://github.com/MaiyunNET/Mutton/issues)
@@ -102,6 +102,8 @@ Net::closeAll();
 $res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
 $res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
 ```
+
+> 提示：Net 库同时支持传入 options 和 open 链式操作，如 Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();。
 
 ### 好用的 Db 库
 
