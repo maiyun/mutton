@@ -117,6 +117,7 @@ class __Mutton__ extends Ctr {
         $missConst = [];    // --- 缺少的常量 ---
         $lib = [];          // --- 需要更新的库 ---
         $libFolder = [];    // --- 库存在但附属文件夹缺失 ---
+        $remove = [];       // --- 需要移除的文件 ---
 
         // --- 判断是否有缺失文件、差异文件 ---
         foreach ($data['file'] as $file => $item) {
@@ -129,6 +130,11 @@ class __Mutton__ extends Ctr {
                     }
                     // --- 不能和 is_file 一块写，因为文件存在，并且匹配，则不做任何处理 ---
                 } else {
+                    $miss[] = $file;
+                }
+            } else if ($item[0] === 'mustn') {
+                // --- 文件必须存在，但无需和框架原内容保持一致（不校验 md5） ---
+                if (!is_file(ROOT_PATH . $file)) {
                     $miss[] = $file;
                 }
             } else if ($item[0] === 'md5') {
@@ -149,6 +155,11 @@ class __Mutton__ extends Ctr {
                     if ($item[0] === 'const-must') {
                         $miss[] = $file;
                     }
+                }
+            } else if ($item[0] === 'remove') {
+                // --- 实际运营中可能需要删除的文件 ---
+                if (is_file(ROOT_PATH . $file)) {
+                    $remove[] = $file;
                 }
             }
         }
@@ -183,6 +194,7 @@ class __Mutton__ extends Ctr {
             'missConst' => $missConst,
             'lib' => $lib,
             'libFolder' => $libFolder,
+            'remove' => $remove,
 
             'onlineLibs' => $onlineLibs
         ];
@@ -576,6 +588,8 @@ class __Mutton__ extends Ctr {
         $list = [
             'file' => [
                 'ctr/__Mutton__.php' => ['md5', ''],
+                'ctr/middle.php' => ['mustn'],
+                'ctr/test.php' => ['remove'],
                 'data/locale/en.__Mutton__.json' => ['md5', ''],
                 'data/locale/zh-CN.__Mutton__.json' => ['md5', ''],
                 'data/locale/zh-TW.__Mutton__.json' => ['md5', ''],
@@ -600,6 +614,7 @@ class __Mutton__ extends Ctr {
 
                 'log/index.html' => ['must', ''],
                 'mod/Mod.php' => ['must', ''],
+                'mod/Session.php' => ['remove'],
                 'stc/__Mutton__/index.css' => ['md5', ''],
                 'stc/__Mutton__/index.js' => ['md5', ''],
                 'stc/index.html' => ['must', ''],

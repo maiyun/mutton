@@ -8,6 +8,8 @@ declare(strict_types = 1);
 
 namespace sys;
 
+use ctr\middle;
+
 require ETC_PATH.'route.php';
 
 class Route {
@@ -37,79 +39,56 @@ class Route {
         if (!$match) {
             list($pathLeft, $pathRight) = self::_getPathLeftRight(URI);
         }
-        // --- 加载控制器 ---
-        $ctr = '\\ctr\\' . str_replace('/', '\\', $pathLeft);
-        $filePath = CTR_PATH . $pathLeft . '.php';
-        if (!is_file($filePath)) {
-            // --- 指定的控制器不存在 ---
+        // --- 若文件名为保留的 middle 将不允许进行 ---
+        if (substr($pathLeft, -6) === 'middle') {
             http_response_code(404);
             echo '[Error] Controller not found.';
             return;
         }
+        // --- 加载中间控制器（无论实际控制器是否存在，真实控制器都会加载，以便做特殊处理） ---
         require SYS_PATH . 'Ctr.php';
-        // --- 加载控制文件 ---
-        require $filePath;
-        // --- 判断 action 是否存在 ---
-        /** @var Ctr $ctr */
-        $ctr = new $ctr();
-        // --- 强制 HTTPS ---
-        if (MUST_HTTPS && !$ctr->_mustHttps()) {
-            return;
-        }
-        // --- 检测 action 是否存在 ---
-        if ($pathRight[0] === '_') {
-            // --- _ 开头的 action 是内部方法，不允许访问 ---
-            http_response_code(404);
-            echo '[Error] Action not found.';
-            return;
-        }
-        $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
-            return strtoupper($matches[1]);
-        }, $pathRight);
-        if (!method_exists($ctr, $pathRight)) {
-            http_response_code(404);
-            echo '[Error] Action not found.';
-            return;
-        }
+        require CTR_PATH . 'middle.php';
+        /** @var Ctr $middle */
+        $middle = new middle();
         // --- 对信息进行初始化 ---
         // --- 路由定义的参数序列 ---
-        $ctr->_param = $param;
+        $middle->_param = $param;
         // --- action 名 ---
-        $ctr->_action = $pathRight;
+        $middle->_action = $pathRight;
         // --- 原始 POST ---
-        $ctr->_rawPost = $_POST;
+        $middle->_rawPost = $_POST;
         // --- 原始 GET ---
-        $ctr->_get = &$_GET;
+        $middle->_get = &$_GET;
         // --- Cookie ---
-        $ctr->_cookie = &$_COOKIE;
+        $middle->_cookie = &$_COOKIE;
         // --- 设置 XSRF 值 ---
         if (!isset($_COOKIE['XSRF-TOKEN'])) {
-            $ctr->_xsrf = $ctr->_random(16, Ctr::RANDOM_LUN);
-            setcookie('XSRF-TOKEN', $ctr->_xsrf, 0, '/' ,'', false, true);
-            $_COOKIE['XSRF-TOKEN'] = $ctr->_xsrf;
+            $middle->_xsrf = $middle->_random(16, Ctr::RANDOM_LUN);
+            setcookie('XSRF-TOKEN', $middle->_xsrf, 0, '/', '', false, true);
+            $_COOKIE['XSRF-TOKEN'] = $middle->_xsrf;
         } else {
-            $ctr->_xsrf = $_COOKIE['XSRF-TOKEN'];
+            $middle->_xsrf = $_COOKIE['XSRF-TOKEN'];
         }
         // --- 处理 headers ---
         foreach ($_SERVER as $key => $val) {
             if ($key === 'CONTENT_TYPE') {
-                $ctr->_headers['content-type'] = $val;
+                $middle->_headers['content-type'] = $val;
                 continue;
             }
             if (substr($key, 0, 5) !== 'HTTP_') {
                 continue;
             }
-            $ctr->_headers[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
+            $middle->_headers[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
         }
-        if (!isset($ctr->_headers['authorization'])) {
-            $ctr->_headers['authorization'] = '';
+        if (!isset($middle->_headers['authorization'])) {
+            $middle->_headers['authorization'] = '';
         }
         // --- 处理 POST 的值 JSON 或 FILE ---
-        $contentType = isset($ctr->_headers['content-type']) ? strtolower($ctr->_headers['content-type']) : '';
+        $contentType = isset($middle->_headers['content-type']) ? strtolower($middle->_headers['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
             $_POST = file_get_contents('php://input');
-            if(($_POST = json_decode($_POST, true)) === false) {
+            if (($_POST = json_decode($_POST, true)) === false) {
                 $_POST = [];
             }
         } else if (strpos($contentType, 'form-data') !== false) {
@@ -130,26 +109,77 @@ class Route {
                 }
                 $_FILES[$key] = $files;
             }
-            $ctr->_files = &$_FILES;
+            $middle->_files = &$_FILES;
         }
         // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
-        $ctr->_post = &$_POST;
-        // --- 检测是否有 onLoad，有则优先执行一下 ---
-        if (method_exists($ctr, '_load')) {
-            $rtn = $ctr->_load();
-        }
-        // --- 执行 action ---
+        $middle->_post = &$_POST;
+        // --- 执行中间件的 _load ---
+        $rtn = $middle->_load();
         if (!isset($rtn) || $rtn === true) {
-            $rtn = $ctr->$pathRight();
-        }
-        // --- 在返回值输出之前，设置缓存 ---
-        if ($ctr->_cacheTTL > 0) {
-            header('Expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->_cacheTTL) . ' GMT');
-            header('Cache-Control: max-age=' . $ctr->_cacheTTL);
-        } else {
-            header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
-            header('Cache-Control: no-store');
+            // --- 只有不返回或返回 true 时才加载控制文件 ---
+            // --- 判断真实控制器文件是否存在 ---
+            $filePath = CTR_PATH . $pathLeft . '.php';
+            if (!is_file($filePath)) {
+                // --- 指定的控制器不存在 ---
+                http_response_code(404);
+                echo '[Error] Controller not found.';
+                return;
+            }
+            // --- 加载控制器文件 ---
+            require $filePath;
+            // --- 判断 action 是否存在 ---
+            $ctrName = '\\ctr\\' . str_replace('/', '\\', $pathLeft);
+            /** @var Ctr $ctr */
+            $ctr = new $ctrName();
+            // --- 强制 HTTPS ---
+            if (MUST_HTTPS && !$ctr->_mustHttps()) {
+                return;
+            }
+            // --- 检测 action 是否存在 ---
+            if ($pathRight[0] === '_') {
+                // --- _ 开头的 action 是内部方法，不允许访问 ---
+                http_response_code(404);
+                echo '[Error] Action not found.';
+                return;
+            }
+            $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
+                return strtoupper($matches[1]);
+            }, $pathRight);
+            if (!method_exists($ctr, $pathRight)) {
+                http_response_code(404);
+                echo '[Error] Action not found.';
+                return;
+            }
+            // --- 对信息进行初始化 ---
+            // --- 路由定义的参数序列 ---
+            $ctr->_param = $middle->_param;
+            $ctr->_action = $middle->_action;
+            $ctr->_rawPost = &$middle->_rawPost;
+            $ctr->_get = &$middle->_get;
+            $ctr->_cookie = &$middle->_cookie;
+            $ctr->_xsrf = $middle->_xsrf;
+            $ctr->_headers = &$middle->_headers;
+            $ctr->_files = &$middle->_files;
+            $ctr->_post = &$middle->_post;
+            $ctr->_cacheTTL = $middle->_cacheTTL;
+            $ctr->_session = &$middle->_session;
+            // --- 检测是否有 onLoad，有则优先执行一下 ---
+            if (method_exists($ctr, '_load')) {
+                $rtn = $ctr->_load();
+            }
+            // --- 执行 action ---
+            if (!isset($rtn) || $rtn === true) {
+                $rtn = $ctr->$pathRight();
+            }
+            // --- 在返回值输出之前，设置缓存 ---
+            if ($ctr->_cacheTTL > 0) {
+                header('Expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->_cacheTTL) . ' GMT');
+                header('Cache-Control: max-age=' . $ctr->_cacheTTL);
+            } else {
+                header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
+                header('Cache-Control: no-store');
+            }
         }
         // --- 判断返回值 ---
         if (!isset($rtn) || is_bool($rtn) || $rtn === null) {

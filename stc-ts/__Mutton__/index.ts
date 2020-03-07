@@ -165,6 +165,9 @@ namespace __Mutton__ {
                     for (let lib of j.libFolder) {
                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
                     }
+                    for (let file of j.remove) {
+                        list.push(file + " - " + l("The file may need to be deleted."));
+                    }
                     if (list.length === 0) {
                         this.alert = l("No problem.");
                     }

@@ -65,6 +65,9 @@ class test extends Ctr {
             '<br><br><a href="'.URL_BASE.'test/ctr-random">View "test/ctr-random"</a>',
             '<br><a href="'.URL_BASE.'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
 
+            '<br><br><b>Middle:</b>',
+            '<br><br><a href="'.URL_BASE.'test/middle">View "test/middle"</a>',
+
             '<br><br><b>Model test:</b>',
 
             '<br><br><b style="color: red;">In a production environment, please delete the "Mod/Session.php" file.</b>',

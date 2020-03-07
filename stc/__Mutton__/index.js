@@ -195,9 +195,9 @@ var __Mutton__;
                                 },
                                 check: function () {
                                     return __awaiter(this, void 0, void 0, function () {
-                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib;
-                                        return __generator(this, function (_j) {
-                                            switch (_j.label) {
+                                        var _a, j, list, _i, _b, file, _c, _d, file, file, _e, _f, lib, _g, _h, lib, _j, _k, file;
+                                        return __generator(this, function (_l) {
+                                            switch (_l.label) {
                                                 case 0:
                                                     if (!this.verList[this.verIndex]) {
                                                         this.alert = l("Please select the version first.");
@@ -207,8 +207,8 @@ var __Mutton__;
                                                     if (!_a) return [3, 2];
                                                     return [4, this.confirm(l("Please select a published version to check or upgrade, and \"master\" for the latest code does not necessarily work correctly. To continue using \"master\", click \"OK\" or click \"Cancel\"."))];
                                                 case 1:
-                                                    _a = (!(_j.sent()));
-                                                    _j.label = 2;
+                                                    _a = (!(_l.sent()));
+                                                    _l.label = 2;
                                                 case 2:
                                                     if (_a) {
                                                         return [2];
@@ -216,7 +216,7 @@ var __Mutton__;
                                                     this.mask = true;
                                                     return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror })];
                                                 case 3:
-                                                    j = _j.sent();
+                                                    j = _l.sent();
                                                     this.mask = false;
                                                     if (j === false) {
                                                         this.alert = l("The network connection failed.");
@@ -246,6 +246,10 @@ var __Mutton__;
                                                     for (_g = 0, _h = j.libFolder; _g < _h.length; _g++) {
                                                         lib = _h[_g];
                                                         list.push(l("Library: ?, existing but missing satellite folders.", [lib]));
+                                                    }
+                                                    for (_j = 0, _k = j.remove; _j < _k.length; _j++) {
+                                                        file = _k[_j];
+                                                        list.push(file + " - " + l("The file may need to be deleted."));
                                                     }
                                                     if (list.length === 0) {
                                                         this.alert = l("No problem.");

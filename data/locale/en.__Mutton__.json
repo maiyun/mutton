@@ -52,6 +52,7 @@
 
     "File mismatch.": "File mismatch.",
     "File does not exist.": "File does not exist.",
+    "The file may need to be deleted.": "The file may need to be deleted.",
     "Missing constants: ?.": "Missing constants: ?.",
     "Library: ?, current version: ?, latest version: ?.": "Library: ?, current version: ?, latest version: ?.",
     "Library: ?, existing but missing satellite folders.": "Library: ?, existing but missing satellite folders.",
