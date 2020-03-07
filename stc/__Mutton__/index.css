@@ -142,8 +142,11 @@ html,body,input,textarea {
 .textbox-in {
     outline: none; width: 100%; -webkit-appearance: none; border-radius: 0; margin: 0;
 }
-textarea.textbox-in {
-    resize: none; vertical-align: middle;
+code.textbox-in {
+    display: block; line-height: 1.5; -webkit-user-select: text; user-select: text; cursor: text;
+}
+pre.textbox {
+    margin: 0;
 }
 
 /* --- List --- */

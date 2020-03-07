@@ -100,9 +100,7 @@ namespace __Mutton__ {
                 onlineLibsIndex: 0,
                 localLibsIndex: 0,
                 upgradeInfoList: [],
-                upgradeRunning: false,
-                // --- Config ---
-                configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
+                upgradeRunning: false
             },
             mounted: async function (this: any) {
                 await this.$nextTick();
@@ -302,6 +300,9 @@ namespace __Mutton__ {
     });
     document.addEventListener("touchstart", function () {});
     document.addEventListener("contextmenu", function (e) {
+        if (e.target && (<HTMLElement>e.target).tagName.toLowerCase() === "code") {
+            return;
+        }
         e.preventDefault();
     });
 

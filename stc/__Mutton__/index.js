@@ -144,8 +144,7 @@ var __Mutton__;
                                 onlineLibsIndex: 0,
                                 localLibsIndex: 0,
                                 upgradeInfoList: [],
-                                upgradeRunning: false,
-                                configTxt: "<?php\nconst __MUTTON__PWD = 'Your password';\n\n"
+                                upgradeRunning: false
                             },
                             mounted: function () {
                                 return __awaiter(this, void 0, void 0, function () {
@@ -469,6 +468,9 @@ var __Mutton__;
     });
     document.addEventListener("touchstart", function () { });
     document.addEventListener("contextmenu", function (e) {
+        if (e.target && e.target.tagName.toLowerCase() === "code") {
+            return;
+        }
         e.preventDefault();
     });
     function loadScript(paths) {

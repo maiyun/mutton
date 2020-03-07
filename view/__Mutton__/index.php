@@ -143,7 +143,8 @@
                             <!-- Profile -->
                             <div class="tab__panel__item" v-else-if="tab == 3">
                                 <div style="padding-bottom: 10px;"><?php echo l('Please place the following on "etc/__mutton__.php" to use this portal.') ?></div>
-                                <div class="textbox"><textarea class="textbox-in" rows="15" readonly v-model="configTxt"></textarea></div>
+                                <pre class="textbox"><code class="textbox-in" style="height: 300px;"><?php echo substr(highlight_string("<?php
+const __MUTTON__PWD = 'Your password';", true), 6, -7) ?><br><br><br></code></pre>
                             </div>
                         </div>
                     </div>
