@@ -4,6 +4,11 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.zh-CN.md)
 
+# 6.1.0
+
+[+] 新增檢測可能存在的廢棄檔在 Mutton Portal。    
+[+] 新增 middle 結構，可預先處理所有請求。
+
 ## 6.0.2
 
 [\*] 修復 reuse 的一些問題在 Net 庫。

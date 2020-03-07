@@ -132,11 +132,6 @@ class __Mutton__ extends Ctr {
                 } else {
                     $miss[] = $file;
                 }
-            } else if ($item[0] === 'mustn') {
-                // --- 文件必须存在，但无需和框架原内容保持一致（不校验 md5） ---
-                if (!is_file(ROOT_PATH . $file)) {
-                    $miss[] = $file;
-                }
             } else if ($item[0] === 'md5') {
                 // --- 若存在则校验 md5，否则不校验 ---
                 if (is_file(ROOT_PATH . $file) && (md5_file(ROOT_PATH . $file) !== $item[1])) {
@@ -588,7 +583,6 @@ class __Mutton__ extends Ctr {
         $list = [
             'file' => [
                 'ctr/__Mutton__.php' => ['md5', ''],
-                'ctr/middle.php' => ['mustn'],
                 'ctr/test.php' => ['remove'],
                 'data/locale/en.__Mutton__.json' => ['md5', ''],
                 'data/locale/zh-CN.__Mutton__.json' => ['md5', ''],

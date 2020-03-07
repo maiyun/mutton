@@ -11,7 +11,7 @@ class middle extends Ctr {
         if (URI !== 'test/middle') {
             return true;
         }
-        return 'action: ' . $this->_action;
+        return '_action: ' . $this->_action . '<br><br>';
     }
 
 }

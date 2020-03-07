@@ -4,6 +4,11 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+# 6.1.0
+
+[+] New detection of possible waste files is found in Mutton Portal.  
+[+] New middle structure to pre-process all requests.
+
 ## 6.0.2
 
 [\*] Fix reuse's issues of the Net library.

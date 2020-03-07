@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39
+ * Last: 2020-1-17 01:09:39, 2020-3-7 23:00:14
  */
 declare(strict_types = 1);
 
@@ -55,20 +55,6 @@ class Route {
         $middle->_param = $param;
         // --- action 名 ---
         $middle->_action = $pathRight;
-        // --- 原始 POST ---
-        $middle->_rawPost = $_POST;
-        // --- 原始 GET ---
-        $middle->_get = &$_GET;
-        // --- Cookie ---
-        $middle->_cookie = &$_COOKIE;
-        // --- 设置 XSRF 值 ---
-        if (!isset($_COOKIE['XSRF-TOKEN'])) {
-            $middle->_xsrf = $middle->_random(16, Ctr::RANDOM_LUN);
-            setcookie('XSRF-TOKEN', $middle->_xsrf, 0, '/', '', false, true);
-            $_COOKIE['XSRF-TOKEN'] = $middle->_xsrf;
-        } else {
-            $middle->_xsrf = $_COOKIE['XSRF-TOKEN'];
-        }
         // --- 处理 headers ---
         foreach ($_SERVER as $key => $val) {
             if ($key === 'CONTENT_TYPE') {
@@ -83,6 +69,11 @@ class Route {
         if (!isset($middle->_headers['authorization'])) {
             $middle->_headers['authorization'] = '';
         }
+
+        // --- 原始 GET ---
+        $middle->_get = &$_GET;
+        // --- 原始 POST ---
+        $middle->_rawPost = $_POST;
         // --- 处理 POST 的值 JSON 或 FILE ---
         $contentType = isset($middle->_headers['content-type']) ? strtolower($middle->_headers['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
@@ -114,6 +105,18 @@ class Route {
         // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
         $middle->_post = &$_POST;
+
+        // --- Cookie ---
+        $middle->_cookie = &$_COOKIE;
+        // --- 设置 XSRF 值 ---
+        if (!isset($_COOKIE['XSRF-TOKEN'])) {
+            $middle->_xsrf = $middle->_random(16, Ctr::RANDOM_LUN);
+            setcookie('XSRF-TOKEN', $middle->_xsrf, 0, '/', '', false, true);
+            $_COOKIE['XSRF-TOKEN'] = $middle->_xsrf;
+        } else {
+            $middle->_xsrf = $_COOKIE['XSRF-TOKEN'];
+        }
+
         // --- 执行中间件的 _load ---
         $rtn = $middle->_load();
         if (!isset($rtn) || $rtn === true) {
@@ -153,17 +156,20 @@ class Route {
             }
             // --- 对信息进行初始化 ---
             // --- 路由定义的参数序列 ---
-            $ctr->_param = $middle->_param;
+            $ctr->_param = &$middle->_param;
             $ctr->_action = $middle->_action;
-            $ctr->_rawPost = &$middle->_rawPost;
-            $ctr->_get = &$middle->_get;
-            $ctr->_cookie = &$middle->_cookie;
-            $ctr->_xsrf = $middle->_xsrf;
             $ctr->_headers = &$middle->_headers;
-            $ctr->_files = &$middle->_files;
+
+            $ctr->_get = &$middle->_get;
             $ctr->_post = &$middle->_post;
-            $ctr->_cacheTTL = $middle->_cacheTTL;
+            $ctr->_rawPost = &$middle->_rawPost;
+            $ctr->_files = &$middle->_files;
+
+            $ctr->_cookie = &$middle->_cookie;
             $ctr->_session = &$middle->_session;
+
+            $ctr->_cacheTTL = $middle->_cacheTTL;
+            $ctr->_xsrf = $middle->_xsrf;
             // --- 检测是否有 onLoad，有则优先执行一下 ---
             if (method_exists($ctr, '_load')) {
                 $rtn = $ctr->_load();

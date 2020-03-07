@@ -19,20 +19,23 @@ class Ctr {
     public $_param = [];
     /** @var string 当前的 action 名 */
     public $_action = '';
+    /** @var array 请求的 header 列表 */
+    public $_headers = [];
+
     /** @var array GET 数据 */
     public $_get;
     /** @var array POST 数据 */
     public $_post;
     /** @var array 原始 POST 数据 */
     public $_rawPost;
-    /** @var array Session 数组 */
-    public $_session = [];
-    /** @var array Cookie 数组 */
-    public $_cookie;
     /** @var array 上传的文件列表 */
     public $_files = [];
-    /** @var array 请求的 header 列表 */
-    public $_headers = [];
+
+    /** @var array Cookie 数组 */
+    public $_cookie;
+    /** @var array Session 数组 */
+    public $_session = [];
+
     /** @var int 页面浏览器客户端缓存 */
     public $_cacheTTL = CACHE_TTL;
     /** @var string XSRF TOKEN 值 */
