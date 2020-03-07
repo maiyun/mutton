@@ -11,7 +11,7 @@ class middle extends Ctr {
         if (URI !== 'test/middle') {
             return true;
         }
-        return '_action: ' . $this->_action . '<br><br>';
+        return '_action: ' . $this->_action . '<br><br>In fact, the middle method does not exist in the test controller, which uses Mutton\'s middle structure to preprocess requests.';
     }
 
 }
