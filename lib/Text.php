@@ -9,7 +9,7 @@
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json",
             "action": "down",
             "save": "tld.json"
-        },
+        }
     }
 } - END
  * Date: 2015/05/07 13:50
