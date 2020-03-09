@@ -1,9 +1,9 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":false} - END
+ * CONF - {"ver":"0.2","folder":false} - END
  * Dat: 2019-12-14 16:10:54
- * Las: 2019-12-14 16:10:58, 2020-2-27 18:46:35
+ * Las: 2019-12-14 16:10:58, 2020-3-9 11:29:30
  */
 declare(strict_types = 1);
 
@@ -18,21 +18,21 @@ class Fs {
      * @return bool
      */
     public static function mkdir(string $path, int $mode = 0755): bool {
-        $path = str_replace('\\', '/', $path);
-        $dirs = explode('/', $path);
-        $tpath = '';
-        foreach ($dirs as $v) {
-            if ($v === '') {
-                continue;
-            }
-            $tpath .= $v . '/';
-            if (!is_dir($tpath)) {
-                if (!@mkdir($tpath)) {
-                    return false;
-                }
-                @chmod($tpath, $mode);
-            }
+        if (is_dir($path)) {
+            return true;
         }
+        $path = str_replace('\\', '/', $path);
+        if ($path[strlen($path) - 1] === '/') {
+            $path = substr($path, 0, -1);
+        }
+        $lio = strrpos($path, '/');
+        if (!self::mkdir(substr($path, 0, $lio), $mode)) {
+            return false;
+        }
+        if (!@mkdir($path)) {
+            return false;
+        }
+        @chmod($path, $mode);
         return true;
     }
 
