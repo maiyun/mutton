@@ -1,9 +1,9 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":false} - END
+ * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/05/07 13:50
- * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44,  2020-1-26 23:18:42
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-9 14:38:40
  */
 declare(strict_types = 1);
 
@@ -12,12 +12,12 @@ namespace lib;
 class Text {
 
     /**
-     * --- 将文件大小格式化为容量显示字符串 ---
-     * @param float $size
+     * --- 将文件大小格式化为带单位的字符串 ---
+     * @param float|int $size
      * @param string $spliter
      * @return string
      */
-    public static function sizeFormat(float $size, string $spliter = ' '): string {
+    public static function sizeFormat($size, string $spliter = ' '): string {
         static $units = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
         $i = 0;
         for (; $i < 6 && $size >= 1024.0; ++$i) {
@@ -128,6 +128,15 @@ class Text {
     }
 
     /**
+     * --- 是否是 IPv6 ---
+     * @param string $ip
+     * @return bool
+     */
+    public static function isIPv6(string $ip): bool {
+        return preg_match('/^(([\da-fA-F]{1,4}):){8}$/', $ip . ':') ? true : false;
+    }
+
+    /**
      * --- 换行替换为别的字符 ---
      * @param string $str
      * @param string $to
@@ -171,7 +180,7 @@ class Text {
     }
 
     /**
-     * --- 传入正则进行匹配 str 是否都满足 ---
+     * --- 传入正则进行匹配 str 是否有一项满足 ---
      * @param string $str
      * @param array $regs
      * @return bool
