@@ -349,7 +349,7 @@ class __Mutton__ extends Ctr {
         ], $return)) {
             return $return;
         }
-        if (in_array($_POST['lib'], ['Fs', 'Net'])) {
+        if (in_array($_POST['lib'], ['Fs', 'Net', 'Text'])) {
             return [0, l('The library cannot be uninstalled.')];
         }
         if (!is_file(LIB_PATH . $_POST['lib'] . '.php')) {
