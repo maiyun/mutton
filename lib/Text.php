@@ -1,9 +1,20 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.2","folder":false} - END
+ * CONF - {
+    "ver": "0.3",
+    "folder": true,
+    "url": {
+        "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json": {
+            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json",
+            "action": "down",
+            "save": "tld.json"
+        },
+    }
+} - END
  * Date: 2015/05/07 13:50
- * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-9 14:38:40
+ * TLD: https://raw.githubusercontent.com/lupomontero/psl/master/data/rules.json
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-9 20:40:13
  */
 declare(strict_types = 1);
 
@@ -115,7 +126,7 @@ class Text {
      * @return bool
      */
     public static function isEMail(string $email): bool {
-        return preg_match('/^[-_\w.]+@[-_\w]+(\.[-_\w]+)*$/i', $email) ? true : false;
+        return preg_match('/^[-_\w.]+@[-_\w.]+\.([a-zA-Z]+)$/i', $email) ? true : false;
     }
 
     /**
@@ -133,7 +144,16 @@ class Text {
      * @return bool
      */
     public static function isIPv6(string $ip): bool {
-        return preg_match('/^(([\da-fA-F]{1,4}):){8}$/', $ip . ':') ? true : false;
+        return preg_match('/^(\w*?:){2,7}[\w.]*$/', $ip) ? true : false;
+    }
+
+    /**
+     * --- 判断是否是域名 ---
+     * @param string $domain
+     * @return bool
+     */
+    public static function isDomain(string $domain): bool {
+        return preg_match('/^.+?\.[a-zA-Z]+$/', $domain) ? true : false;
     }
 
     /**
@@ -151,32 +171,66 @@ class Text {
         return $str;
     }
 
+    /** @var array|null Tld 列表 */
+    private static $tldList = null;
     /**
-     * --- 获取一个域名的顶级域名 ---
+     * --- 获取一个域名的根域名（TLD） ---
      * @param string $domain
-     * @return string
+     * @return array
      */
-    public static function getHost(string $domain = ''): string {
+    public static function parseDomain(string $domain = ''): array {
+        $rtn = [
+            'tld' => null,
+            'sld' => null,
+            'domain' => null,
+            'sub' => null
+        ];
         if ($domain === '') {
             $domain = $_SERVER['HTTP_HOST'];
-        }
-        $domainArr = explode('.', $domain);
-        $count = count($domainArr);
-        // --- 判断是否是双后缀 ---
-        $isDoubleExt = false;
-        $extList = ['com.cn', 'net.cn', 'org.cn', 'gov.cn', 'co.jp', 'com.tw', 'co.kr', 'co.hk'];
-        foreach ($extList as $ext){
-            if (strpos($domain, '.' . $ext)){
-                $isDoubleExt = true;
-                break;
+        } else {
+            if (!self::isDomain($domain)) {
+                return $rtn;
             }
         }
-        if ($isDoubleExt) {
-            $host = $domainArr[$count - 3] . '.' . $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
+        $arr = explode('.', $domain);
+        $length = count($arr);
+        if ($length === 1) {
+            $rtn['tld'] = strtolower($arr[0]);
+            $rtn['domain'] = strtolower($arr[0]);
         } else {
-            $host = $domainArr[$count - 2] . '.' . $domainArr[$count - 1];
+            if (self::$tldList === null) {
+                self::$tldList = json_decode(file_get_contents(LIB_PATH . 'Text/tld.json'), true);
+            }
+            $last2 = strtolower($arr[$length - 2] . '.' . $arr[$length - 1]);
+            if (in_array($last2, self::$tldList)) {
+                // --- last2 就是 tld ---
+                $rtn['tld'] = $last2;
+                if ($length === 2) {
+                    // --- 没有 sld ---
+                    $rtn['domain'] = $last2;
+                    return $rtn;
+                }
+                $rtn['sld'] = strtolower($arr[$length - 3]);
+                $rtn['domain'] = $rtn['sld'] . '.' . $rtn['tld'];
+                // --- 判断是否有 sub ---
+                if ($length === 3) {
+                    return $rtn;
+                }
+                array_splice($arr, -3);
+                $rtn['sub'] = strtolower(join('.', $arr));
+            } else {
+                $rtn['tld'] = strtolower($arr[$length - 1]);
+                $rtn['sld'] = strtolower($arr[$length - 2]);
+                $rtn['domain'] = $rtn['sld'] . '.' . $rtn['tld'];
+                // --- 判断是否有 sub ---
+                if ($length === 2) {
+                    return $rtn;
+                }
+                array_splice($arr, -2);
+                $rtn['sub'] = strtolower(join('.', $arr));
+            }
         }
-        return $host;
+        return $rtn;
     }
 
     /**

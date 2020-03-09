@@ -47,6 +47,7 @@
     "Running...": "Running...",
     "Build a \"mblob\" file:": "Build a \"mblob\" file:",
     "Build": "Build",
+    "Format tld": "Format tld",
 
     "Please place the following on \"etc/__mutton__.php\" to use this portal.": "Please place the following on \"etc/__mutton__.php\" to use this portal.",
 
@@ -73,5 +74,6 @@
     "Are you sure you want to uninstall \"?\"?": "Are you sure you want to uninstall \"?\"?",
     "Do you really want to automatically update to the version \"?\"? Files in the \"etc\" directory are not updated.": "Do you really want to automatically update to the version \"?\"? Files in the \"etc\" directory are not updated.",
     "The upgrade was successful.": "The upgrade was successful.",
-    "No upgrade is required.": "No upgrade is required."
+    "No upgrade is required.": "No upgrade is required.",
+    "Are you sure you want to format it?": "Are you sure you want to format it?"
 }

@@ -137,6 +137,7 @@
                                     <div><?php echo l('Build a "mblob" file:') ?></div>
                                     <div style="text-align: center; margin-top: 10px;">
                                         <mu-button @click.native="build()"><?php echo l('Build') ?></mu-button>
+                                        <mu-button @click.native="formatTld()" style="margin-left: 10px;"><?php echo l('Format tld') ?></mu-button>
                                     </div>
                                 </div>
                             </div>

@@ -1064,7 +1064,45 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <pre>Text::urlResolve('http://www.url.com/path?ok=b', '?do=some');</pre>
 " . htmlspecialchars(Text::urlResolve('http://www.url.com/path?ok=b', '?do=some')) . "
 <pre>Text::urlResolve('/abc/def/', '');</pre>
-" . htmlspecialchars(Text::urlResolve('/abc/def/', ''));
+" . htmlspecialchars(Text::urlResolve('/abc/def/', '')) . "
+<pre>Text::isEMail('test@gmail.com');</pre>
+" . json_encode(Text::isEMail('test@gmail.com')) . "
+<pre>Text::isEMail('test@x');</pre>
+" . json_encode(Text::isEMail('test@x')) . "
+<pre>Text::isIPv4('192.168.0.1');</pre>
+" . json_encode(Text::isIPv4('192.168.0.1')) . "
+<pre>Text::isIPv4('192.168.0');</pre>
+" . json_encode(Text::isIPv4('192.168.0')) . "
+<pre>Text::isIPv6(':');</pre>
+" . json_encode(Text::isIPv6(':')) . "
+<pre>Text::isIPv6('::');</pre>
+" . json_encode(Text::isIPv6('::')) . "
+<pre>Text::isIPv6('::1');</pre>
+" . json_encode(Text::isIPv6('::1')) . "
+<pre>Text::isIPv6('::FFFF:C0A8:0201');</pre>
+" . json_encode(Text::isIPv6('::FFFF:C0A8:0201')) . "
+<pre>Text::isIPv6('2031:0000:1F1F:0000:0000:0100:11A0:ADDF');</pre>
+" . json_encode(Text::isIPv6('2031:0000:1F1F:0000:0000:0100:11A0:ADDF')) . "
+<pre>Text::isIPv6('2031:0000:1F1F:0000:0000:0100:11A0:ADDF:AZ');</pre>
+" . json_encode(Text::isIPv6('2031:0000:1F1F:0000:0000:0100:11A0:ADDF:AZ')) . "
+<pre>Text::isIPv6('::FFFF:192.168.0.1');</pre>
+" . json_encode(Text::isIPv6('::FFFF:192.168.0.1')) . "
+<pre>Text::isDomain('::FFFF:192.168.0.1');</pre>
+" . json_encode(Text::isDomain('::FFFF:192.168.0.1')) . "
+<pre>Text::isDomain('www.xxx.com.cn');</pre>
+" . json_encode(Text::isDomain('www.xxx.com.cn')) . "
+<pre>Text::isDomain('com');</pre>
+" . json_encode(Text::isDomain('com')) . "
+<pre>Text::parseDomain('www.xxx.com.cn');</pre>
+" . json_encode(Text::parseDomain('www.xxx.com.cn')) . "
+<pre>Text::parseDomain('www.xxx.us');</pre>
+" . json_encode(Text::parseDomain('www.xxx.us')) . "
+<pre>Text::parseDomain('xxx.co.jp');</pre>
+" . json_encode(Text::parseDomain('xxx.co.jp')) . "
+<pre>Text::parseDomain('js.cn');</pre>
+" . json_encode(Text::parseDomain('js.cn')) . "
+<pre>Text::parseDomain('xxx.cn');</pre>
+" . json_encode(Text::parseDomain('xxx.cn'));
         return $echo . '<br><br>' . $this->_getEnd();
     }
 

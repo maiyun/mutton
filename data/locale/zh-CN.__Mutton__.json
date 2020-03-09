@@ -47,6 +47,7 @@
     "Running...": "运行中……",
     "Build a \"mblob\" file:": "创建一个“mblob”文件：",
     "Build": "创建",
+    "Format tld": "格式化 tld",
 
     "Please place the following on \"etc/__mutton__.php\" to use this portal.": "请将以下内容放置在“etc/__mutton__.php”然后再使用本面板。",
 
@@ -73,5 +74,6 @@
     "Are you sure you want to uninstall \"?\"?": "确定要卸载“?”吗？",
     "Do you really want to automatically update to the version \"?\"? Files in the \"etc\" directory are not updated.": "真的要自动更新到版本“?”吗？“etc”目录中的文件不会被更新。",
     "The upgrade was successful.": "升级成功。",
-    "No upgrade is required.": "不需要升级。"
+    "No upgrade is required.": "不需要升级。",
+    "Are you sure you want to format it?": "确定要格式化吗？"
 }

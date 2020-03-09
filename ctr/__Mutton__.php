@@ -309,6 +309,32 @@ class __Mutton__ extends Ctr {
         }
     }
 
+    public function apiFormatTld() {
+        if (!$this->_hasConfig) {
+            return [0, l('Please place the profile first.')];
+        }
+        if (!$this->_checkXInput($_POST, [
+            'password' => ['require', __MUTTON__PWD, [0, l('Password is incorrect.')]]
+        ], $return)) {
+            return $return;
+        }
+        if (!($arr = file_get_contents(LIB_PATH . 'Text/tld.json'))) {
+            return [0, l('File does not exist.')];
+        }
+        $arr = json_decode($arr, true);
+        $out = [];
+        foreach ($arr as $item) {
+            if (substr_count($item, '.') !== 1) {
+                continue;
+            }
+            $out[] = $item;
+        }
+        if (!file_put_contents(LIB_PATH . 'Text/tld.json', json_encode($out))) {
+            return [0, l('No server write permissions.')];
+        }
+        return [1];
+    }
+
     /**
      * --- 卸载本地库 ---
      * @return array

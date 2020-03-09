@@ -424,6 +424,35 @@ var __Mutton__;
                                         });
                                     });
                                 },
+                                formatTld: function () {
+                                    return __awaiter(this, void 0, void 0, function () {
+                                        var j;
+                                        return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4, this.confirm(l("Are you sure you want to format it?"))];
+                                                case 1:
+                                                    if (!(_a.sent())) {
+                                                        return [2];
+                                                    }
+                                                    this.mask = true;
+                                                    return [4, post(URL_BASE + "__Mutton__/apiFormatTld", { password: this.password })];
+                                                case 2:
+                                                    j = _a.sent();
+                                                    this.mask = false;
+                                                    if (j === false) {
+                                                        this.alert = l("The network connection failed.");
+                                                        return [2];
+                                                    }
+                                                    if (j.result <= 0) {
+                                                        this.alert = j.msg;
+                                                        return [2];
+                                                    }
+                                                    this.alert = l("Successful.");
+                                                    return [2];
+                                            }
+                                        });
+                                    });
+                                },
                                 getLocalLibs: function () {
                                     return __awaiter(this, void 0, void 0, function () {
                                         var j;

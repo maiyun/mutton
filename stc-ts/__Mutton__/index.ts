@@ -276,6 +276,24 @@ namespace __Mutton__ {
                     }
                     this.alert = l("Successful.");
                 },
+                // --- 格式化 tld 文件 ---
+                formatTld: async function (this: any) {
+                    if (!await this.confirm(l("Are you sure you want to format it?"))) {
+                        return;
+                    }
+                    this.mask = true;
+                    let j = await post(URL_BASE + "__Mutton__/apiFormatTld", {password: this.password});
+                    this.mask = false;
+                    if (j === false) {
+                        this.alert = l("The network connection failed.");
+                        return;
+                    }
+                    if (j.result <= 0) {
+                        this.alert = j.msg;
+                        return;
+                    }
+                    this.alert = l("Successful.");
+                },
                 // --- 获取本地库列表 ---
                 getLocalLibs: async function (this: any) {
                     this.mask = true;
