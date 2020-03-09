@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.3",
+    "ver": "0.4",
     "folder": true,
     "url": {
         "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem": {
@@ -19,7 +19,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-6 21:12:03
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-9 22:57:18
  */
 declare(strict_types = 1);
 
@@ -375,11 +375,16 @@ class Net {
             // --- z.ok.xxx.com vs  .xxx.com: true ---
             // --- ok.xxx.com   vs  .zz.ok.xxx.com: false ---
             if ($uri['host'] !== $domainN) {
-                $domainSc = substr_count($domain, '.');
-                if ($domainSc <= 1) {
-                    // --- .com ---
+                // --- 设置的域名和当前 host 不相等，如果是 IP、无 . 域名，则直接失败 ---
+                if (!Text::isDomain($uri['host'])) {
                     continue;
                 }
+                $parseDomain = Text::parseDomain($domainN);
+                if ($parseDomain['tld'] === strtolower($domainN)) {
+                    continue;
+                }
+                // --- 获取设置域名的点数 ---
+                $domainSc = substr_count($domain, '.');
                 // --- 判断访问路径 (uri['host']) 是不是设置域名 (domain) 的孩子，domain 必须是 uriHost 的同级或者父辈 ---
                 if (substr_count($uri['host'], '.') < $domainSc) {
                     // --- ok.xxx.com (2) < .pp.xxx.com (2): false ---

@@ -19,7 +19,7 @@ use sys\Ctr;
 class test extends Ctr {
 
     public function _load() {
-        if (HOST !== '127.0.0.1') {
+        if (HOST !== '127.0.0.1' && HOST !== 'local-test.brc-app.com' && HOST !== 'local-test.brc-app.com.cn') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
         }
     }
@@ -713,16 +713,24 @@ content: <pre>" . $res->content . "</pre>";
         return join('', $echo) . $this->_getEnd();
     }
     public function netCookie1() {
-        setcookie('test1', '123', $_SERVER['REQUEST_TIME'] + 10);
-        setcookie('test2', '456', $_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
-        setcookie('test3', '789', $_SERVER['REQUEST_TIME'] + 30, '/', HOSTNAME);
-        setcookie('test4', '012', $_SERVER['REQUEST_TIME'] + 40, '/ok/');
-        setcookie('test5', '345', $_SERVER['REQUEST_TIME'] + 10, '', '', true);
-        return "setcookie('test1', '123', \$_SERVER['REQUEST_TIME'] + 10);
-setcookie('test2', '456', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
-setcookie('test3', '789', \$_SERVER['REQUEST_TIME'] + 30, '/', '".HOSTNAME."');
-setcookie('test4', '012', \$_SERVER['REQUEST_TIME'] + 40, '/ok/');
-setcookie('test5', '345', \$_SERVER['REQUEST_TIME'] + 10, '', '', true);";
+        setcookie('test1', 'normal', $_SERVER['REQUEST_TIME'] + 10);
+        setcookie('test2', 'baidu.com', $_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
+        setcookie('test3', HOSTNAME, $_SERVER['REQUEST_TIME'] + 30, '/', HOSTNAME);
+        setcookie('test4', '/ok/', $_SERVER['REQUEST_TIME'] + 40, '/ok/');
+        setcookie('test5', 'secure', $_SERVER['REQUEST_TIME'] + 50, '', '', true);
+        setcookie('test6', '0.1', $_SERVER['REQUEST_TIME'] + 40, '/', '0.1');
+        setcookie('test7', 'localhost', $_SERVER['REQUEST_TIME'] + 30, '/', 'localhost');
+        setcookie('test8', 'com', $_SERVER['REQUEST_TIME'] + 20, '/', 'com');
+        setcookie('test9', 'com.cn', $_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');
+        return "setcookie('test1', 'normal', \$_SERVER['REQUEST_TIME'] + 10);
+setcookie('test2', 'baidu.com', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
+setcookie('test3', '" . HOSTNAME .  "', \$_SERVER['REQUEST_TIME'] + 30, '/', '" . HOSTNAME . "');
+setcookie('test4', '/ok/', \$_SERVER['REQUEST_TIME'] + 40, '/ok/');
+setcookie('test5', 'secure', \$_SERVER['REQUEST_TIME'] + 50, '', '', true);
+setcookie('test6', '0.1', \$_SERVER['REQUEST_TIME'] + 40, '/', '0.1');
+setcookie('test7', 'localhost', \$_SERVER['REQUEST_TIME'] + 30, '/', 'localhost');
+setcookie('test8', 'com', \$_SERVER['REQUEST_TIME'] + 20, '/', 'com');
+setcookie('test9', 'com.cn', \$_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');";
     }
     public function netCookie2() {
         return "\$_COOKIE: \n\n" . json_encode($_COOKIE, JSON_PRETTY_PRINT);
