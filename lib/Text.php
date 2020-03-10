@@ -153,7 +153,7 @@ class Text {
      * @return bool
      */
     public static function isDomain(string $domain): bool {
-        return preg_match('/^.+?\.[a-zA-Z]+$/', $domain) ? true : false;
+        return preg_match('/^.+?\.((?![0-9]).)+$/i', $domain) ? true : false;
     }
 
     /**
@@ -172,10 +172,10 @@ class Text {
     }
 
     /** @var array|null Tld 列表 */
-    private static $tldList = null;
+    private static $_tldList = null;
     /**
-     * --- 获取一个域名的根域名（TLD） ---
-     * @param string $domain
+     * --- 解析域名并获取 tld/sld/domain/sub ---
+     * @param string $domain 域名
      * @return array
      */
     public static function parseDomain(string $domain = ''): array {
@@ -196,13 +196,13 @@ class Text {
         $length = count($arr);
         if ($length === 1) {
             $rtn['tld'] = strtolower($arr[0]);
-            $rtn['domain'] = strtolower($arr[0]);
+            $rtn['domain'] = $rtn['tld'];
         } else {
-            if (self::$tldList === null) {
-                self::$tldList = json_decode(file_get_contents(LIB_PATH . 'Text/tld.json'), true);
+            if (self::$_tldList === null) {
+                self::$_tldList = json_decode(file_get_contents(LIB_PATH . 'Text/tld.json'), true);
             }
             $last2 = strtolower($arr[$length - 2] . '.' . $arr[$length - 1]);
-            if (in_array($last2, self::$tldList)) {
+            if (in_array($last2, self::$_tldList)) {
                 // --- last2 就是 tld ---
                 $rtn['tld'] = $last2;
                 if ($length === 2) {
@@ -235,8 +235,8 @@ class Text {
 
     /**
      * --- 传入正则进行匹配 str 是否有一项满足 ---
-     * @param string $str
-     * @param array $regs
+     * @param string $str 要检测的字符串
+     * @param array $regs 正则列表
      * @return bool
      */
     public static function match(string $str, array $regs): bool {
@@ -252,7 +252,7 @@ class Text {
 
     /**
      * --- 判断手机号是否是 11 位，不做真实性校验 ---
-     * @param string $p
+     * @param string $p 手机号
      * @return bool
      */
     public static function isPhoneCN(string $p): bool {
@@ -265,7 +265,7 @@ class Text {
 
     /**
      * --- 是否是中国大陆身份证号码 ---
-     * @param string $idcard
+     * @param string $idcard 身份证号
      * @return bool
      */
     public static function isIdCardCN(string $idcard): bool {
@@ -282,7 +282,7 @@ class Text {
         $verifyCodeList = ['1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'];
         // --- 根据前17位计算校验码 ---
         $total = 0;
-        for ($i=0; $i<17; $i++) {
+        for ($i = 0; $i < 17; $i++) {
             $total += substr($idcardBase, $i, 1) * $factor[$i];
         }
         // --- 取模 ---
