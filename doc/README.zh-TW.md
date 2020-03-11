@@ -148,7 +148,7 @@ $str = $this->_random(16, Ctr::RANDOM_N);
 ### 創建一個驗證碼
 
 ```php
-Captcha::get(400, 100)->getStream();
+Captcha::get(400, 100)->getBuffer();
 ```
 
 ### 獲取一個清單

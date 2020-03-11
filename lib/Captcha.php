@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.1",
+    "ver": "0.2",
     "folder": true,
     "url": {
         "https://github.com/Gregwar/Captcha/archive/v1.1.7.zip": {
@@ -12,7 +12,7 @@
     }
 } - END
  * Date: 2018-7-4 09:37
- * Last: 2019-1-29 16:10:50, 2020-2-28 23:49:30
+ * Last: 2019-1-29 16:10:50, 2020-3-11 23:14:45
  */
 declare(strict_types = 1);
 
@@ -54,7 +54,7 @@ class Captcha {
      * @param int $quality 图片质量
      * @return string
      */
-    public function getStream(int $quality = 70): string {
+    public function getBuffer(int $quality = 70): string {
         $old = ob_get_clean();
         ob_start();
         header('Content-type: image/jpeg');

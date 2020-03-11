@@ -228,7 +228,7 @@ json_encode(\$result);</pre>" . json_encode($result);
     }
 
     public function captchaFastbuild() {
-        return Captcha::get(400, 100)->getStream();
+        return Captcha::get(400, 100)->getBuffer();
     }
 
     public function captchaBase64() {

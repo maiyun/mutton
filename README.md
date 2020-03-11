@@ -147,7 +147,7 @@ $str = $this->_random(16, Ctr::RANDOM_N);
 ### Generate a verification code picture
 
 ```php
-Captcha::get(400, 100)->getStream();
+Captcha::get(400, 100)->getBuffer();
 ```
 
 ### Get a list
