@@ -1,9 +1,9 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":false} - END
+ * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/11/26 12:56
- * Last: 2019-2-1 15:59:13, 2020-2-8 10:22:59
+ * Last: 2019-2-1 15:59:13, 2020-2-8 10:22:59, 2020-3-12 17:21:45
  */
 declare(strict_types = 1);
 
@@ -30,7 +30,7 @@ class Crypto {
             $method = $method === self::AES_256_ECB ? self::AES_256_CFB : $method;
         }
         if (strlen($key) < 32) {
-            $key = hash_hmac('md5', $key, 'MuttonSalt');
+            $key = hash_hmac('md5', $key, 'MaiyunSalt');
         }
         if ($rtn = @openssl_encrypt($original, $method, $key, OPENSSL_RAW_DATA, $iv)) {
             return base64_encode($rtn);
@@ -39,13 +39,20 @@ class Crypto {
         }
     }
 
-    // --- 返回空代表解密失败 ---
+    /**
+     * --- AES 解密 ---
+     * @param string $encrypt 需解密的字符串
+     * @param string $key 密钥 32 个英文字母和数字
+     * @param string $iv 向量 16 个英文字母和数字
+     * @param string $method 加密方法
+     * @return string
+     */
     public static function aesDecrypt(string $encrypt, string $key, string $iv = '', string $method = self::AES_256_ECB): string {
         if ($iv !== '') {
             $method = $method === self::AES_256_ECB ? self::AES_256_CFB : $method;
         }
         if (strlen($key) < 32) {
-            $key = hash_hmac('md5', $key, 'MuttonSalt');
+            $key = hash_hmac('md5', $key, 'MaiyunSalt');
         }
         if ($rtn = @openssl_decrypt(base64_decode($encrypt), $method, $key, OPENSSL_RAW_DATA, $iv)) {
             return $rtn;

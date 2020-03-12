@@ -50,7 +50,7 @@ class Captcha {
     }
 
     /**
-     * --- 获取图片输出流 ---
+     * --- 获取图片 Buffer ---
      * @param int $quality 图片质量
      * @return string
      */
@@ -67,7 +67,11 @@ class Captcha {
         return $r;
     }
 
-    // --- 获取 base64 ---
+    /**
+     * --- 获取 base64 格式图片 ---
+     * @param int $quality 图片质量
+     * @return string
+     */
     public function getBase64(int $quality = 70): string {
         $old = ob_get_clean();
         ob_start();
@@ -82,7 +86,7 @@ class Captcha {
     }
 
     /**
-     * 获取随机码
+     * --- 获取当前随机码 ---
      * @return string
      */
     public function getPhrase(): string {
