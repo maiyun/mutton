@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.3",
+    "ver": "0.4",
     "folder": true,
     "url": {
         "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json": {
@@ -14,7 +14,7 @@
 } - END
  * Date: 2015/05/07 13:50
  * TLD: https://raw.githubusercontent.com/lupomontero/psl/master/data/rules.json
- * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-9 20:40:13
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-14 15:20:22
  */
 declare(strict_types = 1);
 
@@ -74,18 +74,26 @@ class Text {
      * @return string
      */
     public static function urlResolve(string $from, string $to): string {
+        $from = str_replace('\\', '/', $from);
+        $to = str_replace('\\', '/', $to);
+        // --- to 为空，直接返回 form ---
         if ($to === '') {
             return $from;
         }
-        // --- 获取 scheme, host, path ---
+        // --- 获取 from 的 scheme, host, path ---
         $f = Text::parseUrl($from);
         // --- 以 // 开头的，加上 from 的 protocol 返回 ---
         if (strpos($to,'//') === 0) {
             return $f['protocol'] ? $f['protocol'] . ':' . $to : $to;
         }
+        if ($f['protocol']) {
+            $from = $f['protocol'] . substr($from, strlen($f['protocol']));
+        }
+        // --- 获取 to 的 scheme, host, path ---
+        $t = Text::parseUrl($to);
         // --- 已经是绝对路径，直接返回 ---
-        if (parse_url($to, PHP_URL_SCHEME)) {
-            return $to;
+        if ($t['protocol']) {
+            return $t['protocol'] . substr($to, strlen($t['protocol']));
         }
         // --- # 或 ? 替换后返回 ---
         if ($to[0] === '#' || $to[0] === '?') {
@@ -96,14 +104,18 @@ class Text {
                 return $from . $to;
             }
         }
-        // --- 移除不是路径的部分，如 /ab/c 变成了 /ab ---
-        $path = preg_replace('#/[^/]*$#', '', $f['path']);
-        // --- 相对路径从根路径开始 ---
-        if ($to[0] ==  '/') {
-            $path = '';
+        // --- 处理后面的尾随路径 ---
+        $abs = ($f['auth'] ? $f['auth'] . '@' : '') . ($f['host'] ? $f['host'] : '');
+        if ($to[0] === '/') {
+            // -- abs 类似是 /xx/xx ---
+            $abs .= $to;
+        } else {
+            // --- to 是 xx/xx 这样的 ---
+            // --- 移除基准 path 不是路径的部分，如 /ab/c 变成了 /ab，/ab 变成了 空 ---
+            $path = preg_replace('/\\/[^\\/]*$/', '', $f['pathname']);
+            // --- abs 是 /xx/xx 了，因为如果 path 是空，则跟上了 /，如果 path 不为空，也是 / 开头 ---
+            $abs .= $path . '/' . $to;
         }
-        // --- 非最终绝对网址 ----
-        $abs = ($f['host'] ? $f['host'] : '') . $path . '/' . $to;
         // --- 删掉 ./ ---
         $abs = preg_replace('/(\/\.?\/)/', '/', $abs);
         // --- 删掉 ../ ---
@@ -117,7 +129,11 @@ class Text {
         // --- 剩下的 ../ 就是无效的直接替换为空 ---
         $abs = str_replace('../', '', $abs);
         // --- 返回最终结果 ---
-        return ($f['protocol'] ? $f['protocol'] . '://' : '') . $abs;
+        if ($f['protocol'] && !$f['host']) {
+            return $f['protocol'] . ':' . $abs;
+        } else {
+            return ($f['protocol'] ? $f['protocol'] . '://' : '') . $abs;
+        }
     }
 
     /**

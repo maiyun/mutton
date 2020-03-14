@@ -1065,12 +1065,22 @@ Result:<pre id=\"result\">Nothing.</pre>";
 " . htmlspecialchars(Text::urlResolve('/', 'path?id=1')) . "
 <pre>Text::urlResolve('https://www.url.com/view/path', 'find');</pre>
 " . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', 'find')) . "
+<pre>Text::urlResolve('https://www.url.com/view/path', '/');</pre>
+" . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', '/')) . "
+<pre>Text::urlResolve('https://www.url.com/view/path', '/xxx/yyy');</pre>
+" . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', '/xxx/yyy')) . "
 <pre>Text::urlResolve('/', '//www.url.com/path');</pre>
 " . htmlspecialchars(Text::urlResolve('/', '//www.url.com/path')) . "
-<pre>Text::urlResolve('http://www.url.com/path', 'https://www.url.com/path');</pre>
-" . htmlspecialchars(Text::urlResolve('http://www.url.com/path', 'https://www.url.com/path')) . "
-<pre>Text::urlResolve('http://www.url.com/path?ok=b', '?do=some');</pre>
-" . htmlspecialchars(Text::urlResolve('http://www.url.com/path?ok=b', '?do=some')) . "
+<pre>Text::urlResolve('http://www.url.com/path', 'hTtps://www.url.com/path');</pre>
+" . htmlspecialchars(Text::urlResolve('http://www.url.com/path', 'hTtps://www.url.com/path')) . "
+<pre>Text::urlResolve('hTtp://www.url.com/path?ok=b', '?do=some');</pre>
+" . htmlspecialchars(Text::urlResolve('hTtp://www.url.com/path?ok=b', '?do=some')) . "
+<pre>Text::urlResolve('/', 'C:\\Windows\\Boot');</pre>
+" . htmlspecialchars(Text::urlResolve('/', 'C:\\Windows\\Boot')) . "
+<pre>Text::urlResolve('C:\\Windows\\Misc', '/');</pre>
+" . htmlspecialchars(Text::urlResolve('C:\\Windows\\Misc', '/')) . "
+<pre>Text::urlResolve('C:\\Windows\\Misc', '/xxx/yyy');</pre>
+" . htmlspecialchars(Text::urlResolve('C:\\Windows\\Misc', '/xxx/yyy')) . "
 <pre>Text::urlResolve('/abc/def/', '');</pre>
 " . htmlspecialchars(Text::urlResolve('/abc/def/', '')) . "
 <pre>Text::isEMail('test@gmail.com');</pre>
