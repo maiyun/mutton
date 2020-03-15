@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.4",
+    "ver": "0.5",
     "folder": true,
     "url": {
         "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json": {
@@ -14,7 +14,7 @@
 } - END
  * Date: 2015/05/07 13:50
  * TLD: https://raw.githubusercontent.com/lupomontero/psl/master/data/rules.json
- * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-14 15:20:22
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-15 09:41:00
  */
 declare(strict_types = 1);
 
@@ -117,7 +117,7 @@ class Text {
             $abs .= $path . '/' . $to;
         }
         // --- 删掉 ./ ---
-        $abs = preg_replace('/(\/\.?\/)/', '/', $abs);
+        $abs = preg_replace('/\/\.\//', '/', $abs);
         // --- 删掉 ../ ---
         while (true) {
             // --- 用循环法把 /xx/../ 变成 / 进行返回上级目录 ---

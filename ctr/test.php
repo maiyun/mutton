@@ -1067,6 +1067,12 @@ Result:<pre id=\"result\">Nothing.</pre>";
 " . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', 'find')) . "
 <pre>Text::urlResolve('https://www.url.com/view/path', '/');</pre>
 " . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', '/')) . "
+<pre>Text::urlResolve('https://www.url.com/view/path/oh', '../ok/./index.js');</pre>
+" . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path/oh', '../ok/./index.js')) . "
+<pre>Text::urlResolve('https://www.url.com/view/path/oh', '../hah/../dodo/../112/666/777/../en');</pre>
+" . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path/oh', '../hah/../dodo/../112/666/777/../en')) . "
+<pre>Text::urlResolve('/hehe/ooo/', '../../../../../index.html');</pre>
+" . htmlspecialchars(Text::urlResolve('/hehe/ooo/', '../../../../../index.html')) . "
 <pre>Text::urlResolve('https://www.url.com/view/path', '/xxx/yyy');</pre>
 " . htmlspecialchars(Text::urlResolve('https://www.url.com/view/path', '/xxx/yyy')) . "
 <pre>Text::urlResolve('/', '//www.url.com/path');</pre>
