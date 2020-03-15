@@ -4,6 +4,14 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.zh-CN.md)
 
+# 6.2.0
+
+[+] 新增 isIPv6/isDomain/parseDomain 方法在 Text 庫。  
+[\*] 優化 CookieManager 在 Net 庫。  
+[\*] 修改 getStream 方法名為 getBuffer 在 Captcha 庫。  
+[\*] 優化 urlResolve 方法支援 Windows 路徑處理在 Text 庫。  
+[-] 移除 getHost 方法在 Text 庫，請用 parseDomain 方法替代。
+
 # 6.1.0
 
 [+] 新增檢測可能存在的廢棄檔在 Mutton Portal。    

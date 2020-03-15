@@ -4,6 +4,14 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+# 6.2.0
+
+[+] Add isIPv6/isDomain/parseDomain method in Text library.  
+[\*] Optimize CookieManager in Net library.  
+[\*] Modify getStream method named getBuffer in Captcha library.  
+[\*] The optimization urlResolve method supports Windows path processing in the Text library.  
+[-] Remove getHost method from the Text library, instead using the parseDomain method.
+
 # 6.1.0
 
 [+] New detection of possible waste files is found in Mutton Portal.  

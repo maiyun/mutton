@@ -2,10 +2,10 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.5",
+    "ver": "0.6",
     "folder": true,
     "url": {
-        "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json": {
+        "https://github.com/maiyun/Mutton/raw/{ver}/lib/Text/tld.json": {
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json",
             "action": "down",
             "save": "tld.json"

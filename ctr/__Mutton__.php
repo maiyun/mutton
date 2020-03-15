@@ -60,7 +60,7 @@ class __Mutton__ extends Ctr {
         }
         $url = '';
         if ($_POST['mirror'] === 'global') {
-            $url = 'https://api.github.com/repos/MaiyunNET/Mutton/tags';
+            $url = 'https://api.github.com/repos/maiyun/Mutton/tags';
         } else if ($_POST['mirror'] === 'cn') {
             $url = 'https://gitee.com/api/v5/repos/MaiyunNET/Mutton/tags';
         }
@@ -243,7 +243,7 @@ class __Mutton__ extends Ctr {
             }
             if ($url !== '') {
                 if ($_POST['mirror'] === 'global') {
-                    $list[$file] = 'https://github.com/MaiyunNET/Mutton/raw/' . $_POST['verName'] . '/' . $url;
+                    $list[$file] = 'https://github.com/maiyun/Mutton/raw/' . $_POST['verName'] . '/' . $url;
                 } else if ($_POST['mirror'] === 'cn') {
                     $list[$file] = 'https://gitee.com/MaiyunNET/Mutton/raw/' . $_POST['verName'] . '/' . $url;
                 }
@@ -271,8 +271,8 @@ class __Mutton__ extends Ctr {
         if (strpos($_POST['file'], '..') !== false || strpos($_POST['file'], './') !== false) {
             return [0, l('System error.')];
         }
-        $checkUrl = substr($_POST['url'], 0, 35);
-        if (($checkUrl !== 'https://github.com/MaiyunNET/Mutton') && ($checkUrl !== 'https://gitee.com/MaiyunNET/Mutton/')) {
+        $checkUrl = substr($_POST['url'], 0, 32);
+        if (($checkUrl !== 'https://github.com/maiyun/Mutton') && ($checkUrl !== 'https://gitee.com/MaiyunNET/Mutt')) {
             return [0, l('System error.')];
         }
         // --- 下载 ---
@@ -386,7 +386,7 @@ class __Mutton__ extends Ctr {
         }
         $url = '';
         if ($_POST['mirror'] === 'global') {
-            $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
+            $url = 'https://github.com/maiyun/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         } else if ($_POST['mirror'] === 'cn') {
             $url = 'https://gitee.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         }
@@ -582,7 +582,7 @@ class __Mutton__ extends Ctr {
     private function _getOnlineMblobData(string $mirror, string $verName) {
         $url = '';
         if ($mirror === 'global') {
-            $url = 'https://github.com/MaiyunNET/Mutton/raw/'.$verName.'/doc/mblob';
+            $url = 'https://github.com/maiyun/Mutton/raw/'.$verName.'/doc/mblob';
         } else if ($mirror === 'cn') {
             $url = 'https://gitee.com/MaiyunNET/Mutton/raw/'.$verName.'/doc/mblob';
         }

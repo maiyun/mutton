@@ -739,11 +739,11 @@ setcookie('test9', 'com.cn', \$_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');";
     public function netSave() {
         $echo = [];
 
-        $res = Net::get('https://github.com/MaiyunNET/Mutton/raw/master/README.md', [
+        $res = Net::get('https://github.com/maiyun/Mutton/raw/master/README.md', [
             'follow' => true,
             'save' => LOG_PATH . 'test-must-remove.md'
         ]);
-        $echo[] = "<pre>Net::get('https://github.com/MaiyunNET/Mutton/raw/master/README.md', [
+        $echo[] = "<pre>Net::get('https://github.com/maiyun/Mutton/raw/master/README.md', [
     'follow' => true,
     'save' => LOG_PATH . 'test-must-remove.md'
 ]);</pre>

@@ -2,15 +2,15 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.4",
+    "ver": "0.5",
     "folder": true,
     "url": {
-        "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem": {
+        "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/cacert.pem": {
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/cacert.pem",
             "action": "down",
             "save": "cacert.pem"
         },
-        "https://github.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php": {
+        "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/Response.php": {
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php",
             "action": "down",
             "save": "Response.php"
@@ -19,7 +19,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-9 22:57:18
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08
  */
 declare(strict_types = 1);
 
