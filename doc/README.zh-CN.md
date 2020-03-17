@@ -46,6 +46,8 @@ Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net,
 
 基于 GUI 优先原则，Mutton 附带可视化控制台，可以进行本地代码文件与线上版本文件异同检测、版本检测以及框架升级等功能。
 
+> 提示：我们只是采用了 Windows 2000 的怀旧风格，但我们的框架十分先进。
+
 [![Mutton Portal](portal-check-zh-CN.png)](portal-check-zh-CN.png)
 
 [![Mutton Portal](portal-system-zh-CN.png)](portal-system-zh-CN.png)

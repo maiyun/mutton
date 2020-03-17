@@ -46,6 +46,8 @@ Using the various libraries directly, the system loads them automatically.
 
 In Mutton Portal, it includes file anomaly detection, version detection, upgrade, and more.
 
+> Tip: We're just adopting the nostalgic style of Windows 2000, but our framework is very advanced.
+
 [![Mutton Portal](doc/portal-check.png)](doc/portal-check.png)
 
 [![Mutton Portal](doc/portal-system.png)](doc/portal-system.png)
