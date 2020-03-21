@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.7",
+    "ver": "0.8",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Text/tld.json": {
@@ -84,7 +84,7 @@ class Text {
         $f = Text::parseUrl($from);
         // --- 以 // 开头的，加上 from 的 protocol 返回 ---
         if (strpos($to,'//') === 0) {
-            return $f['protocol'] ? $f['protocol'] . ':' . $to : $to;
+            return $f['protocol'] ? $f['protocol'] . $to : $to;
         }
         if ($f['protocol']) {
             $from = $f['protocol'] . substr($from, strlen($f['protocol']));
@@ -130,9 +130,9 @@ class Text {
         $abs = str_replace('../', '', $abs);
         // --- 返回最终结果 ---
         if ($f['protocol'] && !$f['host']) {
-            return $f['protocol'] . ':' . $abs;
+            return $f['protocol'] . $abs;
         } else {
-            return ($f['protocol'] ? $f['protocol'] . '://' : '') . $abs;
+            return ($f['protocol'] ? $f['protocol'] . '//' : '') . $abs;
         }
     }
 
