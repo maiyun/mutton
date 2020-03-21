@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.6",
+    "ver": "0.7",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Text/tld.json": {
@@ -14,7 +14,7 @@
 } - END
  * Date: 2015/05/07 13:50
  * TLD: https://raw.githubusercontent.com/lupomontero/psl/master/data/rules.json
- * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-3-15 09:41:00
+ * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-03-21 16:23:45
  */
 declare(strict_types = 1);
 
@@ -45,7 +45,7 @@ class Text {
     public static function parseUrl(string $url): array {
         $uri = parse_url($url);
         $rtn = [
-            'protocol' => isset($uri['scheme']) ? strtolower($uri['scheme']) : null,
+            'protocol' => isset($uri['scheme']) ? strtolower($uri['scheme']) . ':' : null,
             'auth' => null,
             'user' => isset($uri['user']) ? $uri['user'] : null,
             'pass' => isset($uri['pass']) ? $uri['pass'] : null,

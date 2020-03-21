@@ -21,9 +21,8 @@ define('MOD_PATH', ROOT_PATH . 'mod/');
 define('CTR_PATH', ROOT_PATH . 'ctr/');
 define('VIEW_PATH', ROOT_PATH . 'view/');
 define('DATA_PATH', ROOT_PATH . 'data/');
-define('STC_PATH', ROOT_PATH . 'stc/');
 
-// --- 前端用户的路径 ---
+// --- 前端用的路径 ---
 
 define('URL_BASE', substr($_SERVER['SCRIPT_NAME'], 0, strrpos($_SERVER['SCRIPT_NAME'], '/') + 1));
 define('URL_STC', URL_BASE . 'stc/');
