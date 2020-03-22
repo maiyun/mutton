@@ -28,7 +28,7 @@ class test extends Ctr {
         $echo = [
             'Hello world! Welcome to use <strong>Mutton ' . VER . '</strong>!',
 
-            '<br><br>URI: ' . URI,
+            '<br><br>PATH: ' . PATH,
             '<br>HTTPS: ' . (HTTPS ? 'true' : 'false'),
             '<br>MOBILE: ' . (MOBILE ? 'true' : 'false'),
             '<br>HOST: ' . HOST,
@@ -36,7 +36,7 @@ class test extends Ctr {
             '<br>PHP Verison: ' . PHP_VERSION,
 
             '<br><br>URL_BASE: ' . URL_BASE,
-            '<br>URI: ' . URI,
+            '<br>URL_STC: ' . URL_STC,
             '<br>URL_FULL: ' . URL_FULL,
 
             '<br><br>headers: ' . htmlspecialchars(json_encode($this->_headers)),

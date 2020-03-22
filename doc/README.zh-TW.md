@@ -24,7 +24,7 @@ Nginx/Apache
 
 ```
 if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.txt\??.*)$) {
-    rewrite ^/([\s\S]*)$ /index.php?__uri=$1 last;
+    rewrite ^/([\s\S]*)$ /index.php?__path=$1 last;
 }
 ```
 

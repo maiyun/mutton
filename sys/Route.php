@@ -16,8 +16,8 @@ class Route {
 
     public static function run(): void {
         $time = time();
-        // --- URI 是安全的，不会是 ../../ 来访问到了外层，Apache Nginx 都会做处理的 ---
-        $path = URI;
+        // --- PATH 是安全的，不会是 ../../ 来访问到了外层，Apache Nginx 都会做处理的（已经通过模拟请求验证） ---
+        $path = PATH;
         // --- 如果为空则定义为 @ ---
         if ($path === '') {
             $path = "@";
@@ -37,7 +37,7 @@ class Route {
             }
         }
         if (!$match) {
-            list($pathLeft, $pathRight) = self::_getPathLeftRight(URI);
+            list($pathLeft, $pathRight) = self::_getPathLeftRight(PATH);
         }
         // --- 若文件名为保留的 middle 将不允许进行 ---
         if (substr($pathLeft, -6) === 'middle') {
@@ -143,7 +143,7 @@ class Route {
             if ($pathRight[0] === '_') {
                 // --- _ 开头的 action 是内部方法，不允许访问 ---
                 http_response_code(404);
-                echo '[Error] Action not found.';
+                echo '[Error] Action not found, PATH: ' . PATH;
                 return;
             }
             $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
@@ -151,7 +151,7 @@ class Route {
             }, $pathRight);
             if (!method_exists($ctr, $pathRight)) {
                 http_response_code(404);
-                echo '[Error] Action not found.';
+                echo '[Error] Action not found, PATH: ' . PATH;
                 return;
             }
             // --- 对信息进行初始化 ---

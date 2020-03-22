@@ -8,7 +8,7 @@ use sys\Ctr;
 class middle extends Ctr {
 
     public function _load() {
-        if (URI !== 'test/middle') {
+        if (PATH !== 'test/middle') {
             return true;
         }
         return '_action: ' . $this->_action . '<br><br>In fact, the middle method does not exist in the test controller, which uses Mutton\'s middle structure to preprocess requests.';

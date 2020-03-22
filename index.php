@@ -12,14 +12,10 @@ define('START_TIME', microtime(true));
 define('START_MEMORY', memory_get_usage());
 
 /**
- * --- 获取和定义重写的 URI ---
+ * --- 获取和定义重写的 PATH ---
  */
-if ($_GET['__uri'] == 'index.html' || $_GET['__uri'] == 'index.htm' || $_GET['__uri'] == 'index.php') {
-    header('Location: ./');
-    exit;
-}
-define('URI', isset($_GET['__uri']) ? $_GET['__uri'] : '');
-unset($_GET['__uri']);
+define('PATH', isset($_GET['__path']) ? $_GET['__path'] : '');
+unset($_GET['__path']);
 
 // --- 国际化 ---
 
