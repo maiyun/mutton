@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39, 2020-3-7 23:00:14
+ * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51
  */
 declare(strict_types = 1);
 
@@ -42,7 +42,7 @@ class Route {
         // --- 若文件名为保留的 middle 将不允许进行 ---
         if (substr($pathLeft, -6) === 'middle') {
             http_response_code(404);
-            echo '[Error] Controller not found.';
+            echo '[Error] Controller not found, path: ' . PATH . '.';
             return;
         }
         // --- 加载中间控制器（无论实际控制器是否存在，真实控制器都会加载，以便做特殊处理） ---
@@ -143,7 +143,7 @@ class Route {
             if ($pathRight[0] === '_') {
                 // --- _ 开头的 action 是内部方法，不允许访问 ---
                 http_response_code(404);
-                echo '[Error] Action not found, PATH: ' . PATH;
+                echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
             }
             $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
@@ -151,7 +151,7 @@ class Route {
             }, $pathRight);
             if (!method_exists($ctr, $pathRight)) {
                 http_response_code(404);
-                echo '[Error] Action not found, PATH: ' . PATH;
+                echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
             }
             // --- 对信息进行初始化 ---
@@ -234,7 +234,8 @@ class Route {
         if ($pathLio === false) {
             return [$path, 'index'];
         } else {
-            return [substr($path, 0, $pathLio), substr($path, $pathLio + 1)];
+            $right = substr($path, $pathLio + 1);
+            return [substr($path, 0, $pathLio), $right === '' ? 'index' : $right];
         }
     }
 
