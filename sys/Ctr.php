@@ -66,7 +66,6 @@ class Ctr {
      * @return string
      */
     public function _loadView(string $path, $data = []) {
-        // --- 重构 loadView(string $path, bool $return) ---
         extract($data);
         ob_start();
         require VIEW_PATH . $path . '.php';
@@ -87,12 +86,12 @@ class Ctr {
      * --- 检测提交的数据类型 ---
      * @param array $input 要校验的输入项
      * @param array $rule
-     * @param array $return 返回值
+     * @param array $rtn 返回值
      * @return bool
      */
-    public function _checkInput(array &$input, array $rule, &$return) {
+    public function _checkInput(array &$input, array $rule, &$rtn) {
         // --- 遍历规则 ---
-        // --- $input, ['xx' => ['require', '> 6', [0, 'xx 必须大于 6']], 'yy' => [], '_xsrf' => []], $return ---
+        // --- $input, ['xx' => ['require', '> 6', [0, 'xx 必须大于 6']], 'yy' => [], '_xsrf' => []], $rtn ---
         foreach ($rule as $key => $val) {
             // --- $key 就是上面的 xx ---
             if (!isset($input[$key])) {
@@ -113,14 +112,14 @@ class Ctr {
                 $v = $val[$k];
                 if (is_array($v)) {
                     if ($input[$key] !== '' && !in_array($input[$key], $v)) {
-                        $return = $val[$lastK];
+                        $rtn = $val[$lastK];
                         return false;
                     }
                 } else {
                     switch ($v) {
                         case 'require': {
                             if ($input[$key] == '') {
-                                $return = $val[$lastK];
+                                $rtn = $val[$lastK];
                                 return false;
                             }
                             break;
@@ -128,7 +127,7 @@ class Ctr {
                         case 'num':
                         case 'number': {
                             if ($input[$key] !== '' && !is_numeric($input[$key])) {
-                                $return = $val[$lastK];
+                                $rtn = $val[$lastK];
                                 return false;
                             }
                             break;
@@ -138,7 +137,7 @@ class Ctr {
                                 if ($v[0] === '/') {
                                     // --- 正则 ---
                                     if (!preg_match($v, $input[$key])) {
-                                        $return = $val[$lastK];
+                                        $rtn = $val[$lastK];
                                         return false;
                                     }
                                 } else if (preg_match('/^([><=]+) *([0-9]+)$/', $input[$key], $match)) {
@@ -188,12 +187,12 @@ class Ctr {
                                         }
                                     }
                                     if ($needReturn) {
-                                        $return = $val[$lastK];
+                                        $rtn = $val[$lastK];
                                         return false;
                                     }
                                 } else {
                                     if ($input[$key] !== $v) {
-                                        $return = $val[$lastK];
+                                        $rtn = $val[$lastK];
                                         return false;
                                     }
                                 }
@@ -210,14 +209,14 @@ class Ctr {
      * --- 检测提交的数据类型（会检测 XSRF） ---
      * @param array $input 要校验的输入项
      * @param array $rule
-     * @param array $return 返回值
+     * @param array $rtn 返回值
      * @return bool
      */
-    public function _checkXInput(array &$input, array $rule, &$return) {
+    public function _checkXInput(array &$input, array $rule, &$rtn) {
         if (!isset($rule['_xsrf'])) {
             $rule['_xsrf'] = ['require', $this->_cookie['XSRF-TOKEN'], [0, 'Bad request, no permission.']];
         }
-        return $this->_checkInput($input, $rule, $return);
+        return $this->_checkInput($input, $rule, $rtn);
     }
 
     /**
