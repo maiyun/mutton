@@ -27,7 +27,6 @@ class Route {
         $match = null;
         $pathLeft = ''; $pathRight = '';
         foreach (ROUTE as $rule => $ruleVal) {
-            $rule = str_replace('/', '\\/', $rule);
             preg_match('/^' . $rule . '$/', $path, $match);
             if (!empty($match)) {
                 list($pathLeft, $pathRight) = self::_getPathLeftRight($ruleVal);
@@ -45,7 +44,7 @@ class Route {
             echo '[Error] Controller not found, path: ' . PATH . '.';
             return;
         }
-        // --- 加载中间控制器（无论实际控制器是否存在，真实控制器都会加载，以便做特殊处理） ---
+        // --- 加载中间控制器 ---
         require SYS_PATH . 'Ctr.php';
         require CTR_PATH . 'middle.php';
         /** @var Ctr $middle */
