@@ -623,18 +623,18 @@ var __Mutton__;
     }
     function l(key, data) {
         if (data === void 0) { data = null; }
-        if (!__LOCALE_OBJ[key]) {
+        if (!_localData[key]) {
             return "LocaleError";
         }
         if (data) {
-            var str = __LOCALE_OBJ[key];
+            var str = _localData[key];
             for (var i = 0; i < data.length; ++i) {
                 str = str.replace("?", data[i]);
             }
             return str;
         }
         else {
-            return __LOCALE_OBJ[key];
+            return _localData[key];
         }
     }
 })(__Mutton__ || (__Mutton__ = {}));

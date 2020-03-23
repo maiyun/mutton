@@ -423,17 +423,17 @@ namespace __Mutton__ {
      * @param data 要替换的数据
      */
     function l(key: string, data: any[]|null = null): string {
-        if (!__LOCALE_OBJ[key]) {
+        if (!_localData[key]) {
             return "LocaleError";
         }
         if (data) {
-            let str = __LOCALE_OBJ[key];
+            let str = _localData[key];
             for (let i = 0; i < data.length; ++i) {
                 str = str.replace("?", data[i]);
             }
             return str;
         } else {
-            return __LOCALE_OBJ[key];
+            return _localData[key];
         }
     }
 

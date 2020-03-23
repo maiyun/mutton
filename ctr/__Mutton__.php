@@ -40,7 +40,7 @@ class __Mutton__ extends Ctr {
         return $this->_loadView('__Mutton__/index', [
             'hasConfig' => $this->_hasConfig,
             'local' => $this->_getLocale(),
-            '__LOCALE_OBJ' => $this->_getLocaleJsonString(),
+            '_localData' => $this->_getLocaleJsonString(),
             '_xsrf' => $this->_xsrf
         ]);
     }

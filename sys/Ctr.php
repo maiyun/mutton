@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-23 17:49:22
  */
 declare(strict_types = 1);
 
@@ -43,7 +43,7 @@ class Ctr {
 
     /**
      * --- 获取截止当前时间的总运行时间 ---
-     * @param bool $ms
+     * @param bool $ms 为 true 为毫秒，否则为秒
      * @return float
      */
     public function _getRunTime(bool $ms = false): float {
@@ -325,36 +325,36 @@ class Ctr {
      * @return bool
      */
     public function _loadLocale(string $locale, string $pkg = ''): bool {
-        global $__LOCALE, $__LOCALE_OBJ, $__LOCALE_OVER;
+        global $_localData, $_localFiles, $_local;
 
         if ($pkg === '') {
             $pkg = "default";
         }
         /** @var string $lName 语言名.包名 */
         $lName = $locale . '.' . $pkg;
-        if (!in_array($lName, $__LOCALE_OVER)) {
+        if (!in_array($lName, $_localFiles)) {
             if (($locData = $this->_loadData('locale/'.$lName)) === false) {
                 return false;
             }
-            if (!isset($__LOCALE_OBJ[$locale])) {
-                $__LOCALE_OBJ[$locale] = [];
+            if (!isset($_localData[$locale])) {
+                $_localData[$locale] = [];
             }
-            $__LOCALE = $locale;
+            $_local = $locale;
             $this->_loadLocaleDeep($locData);
-            $__LOCALE_OVER[] = $lName;
+            $_localFiles[] = $lName;
         } else {
-            $__LOCALE = $locale;
+            $_local = $locale;
         }
         return true;
     }
     private function _loadLocaleDeep(array $locData, string $pre = '') {
-        global $__LOCALE, $__LOCALE_OBJ;
+        global $_localData, $_local;
 
         foreach ($locData as $k => $v) {
             if (is_array($v)) {
                 $this->_loadLocaleDeep($v, $pre . $k . '.');
             } else {
-                $__LOCALE_OBJ[$__LOCALE][$pre . $k] = $v;
+                $_localData[$_local][$pre . $k] = $v;
             }
         }
     }
@@ -364,9 +364,10 @@ class Ctr {
      * @return string
      */
     public function _getLocaleJsonString(): string {
-        global $__LOCALE, $__LOCALE_OBJ;
-        if (isset($__LOCALE_OBJ[$__LOCALE])) {
-            return json_encode($__LOCALE_OBJ[$__LOCALE]);
+        global $_localData, $_local;
+
+        if (isset($_localData[$_local])) {
+            return json_encode($_localData[$_local]);
         } else {
             return '{}';
         }
@@ -377,8 +378,8 @@ class Ctr {
      * @return string
      */
     public function _getLocale(): string {
-        global $__LOCALE;
-        return $__LOCALE;
+        global $_local;
+        return $_local;
     }
 
     // --- 随机 ---

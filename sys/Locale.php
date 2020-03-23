@@ -2,18 +2,17 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2019-3-26 23:31
- * Last: 2020-1-17 01:09:14
+ * Last: 2020-1-17 01:09:14, 2020-3-23 17:40:54
  */
 declare(strict_types = 1);
 
-/** @var string $__LOCALE 当前语言名 */
-$__LOCALE = 'en';
-/** @var array $__LOCALE_OBJ 已经加载的语言包 */
-$__LOCALE_OBJ = [
-    'en' => []
-];
-/** @var string[] $__LOCALE_OVER 已经加载的语言文件 */
-$__LOCALE_OVER = [];
+/** @var string --- 当前语言名 --- */
+$_local = 'en';
+
+/** @var array 已经加载的语言包 */
+$_localData = [];
+/** @var string[] 已经加载的语言文件 */
+$_localFiles = [];
 
 /**
  * --- 获取语言包值 ---
@@ -22,11 +21,11 @@ $__LOCALE_OVER = [];
  * @return string
  */
 function l(string $key, ?array $data = null): string {
-    global $__LOCALE, $__LOCALE_OBJ;
-    if (!isset($__LOCALE_OBJ[$__LOCALE])) {
+    global $_localData, $_local;
+    if (!isset($_localData[$_local])) {
         return 'LocaleError';
     }
-    if (!isset($__LOCALE_OBJ[$__LOCALE][$key])) {
+    if (!isset($_localData[$_local][$key])) {
         return 'LocaleError';
     }
     if ($data) {
@@ -38,9 +37,9 @@ function l(string $key, ?array $data = null): string {
             } else {
                 return '';
             }
-        }, $__LOCALE_OBJ[$__LOCALE][$key]);
+        }, $_localData[$_local][$key]);
     } else {
-        return $__LOCALE_OBJ[$__LOCALE][$key];
+        return $_localData[$_local][$key];
     }
 }
 
