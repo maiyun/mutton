@@ -57,7 +57,7 @@ class Captcha {
     public function getBuffer(int $quality = 70): string {
         $old = ob_get_clean();
         ob_start();
-        header('Content-type: image/jpeg');
+        header('content-type: image/jpeg');
         $this->_link->output($quality);
         $r = ob_get_clean();
         if ($old !== false) {

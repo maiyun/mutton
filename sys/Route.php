@@ -179,11 +179,11 @@ class Route {
             }
             // --- 在返回值输出之前，设置缓存 ---
             if ($ctr->_cacheTTL > 0) {
-                header('Expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->_cacheTTL) . ' GMT');
-                header('Cache-Control: max-age=' . $ctr->_cacheTTL);
+                header('expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->_cacheTTL) . ' GMT');
+                header('cache-control: max-age=' . $ctr->_cacheTTL);
             } else {
-                header('Expires: Mon, 26 Jul 1994 05:00:00 GMT');
-                header('Cache-Control: no-store');
+                header('expires: Mon, 26 Jul 1994 05:00:00 GMT');
+                header('cache-control: no-store');
             }
         }
         // --- 判断返回值 ---
@@ -196,7 +196,7 @@ class Route {
         } else if (is_array($rtn)) {
             // --- 返回的是数组，那么代表是 JSON，以 JSON 形式输出 ---
             // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
-            header('Content-type: application/json; charset=utf-8');
+            header('content-type: application/json; charset=utf-8');
             if (isset($rtn[0]) && is_int($rtn[0])) {
                 $json = ['result' => $rtn[0]];
                 if (isset($rtn[1])) {

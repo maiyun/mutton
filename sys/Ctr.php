@@ -66,6 +66,8 @@ class Ctr {
      * @return string
      */
     public function _loadView(string $path, $data = []) {
+        $data['_staticPath'] = STATIC_PATH === '' ? URL_STC : STATIC_PATH;
+        $data['_staticVer'] = STATIC_VER;
         extract($data);
         ob_start();
         require VIEW_PATH . $path . '.php';
@@ -85,7 +87,7 @@ class Ctr {
     /**
      * --- 检测提交的数据类型 ---
      * @param array $input 要校验的输入项
-     * @param array $rule
+     * @param array $rule 规则
      * @param array $rtn 返回值
      * @return bool
      */
@@ -105,20 +107,19 @@ class Ctr {
             }
             // --- ['require', '> 6', [0, 'xx 必须大于 6']] ---
             $lastK = $c - 1;
-            for ($k = 0; $k <= $lastK; ++$k) {
-                if ($k === $lastK) {
-                    break;
-                }
+            for ($k = 0; $k < $lastK; ++$k) {
                 $v = $val[$k];
                 if (is_array($v)) {
+                    // --- 判断提交的数据是否在此 array 之内 ---
                     if ($input[$key] !== '' && !in_array($input[$key], $v)) {
+                        // --- 不在 ---
                         $rtn = $val[$lastK];
                         return false;
                     }
                 } else {
                     switch ($v) {
                         case 'require': {
-                            if ($input[$key] == '') {
+                            if ($input[$key] === '') {
                                 $rtn = $val[$lastK];
                                 return false;
                             }
@@ -208,7 +209,7 @@ class Ctr {
     /**
      * --- 检测提交的数据类型（会检测 XSRF） ---
      * @param array $input 要校验的输入项
-     * @param array $rule
+     * @param array $rule 规则
      * @param array $rtn 返回值
      * @return bool
      */
@@ -231,7 +232,7 @@ class Ctr {
 
     /**
      * --- 获取 data 数据 ---
-     * @param string $path
+     * @param string $path 文件路径（不含扩展名）
      * @return mixed|null
      */
     public function _loadData(string $path) {
@@ -250,21 +251,19 @@ class Ctr {
         if (HTTPS) {
             return true;
         } else {
-            $redirect = 'https://' . HOST . $_SERVER['REQUEST_URI'];
-            http_response_code(301);
-            header('Location: ' . $redirect);
+            $this->_location('https://' . HOST . $_SERVER['REQUEST_URI']);
             return false;
         }
     }
 
     /**
      * --- 跳转（302临时跳转），支持相对和绝对路径 ---
-     * @param string $url
+     * @param string $location 相对或绝对网址
      * @return false
      */
-    public function _location(string $url) {
+    public function _location(string $location) {
         http_response_code(302);
-        header('Location: '.Text::urlResolve(URL_BASE, $url));
+        header('location: ' . Text::urlResolve(URL_BASE, $location));
         return false;
     }
 
