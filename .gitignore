@@ -6,3 +6,4 @@ etc/__*
 lib/Captcha*
 log/*
 !log/index.html
+stc-ts/node_modules/
