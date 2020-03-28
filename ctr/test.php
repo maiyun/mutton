@@ -534,7 +534,24 @@ json_encode(\$kv->getLastError());</pre>";
 
             $echo[] = "<pre>json_encode(\$kv->hDel('hTest', 'name'));</pre>" . json_encode($kv->hDel('hTest', 'name'));
 
+            $echo[] = "<pre>json_encode(\$kv->hMSet('hTest', [
+    'ok1' => 'bye',
+    'ok2' => [
+        '1', '2', '5', '8', '0'
+    ]
+]));</pre>";
+            $echo[] = json_encode($kv->hMSet('hTest', [
+                'ok1' => 'bye',
+                'ok2' => [
+                    '1', '2', '5', '8', '0'
+                ]
+            ]));
+
+            $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'ok1', ['a', 'b']));</pre>" . json_encode($kv->hSet('hTest', 'ok1', ['a', 'b']));
+
             $echo[] = "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>" . json_encode($kv->hGetAll('hTest'));
+
+            $echo[] = "<pre>json_encode(\$kv->hGetJson('hTest', 'ok1'));</pre>" . json_encode($kv->hGetJson('hTest', 'ok1'));
 
             $echo[] = "<pre>json_encode(\$kv->hKeys('hTest'));</pre>" . json_encode($kv->hKeys('hTest'));
 
@@ -569,7 +586,7 @@ echo 'Added.';</pre>";
         } else {
             $echo[] = "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>" . json_encode($kv->exists(['test', 'heheda']));
 
-            $echo[] = "<pre>json_encode(\$kv->mget(['test', 'heheda']));</pre>" . json_encode($kv->mget(['test', 'heheda']));
+            $echo[] = "<pre>json_encode(\$kv->mGet(['test', 'heheda']));</pre>" . json_encode($kv->mGet(['test', 'heheda']));
 
             $echo[] = "<pre>json_encode(\$kv->getMulti(['test', 'heheda']));</pre>" . json_encode($kv->getMulti(['test', 'heheda']));
 

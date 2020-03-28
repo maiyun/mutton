@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/01/31 10:30
- * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49
+ * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02
  */
 declare(strict_types = 1);
 
@@ -114,7 +114,7 @@ class Redis implements IKv {
      * --- 添加一个值，存在则不变 ---
      * @param string $key
      * @param $val
-     * @param int $ttl 有效期
+     * @param int $ttl 秒，0 为不限制
      * @return bool
      */
     public function add(string $key, $val, int $ttl = 0): bool {
@@ -125,7 +125,7 @@ class Redis implements IKv {
      * --- 替换一个存在的值 ---
      * @param string $key
      * @param $val
-     * @param int $ttl
+     * @param int $ttl 秒，0 为不限制
      * @return bool
      */
     public function replace(string $key, $val, int $ttl = 0) {
@@ -206,9 +206,9 @@ SCRIPT;
     }
 
     /**
-     * --- 获取数值和字符串 ---
+     * --- 获取字符串 ---
      * @param string $key
-     * @return mixed|false
+     * @return string|null
      */
     public function get(string $key) {
         $this->_resultCode = 0;
@@ -216,7 +216,7 @@ SCRIPT;
         if(($v = $this->_link->get($this->_pre . $key)) === false) {
             $this->_resultCode = -1;
             $this->_resultMessage = $this->_link->getLastError();
-            return false;
+            return null;
         }
         return $v;
     }
@@ -226,7 +226,7 @@ SCRIPT;
      * @param array $keys key 序列
      * @return array 顺序数组
      */
-    public function mget(array $keys) {
+    public function mGet(array $keys) {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         foreach ($keys as $k => $v) {
@@ -247,7 +247,7 @@ SCRIPT;
      * @return array key => value 键值对
      */
     public function getMulti(array $keys) {
-        $r = $this->mget($keys);
+        $r = $this->mGet($keys);
         $rtn = [];
         foreach ($keys as $k => $v) {
             $rtn[$v] = $r[$k];
@@ -258,14 +258,14 @@ SCRIPT;
     /**
      * --- 获取 json 对象 ---
      * @param string $key
-     * @return bool|mixed
+     * @return mixed|null
      */
     public function getJson(string $key) {
-        if (($v = $this->get($key)) === false) {
-            return false;
+        if (($v = $this->get($key)) === null) {
+            return null;
         }
         $j = json_decode($v, true);
-        return $j === null ? false : $j;
+        return $j === null ? null : $j;
     }
 
     /**
@@ -294,16 +294,20 @@ SCRIPT;
     /**
      * --- 自增 ---
      * @param string $key
-     * @param int $num
-     * @return false|int
+     * @param int|float $num 整数或浮点正数
+     * @return false|int|float
      */
     public function incr(string $key, int $num = 1) {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
-        if ($num === 1) {
-            $r = $this->_link->incr($this->_pre . $key);
+        if (is_int($num)) {
+            if ($num === 1) {
+                $r = $this->_link->incr($this->_pre . $key);
+            } else {
+                $r = $this->_link->incrBy($this->_pre . $key, $num);
+            }
         } else {
-            $r = $this->_link->incrBy($this->_pre . $key, $num);
+            $r = $this->_link->incrByFloat($this->_pre . $key, $num);
         }
         if ($r === false) {
             $this->_resultCode = -1;
@@ -315,16 +319,20 @@ SCRIPT;
     /**
      * --- 自减 ---
      * @param string $key
-     * @param int $num
-     * @return false|int
+     * @param int|float $num 整数或浮点正数
+     * @return false|int|float
      */
     public function decr(string $key, int $num = 1) {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
-        if ($num === 1) {
-            $r = $this->_link->decr($this->_pre . $key);
+        if (is_int($num)) {
+            if ($num === 1) {
+                $r = $this->_link->decr($this->_pre . $key);
+            } else {
+                $r = $this->_link->decrBy($this->_pre . $key, $num);
+            }
         } else {
-            $r = $this->_link->decrBy($this->_pre . $key, $num);
+            $r = $this->_link->incrByFloat($this->_pre . $key, -$num);
         }
         if ($r === false) {
             $this->_resultCode = -1;
@@ -380,19 +388,20 @@ SCRIPT;
         if ($r === false) {
             $this->_resultCode = -1;
             $this->_resultMessage = $this->_link->getLastError();
-        }
-        $pl = strlen($this->_pre);
-        if ($pl > 0) {
-            foreach ($r as $k => $v) {
-                $r[$k] = substr($v, $pl);
+        } else {
+            $pl = strlen($this->_pre);
+            if ($pl > 0) {
+                foreach ($r as $k => $v) {
+                    $r[$k] = substr($v, $pl);
+                }
             }
         }
         return $r;
     }
 
     /**
-     * --- 根据条件获取服务器上的 key ---
-     * @param string $pattern
+     * --- 根据条件获取服务器上的 keys ---
+     * @param string $pattern 例如 *
      * @return string[]|false
      */
     public function scan($pattern = '*') {
@@ -415,7 +424,7 @@ SCRIPT;
     }
 
     /**
-     * --- 清除服务器上所有的数据 ---
+     * --- 清除当前所选数据库的所有内容 ---
      * @return bool
      */
     public function flush() {
@@ -522,18 +531,23 @@ SCRIPT;
             $this->_resultCode = -1;
             $this->_resultMessage = $this->_link->getLastError();
         }
-        return is_int($r) ? ($r ? true : false) : $r;
+        return $r === false ? false : true;
     }
 
     /**
      * --- 批量设置哈希值 ---
-     * @param string $key key my
+     * @param string $key key 名
      * @param array $rows key / val 数组
      * @return bool
      */
     public function hMSet(string $key, array $rows) {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
+        foreach ($rows as $i => $val) {
+            if (is_array($val)) {
+                $rows[$i] = json_encode($val);
+            }
+        }
         $r = $this->_link->hMSet($this->_pre . $key, $rows);
         if ($r === false) {
             $this->_resultCode = -1;
@@ -546,7 +560,7 @@ SCRIPT;
      * --- 获取哈希值 ---
      * @param string $key
      * @param string $field
-     * @return string|false
+     * @return string|null
      */
     public function hGet(string $key, string $field) {
         $this->_resultCode = 0;
@@ -555,8 +569,23 @@ SCRIPT;
         if ($r === false) {
             $this->_resultCode = -1;
             $this->_resultMessage = $this->_link->getLastError();
+            return null;
         }
         return $r;
+    }
+
+    /**
+     * --- 获取哈希 json 对象 ---
+     * @param string $key
+     * @param string $field
+     * @return mixed|null
+     */
+    public function hGetJson(string $key, string $field) {
+        if (($v = $this->hGet($key, $field)) === null) {
+            return null;
+        }
+        $j = json_decode($v, true);
+        return $j === null ? null : $j;
     }
 
     /**
@@ -620,9 +649,9 @@ SCRIPT;
 
     /**
      * --- 设置哈希自增自减 ---
-     * @param string $key
-     * @param string $field
-     * @param $increment
+     * @param string $key key
+     * @param string $field 字段
+     * @param float|int $increment 正数或负数，整数或浮点
      * @return float|int
      */
     public function hIncr(string $key, string $field, $increment) {

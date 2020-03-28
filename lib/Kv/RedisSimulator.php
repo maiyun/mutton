@@ -23,7 +23,7 @@ CREATE TABLE `redis` (
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/09/29 15:26
- * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47
+ * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47, 2020-3-28 13:21:16
  */
 declare(strict_types = 1);
 
@@ -83,7 +83,7 @@ class RedisSimulator implements IKv {
         $this->_link = $opt['db'];
         $this->_index = $index;
 
-        $sqlPre = isset($opt['sqlPre']) ? $opt['sqlPre'] : SQL_PRE;
+        $sqlPre = isset($opt['sqlPre']) ? $opt['sqlPre'] : null;
         $this->_sql = Sql::get($sqlPre);
         if (isset($opt['table'])) {
             $this->_table = $opt['table'];
@@ -334,7 +334,7 @@ class RedisSimulator implements IKv {
     /**
      * --- 获取数值和字符串 ---
      * @param string $key
-     * @return mixed|false
+     * @return mixed|null
      */
     public function get(string $key) {
         $this->_resultCode = 0;
@@ -352,13 +352,13 @@ class RedisSimulator implements IKv {
                 $this->_resultCode = -1;
                 $this->_resultMessage = $ps->errorInfo()[2];
                 $this->_lastError = $this->_resultMessage;
-                return false;
+                return null;
             }
         } else {
             $this->_resultCode = -1;
             $this->_resultMessage = $ps->errorInfo()[2];
             $this->_lastError = $this->_resultMessage;
-            return false;
+            return null;
         }
     }
 
@@ -367,7 +367,7 @@ class RedisSimulator implements IKv {
      * @param array $keys key 序列
      * @return array 顺序数组
      */
-    public function mget(array $keys) {
+    public function mGet(array $keys) {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         $this->_gc();
@@ -405,7 +405,7 @@ class RedisSimulator implements IKv {
      * @return array key => value 键值对
      */
     public function getMulti(array $keys) {
-        $r = $this->mget($keys);
+        $r = $this->mGet($keys);
         $rtn = [];
         foreach ($keys as $k => $v) {
             $rtn[$v] = $r[$k];
@@ -416,14 +416,14 @@ class RedisSimulator implements IKv {
     /**
      * --- 获取 json 对象 ---
      * @param string $key
-     * @return bool|mixed
+     * @return mixed|null
      */
     public function getJson(string $key) {
-        if (($v = $this->get($key)) === false) {
-            return false;
+        if (($v = $this->get($key)) === null) {
+            return null;
         }
         $j = json_decode($v, true);
-        return $j === null ? false : $j;
+        return $j === null ? null : $j;
     }
 
     /**
@@ -577,7 +577,7 @@ class RedisSimulator implements IKv {
      * @return string[]|false
      */
     public function getAllKeys() {
-        return $this->scan();
+        return $this->keys('*');
     }
 
     /**
@@ -589,6 +589,7 @@ class RedisSimulator implements IKv {
         $this->_resultCode = 0;
         $this->_resultMessage = 'SUCCESS';
         $this->_gc();
+        $this->_sql->select(['tag'], $this->_table);
         $where = [
             ['time_exp', '>=', time()]
         ];
@@ -596,6 +597,7 @@ class RedisSimulator implements IKv {
             $pattern = str_replace('*', '%', $pattern);
             $where[] = ['tag', 'LIKE', $this->_index . '_' . $this->_pre . $pattern];
         }
+        $this->_sql->where($where);
         $ps = $this->_link->prepare($this->_sql->getSql());
         if (!$ps->execute($this->_sql->getData())) {
             $this->_resultCode = -1;
@@ -731,7 +733,7 @@ class RedisSimulator implements IKv {
         if ($r === false) {
             return false;
         }
-        if (($v = $this->get($key)) === false) {
+        if (($v = $this->get($key)) === null) {
             $this->set($key, '-' . $field . '-');
         } else {
             if (strpos($v, '-' . $field . '-') === false) {
@@ -760,11 +762,26 @@ class RedisSimulator implements IKv {
      * --- 获取哈希值 ---
      * @param string $key
      * @param string $field
-     * @return string|false
+     * @return string|null
      */
     public function hGet(string $key, string $field) {
         return $this->get($key . '-' . $field);
     }
+
+    /**
+     * --- 获取哈希 json 对象 ---
+     * @param string $key
+     * @param string $field
+     * @return mixed|null
+     */
+    public function hGetJson(string $key, string $field) {
+        if (($v = $this->hGet($key, $field)) === null) {
+            return null;
+        }
+        $j = json_decode($v, true);
+        return $j === null ? null : $j;
+    }
+
 
     /**
      * --- 批量获取哈希值 ---
@@ -792,7 +809,7 @@ class RedisSimulator implements IKv {
      * @return array
      */
     public function hGetAll(string $key) {
-        if (($v = $this->get($key)) === false) {
+        if (($v = $this->get($key)) === null) {
             return [];
         }
         if ($v === '-') {

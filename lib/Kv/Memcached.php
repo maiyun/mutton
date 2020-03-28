@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2017/07/04 22:48
- * Last: 2018-12-12 17:48:43, 2019-12-16 12:53:35
+ * Last: 2018-12-12 17:48:43, 2019-12-16 12:53:35, 2020-3-28 13:21:09
  */
 declare(strict_types = 1);
 
@@ -173,7 +173,7 @@ class Memcached implements IKv {
     /**
      * --- 获取数值和字符串 ---
      * @param string $key
-     * @return mixed|false
+     * @return mixed|null
      */
     public function get(string $key) {
         $v = $this->_link->get($this->_pre . $key);
@@ -181,7 +181,7 @@ class Memcached implements IKv {
             $this->_lastError = $msg;
         }
         if($v === false) {
-            return false;
+            return null;
         }
         return $v;
     }
@@ -191,7 +191,7 @@ class Memcached implements IKv {
      * @param array $keys key 序列
      * @return array 顺序数组
      */
-    public function mget(array $keys) {
+    public function mGet(array $keys) {
         $rtn = [];
         $list = $this->getMulti($keys);
         foreach ($keys as $v) {
@@ -232,14 +232,14 @@ class Memcached implements IKv {
     /**
      * --- 获取 json 对象 ---
      * @param string $key
-     * @return bool|mixed
+     * @return mixed|null
      */
     public function getJson(string $key) {
-        if (($v = $this->get($key)) === false) {
-            return false;
+        if (($v = $this->get($key)) === null) {
+            return null;
         }
         $j = json_decode($v, true);
-        return $j === null ? false : $j;
+        return $j === null ? null : $j;
     }
 
     /**
@@ -462,7 +462,7 @@ class Memcached implements IKv {
         if ($r === false) {
             return false;
         }
-        if (($v = $this->get($key)) === false) {
+        if (($v = $this->get($key)) === null) {
             $this->set($key, '-' . $field . '-');
         } else {
             if (strpos($v, '-' . $field . '-') === false) {
@@ -491,10 +491,24 @@ class Memcached implements IKv {
      * --- 获取哈希值 ---
      * @param string $key
      * @param string $field
-     * @return string|false
+     * @return string|null
      */
     public function hGet(string $key, string $field) {
         return $this->get($key . '-' . $field);
+    }
+
+    /**
+     * --- 获取哈希 json 对象 ---
+     * @param string $key
+     * @param string $field
+     * @return mixed|null
+     */
+    public function hGetJson(string $key, string $field) {
+        if (($v = $this->hGet($key, $field)) === null) {
+            return null;
+        }
+        $j = json_decode($v, true);
+        return $j === null ? null : $j;
     }
 
     /**
@@ -523,7 +537,7 @@ class Memcached implements IKv {
      * @return array
      */
     public function hGetAll(string $key) {
-        if (($v = $this->get($key)) === false) {
+        if (($v = $this->get($key)) === null) {
             return [];
         }
         if ($v === '-') {

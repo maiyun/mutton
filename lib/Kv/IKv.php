@@ -90,7 +90,7 @@ interface IKv {
      * @param array $keys key 序列
      * @return array 顺序数组
      */
-    public function mget(array $keys);
+    public function mGet(array $keys);
 
     /**
      * --- 批量获取值 ---
