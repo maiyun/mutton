@@ -979,9 +979,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
             case 'update': {
                 // --- 1, 2 ---
 
-                $s = $sql->update('user', [['age', '+', '1'], 'name' => 'Serene'])->where(['name' => 'Ah'])->getSql();
+                $s = $sql->update('user', [['age', '+', '1'], 'name' => 'Serene', 'nick' => '#name', ['year', '+', '#age']])->where(['name' => 'Ah'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->update('user', [['age', '+', '1'], 'name' => 'Serene']).where(['name' => 'Ah']);</pre>
+                $echo[] = "<pre>\$sql->update('user', [['age', '+', '1'], 'name' => 'Serene', 'nick' => '#name', ['year', '+', '#age']]).where(['name' => 'Ah']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
