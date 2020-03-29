@@ -21,9 +21,9 @@ CREATE TABLE `session` (
 
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":false} - END
+ * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/05/25 19:56
- * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33
+ * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33, 2020-3-29 20:38:57
  */
 declare(strict_types = 1);
 
@@ -58,12 +58,12 @@ class Session {
      * @param Ctr $ctr 模型实例
      * @param IKv|Db $link Kv 或 Db 实例
      * @param bool $auth 设为 true 则从头 Authorization 或 post _auth 值读取 token
-     * @param array $opt name, ttl, ssl
+     * @param array $opt name, ttl, ssl, sqlPre
      */
     public function __construct(&$ctr, $link, bool $auth = false, array $opt = []) {
         $time = time();
         $ssl = isset($opt['ssl']) ? $opt['ssl'] : SESSION_SSL;
-        $pre = isset($opt['pre']) ? $opt['pre'] : null;
+        $pre = isset($opt['sqlPre']) ? $opt['sqlPre'] : null;
         $this->_name = isset($opt['name']) ? $opt['name'] : SESSION_NAME;
         $this->_ttl = isset($opt['ttl']) ? $opt['ttl'] : SESSION_TTL;
 
@@ -89,7 +89,7 @@ class Session {
             // --- 如果启用了内存加速则在内存找 ---
             if ($this->_link instanceof IKv) {
                 // --- Kv ---
-                if(($data = $this->_link->getJson($this->_name . '_' . $this->_token)) === false) {
+                if (($data = $this->_link->getJson($this->_name . '_' . $this->_token)) === null) {
                     $needInsert = true;
                 } else {
                     $_SESSION = $data;
@@ -97,8 +97,8 @@ class Session {
             } else {
                 // --- 数据库 ---
                 $this->_sql->select('*', 'session')->where([
-                    'token' => $this->_token,
-                    ['time_update', '>=', $time - $this->_ttl]
+                    ['time_update', '>=', $time - $this->_ttl],
+                    'token' => $this->_token
                 ]);
                 $ps = $this->_link->prepare($this->_sql->getSql());
                 $ps->execute($this->_sql->getData());

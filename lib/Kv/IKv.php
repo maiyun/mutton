@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-12-21 11:56:27
- * Last: 2019-12-21 11:56:30
+ * Last: 2019-12-21 11:56:30, 2020-3-29 21:29:53
  */
 declare(strict_types = 1);
 
@@ -81,7 +81,7 @@ interface IKv {
     /**
      * --- 获取数值和字符串 ---
      * @param string $key
-     * @return mixed|false
+     * @return mixed|null
      */
     public function get(string $key);
 
@@ -102,7 +102,7 @@ interface IKv {
     /**
      * --- 获取 json 对象 ---
      * @param string $key
-     * @return bool|mixed
+     * @return bool|null
      */
     public function getJson(string $key);
 
@@ -242,7 +242,7 @@ interface IKv {
      * --- 获取哈希值 ---
      * @param string $key
      * @param string $field
-     * @return string|false
+     * @return string|null
      */
     public function hGet(string $key, string $field);
 
