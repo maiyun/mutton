@@ -230,6 +230,35 @@ class Ctr {
         return 'Basic ' . base64_encode($user . ':' . $pwd);
     }
 
+    /** @var array --- auth 对象，user, pwd --- */
+    private $_authorization = null;
+
+    /**
+     * --- 通过 header 或 _auth 获取鉴权信息 ---
+     * @return array|false user, pwd
+     */
+    public function _getAuthorization() {
+        if ($this->_authorization !== null) {
+            return $this->_authorization;
+        }
+        $auth = '';
+        if (isset($this->_headers['authorization']) && $this->_headers['authorization']) {
+            $auth = $this->_headers['authorization'];
+        } else if (isset($this->_post['_auth'])) {
+            $auth = $this->_post['_auth'];
+        }
+        $authArr = explode(' ', $auth);
+        if (!isset($authArr[1])) {
+            return false;
+        }
+        if (!($auth = base64_decode($authArr[1]))) {
+            return false;
+        }
+        $authArr = explode(':', $auth);
+        $this->_authorization = ['user' => $authArr[0], 'pwd' => $authArr[1]];
+        return $this->_authorization;
+    }
+
     /**
      * --- 获取 data 数据 ---
      * @param string $path 文件路径（不含扩展名）
@@ -271,8 +300,20 @@ class Ctr {
      * --- 设置当前时区 ---
      * @param string $timezone_identifier
      */
-    public function _setTimezone(string $timezone_identifier): void{
+    public function _setTimezone(string $timezone_identifier): void {
         date_default_timezone_set($timezone_identifier);
+    }
+
+    /**
+     * --- 设置 cookie ---
+     * @param string $name 名
+     * @param string $value 值
+     * @param array $opt 选项 ttl, path, domain, ssl, httponly
+     */
+    public  function _setCookie(string $name, string $value, array $opt = []): void {
+        $ttl = !isset($opt['ttl']) ? 0 : $opt['ttl'];
+
+        setcookie($name, $value, time() + $ttl, isset($opt['path']) ? $opt['path'] : "/", isset($opt['domain']) ? $opt['domain'] : "", isset($opt['ssl']) ? $opt['ssl'] : true, isset($opt['httponly']) ? $opt['httponly'] : true);
     }
 
     /**
@@ -284,34 +325,6 @@ class Ctr {
      */
     public function _startSession($link, bool $auth = false, array $opt = []): Session {
         return new Session($this, $link, $auth, $opt);
-    }
-
-    /** @var array auth 对象，user, pwd */
-    private $_authorization = null;
-    /**
-     * --- 通过 header 或 _auth 获取鉴权信息 ---
-     * @return array|false user, pwd
-     */
-    public function _getAuthorization() {
-        if ($this->_authorization !== null) {
-            return $this->_authorization;
-        }
-        $auth = '';
-        if (isset($this->_headers['authorization']) && $this->_headers['authorization']) {
-            $auth = $this->_headers['authorization'];
-        } else if (isset($this->_post['_auth'])) {
-            $auth = $this->_post['_auth'];
-        }
-        $authArr = explode(' ', $auth);
-        if (!isset($authArr[1])) {
-            return false;
-        }
-        if (!($auth = base64_decode($authArr[1]))) {
-            return false;
-        }
-        $authArr = explode(':', $auth);
-        $this->_authorization = ['user' => $authArr[0], 'pwd' => $authArr[1]];
-        return $this->_authorization;
     }
 
     // --- 国际化 ---

@@ -136,7 +136,10 @@ class Session {
             }
         }
 
-        setcookie($this->_name, $this->_token, $time + $this->_ttl, '/' ,'', $ssl, true);
+        $ctr->_setCookie($this->_name, $this->_token, [
+            'ttl' => $this->_ttl,
+            'ssl' => $ssl
+        ]);
 
         register_shutdown_function([$this, '__update']); // self::class
     }
@@ -153,7 +156,6 @@ class Session {
      * --- 页面整体结束时，要写入到 Redis 或 数据库 ---
      */
     public function __update(): void {
-        // --- 写入内存或数据库 ---
         if($this->_link instanceof IKv) {
             $this->_link->set($this->_name . '_' . $this->_token, $_SESSION, $this->_ttl);
         } else {
@@ -173,13 +175,14 @@ class Session {
      * --- 仅能在 Db 模式执行，本函数不进行判断是否是 Db 模式 ---
      */
     private function _gc(): void {
-        if(rand(0, 20) == 10) {
-            $this->_sql->delete('session')->where([
-                ['time_update', '<', time() - $this->_ttl]
-            ]);
-            $ps = $this->_link->prepare($this->_sql->getSql());
-            $ps->execute($this->_sql->getData());
+        if(rand(0, 20) !== 10) {
+            return;
         }
+        $this->_sql->delete('session')->where([
+            ['time_update', '<', time() - $this->_ttl]
+        ]);
+        $ps = $this->_link->prepare($this->_sql->getSql());
+        $ps->execute($this->_sql->getData());
     }
 
 }
