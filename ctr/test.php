@@ -181,8 +181,8 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
 
-        if (!($stmt = $db->query('SELECT * FROM `mu_session` WHERE `token` LIMIT 1;'))) {
-            return [0 ,'Failed("mu_session" not found).'];
+        if (!($stmt = $db->query('SELECT * FROM `lt_session` WHERE `token` LIMIT 1;'))) {
+            return [0 ,'Failed("lt_session" not found).'];
         }
 
         Mod::setDb($db);
@@ -218,7 +218,7 @@ json_encode(\$result);</pre>" . json_encode($result);
 
             $echo[] = "<br><br>Session table:";
 
-            $stmt = $db->query('SELECT * FROM `mu_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
+            $stmt = $db->query('SELECT * FROM `lt_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
             $this->_dbTable($stmt, $echo);
 
             $echo[] = "<br><a href=\"".URL_BASE."test/mod?action=remove\">Remove all test data</a> | <a href=\"".URL_BASE."test\">Return</a>";
@@ -317,8 +317,8 @@ json_encode(\$orig);</pre>" . json_encode($orig);
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
 
-        if (!($stmt = $db->query('SELECT * FROM `mu_session` LIMIT 10;'))) {
-            return [0 ,'Failed("mu_session" not found).'];
+        if (!($stmt = $db->query('SELECT * FROM `lt_session` LIMIT 10;'))) {
+            return [0 ,'Failed("lt_session" not found).'];
         }
 
         $echo = ["<pre>\$db = Db::get('" . $_GET['s'] . "');
@@ -326,46 +326,46 @@ if (!(\$rtn = \$db->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
 
-\$stmt = \$db->query('SELECT * FROM `mu_session` LIMIT 10;');</pre>"];
+\$stmt = \$db->query('SELECT * FROM `lt_session` LIMIT 10;');</pre>"];
 
         $this->_dbTable($stmt, $echo);
 
-        $exec = $db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
         $insertId = $db->getInsertID();
 
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 1;');
+        $stmt = $db->query('SELECT * FROM `lt_session` LIMIT 1;');
         $this->_dbTable($stmt, $echo);
 
-        $exec = $db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $exec = $db->exec('REPLACE INTO `mu_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
-        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `mu_session` (`id`, `token`, `data`, `time_update`, `time_add`) VALUES (\'" . $insertId . "\', \'test2-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('REPLACE INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `lt_session` (`id`, `token`, `data`, `time_update`, `time_add`) VALUES (\'" . $insertId . "\', \'test2-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 " . ($exec ? "insertId: " . json_encode($db->getInsertID()) . "<br>" : "") . "
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `lt_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
-        $exec = $db->exec('DELETE FROM `mu_session` WHERE `id` = \'' . $insertId . '\';');
-        $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `mu_session` WHERE `id` = \'$insertId\';');</pre>
+        $exec = $db->exec('DELETE FROM `lt_session` WHERE `id` = \'' . $insertId . '\';');
+        $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `lt_session` WHERE `id` = \'$insertId\';');</pre>
 exec: " . $exec . "<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `mu_session` LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `lt_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         return join('', $echo) . "<br>" . $this->_getEnd();
@@ -857,14 +857,14 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
                 '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . '<br><br>' . $this->_getEnd();
         } else {
             // --- AUTH 模式 ---
-            $session = $this->_startSession($link, true, ['ttl' => 60]);
+            $this->_startSession($link, true, ['ttl' => 60]);
             if (count($_POST) > 0) {
                 if (!isset($_SESSION['count'])) {
                     $_SESSION['count'] = 1;
                 } else {
                     ++$_SESSION['count'];
                 }
-                return [1, 'txt' => "\$_SESSION: " . json_encode($_SESSION) . "\nToken: " . $session->getToken(), 'token' => $session->getToken(), '_auth' => $this->_getBasicAuth('token', $session->getToken())];
+                return [1, 'txt' => "\$_SESSION: " . json_encode($_SESSION) . "\nToken: " . $this->_sess->getToken(), 'token' => $this->_sess->getToken(), '_auth' => $this->_getBasicAuth('token', $this->_sess->getToken())];
             } else {
                 $echo[] = '<script>document.write((typeof fetch !== "function") ? "<script src=\\"https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/dist/fetch.umd.min.js\\">" : "")</script>';
 
@@ -876,8 +876,8 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
                 $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',headers:{'Authorization':document.getElementById('_auth').innerText,'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;document.getElementById('token').innerText=j.token;document.getElementById('_auth').innerText=j._auth;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>
-Token: <span id=\"token\">" . $session->getToken() . "</span><br>
-Post Authorization header: <span id=\"_auth\">" . $this->_getBasicAuth('token', $session->getToken()) . "</span><br><br>
+Token: <span id=\"token\">" . $this->_sess->getToken() . "</span><br>
+Post Authorization header: <span id=\"_auth\">" . $this->_getBasicAuth('token', $this->_sess->getToken()) . "</span><br><br>
 Result:<pre id=\"result\">Nothing.</pre>";
 
                 return '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . $this->_getEnd();

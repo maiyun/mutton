@@ -130,10 +130,27 @@ class Route {
             }
             // --- 加载控制器文件 ---
             require $filePath;
-            // --- 判断 action 是否存在 ---
+            // --- 获取类名 ---
             $ctrName = '\\ctr\\' . str_replace('/', '\\', $pathLeft);
             /** @var Ctr $ctr */
             $ctr = new $ctrName();
+            // --- 对信息进行初始化 ---
+            // --- 路由定义的参数序列 ---
+            $ctr->_param = &$middle->_param;
+            $ctr->_action = $middle->_action;
+            $ctr->_headers = &$middle->_headers;
+
+            $ctr->_get = &$middle->_get;
+            $ctr->_rawPost = &$middle->_rawPost;
+            $ctr->_post = &$middle->_post;
+            $ctr->_files = &$middle->_files;
+
+            $ctr->_cookie = &$middle->_cookie;
+            $ctr->_session = &$middle->_session;
+            $ctr->_sess = &$middle->_sess;
+
+            $ctr->_cacheTTL = $middle->_cacheTTL;
+            $ctr->_xsrf = $middle->_xsrf;
             // --- 强制 HTTPS ---
             if (MUST_HTTPS && !$ctr->_mustHttps()) {
                 return;
@@ -153,26 +170,8 @@ class Route {
                 echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
             }
-            // --- 对信息进行初始化 ---
-            // --- 路由定义的参数序列 ---
-            $ctr->_param = &$middle->_param;
-            $ctr->_action = $middle->_action;
-            $ctr->_headers = &$middle->_headers;
-
-            $ctr->_get = &$middle->_get;
-            $ctr->_post = &$middle->_post;
-            $ctr->_rawPost = &$middle->_rawPost;
-            $ctr->_files = &$middle->_files;
-
-            $ctr->_cookie = &$middle->_cookie;
-            $ctr->_session = &$middle->_session;
-
-            $ctr->_cacheTTL = $middle->_cacheTTL;
-            $ctr->_xsrf = $middle->_xsrf;
-            // --- 检测是否有 onLoad，有则优先执行一下 ---
-            if (method_exists($ctr, '_load')) {
-                $rtn = $ctr->_load();
-            }
+            // --- 执行 _load 方法 ---
+            $rtn = $ctr->_load();
             // --- 执行 action ---
             if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
@@ -231,10 +230,10 @@ class Route {
     private static function _getPathLeftRight($path) {
         $pathLio = strrpos($path, '/');
         if ($pathLio === false) {
-            return [$path, 'index'];
+            return [strtolower($path), 'index'];
         } else {
             $right = substr($path, $pathLio + 1);
-            return [substr($path, 0, $pathLio), $right === '' ? 'index' : $right];
+            return [strtolower(substr($path, 0, $pathLio)), $right === '' ? 'index' : strtolower($right)];
         }
     }
 

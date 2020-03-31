@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-23 17:49:22
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48
  */
 declare(strict_types = 1);
 
@@ -24,10 +24,10 @@ class Ctr {
 
     /** @var array GET 数据 */
     public $_get;
-    /** @var array POST 数据 */
-    public $_post;
     /** @var array 原始 POST 数据 */
     public $_rawPost;
+    /** @var array POST 数据 */
+    public $_post;
     /** @var array 上传的文件列表 */
     public $_files = [];
 
@@ -35,11 +35,21 @@ class Ctr {
     public $_cookie;
     /** @var array Session 数组 */
     public $_session = [];
+    /** @var Session Session|null 对象 */
+    public $_sess = null;
 
     /** @var int 页面浏览器客户端缓存 */
     public $_cacheTTL = CACHE_TTL;
     /** @var string XSRF TOKEN 值 */
     public $_xsrf = '';
+
+    /**
+     * --- 实例化后会执行的方法 ---
+     * @return bool|array|string|null|void
+     */
+    public function _load() {
+        return true;
+    }
 
     /**
      * --- 获取截止当前时间的总运行时间 ---
@@ -320,11 +330,10 @@ class Ctr {
      * --- 开启 Session ---
      * @param IKv|Db $link Kv 或 Db 实例
      * @param bool $auth 设为 true 则从头 Authorization 或 post _auth 值读取 token
-     * @param array $opt name, ttl, ssl
-     * @return Session
+     * @param array $opt name, ttl, ssl, sqlPre
      */
-    public function _startSession($link, bool $auth = false, array $opt = []): Session {
-        return new Session($this, $link, $auth, $opt);
+    public function _startSession($link, bool $auth = false, array $opt = []): void {
+        $this->_sess = new Session($this, $link, $auth, $opt);
     }
 
     // --- 国际化 ---
@@ -335,16 +344,13 @@ class Ctr {
      * @param string $pkg 包名，为空自动填充为 default
      * @return bool
      */
-    public function _loadLocale(string $locale, string $pkg = ''): bool {
+    public function _loadLocale(string $locale, string $pkg = 'default'): bool {
         global $_localData, $_localFiles, $_local;
 
-        if ($pkg === '') {
-            $pkg = "default";
-        }
         /** @var string $lName 语言名.包名 */
         $lName = $locale . '.' . $pkg;
         if (!in_array($lName, $_localFiles)) {
-            if (($locData = $this->_loadData('locale/'.$lName)) === false) {
+            if (($locData = $this->_loadData('locale/' . $lName)) === null) {
                 return false;
             }
             if (!isset($_localData[$locale])) {
