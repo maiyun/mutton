@@ -33,7 +33,7 @@ class test extends Ctr {
             '<br>MOBILE: ' . (MOBILE ? 'true' : 'false'),
             '<br>HOST: ' . HOST,
             '<br>HOSTNAME: ' . HOSTNAME,
-            '<br>PHP Verison: ' . PHP_VERSION,
+            '<br>PHP Version: ' . PHP_VERSION,
 
             '<br><br>URL_BASE: ' . URL_BASE,
             '<br>URL_STC: ' . URL_STC,
