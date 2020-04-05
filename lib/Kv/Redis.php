@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/01/31 10:30
- * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02
+ * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08
  */
 declare(strict_types = 1);
 
@@ -171,7 +171,7 @@ else
 end
 SCRIPT;
         $r = $this->_link->evalSha('ea360f3f6508a243824ecda6be15db56df217873', [$this->_pre . $key, $val], 1);
-        if ($r <= 0) {
+        if ($r === false) {
             $this->_link->script('load', $script);
             $r = $this->_link->evalSha('ea360f3f6508a243824ecda6be15db56df217873', [$this->_pre . $key, $val], 1);
             if ($r <= 0) {
