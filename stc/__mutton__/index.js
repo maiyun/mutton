@@ -43,8 +43,8 @@ window.onerror = function (msg, uri, line, col, err) {
         console.log(msg);
     }
 };
-var __Mutton__;
-(function (__Mutton__) {
+var __mutton__;
+(function (__mutton__) {
     var headElement;
     document.addEventListener("DOMContentLoaded", function () {
         return __awaiter(this, void 0, void 0, function () {
@@ -173,7 +173,7 @@ var __Mutton__;
                                             switch (_a.label) {
                                                 case 0:
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiRefresh", { password: this.password, mirror: this.mirror })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiRefresh", { password: this.password, mirror: this.mirror })];
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -214,7 +214,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiCheck", { password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror })];
                                                 case 3:
                                                     j = _l.sent();
                                                     this.mask = false;
@@ -278,7 +278,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiInstallLib", { password: this.password, lib: this.onlineLibs[this.onlineLibsIndex].value, verName: this.selectedVer, mirror: this.mirror })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiInstallLib", { password: this.password, lib: this.onlineLibs[this.onlineLibsIndex].value, verName: this.selectedVer, mirror: this.mirror })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -315,7 +315,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiUninstallLib", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiUninstallLib", { password: this.password, lib: this.localLibs[this.localLibsIndex].value })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -347,7 +347,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiGetUpgradeList", { password: this.password, verName: this.selectedVer, mirror: this.mirror })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiGetUpgradeList", { password: this.password, verName: this.selectedVer, mirror: this.mirror })];
                                                 case 2:
                                                     j = _c.sent();
                                                     this.mask = false;
@@ -375,7 +375,7 @@ var __Mutton__;
                                                     file = _a[_i];
                                                     url = j.list[file];
                                                     this.upgradeInfoList.unshift(l("Update \"?\"...", [file]));
-                                                    return [4, post(URL_BASE + "__Mutton__/apiUpgrade", { password: this.password, file: file, url: url })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiUpgrade", { password: this.password, file: file, url: url })];
                                                 case 4:
                                                     j1 = _c.sent();
                                                     if (j1 === false) {
@@ -406,7 +406,7 @@ var __Mutton__;
                                             switch (_a.label) {
                                                 case 0:
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiBuild", { password: this.password })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiBuild", { password: this.password })];
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -435,7 +435,7 @@ var __Mutton__;
                                                         return [2];
                                                     }
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiFormatTld", { password: this.password })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiFormatTld", { password: this.password })];
                                                 case 2:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -460,7 +460,7 @@ var __Mutton__;
                                             switch (_a.label) {
                                                 case 0:
                                                     this.mask = true;
-                                                    return [4, post(URL_BASE + "__Mutton__/apiGetLocalLibs", { password: this.password })];
+                                                    return [4, post(URL_BASE + "__mutton__/apiGetLocalLibs", { password: this.password })];
                                                 case 1:
                                                     j = _a.sent();
                                                     this.mask = false;
@@ -637,4 +637,4 @@ var __Mutton__;
             return _localData[key];
         }
     }
-})(__Mutton__ || (__Mutton__ = {}));
+})(__mutton__ || (__mutton__ = {}));

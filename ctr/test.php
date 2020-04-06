@@ -48,7 +48,7 @@ class test extends Ctr {
             '<br><a href="'.URL_BASE.'article/456">View "article/456"</a>',
 
             '<br><br><b>Automatic route:</b>',
-            '<br><br><a href="'.URL_BASE.'__Mutton__">View "__Mutton__"</a>',
+            '<br><br><a href="'.URL_BASE.'__mutton__">View "__mutton__"</a>',
 
             '<br><br><b>Query string:</b>',
             '<br><br><a href="'.URL_BASE.'test/qs?a=1&b=2">View "test/qs?a=1&b=2"</a>',

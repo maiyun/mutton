@@ -14,7 +14,7 @@ use lib\Net;
 use sys\Ctr;
 use ZipArchive;
 
-class __Mutton__ extends Ctr {
+class __mutton__ extends Ctr {
 
     private $_hasConfig = false;
 
@@ -28,7 +28,7 @@ class __Mutton__ extends Ctr {
         if (!in_array($l, ['en', 'zh-CN', 'zh-TW'])) {
             $l = 'en';
         }
-        $this->_loadLocale($l, '__Mutton__');
+        $this->_loadLocale($l, '__mutton__');
 
         if (__MUTTON__PWD === 'Your password') {
             return [0, l('The password cannot be set to "?".', ['Your password'])];
@@ -37,7 +37,7 @@ class __Mutton__ extends Ctr {
 
     // --- Index page ---
     public function index() {
-        return $this->_loadView('__Mutton__/index', [
+        return $this->_loadView('__mutton__/index', [
             'hasConfig' => $this->_hasConfig,
             'local' => $this->_getLocale(),
             '_localData' => $this->_getLocaleJsonString(),
@@ -608,11 +608,11 @@ class __Mutton__ extends Ctr {
     private function _buildMBlobData(): array {
         $list = [
             'file' => [
-                'ctr/__Mutton__.php' => ['md5', ''],
+                'ctr/__mutton__.php' => ['md5', ''],
                 'ctr/test.php' => ['remove'],
-                'data/locale/en.__Mutton__.json' => ['md5', ''],
-                'data/locale/zh-CN.__Mutton__.json' => ['md5', ''],
-                'data/locale/zh-TW.__Mutton__.json' => ['md5', ''],
+                'data/locale/en.__mutton__.json' => ['md5', ''],
+                'data/locale/zh-CN.__mutton__.json' => ['md5', ''],
+                'data/locale/zh-TW.__mutton__.json' => ['md5', ''],
                 'data/index.html' => ['must', ''],
                 'etc/const.php' => ['must', ''],
                 'etc/db.php' => ['const', []],
@@ -635,15 +635,15 @@ class __Mutton__ extends Ctr {
                 'log/index.html' => ['must', ''],
                 'mod/Mod.php' => ['must', ''],
                 'mod/Session.php' => ['remove'],
-                'stc/__Mutton__/index.css' => ['md5', ''],
-                'stc/__Mutton__/index.js' => ['md5', ''],
+                'stc/__mutton__/index.css' => ['md5', ''],
+                'stc/__mutton__/index.js' => ['md5', ''],
                 'stc/index.html' => ['must', ''],
-                'stc-ts/__Mutton__/index.ts' => ['md5', ''],
+                'stc-ts/__mutton__/index.ts' => ['md5', ''],
                 'sys/Boot.php' => ['must', ''],
                 'sys/Ctr.php' => ['must', ''],
                 'sys/Locale.php' => ['must', ''],
                 'sys/Route.php' => ['must', ''],
-                'view/__Mutton__/index.php' => ['md5', ''],
+                'view/__mutton__/index.php' => ['md5', ''],
                 '.htaccess' => ['md5', ''],
                 'index.php' => ['must', '']
             ],

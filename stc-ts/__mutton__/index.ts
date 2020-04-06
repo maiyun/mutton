@@ -6,7 +6,7 @@ window.onerror = (msg, uri, line, col, err) => {
     }
 };
 
-namespace __Mutton__ {
+namespace __mutton__ {
 
     /** head 标签 */
     let headElement: HTMLHeadElement;
@@ -115,7 +115,7 @@ namespace __Mutton__ {
                 // --- Check ---
                 refresh: async function (this: any) {
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiRefresh", {password: this.password, mirror: this.mirror});
+                    let j = await post(URL_BASE + "__mutton__/apiRefresh", {password: this.password, mirror: this.mirror});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -138,7 +138,7 @@ namespace __Mutton__ {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror});
+                    let j = await post(URL_BASE + "__mutton__/apiCheck", {password: this.password, ver: this.verList[this.verIndex].value, verName: this.verList[this.verIndex].label, mirror: this.mirror});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -186,7 +186,7 @@ namespace __Mutton__ {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiInstallLib", {password: this.password, lib: this.onlineLibs[this.onlineLibsIndex].value, verName: this.selectedVer, mirror: this.mirror});
+                    let j = await post(URL_BASE + "__mutton__/apiInstallLib", {password: this.password, lib: this.onlineLibs[this.onlineLibsIndex].value, verName: this.selectedVer, mirror: this.mirror});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -208,7 +208,7 @@ namespace __Mutton__ {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiUninstallLib", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
+                    let j = await post(URL_BASE + "__mutton__/apiUninstallLib", {password: this.password, lib: this.localLibs[this.localLibsIndex].value});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -228,7 +228,7 @@ namespace __Mutton__ {
                     }
                     // --- 获取要更新的文件，2 个为一组，进行更新 ---
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiGetUpgradeList", {password: this.password, verName: this.selectedVer, mirror: this.mirror});
+                    let j = await post(URL_BASE + "__mutton__/apiGetUpgradeList", {password: this.password, verName: this.selectedVer, mirror: this.mirror});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -247,7 +247,7 @@ namespace __Mutton__ {
                     for (let file in j.list) {
                         let url = j.list[file];
                         this.upgradeInfoList.unshift(l(`Update "?"...`, [file]));
-                        let j1 = await post(URL_BASE + "__Mutton__/apiUpgrade", {password: this.password, file: file, url: url});
+                        let j1 = await post(URL_BASE + "__mutton__/apiUpgrade", {password: this.password, file: file, url: url});
                         if (j1 === false) {
                             this.upgradeInfoList.unshift(l("The network connection failed."));
                             continue;
@@ -264,7 +264,7 @@ namespace __Mutton__ {
                 // --- 创建 mblob 文件 ---
                 build: async function (this: any) {
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiBuild", {password: this.password});
+                    let j = await post(URL_BASE + "__mutton__/apiBuild", {password: this.password});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -282,7 +282,7 @@ namespace __Mutton__ {
                         return;
                     }
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiFormatTld", {password: this.password});
+                    let j = await post(URL_BASE + "__mutton__/apiFormatTld", {password: this.password});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
@@ -297,7 +297,7 @@ namespace __Mutton__ {
                 // --- 获取本地库列表 ---
                 getLocalLibs: async function (this: any) {
                     this.mask = true;
-                    let j = await post(URL_BASE + "__Mutton__/apiGetLocalLibs", {password: this.password});
+                    let j = await post(URL_BASE + "__mutton__/apiGetLocalLibs", {password: this.password});
                     this.mask = false;
                     if (j === false) {
                         this.alert = l("The network connection failed.");
