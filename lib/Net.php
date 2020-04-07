@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.5",
+    "ver": "0.6",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/cacert.pem": {
@@ -19,7 +19,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-04-06 23:07:19
  */
 declare(strict_types = 1);
 
@@ -79,67 +79,67 @@ class Net {
 
     /**
      * --- 创建一个请求对象 ---
-     * @param string $url
+     * @param string $u
      * @return Request
      */
-    public static function open(string $url) {
-        return new Request($url);
+    public static function open(string $u) {
+        return new Request($u);
     }
 
     /**
      * --- 发起 GET 请求 ---
-     * @param string $url
+     * @param string $u
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
-    public static function get(string $url, array $opt = [], ?array &$cookie = null) {
-        return self::request($url, null, $opt, $cookie);
+    public static function get(string $u, array $opt = [], ?array &$cookie = null) {
+        return self::request($u, null, $opt, $cookie);
     }
 
     /**
      * --- 发起 POST 请求 ---
-     * @param string $url
+     * @param string $u
      * @param array $data
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
-    public static function post(string $url, array $data, array $opt = [], ?array &$cookie = null) {
+    public static function post(string $u, array $data, array $opt = [], ?array &$cookie = null) {
         $opt['method'] = 'POST';
-        return self::request($url, $data, $opt, $cookie);
+        return self::request($u, $data, $opt, $cookie);
     }
 
     /**
      * --- 发起 JSON 请求 ---
-     * @param string $url
+     * @param string $u
      * @param array $data
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
-    public static function postJson(string $url, array $data, array $opt = [], ?array &$cookie = null): Response {
+    public static function postJson(string $u, array $data, array $opt = [], ?array &$cookie = null): Response {
         $opt['method'] = 'POST';
         $opt['type'] = 'json';
-        return self::request($url, $data, $opt, $cookie);
+        return self::request($u, $data, $opt, $cookie);
     }
 
     /**
      * --- 发起请求 ---
-     * @param string $url 提交的 url
+     * @param string $u 提交的 url
      * @param array|null $data 提交的 data 数据
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
-    public static function request(string $url, ?array $data = null, array $opt = [], ?array &$cookie = null): Response {
-        $uri = parse_url($url);
+    public static function request(string $u, ?array $data = null, array $opt = [], ?array &$cookie = null): Response {
+        $uri = parse_url($u);
         $isSsl = false;
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
         $type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
         $timeout = isset($opt['timeout']) ? $opt['timeout'] : 10;
         $follow = isset($opt['follow']) ? $opt['follow'] : false;
-        $hosts = isset($opt['hosts']) ? $opt['hosts'] : null;
+        $hosts = isset($opt['hosts']) ? $opt['hosts'] : [];
         // $raw = isset($opt['raw']) ? $opt['raw'] : false;                 // --- 不应该依赖 raw，依赖本服务器的压缩 ---
         $save = isset($opt['save']) ? $opt['save'] : null;                  // --- 直接保存到文件的实体地址 ---
         $local = isset($opt['local']) ? $opt['local'] : null;               // --- 使用的本地网卡 IP ---
@@ -159,10 +159,10 @@ class Net {
             $ch = curl_init();
         }
         if ($method == 'GET') {
-            curl_setopt($ch, CURLOPT_URL, $url . ($data !== null ? '?' . http_build_query($data) : ''));
+            curl_setopt($ch, CURLOPT_URL, $u . ($data !== null ? '?' . http_build_query($data) : ''));
         } else {
             // --- POST ---
-            curl_setopt($ch, CURLOPT_URL, $url);
+            curl_setopt($ch, CURLOPT_URL, $u);
             curl_setopt($ch, CURLOPT_POST, true);
             $upload = false;
             if ($data !== null) {
@@ -210,20 +210,18 @@ class Net {
             curl_setopt($ch, CURLOPT_INTERFACE, $local);
         }
         // --- ssl ---
-        if (substr($url, 0, 6) === 'https:') {
+        if (substr($u, 0, 6) === 'https:') {
             $isSsl = true;
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
             curl_setopt($ch, CURLOPT_CAINFO, LIB_PATH . 'Net/cacert.pem');
         }
         // --- 重定义 IP ---
-        if ($hosts) {
-            $host = strtolower($uri['host']);
-            if (isset($hosts[$host])) {
-                $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
-                // curl_setopt($ch, 10243, [$host . ':' . $port . ':' . $hosts[$host]]);                       // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
-                curl_setopt($ch, CURLOPT_RESOLVE, [$host . ':' . $port . ':' . $hosts[$host]]);        // --- CURL 7.21.3 ---
-            }
+        $host = strtolower($uri['host']);
+        if (isset($hosts[$host])) {
+            $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
+            // curl_setopt($ch, 10243, [$host . ':' . $port . ':' . $hosts[$host]]);                       // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
+            curl_setopt($ch, CURLOPT_RESOLVE, [$host . ':' . $port . ':' . $hosts[$host]]);        // --- CURL 7.21.3 ---
         }
         // --- 设定头部以及判断提交的数据类型 ---
         if ($type === 'json') {
@@ -238,7 +236,7 @@ class Net {
         curl_setopt($ch, CURLOPT_HTTPHEADER, self::_formatHeaderSender($headers));
         // --- cookie 托管 ---
         if ($cookie !== null) {
-            curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $url));
+            curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $u));
         }
         // --- 直接下载到文件 ---
         /** @var resource $fh */
@@ -300,11 +298,11 @@ class Net {
         } else {
             $res->content = (string)$total;
         }
-        $res->headers = self::_formatHeader($resHeaders, $url);
+        $res->headers = self::_formatHeader($resHeaders, $u);
         // --- 是否追踪 cookie ---
         if ($cookie !== null) {
             // --- 提取 cookie ---
-            self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $url);
+            self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $u);
         }
         // --- 判断 follow 追踪 ---
         if (!$follow) {
@@ -313,8 +311,8 @@ class Net {
         if (!isset($res->headers['location'])) {
             return $res;
         }
-        $headers['referer'] = $url;
-        return self::request(Text::urlResolve($url, $res->headers['location']), $data, [
+        $headers['referer'] = $u;
+        return self::request(Text::urlResolve($u, $res->headers['location']), $data, [
             'method' => $method,
             'type' => $type,
             'timeout' => $timeout,
@@ -330,10 +328,10 @@ class Net {
      * --- 根据 Set-Cookie 头部转换到 cookie 数组（会自动筛掉不能设置的 cookie） ---
      * @param array $cookie Cookie 引用键值对数组
      * @param array $setCookies 头部的 set-cookie 数组
-     * @param string $url 当前网址
+     * @param string $u 当前网址
      */
-    private static function _buildCookieObject(array &$cookie, array $setCookies, string $url) {
-        $uri = parse_url($url);
+    private static function _buildCookieObject(array &$cookie, array $setCookies, string $u) {
+        $uri = parse_url($u);
         if (!isset($uri['path'])) {
             $uri['path'] = '/';
         }
@@ -429,17 +427,17 @@ class Net {
     /**
      * --- 数组转换为 Cookie 拼接字符串（会自动筛掉不能发送的 cookie） ---
      * @param array $cookie Cookie 键值数组
-     * @param string $url 当前网页路径
+     * @param string $u 当前网页路径
      * @return string
      */
-    private static function _buildCookieQuery(array &$cookie, string $url): string {
+    private static function _buildCookieQuery(array &$cookie, string $u): string {
         $cookieStr = '';
         foreach ($cookie as $key => $item) {
             if (($item['exp'] < $_SERVER['REQUEST_TIME']) && ($item['exp'] !== -1992199400)) {
                 unset($cookie[$key]);
                 continue;
             }
-            $uri = parse_url($url);
+            $uri = parse_url($u);
             if (!isset($uri['path'])) {
                 $uri['path'] = '/';
             }
@@ -483,10 +481,10 @@ class Net {
     /**
      * --- 将获取的 header 字符串格式化为数组 ---
      * @param string $header
-     * @param string $url 当前访问的 url
+     * @param string $u 当前访问的 url
      * @return array
      */
-    private static function _formatHeader(string $header, string $url) {
+    private static function _formatHeader(string $header, string $u) {
         $h = [];
         $header = explode("\r\n", $header);
         foreach ($header as $val) {
@@ -501,7 +499,7 @@ class Net {
                 preg_match('/HTTP\\/([0-9.]+) ([0-9]+)/', $val, $match);
                 $h['http-version'] = $match[1];
                 $h['http-code'] = $match[2];
-                $h['http-url'] = $url;
+                $h['http-url'] = $u;
                 continue;
             }
             $k = strtolower(substr($val, 0, $sp));
