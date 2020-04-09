@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.8",
+    "ver": "0.9",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/cacert.pem": {
@@ -10,6 +10,11 @@
             "action": "down",
             "save": "cacert.pem"
         },
+        "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/Request.php": {
+            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Request.php",
+            "action": "down",
+            "save": "Request.php"
+        }
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/Response.php": {
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php",
             "action": "down",
@@ -19,7 +24,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-04-08 20:04:09
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-9 19:02:31
  */
 declare(strict_types = 1);
 
@@ -138,7 +143,7 @@ class Net {
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
         $type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
         $timeout = isset($opt['timeout']) ? $opt['timeout'] : 10;
-        $follow = isset($opt['follow']) ? $opt['follow'] : false;
+        $follow = isset($opt['follow']) ? $opt['follow'] : 0;
         $hosts = isset($opt['hosts']) ? $opt['hosts'] : [];
         // $raw = isset($opt['raw']) ? $opt['raw'] : false;                 // --- 不应该依赖 raw，依赖本服务器的压缩 ---
         $save = isset($opt['save']) ? $opt['save'] : null;                  // --- 直接保存到文件的实体地址 ---
@@ -211,7 +216,7 @@ class Net {
             curl_setopt($ch, CURLOPT_INTERFACE, $local);
         }
         // --- ssl ---
-        if (substr($u, 0, 6) === 'https:') {
+        if (strtolower($uri['scheme']) === 'https') {
             $isSsl = true;
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
@@ -306,18 +311,19 @@ class Net {
             self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $uri);
         }
         // --- 判断 follow 追踪 ---
-        if (!$follow) {
+        if ($follow === 0) {
             return $res;
         }
         if (!isset($res->headers['location'])) {
             return $res;
         }
+        // --- 哦，要追踪 ---
         $headers['referer'] = $u;
         return self::request(Text::urlResolve($u, $res->headers['location']), $data, [
             'method' => $method,
             'type' => $type,
             'timeout' => $timeout,
-            'follow' => $follow,
+            'follow' => $follow - 1,
             'hosts' => $hosts,
             'save' => $save,
             'reuse' => $reuse,
@@ -492,7 +498,7 @@ class Net {
             if (!$sp) {
                 preg_match('/HTTP\\/([0-9.]+) ([0-9]+)/', $val, $match);
                 $h['http-version'] = $match[1];
-                $h['http-code'] = $match[2];
+                $h['http-code'] = (int)$match[2];
                 $h['http-url'] = $u;
                 continue;
             }

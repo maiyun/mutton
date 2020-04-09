@@ -278,7 +278,7 @@ class __mutton__ extends Ctr {
         // --- 下载 ---
         $r = Net::get($_POST['url'], [
             'timeout' => 50,
-            'follow' => true,
+            'follow' => 5,
             'save' => ROOT_PATH . $_POST['file'],
             'reuse' => true
         ]);
@@ -391,7 +391,7 @@ class __mutton__ extends Ctr {
             $url = 'https://gitee.com/MaiyunNET/Mutton/raw/'.$_POST['verName'].'/lib/'.$_POST['lib'].'.php';
         }
         $res = Net::get($url, [
-            'follow' => true,
+            'follow' => 5,
             'reuse' => true
         ]);
         if (!$res->content) {
@@ -449,7 +449,7 @@ class __mutton__ extends Ctr {
                 // --- 下载 ---
                 $r = Net::get($file, [
                     'timeout' => 50,
-                    'follow' => true,
+                    'follow' => 5,
                     'save' => LIB_PATH . $_POST['lib'] . '/' . $path . $name,
                     'reuse' => true
                 ]);
@@ -587,7 +587,7 @@ class __mutton__ extends Ctr {
             $url = 'https://gitee.com/MaiyunNET/Mutton/raw/'.$verName.'/doc/mblob';
         }
         $res = Net::get($url, [
-            'follow' => true
+            'follow' => 5
         ]);
         if (!$res->content) {
             return [0, l('Network error, please try again.').'('.$res->error.')'];

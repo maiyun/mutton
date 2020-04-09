@@ -89,10 +89,10 @@ class Request {
 
     /**
      * --- 设置是否跟随请求方的 location，留空为跟随，不设置为不跟随 ---
-     * @param bool $follow
+     * @param int $follow
      * @return $this
      */
-    public function follow(bool $follow = true) {
+    public function follow(int $follow = 5) {
         $this->_opt['follow'] = $follow;
         return $this;
     }
