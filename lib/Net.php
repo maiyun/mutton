@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.6",
+    "ver": "0.8",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/cacert.pem": {
@@ -19,7 +19,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-04-06 23:07:19
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-04-08 20:04:09
  */
 declare(strict_types = 1);
 
@@ -158,7 +158,8 @@ class Net {
         } else {
             $ch = curl_init();
         }
-        if ($method == 'GET') {
+        // --- DATA ---
+        if ($method === 'GET') {
             curl_setopt($ch, CURLOPT_URL, $u . ($data !== null ? '?' . http_build_query($data) : ''));
         } else {
             // --- POST ---
@@ -225,9 +226,7 @@ class Net {
         }
         // --- 设定头部以及判断提交的数据类型 ---
         if ($type === 'json') {
-            if (!isset($headers['content-type'])) {
-                $headers['content-type'] = 'application/json; charset=utf-8';
-            }
+            $headers['content-type'] = 'application/json; charset=utf-8';
         }
         // --- 设置 expect 防止出现 100 continue ---
         if (!isset($headers['expect'])) {
@@ -236,7 +235,7 @@ class Net {
         curl_setopt($ch, CURLOPT_HTTPHEADER, self::_formatHeaderSender($headers));
         // --- cookie 托管 ---
         if ($cookie !== null) {
-            curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $u));
+            curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $uri));
         }
         // --- 直接下载到文件 ---
         /** @var resource $fh */
@@ -244,11 +243,13 @@ class Net {
         $resHeaders = '';
         $total = 0;
         if ($save !== null) {
+            /** @var boolean $isBody --- 当前是否是 body 写入 --- */
             $isBody = false;
             curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fh, &$save, &$resHeaders, &$isBody, &$total) {
                 $len = strlen($data);
                 if ($isBody) {
                     if ($data !== '') {
+                        // --- 不等于空才写入，因此 location 状态的不会被写入，写入了也会被覆盖 ---
                         if (!$fh) {
                             $fh = fopen($save, 'w');
                         }
@@ -302,7 +303,7 @@ class Net {
         // --- 是否追踪 cookie ---
         if ($cookie !== null) {
             // --- 提取 cookie ---
-            self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $u);
+            self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $uri);
         }
         // --- 判断 follow 追踪 ---
         if (!$follow) {
@@ -326,12 +327,11 @@ class Net {
 
     /**
      * --- 根据 Set-Cookie 头部转换到 cookie 数组（会自动筛掉不能设置的 cookie） ---
-     * @param array $cookie Cookie 引用键值对数组
+     * @param array $cookie Cookie 数组
      * @param array $setCookies 头部的 set-cookie 数组
-     * @param string $u 当前网址
+     * @param array $uri 请求的 URI 对象
      */
-    private static function _buildCookieObject(array &$cookie, array $setCookies, string $u) {
-        $uri = parse_url($u);
+    private static function _buildCookieObject(array &$cookie, array $setCookies, array $uri) {
         if (!isset($uri['path'])) {
             $uri['path'] = '/';
         }
@@ -379,22 +379,19 @@ class Net {
                 }
                 $parseDomain = Text::parseDomain($domainN);
                 if ($parseDomain['tld'] === strtolower($domainN)) {
+                    // --- 不能给 tld 设置 cookie ---
                     continue;
                 }
-                // --- 获取设置域名的点数 ---
-                $domainSc = substr_count($domain, '.');
                 // --- 判断访问路径 (uri['host']) 是不是设置域名 (domain) 的孩子，domain 必须是 uriHost 的同级或者父辈 ---
-                if (substr_count($uri['host'], '.') < $domainSc) {
-                    // --- ok.xxx.com (2) < .pp.xxx.com (2): false ---
-                    // --- ok.xxx.com < .z.xxx.com: false ---
-                    continue;
-                }
                 if (substr($uri['host'], -strlen($domain)) !== $domain) {
+                    // --- false 代表进入了，代表失败 ---
+                    // --- ok.xxx.com, .xxx.com: true ---
                     // --- ok.xxx.com, .ppp.com: false ---
+                    // --- ok.xxx.com, .p.ok.xxx.com: false ---
                     continue;
                 }
             }
-            $cookieKey = $cookieTmp['name'].'-'.$domainN;
+            $cookieKey = $cookieTmp['name'] . '-' . $domainN;
             if (isset($cookieTmp['max-age']) && ($cookieTmp['max-age'] <= 0)) {
                 if (isset($cookie[$cookieKey])) {
                     unset($cookie[$cookieKey]);
@@ -426,18 +423,17 @@ class Net {
 
     /**
      * --- 数组转换为 Cookie 拼接字符串（会自动筛掉不能发送的 cookie） ---
-     * @param array $cookie Cookie 键值数组
-     * @param string $u 当前网页路径
+     * @param array $cookie Cookie 数组
+     * @param array $uri 请求的 URI 数组
      * @return string
      */
-    private static function _buildCookieQuery(array &$cookie, string $u): string {
+    private static function _buildCookieQuery(array &$cookie, array $uri): string {
         $cookieStr = '';
         foreach ($cookie as $key => $item) {
             if (($item['exp'] < $_SERVER['REQUEST_TIME']) && ($item['exp'] !== -1992199400)) {
                 unset($cookie[$key]);
                 continue;
             }
-            $uri = parse_url($u);
             if (!isset($uri['path'])) {
                 $uri['path'] = '/';
             }
@@ -456,22 +452,20 @@ class Net {
             // --- z.ok.xxx.com     vs      .xxx.com: true ---
             // --- ok.xxx.com       vs      .zz.ok.xxx.com: false ---
             if ('.' . $uri['host'] !== $domain) {
-                // --- 判断自己是不是孩子 ---
-                if (substr_count($uri['host'], '.') < substr_count($domain, '.')) {
+                // --- 域名不相等，那么判断当前域名 host 是不是 domain 的孩子 ---
+                if (substr($uri['host'], -strlen($domain)) !== $domain) {
+                    // --- false 代表进入，被排除了，因为 cookie 的 domain 和当前 host 后半部分，代表不是 domain 的孩子 ---
                     // --- ok.xxx.com, .zz.ok.xxx.com: false ---
                     // --- pp.ok.xxx.com, .zz.ok.xxx.com: false ---
-                    // --- q.b.ok.xx.com, .zz.ok.xxx.com: true ---
-                    continue;
-                }
-                if (substr($uri['host'], -strlen($domain)) !== $domain) {
                     // --- q.b.ok.xx.com, .zz.ok.xxx.com: false ---
                     // --- z.ok.xxx.com, .xxx.com: true ---
+                    // --- xx.xxx.com, .ok.xxx.com: false ---
                     continue;
                 }
             }
             $cookieStr .= $item['name'] . '=' . urlencode($item['value']) . ';';
         }
-        if ($cookieStr != '') {
+        if ($cookieStr !== '') {
             return substr($cookieStr, 0, -1);
         } else {
             return '';
@@ -545,15 +539,17 @@ class Net {
      * @return string
      */
     public static function getIP(): string {
-        if (isset($_SERVER['HTTP_X_REAL_FORWARDED_FOR']) && $_SERVER['HTTP_X_REAL_FORWARDED_FOR'] && ($_SERVER['HTTP_X_REAL_FORWARDED_FOR'] != '0.0.0.0')) {
+        if (isset($_SERVER['HTTP_X_REAL_IP']) && $_SERVER['HTTP_X_REAL_IP']) {
+            return $_SERVER['HTTP_X_REAL_IP'];
+        } else if (isset($_SERVER['HTTP_X_REAL_FORWARDED_FOR']) && $_SERVER['HTTP_X_REAL_FORWARDED_FOR']) {
             return $_SERVER['HTTP_X_REAL_FORWARDED_FOR'];
-        } else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'] && ($_SERVER['HTTP_X_FORWARDED_FOR'] != '0.0.0.0')) {
+        } else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR']) {
             return $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else if (isset($_SERVER['HTTP_CLIENT_IP']) && $_SERVER['HTTP_CLIENT_IP'] && ($_SERVER['HTTP_CLIENT_IP'] != '0.0.0.0')) {
+        } else if (isset($_SERVER['HTTP_CLIENT_IP']) && $_SERVER['HTTP_CLIENT_IP']) {
             return $_SERVER['HTTP_CLIENT_IP'];
-        } else if (isset($_SERVER['HTTP_X_CONNECTING_IP']) && $_SERVER['HTTP_X_CONNECTING_IP'] && ($_SERVER['HTTP_X_CONNECTING_IP'] != '0.0.0.0')) {
+        } else if (isset($_SERVER['HTTP_X_CONNECTING_IP']) && $_SERVER['HTTP_X_CONNECTING_IP']) {
             return $_SERVER['HTTP_X_CONNECTING_IP'];
-        } else if (isset($_SERVER['HTTP_CF_CONNECTING_IP']) && $_SERVER['HTTP_CF_CONNECTING_IP'] && ($_SERVER['HTTP_CF_CONNECTING_IP'] != '0.0.0.0')) {
+        } else if (isset($_SERVER['HTTP_CF_CONNECTING_IP']) && $_SERVER['HTTP_CF_CONNECTING_IP']) {
             return $_SERVER['HTTP_CF_CONNECTING_IP'];
         } else {
             return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
@@ -561,19 +557,16 @@ class Net {
     }
 
     /** @var string HTTP_X_CONNECTING_IP */
-    public const REAL_IP_HEADER_X = 'HTTP_X_CONNECTING_IP';
+    public const REAL_IP_X = 'HTTP_X_CONNECTING_IP';
     /** @var string HTTP_CF_CONNECTING_IP */
-    public const REAL_IP_HEADER_CF = 'HTTP_CF_CONNECTING_IP';
+    public const REAL_IP_CF = 'HTTP_CF_CONNECTING_IP';
     /**
-     * --- 獲取直連 IP（安全 IP） ---
+     * --- 获取直连 IP（安全 IP） ---
      * @param string $name 输入安全的 header
      * @return string
      */
     public static function getRealIP($name = ''): string {
-        if ($name === '') {
-            return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-        }
-        if (isset($_SERVER[$name]) && $_SERVER[$name] && ($_SERVER[$name] != '0.0.0.0')) {
+        if (($name !== '') && isset($_SERVER[$name]) && $_SERVER[$name]) {
             return $_SERVER[$name];
         }
         return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
