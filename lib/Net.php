@@ -14,7 +14,7 @@
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Request.php",
             "action": "down",
             "save": "Request.php"
-        }
+        },
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/Response.php": {
             "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Net/Response.php",
             "action": "down",
@@ -93,7 +93,7 @@ class Net {
 
     /**
      * --- 发起 GET 请求 ---
-     * @param string $u
+     * @param string $u 请求的 URL
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
@@ -104,8 +104,8 @@ class Net {
 
     /**
      * --- 发起 POST 请求 ---
-     * @param string $u
-     * @param array $data
+     * @param string $u 请求的 URL
+     * @param array $data 要发送的数据（值由 @ 开头则是上传文件）
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response

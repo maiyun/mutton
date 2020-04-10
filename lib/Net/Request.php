@@ -12,11 +12,11 @@ use lib\Net;
 
 class Request {
 
-    /** @var array|null get 或 post 的数据 */
+    /** @var array|null --- get 或 post 的数据 --- */
     private $_data = null;
-    /** @var string 访问的 URL */
+    /** @var string --- 访问的 URL --- */
     private $_url = '';
-    /** @var array 要传递的参数 */
+    /** @var array --- 要传递的参数 --- */
     private $_opt = [];
 
     public function __construct(string $url) {
@@ -25,7 +25,7 @@ class Request {
 
     /**
      * --- 设置 get 或 post 的数据 ---
-     * @param array $data
+     * @param array $data 数据
      * @return $this
      */
     public function data(array $data) {
@@ -79,7 +79,7 @@ class Request {
 
     /**
      * --- 设置请求有效期 ---
-     * @param int $timeout
+     * @param int $timeout 秒
      * @return $this
      */
     public function timeout(int $timeout) {

@@ -22,7 +22,7 @@ class Fs {
             return true;
         }
         $path = str_replace('\\', '/', $path);
-        if ($path[strlen($path) - 1] === '/') {
+        if (substr($path, -1) === '/') {
             $path = substr($path, 0, -1);
         }
         $lio = strrpos($path, '/');
