@@ -282,7 +282,7 @@ class __mutton__ extends Ctr {
             'save' => ROOT_PATH . $_POST['file'],
             'reuse' => true
         ]);
-        if ($r->content === '') {
+        if (!$r->content) {
             return [0, l('File "?" download failed.', [$_POST['file']])];
         }
         return [1];
@@ -453,7 +453,7 @@ class __mutton__ extends Ctr {
                     'save' => LIB_PATH . $_POST['lib'] . '/' . $path . $name,
                     'reuse' => true
                 ]);
-                if ($r->content === '') {
+                if (!$r->content) {
                     Net::closeAll();
                     return [0, l('File "?" download failed.', [$file])];
                 }

@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.9",
+    "ver": "0.10",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/cacert.pem": {
@@ -24,7 +24,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-9 19:02:31
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46
  */
 declare(strict_types = 1);
 

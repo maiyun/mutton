@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-12-10 19:51:06
- * Last: 2018-12-11 21:26:26, 2020-2-26 12:01:25
+ * Last: 2018-12-11 21:26:26, 2020-2-26 12:01:25, 2020-4-11 22:57:04
  */
 declare(strict_types = 1);
 
@@ -11,7 +11,8 @@ namespace lib\Net;
 class Response {
 
     public $headers = [];
-    public $content = '';
+    /** @var string|null 返回的数据 */
+    public $content = null;
 
     public $error = '';
     public $errno = 0;
