@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-13 16:43:36
  */
 declare(strict_types = 1);
 
@@ -21,26 +21,24 @@ use PDO;
  */
 class Mod {
 
-    /** @var string 表名 */
+    /** @var string --- 表名 --- */
     protected static $_table = '';
-    /** @var string 主键字段名 */
+    /** @var string --- 主键字段名 --- */
     protected static $_primary = 'id';
-    /** @var string 设置后将由 _keyGenerator 函数生成唯一字段 */
+    /** @var string --- 设置后将由 _keyGenerator 函数生成唯一字段 --- */
     protected static $_key = '';
     /** @var bool 可开启软删软更新软新增 */
     protected static $_soft = false;
 
-    /** @var array 要 update 的内容 */
+    /** @var array --- 要 update 的内容 --- */
     protected $_updates = [];
-    /** @var array 模型获取的属性 */
+    /** @var array --- 模型获取的属性 --- */
     protected $_data = [];
 
-    /* @var Db $_db 数据库连接对象 */
+    /* @var Db $_db --- 数据库连接对象 --- */
     protected $_db = null;
 
-    // --- 系统自用 ---
-
-    /** @var LSql $_sql Sql 库对象 */
+    /** @var LSql $_sql --- Sql 对象 --- */
     protected $_sql = null;
 
     // --- Mutton PHP 框架配置项 [ 开始 ] ---
@@ -54,7 +52,7 @@ class Mod {
 
     /**
      * 构造函数，etc 选项可选
-     * @param array $opt
+     * @param array $opt row, select, where, raw
      */
     public function __construct(array $opt = []) {
         // --- 导入数据库连接 ---
@@ -322,9 +320,9 @@ class Mod {
     // --- 动态方法 ---
 
     /**
-     * --- 设置模型属性 ---
-     * @param string|array $n
-     * @param string|int|float $v 可能是数字
+     * --- 设置一个/多个属性 ---
+     * @param string|array $n 字符串或键/值
+     * @param string|int|float|null $v 可能是数字
      */
     public function set($n, $v = ''): void {
         if(!is_string($n)) {
@@ -352,62 +350,22 @@ class Mod {
 
     /**
      * --- 创建数据 ---
+     * @param array|null $notWhere 若要不存在才成功，则要传入限定条件
+     * @param string|null $table 可对限定条件传入适当的表
      * @return bool
      */
-    public function create(): bool {
+    public function create(?array $notWhere = null, ?string $table = null): bool {
         $updates = [];
         foreach ($this->_updates as $k => $v) {
             $updates[$k] = $this->_data[$k];
         }
-
-        $ps = null;
-        if (static::$_key !== '' && !isset($updates[static::$_key])) {
-            $count = 0;
-            do {
-                if ($count === 20) {
-                    break;
-                }
-                $updates[static::$_key] = $this->_keyGenerator();
-                $this->_data[static::$_key] = $updates[static::$_key];
-                $this->{static::$_key} = $updates[static::$_key];
-                $this->_sql->insert(static::$_table)->values($updates);
-                $ps = $this->_db->prepare($this->_sql->getSql());
-                ++$count;
-            } while (!$ps->execute($this->_sql->getData()) && ($ps->errorCode() === '23000'));
-        } else {
-            $this->_sql->insert(static::$_table)->values($updates);
-            $ps = $this->_db->prepare($this->_sql->getSql());
-            if (!$ps->execute($this->_sql->getData())) {
-                return false;
-            }
-        }
-        if ($ps && ($ps->rowCount() > 0)) {
-            $this->_updates = [];
-            $this->_data[static::$_primary] = $this->_db->getInsertID();
-            $this->{static::$_primary} = $this->_data[static::$_primary];
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * --- 不存在则才会创建成功 ---
-     * @param array $where 限定条件
-     * @param string|null $table 限定表，留空为当前表
-     * @return bool
-     */
-    public function createNotExists(array $where, ?string $table = null) {
-        $updates = [];
-        foreach ($this->_updates as $k => $v) {
-            $updates[$k] = $this->_data[$k];
-        }
+        // --- 这个 table 主要给 notWhere 有值时才使用 ---
         if ($table === null) {
             $table = static::$_table;
         }
 
         $ps = null;
-        if (static::$_key !== '' && !isset($updates[static::$_key])) {
+        if ((static::$_key !== '') && !isset($updates[static::$_key])) {
             $count = 0;
             do {
                 if ($count === 20) {
@@ -416,12 +374,22 @@ class Mod {
                 $updates[static::$_key] = $this->_keyGenerator();
                 $this->_data[static::$_key] = $updates[static::$_key];
                 $this->{static::$_key} = $updates[static::$_key];
-                $this->_sql->insert(static::$_table)->notExists($table, $updates, $where);
+                $this->_sql->insert(static::$_table);
+                if ($notWhere) {
+                    $this->_sql->notExists($table, $updates, $notWhere);
+                } else {
+                    $this->_sql->values($updates);
+                }
                 $ps = $this->_db->prepare($this->_sql->getSql());
                 ++$count;
             } while (!$ps->execute($this->_sql->getData()) && ($ps->errorCode() === '23000'));
         } else {
-            $this->_sql->insert(static::$_table)->notExists($table, $updates, $where);
+            $this->_sql->insert(static::$_table);
+            if ($notWhere) {
+                $this->_sql->notExists($table, $updates, $notWhere);
+            } else {
+                $this->_sql->values($updates);
+            }
             $ps = $this->_db->prepare($this->_sql->getSql());
             if (!$ps->execute($this->_sql->getData())) {
                 return false;
