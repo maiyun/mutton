@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-13 16:43:36
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29
  */
 declare(strict_types = 1);
 
@@ -179,7 +179,7 @@ class Mod {
      */
     public static function removeByWhere($where, bool $raw = false) {
         $sql = Sql::get(Mod::$__pre);
-        if (static::$_soft && ($raw === false)) {
+        if (static::$_soft && !$raw) {
             // --- 软删除 ---
             $sql->update(static::$_table, [
                 'time_remove' => time()
@@ -299,12 +299,23 @@ class Mod {
 
     /**
      * --- 根据 where 条件获取主键值列表 ---
-     * @param string $s where 条件
+     * @param array|string $where where 条件
+     * @param boolean $raw 是否包含已被软删除的主键值
      * @return array|false
      */
-    public static function primarys($s = '') {
+    public static function primarys($where = '', $raw = false) {
         $sql = Sql::get(Mod::$__pre);
-        $sql->select(self::$_primary, static::$_table)->where($s);
+        if (static::$_soft && !$raw) {
+            // --- 不包含已删除 ---
+            if (is_string($where)) {
+                if ($where !== '') {
+                    $where = '(' . $where . ') AND `time_remove` = 0';
+                }
+            } else {
+                $where['time_remove'] = '0';
+            }
+        }
+        $sql->select(self::$_primary, static::$_table)->where($where);
         $ps = self::$__db->prepare($sql->getSql());
         if ($ps->execute($sql->getData())) {
             $primarys = [];
@@ -360,7 +371,7 @@ class Mod {
             $updates[$k] = $this->_data[$k];
         }
         // --- 这个 table 主要给 notWhere 有值时才使用 ---
-        if ($table === null) {
+        if (!$table) {
             $table = static::$_table;
         }
 
@@ -466,19 +477,18 @@ class Mod {
         foreach ($this->_updates as $k => $v) {
             $updates[$k] = $this->_data[$k];
         }
-        if(count($updates) > 0) {
-            $this->_sql->update(static::$_table, $updates)->where([
-                static::$_primary => $this->_data[static::$_primary]
-            ]);
-            $ps = $this->_db->prepare($this->_sql->getSql());
-            if ($ps->execute($this->_sql->getData())) {
-                $this->_updates = [];
-                return true;
-            } else {
-                return false;
-            }
-        } else {
+        if(count($updates) === 0) {
             return true;
+        }
+        $this->_sql->update(static::$_table, $updates)->where([
+            static::$_primary => $this->_data[static::$_primary]
+        ]);
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        if ($ps->execute($this->_sql->getData())) {
+            $this->_updates = [];
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -488,7 +498,7 @@ class Mod {
      * @return bool
      */
     public function remove($raw = false): bool {
-        if (static::$_soft && ($raw === false)) {
+        if (static::$_soft && !$raw) {
             $this->_sql->update(static::$_table, [
                 'time_remove' => $_SERVER['REQUEST_TIME']
             ])->where([
@@ -519,19 +529,17 @@ class Mod {
             $this->_sql->lock();
         }
         $ps = $this->_db->prepare($this->_sql->getSql());
-        if ($ps->execute($this->_sql->getData())) {
-            if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-                foreach ($row as $k => $v) {
-                    $this->_data[$k] = $v;
-                    $this->$k = $v;
-                }
-                return $this;
-            } else {
-                return null;
-            }
-        } else {
+        if (!$ps->execute($this->_sql->getData())) {
             return false;
         }
+        if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
+            return null;
+        }
+        foreach ($row as $k => $v) {
+            $this->_data[$k] = $v;
+            $this->$k = $v;
+        }
+        return $this;
     }
 
     /**
@@ -541,22 +549,26 @@ class Mod {
      */
     public function all(?string $key = null) {
         $ps = $this->_db->prepare($this->_sql->getSql());
-        if ($ps->execute($this->_sql->getData())) {
-            $list = [];
+        if (!$ps->execute($this->_sql->getData())) {
+            return false;
+        }
+        $list = [];
+        if ($key) {
             while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
                 $obj = new static([
                     'row' => $row
                 ]);
-                if ($key) {
-                    $list[$row[$key]] = $obj;
-                } else {
-                    $list[] = $obj;
-                }
+                $list[$row[$key]] = $obj;
             }
-            return $list;
         } else {
-            return false;
+            while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+                $obj = new static([
+                    'row' => $row
+                ]);
+                $list[] = $obj;
+            }
         }
+        return $list;
     }
 
     /**
@@ -575,19 +587,18 @@ class Mod {
     }
 
     /**
-     * --- 获取总条数，自动抛弃 LIMIT，仅适合获取数据的对象使用 ---
+     * --- 获取总条数，自动抛弃 LIMIT，仅用于获取数据的情况（select） ---
      * @return int
      */
     public function total(): int {
         $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
         $sql = preg_replace('/ LIMIT [0-9 ,]+/', '', $sql);
         $ps = $this->_db->prepare($sql);
-        if ($ps->execute($this->_sql->getData())) {
-            if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-                return (int)$row['count'];
-            } else {
-                return 0;
-            }
+        if (!$ps->execute($this->_sql->getData())) {
+            return 0;
+        }
+        if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            return (int)$row['count'];
         } else {
             return 0;
         }
@@ -600,12 +611,11 @@ class Mod {
     public function count(): int {
         $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
         $ps = $this->_db->prepare($sql);
-        if ($ps->execute($this->_sql->getData())) {
-            if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-                return (int)$row['count'];
-            } else {
-                return 0;
-            }
+        if (!$ps->execute($this->_sql->getData())) {
+            return 0;
+        }
+        if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            return (int)$row['count'];
         } else {
             return 0;
         }
@@ -656,7 +666,7 @@ class Mod {
     }
 
     /**
-     * --- full join 方法 --
+     * --- full join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
      * @return static
@@ -684,7 +694,7 @@ class Mod {
      * @return static
      */
     public function filter($s, $raw = false) {
-        if (static::$_soft && ($raw === false)) {
+        if (static::$_soft && !$raw) {
             if (is_string($s)) {
                 $s = '(' . $s . ') AND `time_remove` = 0';
             } else {
