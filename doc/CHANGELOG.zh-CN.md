@@ -4,6 +4,15 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+# 6.3.0
+
+[+] 模板中新增 _staticPath、_staticVer 变量。  
+[+] Kv 库 incr、decr 方法新增浮点数支持。  
+[+] Ctr 类新增 _setCookie 方法。  
+[+] Mod 类的 primarys 方法新增 raw 参数。  
+[\*] 修复 Text 库的 urlResolve 方法。  
+[\*] 修复当没有 action 时会报错的 BUG。
+
 # 6.2.0
 
 [+] 新增 isIPv6/isDomain/parseDomain 方法在 Text 库。  

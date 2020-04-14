@@ -127,14 +127,13 @@ class Mod {
         $sql = Sql::get(Mod::$__pre);
         $sql->insert(static::$_table)->values($cs, $vs);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData())) {
-            if ($ps->rowCount() > 0) {
-                return true;
-            } else {
-                return null;
-            }
-        } else {
+        if (!$ps->execute($sql->getData())) {
             return false;
+        }
+        if ($ps->rowCount() > 0) {
+            return true;
+        } else {
+            return null;
         }
     }
 
@@ -160,14 +159,13 @@ class Mod {
         $sql = Sql::get(Mod::$__pre);
         $sql->insert(static::$_table)->values($data)->duplicate($update);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData())) {
-            if ($ps->rowCount() > 0) {
-                return true;
-            } else {
-                return null;
-            }
-        } else {
+        if (!$ps->execute($sql->getData())) {
             return false;
+        }
+        if ($ps->rowCount() > 0) {
+            return true;
+        } else {
+            return null;
         }
     }
 
@@ -195,14 +193,13 @@ class Mod {
         }
         $sql->where($where);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData())) {
-            if ($ps->rowCount() > 0) {
-                return true;
-            } else {
-                return null;
-            }
-        } else {
+        if (!$ps->execute($sql->getData())) {
             return false;
+        }
+        if ($ps->rowCount() > 0) {
+            return true;
+        } else {
+            return null;
         }
     }
 
@@ -225,14 +222,13 @@ class Mod {
         }
         $sql->where($where);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData())) {
-            if ($ps->rowCount() > 0) {
-                return true;
-            } else {
-                return null;
-            }
-        } else {
+        if (!$ps->execute($sql->getData())) {
             return false;
+        }
+        if ($ps->rowCount() > 0) {
+            return true;
+        } else {
+            return null;
         }
     }
 
@@ -317,15 +313,14 @@ class Mod {
         }
         $sql->select(self::$_primary, static::$_table)->where($where);
         $ps = self::$__db->prepare($sql->getSql());
-        if ($ps->execute($sql->getData())) {
-            $primarys = [];
-            while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-                $primarys[] = $row[self::$_primary];
-            }
-            return $primarys;
-        } else {
+        if (!$ps->execute($sql->getData())) {
             return false;
         }
+        $primarys = [];
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            $primarys[] = $row[self::$_primary];
+        }
+        return $primarys;
     }
 
     // --- 动态方法 ---

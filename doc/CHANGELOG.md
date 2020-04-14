@@ -4,6 +4,15 @@
 
 [简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
 
+# 6.3.0
+
+[+] New _staticPath, _staticVer variables are added to the template.  
+[+] The Kv library incr, decr method adds floating point support.  
+[+] The Ctr class add _setCookie method.  
+[+] The primarys method of the Mod class adds raw parameters.  
+[\*] Fix the urlResolve method for the Text library.  
+[\*] Fix bug that report errors when there is no action.
+
 # 6.2.0
 
 [+] Add isIPv6/isDomain/parseDomain method in Text library.  
