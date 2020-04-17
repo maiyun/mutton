@@ -19,7 +19,7 @@ use sys\Ctr;
 class test extends Ctr {
 
     public function _load() {
-        if (HOST !== '127.0.0.1' && HOST !== 'local-test.brc-app.com' && HOST !== 'local-test.brc-app.com.cn') {
+        if (HOST !== '127.0.0.1' && HOST !== 'local-test.brc-app.com') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
         }
     }
@@ -44,80 +44,80 @@ class test extends Ctr {
             '<br><br><b style="color: red;">Tips: The file can be deleted.</b>',
 
             '<br><br><b>Route (etc/set.php):</b>',
-            '<br><br><a href="'.URL_BASE.'article/123">View "article/123"</a>',
-            '<br><a href="'.URL_BASE.'article/456">View "article/456"</a>',
+            '<br><br><a href="' . URL_BASE . 'article/123">View "article/123"</a>',
+            '<br><a href="' . URL_BASE . 'article/456">View "article/456"</a>',
 
             '<br><br><b>Automatic route:</b>',
-            '<br><br><a href="'.URL_BASE.'__mutton__">View "__mutton__"</a>',
+            '<br><br><a href="' . URL_BASE . '__mutton__">View "__mutton__"</a>',
 
             '<br><br><b>Query string:</b>',
-            '<br><br><a href="'.URL_BASE.'test/qs?a=1&b=2">View "test/qs?a=1&b=2"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/qs?a=1&b=2">View "test/qs?a=1&b=2"</a>',
 
             '<br><br><b>Return json:</b>',
-            '<br><br><a href="'.URL_BASE.'test/json?type=1">View "test/json?type=1"</a>',
-            '<br><a href="'.URL_BASE.'test/json?type=2">View "test/json?type=2"</a>',
-            '<br><a href="'.URL_BASE.'test/json?type=3">View "test/json?type=3"</a>',
-            '<br><a href="'.URL_BASE.'test/json?type=4">View "test/json?type=4"</a>',
-            '<br><a href="'.URL_BASE.'test/json?type=5">View "test/json?type=5"</a>',
-            '<br><a href="'.URL_BASE.'test/json?type=6">View "test/json?type=6"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/json?type=1">View "test/json?type=1"</a>',
+            '<br><a href="' . URL_BASE . 'test/json?type=2">View "test/json?type=2"</a>',
+            '<br><a href="' . URL_BASE . 'test/json?type=3">View "test/json?type=3"</a>',
+            '<br><a href="' . URL_BASE . 'test/json?type=4">View "test/json?type=4"</a>',
+            '<br><a href="' . URL_BASE . 'test/json?type=5">View "test/json?type=5"</a>',
+            '<br><a href="' . URL_BASE . 'test/json?type=6">View "test/json?type=6"</a>',
 
             '<br><br><b>Ctr:</b>',
-            '<br><br><a href="'.URL_BASE.'test/ctr-random">View "test/ctr-random"</a>',
-            '<br><a href="'.URL_BASE.'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
 
             '<br><br><b>Middle:</b>',
-            '<br><br><a href="'.URL_BASE.'test/middle">View "test/middle"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/middle">View "test/middle"</a>',
 
             '<br><br><b>Model test:</b>',
 
             '<br><br><b style="color: red;">In a production environment, please delete the "Mod/Session.php" file.</b>',
-            '<br><a href="'.URL_BASE.'test/mod">Click to see an example of a Session model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod">Click to see an example of a Session model</a>',
 
             '<br><br><b>Library test:</b>',
 
             '<br><br><b>Captcha:</b>',
-            '<br><br><a href="'.URL_BASE.'test/captcha-fastbuild">View "test/captcha-fastbuild"</a>',
-            '<br><a href="'.URL_BASE.'test/captcha-base64">View "test/captcha-base64"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/captcha-fastbuild">View "test/captcha-fastbuild"</a>',
+            '<br><a href="' . URL_BASE . 'test/captcha-base64">View "test/captcha-base64"</a>',
 
             '<br><br><b>Crypto:</b>',
-            '<br><br><a href="'.URL_BASE.'test/crypto">View "test/crypto"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/crypto">View "test/crypto"</a>',
 
             '<br><br><b>Db:</b>',
-            '<br><a href="'.URL_BASE.'test/db?s=Mysql">View "test/db?s=Mysql"</a>',
-            '<br><a href="'.URL_BASE.'test/db?s=Sqlite">View "test/db?s=Sqlite"</a>',
+            '<br><a href="' . URL_BASE . 'test/db?s=Mysql">View "test/db?s=Mysql"</a>',
+            '<br><a href="' . URL_BASE . 'test/db?s=Sqlite">View "test/db?s=Sqlite"</a>',
 
             '<br><br><b>Kv:</b>',
-            '<br><a href="'.URL_BASE.'test/kv?s=Memcached">View "test/kv?s=Memcached"</a>',
-            '<br><a href="'.URL_BASE.'test/kv?s=Redis">View "test/kv?s=Redis"</a>',
-            '<br><a href="'.URL_BASE.'test/kv?s=RedisSimulator">View "test/kv?s=RedisSimulator"</a>',
+            '<br><a href="' . URL_BASE . 'test/kv?s=Memcached">View "test/kv?s=Memcached"</a>',
+            '<br><a href="' . URL_BASE . 'test/kv?s=Redis">View "test/kv?s=Redis"</a>',
+            '<br><a href="' . URL_BASE . 'test/kv?s=RedisSimulator">View "test/kv?s=RedisSimulator"</a>',
 
             '<br><br><b>Net:</b>',
-            '<br><br><a href="'.URL_BASE.'test/net">View "test/net"</a>',
-            '<br><a href="'.URL_BASE.'test/net-post">View "test/net-post"</a>',
-            '<br><a href="'.URL_BASE.'test/net-open">View "test/net-open"</a>',
-            '<br><a href="'.URL_BASE.'test/net-form-test">View "test/net-form-test"</a>',
-            '<br><a href="'.URL_BASE.'test/net-upload">View "test/net-upload"</a>',
-            '<br><a href="'.URL_BASE.'test/net-cookie">View "test/net-cookie"</a>',
-            '<br><a href="'.URL_BASE.'test/net-save">View "test/net-save"</a>',
-            '<br><a href="'.URL_BASE.'test/net-reuse">View "test/net-reuse"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/net">View "test/net"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-post">View "test/net-post"</a>',
+            '<br><a href="' . URL_BASE .'test/net-open">View "test/net-open"</a>',
+            '<br><a href="' . URL_BASE .'test/net-form-test">View "test/net-form-test"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-upload">View "test/net-upload"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-cookie">View "test/net-cookie"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-save">View "test/net-save"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-reuse">View "test/net-reuse"</a>',
 
             '<br><br><b>Session:</b>',
-            '<br><br><a href="'.URL_BASE.'test/session?s=db">View "test/session?s=db"</a>',
-            '<br><a href="'.URL_BASE.'test/session?s=kv">View "test/session?s=kv"</a>',
-            '<br><a href="'.URL_BASE.'test/session?s=db&auth=1">View "test/session?s=db&auth=1" Header Authorization</a>',
-            '<br><a href="'.URL_BASE.'test/session?s=kv&auth=1">View "test/session?s=kv&auth=1" Header Authorization</a>',
+            '<br><br><a href="' . URL_BASE . 'test/session?s=db">View "test/session?s=db"</a>',
+            '<br><a href="' . URL_BASE . 'test/session?s=kv">View "test/session?s=kv"</a>',
+            '<br><a href="' . URL_BASE . 'test/session?s=db&auth=1">View "test/session?s=db&auth=1" Header Authorization</a>',
+            '<br><a href="' . URL_BASE . 'test/session?s=kv&auth=1">View "test/session?s=kv&auth=1" Header Authorization</a>',
 
             '<br><br><b>Sql:</b>',
-            '<br><br><a href="'.URL_BASE.'test/sql?type=insert">View "test/sql?type=insert"</a>',
-            '<br><a href="'.URL_BASE.'test/sql?type=select">View "test/sql?type=select"</a>',
-            '<br><a href="'.URL_BASE.'test/sql?type=update">View "test/sql?type=update"</a>',
-            '<br><a href="'.URL_BASE.'test/sql?type=delete">View "test/sql?type=delete"</a>',
-            '<br><a href="'.URL_BASE.'test/sql?type=where">View "test/sql?type=where"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/sql?type=insert">View "test/sql?type=insert"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=select">View "test/sql?type=select"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=update">View "test/sql?type=update"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=delete">View "test/sql?type=delete"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=where">View "test/sql?type=where"</a>',
 
             '<br><br><b>Text:</b>',
-            '<br><br><a href="'.URL_BASE.'test/text">View "test/text"</a>'
+            '<br><br><a href="' . URL_BASE . 'test/text">View "test/text"</a>'
         ];
-        $echo[] = '<br><br>'.$this->_getEnd();
+        $echo[] = '<br><br>' . $this->_getEnd();
 
         return join('', $echo);
     }
@@ -1147,7 +1147,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
         return $echo . '<br><br>' . $this->_getEnd();
     }
 
-    // --- END ---
+    /**
+     * --- END ---
+     */
     private function _getEnd(): string {
         $rt = $this->_getRunTime();
         return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding: 10px;background-color:rgba(0,0,0,.07);}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style>';
