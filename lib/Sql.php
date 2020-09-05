@@ -413,32 +413,34 @@ class LSql {
         foreach ($s as $k => $v) {
             if (is_array($v)) {
                 // --- 2, 3, 4, 5 ---
-                if ($k[0] === '$') {
-                    // --- 5 - '$or' => [['city' => 'bj'], ['city' => 'sh']] ---
-                    $sp = ' ' . strtoupper(substr($k, 1)) . ' ';
-                    $sql .= '(';
-                    foreach ($v as $v1) {
-                        // --- v1 是 ['city' => 'bj'] ---
-                        if (isset($v1[1]) && is_string($v1[1])) {
-                            // --- v1 可能是 ['age', '>', '5'] ---
-                            $sql .= $this->_whereSub([$v1]) . $sp;
-                        } else {
-                            if (count($v1) > 1) {
-                                $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
+                if (is_string($k)) {
+                    if ($k[0] === '$') {
+                        // --- 5 - '$or' => [['city' => 'bj'], ['city' => 'sh']] ---
+                        $sp = ' ' . strtoupper(substr($k, 1)) . ' ';
+                        $sql .= '(';
+                        foreach ($v as $v1) {
+                            // --- v1 是 ['city' => 'bj'] ---
+                            if (isset($v1[1]) && is_string($v1[1])) {
+                                // --- v1 可能是 ['age', '>', '5'] ---
+                                $sql .= $this->_whereSub([$v1]) . $sp;
                             } else {
-                                $sql .= $this->_whereSub($v1) . $sp;
+                                if (count($v1) > 1) {
+                                    $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
+                                } else {
+                                    $sql .= $this->_whereSub($v1) . $sp;
+                                }
                             }
                         }
+                        $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
+                    } else {
+                        // --- 4 - 'type' => ['1', '2'] ---
+                        $sql .= $this->field($k) . ' IN (';
+                        foreach ($v as $k1 => $v1) {
+                            $sql .= '?, ';
+                            $this->_data[] = $v1;
+                        }
+                        $sql = substr($sql, 0, -2) . ') AND ';
                     }
-                    $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
-                } else if (is_string($k) && is_array($v)) {
-                    // --- 4 - 'type' => ['1', '2'] ---
-                    $sql .= $this->field($k) . ' IN (';
-                    foreach ($v as $k1 => $v1) {
-                        $sql .= '?, ';
-                        $this->_data[] = $v1;
-                    }
-                    $sql = substr($sql, 0, -2) . ') AND ';
                 } else if (isset($v[2]) && is_array($v[2])) {
                     // --- 3 ---
                     $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
