@@ -4,9 +4,9 @@ const VER = '6.3.0';
 
 // --- 环境判断 ---
 
-define('MOBILE', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile') !== false ? true : false);
+define('MOBILE', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile') !== false);
 define('WECHAT', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'micromessenger') === false ? false : true);
-define('HTTPS', isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on') ? true : false);
+define('HTTPS', isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on'));
 define('HOST', $_SERVER['HTTP_HOST']);
 define('HOSTNAME', explode(':', HOST)[0]);
 
