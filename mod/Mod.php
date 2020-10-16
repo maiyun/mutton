@@ -754,6 +754,32 @@ class Mod {
     }
 
     /**
+     * --- 获取 sql 语句 ---
+     * @return string
+     */
+    public function getSql(): string {
+        return $this->_sql->getSql();
+    }
+
+    /**
+     * --- 获取全部 data ---
+     * @return array
+     */
+    public function getData(): array {
+        return $this->_sql->getData();
+    }
+
+    /**
+     * --- 获取带 data 的 sql 语句 ---
+     * @param string|null $sql sql 语句
+     * @param array|null $data 数据
+     * @return string
+     */
+    public function format(string $sql = null, array $data = null): string {
+        return $this->_sql->format($sql, $data);
+    }
+
+    /**
      * --- 获取值对象 ---
      * @return array
      */

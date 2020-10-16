@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.1","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57
  */
 declare(strict_types = 1);
 
@@ -609,7 +609,9 @@ class LSql {
                 }
                 $right = substr($str, $asPos + 4);
                 if ($right[0] !== '`') {
-                    $right = '`' . $right . '`';
+                    $right = '`' . $pre . $right . '`';
+                } else {
+                    $right = $pre . $right;
                 }
                 $right = ' AS ' . $right;
             } else {
@@ -618,7 +620,9 @@ class LSql {
                 $left = $l[0];
                 if (isset($l[1])) {
                     if ($l[1][0] !== '`') {
-                        $l[1] = '`' . $l[1] . '`';
+                        $l[1] = '`' . $pre . $l[1] . '`';
+                    } else {
+                        $l[1] = $pre . $l[1];
                     }
                     $right = ' AS ' . $l[1];
                 }
@@ -632,7 +636,7 @@ class LSql {
                 return '`' . $pre . $l[0] . '`' . $right;
             }
             // --- x.xxx ---
-            return '`' . $l[0] . '`.`' . $pre . $l[1] . '`' . $right;
+            return '`' . $this->_pre . $l[0] . '`.`' . $l[1] . '`' . $right;
         } else {
             return $str;
         }
