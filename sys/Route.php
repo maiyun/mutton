@@ -194,7 +194,8 @@ class Route {
         if (is_string($rtn)) {
             // --- 返回的是纯字符串，直接输出 ---
             echo $rtn;
-        } else if (is_array($rtn)) {
+        }
+        else if (is_array($rtn)) {
             // --- 返回的是数组，那么代表是 JSON，以 JSON 形式输出 ---
             // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
             header('content-type: application/json; charset=utf-8');
@@ -203,25 +204,30 @@ class Route {
                 if (isset($rtn[1])) {
                     if (is_array($rtn[1])) {
                         echo json_encode(array_merge($json, $rtn[1]));
-                    } else {
-                        if (count($rtn) == 2) {
-                            $json['msg'] = $rtn[1];
-                            echo json_encode($json);
-                        } else {
-                            echo '[Error] Return value is wrong.';
+                    }
+                    else {
+                        $json['msg'] = $rtn[1];
+                        if (isset($rtn[2])) {
+                            echo json_encode(array_merge($json, $rtn[2]));
+                        }
+                        else {
+                            unset($rtn[0], $rtn[1]);
+                            echo json_encode(array_merge($json, $rtn));
                         }
                     }
-                } else {
+                }
+                else {
                     unset($rtn[0]);
                     echo json_encode(array_merge($json, $rtn));
                 }
-            } else {
+            }
+            else {
                 echo json_encode($rtn);
             }
-        } else {
+        }
+        else {
             echo '[Error] Return type is wrong.';
         }
-
     }
 
     /**
