@@ -146,8 +146,10 @@ class Route {
             $ctr->_files = &$middle->_files;
 
             $ctr->_cookie = &$middle->_cookie;
-            $ctr->_session = &$middle->_session;
-            $ctr->_sess = &$middle->_sess;
+            if (!$ctr->_sess && $middle->_sess) {
+                $ctr->_session = &$middle->_session;
+                $ctr->_sess = &$middle->_sess;
+            }
 
             $ctr->_cacheTTL = $middle->_cacheTTL;
             $ctr->_xsrf = $middle->_xsrf;
