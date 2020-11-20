@@ -23,7 +23,7 @@ CREATE TABLE `session` (
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/05/25 19:56
- * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33, 2020-3-29 20:38:57
+ * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33, 2020-3-29 20:38:57, 2020-11-20 14:25:14
  */
 declare(strict_types = 1);
 
@@ -42,16 +42,16 @@ require ETC_PATH.'session.php';
 class Session {
 
     /* @var $_link IKv|Db */
-    private $_link = null;
+    private $_link;
     /* @var $_sql LSql */
     private $_sql = null;
 
     /** @var string Session 在前端或 Kv 中储存的名前缀 */
-    private $_name = '';
+    private $_name;
     /** @var string 当前 Session 的 token */
     private $_token = '';
     /** @var int Session 有效期 */
-    private $_ttl = 0;
+    private $_ttl;
 
     /**
      * Session constructor.
@@ -60,7 +60,7 @@ class Session {
      * @param bool $auth 设为 true 则从头 Authorization 或 post _auth 值读取 token
      * @param array $opt name, ttl, ssl, sqlPre
      */
-    public function __construct(&$ctr, $link, bool $auth = false, array $opt = []) {
+    public function __construct(Ctr $ctr, $link, bool $auth = false, array $opt = []) {
         $time = time();
         $ssl = isset($opt['ssl']) ? $opt['ssl'] : SESSION_SSL;
         $pre = isset($opt['sqlPre']) ? $opt['sqlPre'] : null;
