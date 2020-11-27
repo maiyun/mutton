@@ -67,9 +67,11 @@ class Scan {
         return new Scan($ctr, $link, $token, $exp, $sqlPre);
     }
 
+    /** @var int|null 二维码剩余有效时间 */
+    private $timeLeft = null;
     /**
      * --- 生成二维码处的轮询，检查是否被扫码、被录入数据 ---
-     * @return mixed 0 无操作, 1 已扫码, 其他返回为存的数据并结束轮询
+     * @return mixed -1 无操作, 0 已扫码, 其他返回为存的数据并结束轮询
      */
     public function poll() {
         $time = time();
@@ -91,6 +93,7 @@ class Scan {
             $data = $ps->fetch(PDO::FETCH_ASSOC);
         }
         // --- 存在，判断是否被扫码，以及是否被注入数据 ---
+        $this->timeLeft = $data['time_exp'] - $time;
         if ($data['data'] !== '') {
             $this->_sql->delete('scan')->where([
                 'id' => $data['id']
@@ -98,10 +101,10 @@ class Scan {
             return json_decode($data['data'], true);
         }
         else if ($data['time_update'] > 0) {
-            return 1;
+            return 0;
         }
         else {
-            return 0;
+            return -1;
         }
     }
 
@@ -139,7 +142,7 @@ class Scan {
     }
 
     /**
-     * --- 设置有效期，设置后的 token 有效 ---
+     * --- 设置有效期，设置后的新 token 被创建有效 ---
      * @param int $exp
      */
     public function setExpire(int $exp) {
@@ -152,6 +155,14 @@ class Scan {
      */
     public function getExpire() {
         return $this->_exp;
+    }
+
+    /**
+     * --- 获取当前 token 可扫剩余有效期 ---
+     * @return int|null
+     */
+    public function getTimeLeft() {
+        return $this->timeLeft;
     }
 
     /**
