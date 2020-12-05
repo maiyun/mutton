@@ -50,12 +50,12 @@ class Text {
             'user' => isset($uri['user']) ? $uri['user'] : null,
             'pass' => isset($uri['pass']) ? $uri['pass'] : null,
             'host' => null,
-            'port' => isset($uri['port']) ? $uri['port'] : null,
             'hostname' => isset($uri['host']) ? strtolower($uri['host']) : null,
-            'hash' => isset($uri['fragment']) ? $uri['fragment'] : null,
-            'query' => isset($uri['query']) ? $uri['query'] : null,
+            'port' => isset($uri['port']) ? $uri['port'] : null,
             'pathname' => isset($uri['path']) ? $uri['path'] : '/',
-            'path' => null
+            'path' => null,
+            'query' => isset($uri['query']) ? $uri['query'] : null,
+            'hash' => isset($uri['fragment']) ? $uri['fragment'] : null
         ];
         if ($rtn['user']) {
             $rtn['auth'] = $rtn['user'] . ($rtn['pass'] ? ':' . $rtn['pass'] : '');
@@ -68,9 +68,9 @@ class Text {
     }
 
     /**
-     * --- 将虚拟 URL 路径转换为绝对 URL 路径 ---
+     * --- 将相对路径根据基准路径进行转换 ---
      * @param string $from 基准路径
-     * @param string $to 虚拟路径
+     * @param string $to 相对路径
      * @return string
      */
     public static function urlResolve(string $from, string $to): string {
@@ -87,12 +87,14 @@ class Text {
             return $f['protocol'] ? $f['protocol'] . $to : $to;
         }
         if ($f['protocol']) {
+            // --- 获取小写的 protocol ---
             $from = $f['protocol'] . substr($from, strlen($f['protocol']));
         }
         // --- 获取 to 的 scheme, host, path ---
         $t = Text::parseUrl($to);
         // --- 已经是绝对路径，直接返回 ---
         if ($t['protocol']) {
+            // --- 获取小写的 protocol ---
             return $t['protocol'] . substr($to, strlen($t['protocol']));
         }
         // --- # 或 ? 替换后返回 ---
@@ -112,7 +114,7 @@ class Text {
         } else {
             // --- to 是 xx/xx 这样的 ---
             // --- 移除基准 path 不是路径的部分，如 /ab/c 变成了 /ab，/ab 变成了 空 ---
-            $path = preg_replace('/\\/[^\\/]*$/', '', $f['pathname']);
+            $path = preg_replace('/\/[^\/]*$/', '', $f['pathname']);
             // --- abs 是 /xx/xx 了，因为如果 path 是空，则跟上了 /，如果 path 不为空，也是 / 开头 ---
             $abs .= $path . '/' . $to;
         }
@@ -130,8 +132,10 @@ class Text {
         $abs = str_replace('../', '', $abs);
         // --- 返回最终结果 ---
         if ($f['protocol'] && !$f['host']) {
+            // --- 类似 c:/ ---
             return $f['protocol'] . $abs;
         } else {
+            // --- 类似 http:// ---
             return ($f['protocol'] ? $f['protocol'] . '//' : '') . $abs;
         }
     }

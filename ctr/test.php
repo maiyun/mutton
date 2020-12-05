@@ -1085,6 +1085,8 @@ Result:<pre id=\"result\">Nothing.</pre>";
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Admxw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))) . "
 <pre>json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admxw2Ksiz/dszas'))) . "
+<pre>json_encode(Text::parseUrl('C:\Windows\Misc'))</pre>
+" . htmlspecialchars(json_encode(Text::parseUrl('C:\Windows\Misc'))) . "
 <pre>Text::urlResolve('/', 'path?id=1');</pre>
 " . htmlspecialchars(Text::urlResolve('/', 'path?id=1')) . "
 <pre>Text::urlResolve('https://www.url.com/view/path', 'find');</pre>
