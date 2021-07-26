@@ -7,7 +7,7 @@
         "sourceMap": false,
         "target": "es5",
         "strict": true,
-        "declaration": false, // d.ts
+        "declaration": false,
         "newLine": "LF",
         "lib": ["dom", "es5", "scripthost", "es2015.promise", "es2015.iterable"]
     }

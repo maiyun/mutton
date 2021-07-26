@@ -1,13 +1,13 @@
 <?php
 
-const VER = '6.3.0';
+const VER = '6.3.1';
 
 // --- 环境判断 ---
 
 define('MOBILE', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile') !== false);
 define('WECHAT', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'micromessenger') === false ? false : true);
 define('HTTPS', isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on'));
-define('HOST', $_SERVER['HTTP_HOST']);
+define('HOST', isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : ''));
 define('HOSTNAME', explode(':', HOST)[0]);
 
 // --- 服务端用的路径 ---
