@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {
-    "ver": "0.10",
+    "ver": "0.1",
     "folder": true,
     "url": {
         "https://github.com/maiyun/Mutton/raw/{ver}/lib/Net/cacert.pem": {
