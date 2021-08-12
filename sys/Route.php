@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51
+ * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13
  */
 declare(strict_types = 1);
 
@@ -74,14 +74,21 @@ class Route {
         // --- 原始 POST ---
         $middle->_rawPost = $_POST;
         // --- 处理 POST 的值 JSON 或 FILE ---
+        if (!isset($_POST) || !$_POST) {
+            $_POST = [];
+        }
+        if (!isset($_FILES) || !$_FILES) {
+            $_FILES = [];
+        }
         $contentType = isset($middle->_headers['content-type']) ? strtolower($middle->_headers['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
-            $_POST = file_get_contents('php://input');
-            if (($_POST = json_decode($_POST, true)) === false) {
+            $input = file_get_contents('php://input');
+            if (($_POST = json_decode($input, true)) === false) {
                 $_POST = [];
             }
-        } else if (strpos($contentType, 'form-data') !== false) {
+        }
+        else if (strpos($contentType, 'form-data') !== false) {
             // --- 上传文件简单处理 ---
             foreach ($_FILES as $key => $val) {
                 if (is_string($_FILES[$key]['name'])) {
