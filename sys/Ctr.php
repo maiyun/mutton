@@ -399,6 +399,14 @@ class Ctr {
         return $_local;
     }
 
+    /**
+     * --- 显示 PHP 错误到页面 ---
+     */
+    public function _displayErrors(): void {
+        ini_set('display_errors', 'On');
+        error_reporting(E_ALL);
+    }
+
     // --- 随机 ---
     const RANDOM_N = '0123456789';
     const RANDOM_U = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
