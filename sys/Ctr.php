@@ -76,8 +76,8 @@ class Ctr {
      * @return string
      */
     public function _loadView(string $path, $data = []) {
-        $data['_staticPath'] = STATIC_PATH === '' ? URL_STC : STATIC_PATH;
         $data['_staticVer'] = STATIC_VER;
+        $data['_staticPath'] = STATIC_PATH;
         extract($data);
         ob_start();
         require VIEW_PATH . $path . '.php';
