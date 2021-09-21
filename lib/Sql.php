@@ -1,9 +1,9 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.1","folder":false} - END
+ * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55
  */
 declare(strict_types = 1);
 
@@ -403,7 +403,10 @@ class LSql {
         } else {
             // --- array ---
             if (count($s) > 0) {
-                $this->_sql[] = ' WHERE ' . $this->_whereSub($s);
+                $whereSub = $this->_whereSub($s);
+                if ($whereSub !== '') {
+                    $this->_sql[] = ' WHERE ' . $whereSub;
+                }
             }
         }
         return $this;
@@ -434,12 +437,14 @@ class LSql {
                         $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
                     } else {
                         // --- 4 - 'type' => ['1', '2'] ---
-                        $sql .= $this->field($k) . ' IN (';
-                        foreach ($v as $k1 => $v1) {
-                            $sql .= '?, ';
-                            $this->_data[] = $v1;
+                        if (count($v) > 0) {
+                            $sql .= $this->field($k) . ' IN (';
+                            foreach ($v as $k1 => $v1) {
+                                $sql .= '?, ';
+                                $this->_data[] = $v1;
+                            }
+                            $sql = substr($sql, 0, -2) . ') AND ';
                         }
-                        $sql = substr($sql, 0, -2) . ') AND ';
                     }
                 } else if (isset($v[2]) && is_array($v[2])) {
                     // --- 3 ---
@@ -475,6 +480,9 @@ class LSql {
                     $this->_data[] = $isf[1];
                 }
             }
+        }
+        if ($sql === '') {
+            return '';
         }
         return substr($sql, 0, -5);
     }
