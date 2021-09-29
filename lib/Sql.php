@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42
  */
 declare(strict_types = 1);
 
@@ -426,7 +426,8 @@ class LSql {
                             if (isset($v1[1]) && is_string($v1[1])) {
                                 // --- v1 可能是 ['age', '>', '5'] ---
                                 $sql .= $this->_whereSub([$v1]) . $sp;
-                            } else {
+                            }
+                            else {
                                 if (count($v1) > 1) {
                                     $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
                                 } else {
@@ -445,8 +446,12 @@ class LSql {
                             }
                             $sql = substr($sql, 0, -2) . ') AND ';
                         }
+                        else {
+                            $sql .= $this->field($k) . ' = "-.-Mutton-.-" AND ';
+                        }
                     }
-                } else if (isset($v[2]) && is_array($v[2])) {
+                }
+                else if (isset($v[2]) && is_array($v[2])) {
                     // --- 3 ---
                     $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
                     foreach ($v[2] as $k1 => $v1) {
@@ -454,7 +459,8 @@ class LSql {
                         $this->_data[] = $v1;
                     }
                     $sql = substr($sql, 0, -2) . ') AND ';
-                } else {
+                }
+                else {
                     // --- 2 ---
                     $isf = $this->_isField($v[2]);
                     if ($isf[0]) {
