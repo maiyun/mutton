@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54
  */
 declare(strict_types = 1);
 
@@ -233,7 +233,8 @@ class LSql {
         $sql = 'SELECT ';
         if (is_string($c)) {
             $sql .= $this->field($c);
-        } else {
+        }
+        else {
             // --- $c: ['id', 'name'] ---
             foreach ($c as $i) {
                 $sql .= $this->field($i) . ', ';
@@ -243,7 +244,8 @@ class LSql {
         $sql .= ' FROM ';
         if (is_string($f)) {
             $sql .= $this->field($f, $this->_pre);
-        } else {
+        }
+        else {
             // --- $f: ['user', 'order'] ---
             foreach ($f as $i) {
                 $sql .= $this->field($i, $this->_pre) . ', ';
@@ -610,7 +612,7 @@ class LSql {
     public function field(string $str, string $pre = ''): string {
         $str = trim($str);
         $str = preg_replace('/ {2,}/', ' ', $str);
-        if (preg_match('/^[a-zA-Z0-9`_ .-]+?$/', $str)) {
+        if (preg_match('/^[a-zA-Z0-9*`_ .-]+?$/', $str)) {
             $loStr = strtolower($str);
             $asPos = strpos($loStr, ' as ');
             // $left = '';
@@ -624,11 +626,13 @@ class LSql {
                 $right = substr($str, $asPos + 4);
                 if ($right[0] !== '`') {
                     $right = '`' . $pre . $right . '`';
-                } else {
+                }
+                else {
                     $right = $pre . $right;
                 }
                 $right = ' AS ' . $right;
-            } else {
+            }
+            else {
                 // --- xx xx ---
                 $l = explode(' ', $str);
                 $left = $l[0];
@@ -642,6 +646,9 @@ class LSql {
                 }
             }
             $l = explode('.', $left);
+            if ($l[0] === '*') {
+                return '*';
+            }
             if ($l[0][0] === '`') {
                 $l[0] = str_replace('`', '', $l[0]);
             }
@@ -650,8 +657,10 @@ class LSql {
                 return '`' . $pre . $l[0] . '`' . $right;
             }
             // --- x.xxx ---
-            return '`' . $this->_pre . $l[0] . '`.`' . $l[1] . '`' . $right;
-        } else {
+            $w = $l[1] === '*' ? '*' : '`' . $l[1] . '`';
+            return '`' . $this->_pre . $l[0] . '`.' . $w . $right;
+        }
+        else {
             return $str;
         }
     }

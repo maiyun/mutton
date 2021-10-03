@@ -247,6 +247,14 @@ interface IKv {
     public function hGet(string $key, string $field);
 
     /**
+     * --- 获取哈希 json 对象 ---
+     * @param string $key
+     * @param string $field
+     * @return mixed|null
+     */
+    public function hGetJson(string $key, string $field);
+
+    /**
      * --- 批量获取哈希值 ---
      * @param string $key
      * @param array $fields

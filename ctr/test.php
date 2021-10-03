@@ -975,9 +975,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
 
-                $s = $sql->select(['o.no', 'u.nick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
+                $s = $sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['o.no', 'u.nick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1'])</pre>
+                $echo[] = "<pre>\$sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1'])</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
