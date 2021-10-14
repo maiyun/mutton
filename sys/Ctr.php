@@ -425,8 +425,8 @@ class Ctr {
      * @param string $source 采样值
      * @return string
      */
-    public function _random(int $length = 8, string $source = self::RANDOM_LN): string {
-        return self::_getRandom($length, $source);
+    public function _random(int $length = 8, string $source = self::RANDOM_LN, string $block = ''): string {
+        return self::_getRandom($length, $source, $block);
     }
 
     /**
@@ -435,8 +435,18 @@ class Ctr {
      * @param string $source 采样值
      * @return string
      */
-    public static function _getRandom(int $length = 8, string $source = self::RANDOM_LN): string {
+    public static function _getRandom(int $length = 8, string $source = self::RANDOM_LN, string $block = ''): string {
+        // --- 剔除 block 字符 ---
+        $len = strlen($block);
+        if ($len > 0) {
+            for ($i = 0; $i < $len; ++$i) {
+                $source = str_replace($block[$i], '', $source);
+            }
+        }
         $len = strlen($source);
+        if ($len === 0) {
+            return '';
+        }
         $temp = '';
         for ($i = 0; $i < $length; ++$i) {
             $temp .= $source[rand(0, $len - 1)];

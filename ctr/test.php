@@ -150,8 +150,11 @@ class test extends Ctr {
     }
 
     public function ctrRandom() {
-        return "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) . "
-<pre>\$this->_random(4, Ctr::RANDOM_V);</pre>" . htmlspecialchars($this->_random(4, Ctr::RANDOM_V)). "<br><br>" . $this->_getEnd();
+        return
+            "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) .
+            "<pre>\$this->_random(4, Ctr::RANDOM_V);</pre>" . htmlspecialchars($this->_random(4, Ctr::RANDOM_V)) .
+            "<pre>\$this->_random(8, Ctr::RANDOM_N, '0349');</pre>" . htmlspecialchars($this->_random(8, Ctr::RANDOM_N, '0349')) .
+            "<br><br>" . $this->_getEnd();
     }
 
     public function ctrXsrf() {
