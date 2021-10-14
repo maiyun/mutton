@@ -232,6 +232,27 @@ class Mod {
         }
     }
 
+     /**
+     * --- 根据条件更新数据（仅获取 SQL 对象） ---
+     * @param array $data 要更新的数据
+     * @param array|string $where 筛选条件
+     * @param bool $raw 是否真实
+     * @return LSql
+     */
+    public static function updateByWhereSql(array $data, $where, bool $raw = false): LSql {
+        $sql = Sql::get(Mod::$__pre);
+        $sql->update(static::$_table, $data);
+        if (static::$_soft && ($raw === false)) {
+            if (is_string($where)) {
+                $where = '(' . $where . ') AND `time_remove` = 0';
+            } else {
+                $where['time_remove'] = '0';
+            }
+        }
+        $sql->where($where);
+        return $sql;
+    }
+
     /**
      * --- select 自定字段 ---
      * @param string|string[] $c 字段字符串或字段数组
