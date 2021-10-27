@@ -6,7 +6,7 @@ const VER = '6.3.1';
 
 define('MOBILE', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'mobile') !== false);
 define('WECHAT', isset($_SERVER['HTTP_USER_AGENT']) && strpos(strtolower($_SERVER['HTTP_USER_AGENT']), 'micromessenger') === false ? false : true);
-define('HTTPS', isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on'));
+define('HTTPS', (isset($_SERVER['HTTPS']) && ($_SERVER['HTTPS'] == 'on')) ? true : (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && ($_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? true : false));
 define('HOST', isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : (isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : ''));
 define('HOSTNAME', explode(':', HOST)[0]);
 
