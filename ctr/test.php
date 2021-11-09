@@ -63,6 +63,7 @@ class test extends Ctr {
 
             '<br><br><b>Ctr:</b>',
             '<br><br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-rand">View "test/ctr-rand"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
 
             '<br><br><b>Middle:</b>',
@@ -154,6 +155,14 @@ class test extends Ctr {
             "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) .
             "<pre>\$this->_random(4, Ctr::RANDOM_V);</pre>" . htmlspecialchars($this->_random(4, Ctr::RANDOM_V)) .
             "<pre>\$this->_random(8, Ctr::RANDOM_N, '0349');</pre>" . htmlspecialchars($this->_random(8, Ctr::RANDOM_N, '0349')) .
+            "<br><br>" . $this->_getEnd();
+    }
+
+    public function ctrRand() {
+        return
+            "<pre>\$this->_rand(1.2, 7.1, 1)</pre>" . $this->_rand(1.2, 7.1, 1) .
+            "<pre>\$this->_rand(1.2, 7.1, 5)</pre>" . $this->_rand(1.2, 7.1, 5) .
+            "<pre>\$this->_rand(1.298, 7.1891, 2);</pre>" . $this->_rand(1.298, 7.1891, 2) .
             "<br><br>" . $this->_getEnd();
     }
 

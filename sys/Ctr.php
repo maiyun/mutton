@@ -107,8 +107,8 @@ class Ctr {
         foreach ($rule as $key => $val) {
             // --- $key 就是上面的 xx ---
             if (!isset($input[$key])) {
-                // --- 原值不存在则设定为空 ---
-                $input[$key] = '';
+                // --- 原值不存在则设定为 null ---
+                $input[$key] = null;
             }
             // --- 判断是否需要遍历 val ---
             $c = count($val);
@@ -121,15 +121,16 @@ class Ctr {
                 $v = $val[$k];
                 if (is_array($v)) {
                     // --- 判断提交的数据是否在此 array 之内 ---
-                    if ($input[$key] !== '' && !in_array($input[$key], $v)) {
+                    if ($input[$key] !== null && !in_array($input[$key], $v)) {
                         // --- 不在 ---
                         $rtn = $val[$lastK];
                         return false;
                     }
-                } else {
+                }
+                else {
                     switch ($v) {
                         case 'require': {
-                            if ($input[$key] === '') {
+                            if ($input[$key] === null) {
                                 $rtn = $val[$lastK];
                                 return false;
                             }
@@ -137,21 +138,22 @@ class Ctr {
                         }
                         case 'num':
                         case 'number': {
-                            if ($input[$key] !== '' && !is_numeric($input[$key])) {
+                            if ($input[$key] !== null && !is_numeric($input[$key])) {
                                 $rtn = $val[$lastK];
                                 return false;
                             }
                             break;
                         }
                         default: {
-                            if ($input[$key] !== '') {
+                            if ($input[$key] !== null) {
                                 if ($v[0] === '/') {
                                     // --- 正则 ---
                                     if (!preg_match($v, $input[$key])) {
                                         $rtn = $val[$lastK];
                                         return false;
                                     }
-                                } else if (preg_match('/^([><=]+) *([0-9]+)$/', $input[$key], $match)) {
+                                }
+                                else if (preg_match('/^([><=]+) *([0-9]+)$/', $input[$key], $match)) {
                                     // --- 判断表达式 ---
                                     $needReturn = false;
                                     $inputNum = (float)$input[$key];
@@ -452,6 +454,32 @@ class Ctr {
             $temp .= $source[rand(0, $len - 1)];
         }
         return $temp;
+    }
+
+    /**
+     * --- 生成范围内的随机数，带小数点 ---
+     * @param float $min 最小数
+     * @param float $max 最大数
+     * @param float $prec 保留几位小数
+     * @return float
+     */
+    public function _rand(float $min, float $max, int $prec): float {
+        return self::_getRand($min, $max, $prec);
+    }
+
+    /**
+     * --- 生成范围内的随机数，带小数点 ---
+     * @param float $min 最小数
+     * @param float $max 最大数
+     * @param float $prec 保留几位小数
+     * @return float
+     */
+    public static function _getRand(float $min, float $max, int $prec): float {
+        if ($prec < 0) {
+            $prec = 0;
+        }
+        $p = pow(10, $prec);
+        return rand((int)($min * $p), (int)($max * $p)) / $p;
     }
 
 }
