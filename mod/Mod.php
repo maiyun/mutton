@@ -293,7 +293,7 @@ class Mod {
      * @return bool|null|static
      */
     public static function find($val, $lock = false, $raw = false) {
-        if (!is_string($val) || !is_numeric($val)) {
+        if (!is_string($val) && !is_numeric($val)) {
             return null;
         }
         return (new static([
