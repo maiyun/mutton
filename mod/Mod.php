@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21
  */
 declare(strict_types = 1);
 
@@ -703,6 +703,16 @@ class Mod {
      */
     public function crossJoin(string $f, array $s = []) {
         $this->_sql->crossJoin($f, $s);
+        return $this;
+    }
+
+    /**
+     * --- 筛选器 ---
+     * @param array|string $s 筛选条件数组或字符串
+     * @return static
+     */
+    public function having($s) {
+        $this->_sql->having($s);
         return $this;
     }
 

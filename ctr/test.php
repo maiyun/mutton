@@ -114,6 +114,7 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/sql?type=update">View "test/sql?type=update"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=delete">View "test/sql?type=delete"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=where">View "test/sql?type=where"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=having">View "test/sql?type=having"</a>',
 
             '<br><br><b>Text:</b>',
             '<br><br><a href="' . URL_BASE . 'test/text">View "test/text"</a>'
@@ -1082,6 +1083,19 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->update('*', 'user')->where([
     'time_verify' => '#time_add'
+]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd);
+                break;
+            }
+            case 'having': {
+                $s = $sql->select(['id', 'name', '(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`)))) AS distance'], 'location')->having([
+                    ['distance', '<', '2']
+                ])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select(['id', 'name', '(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`)))) AS distance'], 'location')->having([
+    ['distance', '<', '2']
 ]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>

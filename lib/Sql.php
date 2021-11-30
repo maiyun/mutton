@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39
  */
 declare(strict_types = 1);
 
@@ -383,6 +383,27 @@ class LSql {
      */
     public function crossJoin(string $f, array $s = []): LSql {
         return $this->join($f, $s, 'CROSS');
+    }
+
+    /**
+     * --- having 后置筛选器，用法类似 where ---
+     */
+    public function having($s = ''): LSql {
+        if (is_string($s)) {
+            // --- string ---
+            if ($s !== '') {
+                $this->_sql[] = ' HAVING ' . $s;
+            }
+        } else {
+            // --- array ---
+            if (count($s) > 0) {
+                $whereSub = $this->_whereSub($s);
+                if ($whereSub !== '') {
+                    $this->_sql[] = ' HAVING ' . $whereSub;
+                }
+            }
+        }
+        return $this;
     }
 
     /**
