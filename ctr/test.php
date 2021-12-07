@@ -62,9 +62,10 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/json?type=6">View "test/json?type=6"</a>',
 
             '<br><br><b>Ctr:</b>',
+            '<br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
             '<br><br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-rand">View "test/ctr-rand"</a>',
-            '<br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-muid">View "test/ctr-muid"</a>',
 
             '<br><br><b>Middle:</b>',
             '<br><br><a href="' . URL_BASE . 'test/middle">View "test/middle"</a>',
@@ -151,6 +152,19 @@ class test extends Ctr {
         }
     }
 
+    public function ctrXsrf() {
+        return "XSRF-TOKEN: " . $this->_xsrf . "<br><br>
+<input type=\"button\" value=\"Post with xsrf token\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/ctr-xsrf1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val&_xsrf=".$this->_xsrf."'}).then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\">
+<input type='button' value=\"Post without xsrf token\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/ctr-xsrf1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\"><br><br>
+Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
+    }
+    public function ctrXsrf1() {
+        if (!$this->_checkXInput($_POST, [], $return)) {
+            return $return;
+        }
+        return [1, 'post' => $_POST];
+    }
+
     public function ctrRandom() {
         return
             "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) .
@@ -167,17 +181,14 @@ class test extends Ctr {
             "<br><br>" . $this->_getEnd();
     }
 
-    public function ctrXsrf() {
-        return "XSRF-TOKEN: " . $this->_xsrf . "<br><br>
-<input type=\"button\" value=\"Post with xsrf token\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/ctr-xsrf1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val&_xsrf=".$this->_xsrf."'}).then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\">
-<input type='button' value=\"Post without xsrf token\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/ctr-xsrf1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\"><br><br>
-Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
-    }
-    public function ctrXsrf1() {
-        if (!$this->_checkXInput($_POST, [], $return)) {
-            return $return;
-        }
-        return [1, 'post' => $_POST];
+    public function ctrMuid() {
+        return
+            "<pre>\$this->_muid();</pre>" . $this->_muid() .
+            "<pre>\$this->_muid();</pre>" . $this->_muid() .
+            "<pre>\$this->_muid('1');</pre>" . $this->_muid('1') .
+            "<pre>\$this->_muid('1');</pre>" . $this->_muid('1') .
+            "<pre>strlen(\$this->_muid());</pre>" . strlen($this->_muid()) .
+            "<br><br>" . $this->_getEnd();
     }
 
     public function mod() {

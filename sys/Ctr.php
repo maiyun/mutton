@@ -460,7 +460,7 @@ class Ctr {
      * --- 生成范围内的随机数，带小数点 ---
      * @param float $min 最小数
      * @param float $max 最大数
-     * @param float $prec 保留几位小数
+     * @param int $prec 保留几位小数
      * @return float
      */
     public function _rand(float $min, float $max, int $prec): float {
@@ -480,6 +480,36 @@ class Ctr {
         }
         $p = pow(10, $prec);
         return rand((int)($min * $p), (int)($max * $p)) / $p;
+    }
+
+    /**
+     * --- 获取 MUID ---
+     * @param string $key 多样性混合 key，可留空
+     * @return string
+     */
+    public function _muid($key = ''): string {
+        return self::_getMuid($key);
+    }
+
+    /**
+     * --- 获取 MUID ---
+     * @param string $key 多样性混合 key，可留空
+     * @return string
+     */
+    public static function _getMuid($key = ''): string {
+        if ($key === '') {
+            $key = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'muid');
+        }
+        $key = hash_hmac('md5', $key, 'muid');
+        $date = explode('-', date('Y-m-d-H-i'));
+        $y = base_convert($date[0], 10, 36); // --- 3 位数，从 1296 到 46655 年 ---
+        $m = base_convert($date[1], 10, 36);
+        $d = base_convert($date[2], 10, 36);
+        $h = base_convert($date[3], 10, 36);
+        $rand = self::_getRandom(10);
+        $last = hash_hmac('md5', $rand, $key);
+        // ---    1       1      1         1           3             3           4              1       1   ---
+        return $rand[0] . $h . $rand[1] . $m . substr($rand, 2, 3) . $y . substr($last, 5, 4) . $d . $last[0];
     }
 
 }
