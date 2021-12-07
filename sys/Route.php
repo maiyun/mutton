@@ -71,12 +71,12 @@ class Route {
 
         // --- 原始 GET ---
         $middle->_get = &$_GET;
-        // --- 原始 POST ---
-        $middle->_rawPost = $_POST;
         // --- 处理 POST 的值 JSON 或 FILE ---
         if (!isset($_POST) || !$_POST) {
             $_POST = [];
         }
+        // --- 原始 POST ---
+        $middle->_rawPost = $_POST;
         if (!isset($_FILES) || !$_FILES) {
             $_FILES = [];
         }
