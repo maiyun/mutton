@@ -84,7 +84,8 @@ class Route {
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
             $input = file_get_contents('php://input');
-            if (($_POST = json_decode($input, true)) === false) {
+            $_POST = json_decode($input, true);
+            if (!$_POST) {
                 $_POST = [];
             }
         }
