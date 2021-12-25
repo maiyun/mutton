@@ -71,16 +71,16 @@ class Ctr {
 
     /**
      * --- 加载视图 ---
-     * @param string $path
+     * @param string $path_mtmp
      * @param array $data
      * @return string
      */
-    public function _loadView(string $path, $data = []) {
+    public function _loadView(string $path_mtmp, $data = []) {
         $data['_staticVer'] = STATIC_VER;
         $data['_staticPath'] = STATIC_PATH;
         extract($data);
         ob_start();
-        require VIEW_PATH . $path . '.php';
+        require VIEW_PATH . $path_mtmp . '.php';
         return ob_get_clean();
     }
 
