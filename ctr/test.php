@@ -62,8 +62,8 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/json?type=6">View "test/json?type=6"</a>',
 
             '<br><br><b>Ctr:</b>',
-            '<br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
-            '<br><br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-rand">View "test/ctr-rand"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-muid">View "test/ctr-muid"</a>',
 
