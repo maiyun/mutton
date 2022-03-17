@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-17 15:29:33
  */
 declare(strict_types = 1);
 
@@ -28,6 +28,8 @@ class Ctr {
     public $_rawPost;
     /** @var array POST 数据 */
     public $_post;
+    /** @var string 原始 input 字符串 */
+    public $_input;
     /** @var array 上传的文件列表 */
     public $_files = [];
 
@@ -298,7 +300,7 @@ class Ctr {
     }
 
     /**
-     * --- 跳转（302临时跳转），支持相对和绝对路径 ---
+     * --- 跳转（302临时跳转），支持相对本项目根路径的路径或绝对路径 ---
      * @param string $location 相对或绝对网址
      * @return false
      */

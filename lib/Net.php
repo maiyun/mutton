@@ -24,7 +24,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-17 14:04:48
  */
 declare(strict_types = 1);
 
@@ -105,12 +105,12 @@ class Net {
     /**
      * --- 发起 POST 请求 ---
      * @param string $u 请求的 URL
-     * @param array $data 要发送的数据（值由 @ 开头则是上传文件）
+     * @param array|string $data 要发送的数据（值由 @ 开头则是上传文件）
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
-    public static function post(string $u, array $data, array $opt = [], ?array &$cookie = null) {
+    public static function post(string $u, $data, array $opt = [], ?array &$cookie = null) {
         $opt['method'] = 'POST';
         return self::request($u, $data, $opt, $cookie);
     }
@@ -132,12 +132,12 @@ class Net {
     /**
      * --- 发起请求 ---
      * @param string $u 提交的 url
-     * @param array|null $data 提交的 data 数据
+     * @param array|string|null $data 提交的 data 数据
      * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
      * @param array|null $cookie
      * @return Response
      */
-    public static function request(string $u, ?array $data = null, array $opt = [], ?array &$cookie = null): Response {
+    public static function request(string $u, mixed $data = null, array $opt = [], ?array &$cookie = null): Response {
         $uri = parse_url($u);
         $isSsl = false;
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
@@ -165,42 +165,48 @@ class Net {
         }
         // --- DATA ---
         if ($method === 'GET') {
-            curl_setopt($ch, CURLOPT_URL, $u . ($data !== null ? '?' . http_build_query($data) : ''));
-        } else {
+            curl_setopt($ch, CURLOPT_URL, $u . ($data !== null ? '?' . (is_string($data) ? $data : http_build_query($data)) : ''));
+        }
+        else {
             // --- POST ---
             curl_setopt($ch, CURLOPT_URL, $u);
             curl_setopt($ch, CURLOPT_POST, true);
             $upload = false;
             if ($data !== null) {
-                foreach ($data as $key => $val) {
-                    if (is_array($val)) {
-                        foreach ($val as $k => $v) {
-                            if ($v instanceof CURLFile) {
-                                $upload = true;
-                                break;
+                if (is_array($data)) {
+                    foreach ($data as $key => $val) {
+                        if (is_array($val)) {
+                            foreach ($val as $k => $v) {
+                                if ($v instanceof CURLFile) {
+                                    $upload = true;
+                                    break;
+                                }
                             }
                         }
-                    } else if ($val instanceof CURLFile) {
-                        $upload = true;
-                        break;
-                    }
-                }
-                if ($upload === false) {
-                    if ($type === 'json') {
-                        $data = json_encode($data);
-                    } else {
-                        $data = http_build_query($data);
-                    }
-                } else {
-                    // --- 处理 DATA ---
-                    foreach ($data as $key => $val) {
-                        if (!is_array($val)) {
-                            continue;
+                        else if ($val instanceof CURLFile) {
+                            $upload = true;
+                            break;
                         }
-                        foreach ($val as $k => $v) {
-                            $data[$key . '[' . $k . ']'] = $v;
+                    }
+                    if ($upload === false) {
+                        if ($type === 'json') {
+                            $data = json_encode($data);
                         }
-                        unset($data[$key]);
+                        else {
+                            $data = http_build_query($data);
+                        }
+                    }
+                    else {
+                        // --- 处理 DATA ---
+                        foreach ($data as $key => $val) {
+                            if (!is_array($val)) {
+                                continue;
+                            }
+                            foreach ($val as $k => $v) {
+                                $data[$key . '[' . $k . ']'] = $v;
+                            }
+                            unset($data[$key]);
+                        }
                     }
                 }
                 curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
@@ -250,19 +256,19 @@ class Net {
         if ($save !== null) {
             /** @var boolean $isBody --- 当前是否是 body 写入 --- */
             $isBody = false;
-            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fh, &$save, &$resHeaders, &$isBody, &$total) {
-                $len = strlen($data);
+            curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $dat) use (&$fh, &$save, &$resHeaders, &$isBody, &$total) {
+                $len = strlen($dat);
                 if ($isBody) {
-                    if ($data !== '') {
+                    if ($dat !== '') {
                         // --- 不等于空才写入，因此 location 状态的不会被写入，写入了也会被覆盖 ---
                         if (!$fh) {
                             $fh = fopen($save, 'w');
                         }
-                        fwrite($fh, $data);
+                        fwrite($fh, $dat);
                         $total += $len;
                     }
                 } else {
-                    $resHeaders .= $data;
+                    $resHeaders .= $dat;
                     $pos = strpos($resHeaders, "\r\n\r\n");
                     if ($pos) {
                         $isBody = true;
@@ -319,6 +325,7 @@ class Net {
         }
         // --- 哦，要追踪 ---
         $headers['referer'] = $u;
+        var_dump($data);
         return self::request(Text::urlResolve($u, $res->headers['location']), $data, [
             'method' => $method,
             'type' => $type,

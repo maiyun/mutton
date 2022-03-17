@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13
+ * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29
  */
 declare(strict_types = 1);
 
@@ -77,14 +77,15 @@ class Route {
         }
         // --- 原始 POST ---
         $middle->_rawPost = $_POST;
+        // --- 原始 input ---
+        $middle->_input = file_get_contents('php://input');
         if (!isset($_FILES) || !$_FILES) {
             $_FILES = [];
         }
         $contentType = isset($middle->_headers['content-type']) ? strtolower($middle->_headers['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
-            $input = file_get_contents('php://input');
-            $_POST = json_decode($input, true);
+            $_POST = json_decode($middle->_input, true);
             if (!$_POST) {
                 $_POST = [];
             }
@@ -151,6 +152,7 @@ class Route {
             $ctr->_get = &$middle->_get;
             $ctr->_rawPost = &$middle->_rawPost;
             $ctr->_post = &$middle->_post;
+            $ctr->_input = &$middle->_input;
             $ctr->_files = &$middle->_files;
 
             $ctr->_cookie = &$middle->_cookie;

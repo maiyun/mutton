@@ -96,11 +96,13 @@ class test extends Ctr {
             '<br><br><b>Net:</b>',
             '<br><br><a href="' . URL_BASE . 'test/net">View "test/net"</a>',
             '<br><a href="' . URL_BASE . 'test/net-post">View "test/net-post"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-post-string">View "test/net-post-string"</a>',
             '<br><a href="' . URL_BASE .'test/net-open">View "test/net-open"</a>',
             '<br><a href="' . URL_BASE .'test/net-form-test">View "test/net-form-test"</a>',
             '<br><a href="' . URL_BASE . 'test/net-upload">View "test/net-upload"</a>',
             '<br><a href="' . URL_BASE . 'test/net-cookie">View "test/net-cookie"</a>',
             '<br><a href="' . URL_BASE . 'test/net-save">View "test/net-save"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-follow">View "test/net-follow"</a>',
             '<br><a href="' . URL_BASE . 'test/net-reuse">View "test/net-reuse"</a>',
 
             '<br><br><b>Session:</b>',
@@ -306,7 +308,7 @@ json_encode(\$text);</pre>" . json_encode($text);
 
         $orig = Crypto::aesDecrypt($text, $key, 'otherIv');
         $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, 'otherIv');
-json_encode(\$orig);</pre>" . json_encode($orig);
+json_encode(\$orig);</pre>" . (json_encode($orig) ? 'true' : 'false');
 
         // ----------
 
@@ -659,9 +661,25 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }
-
     public function netPost1() {
         return "\$_POST:\n\n" . json_encode($_POST) . "\n\nRequest headers:\n\n" . json_encode($this->_headers, JSON_PRETTY_PRINT) . "\n\nIP: " . $_SERVER['REMOTE_ADDR'];
+    }
+
+    public function netPostString() {
+        $echo = [];
+
+        $res = Net::post(URL_FULL . 'test/netPostString1', 'HeiHei');
+        $echo[] = "<pre>Net::post('" . URL_FULL . "test/netPostString1', 'HeiHei');</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . $res->content . "</pre>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+    public function netPostString1() {
+        return [1, $this->_input];
     }
 
     public function netOpen() {
@@ -795,6 +813,36 @@ errno: " . json_encode($res->errno) . "<br>
 info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
+    }
+
+    public function netFollow() {
+        $echo = [];
+
+        $res = Net::post(URL_FULL . 'test/net-follow1', [
+            'a' => '1',
+            'b' => '2'
+        ], [
+            'follow' => 5
+        ]);
+        $echo[] = "<pre>Net::post('" . URL_FULL . "test/net-follow1', [
+    'a' => '1',
+    'b' => '2
+], [
+    'follow' => 5
+]);</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . $res->content . "</pre>
+error: " . $res->error . "<br>
+errno: " . $res->errno . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+    public function netFollow1() {
+        $this->_location('test/net-follow2');
+    }
+    public function netFollow2() {
+        return [1, 'post' => $this->_post['a'] . ',' . $this->_post['b']];
     }
 
     public function netReuse() {
