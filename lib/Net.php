@@ -137,7 +137,7 @@ class Net {
      * @param array|null $cookie
      * @return Response
      */
-    public static function request(string $u, mixed $data = null, array $opt = [], ?array &$cookie = null): Response {
+    public static function request(string $u, $data = null, array $opt = [], ?array &$cookie = null): Response {
         $uri = parse_url($u);
         $isSsl = false;
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
