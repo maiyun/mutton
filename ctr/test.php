@@ -47,9 +47,6 @@ class test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'article/123">View "article/123"</a>',
             '<br><a href="' . URL_BASE . 'article/456">View "article/456"</a>',
 
-            '<br><br><b>Automatic route:</b>',
-            '<br><br><a href="' . URL_BASE . '__mutton__">View "__mutton__"</a>',
-
             '<br><br><b>Query string:</b>',
             '<br><br><a href="' . URL_BASE . 'test/qs?a=1&b=2">View "test/qs?a=1&b=2"</a>',
 
@@ -85,13 +82,12 @@ class test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'test/crypto">View "test/crypto"</a>',
 
             '<br><br><b>Db:</b>',
-            '<br><a href="' . URL_BASE . 'test/db?s=Mysql">View "test/db?s=Mysql"</a>',
-            '<br><a href="' . URL_BASE . 'test/db?s=Sqlite">View "test/db?s=Sqlite"</a>',
+            '<br><a href="' . URL_BASE . 'test/db?s=mysql">View "test/db?s=mysql"</a>',
+            '<br><a href="' . URL_BASE . 'test/db?s=sqlite">View "test/db?s=sqlite"</a>',
 
             '<br><br><b>Kv:</b>',
-            '<br><a href="' . URL_BASE . 'test/kv?s=Memcached">View "test/kv?s=Memcached"</a>',
-            '<br><a href="' . URL_BASE . 'test/kv?s=Redis">View "test/kv?s=Redis"</a>',
-            '<br><a href="' . URL_BASE . 'test/kv?s=RedisSimulator">View "test/kv?s=RedisSimulator"</a>',
+            '<br><a href="' . URL_BASE . 'test/kv?s=redis">View "test/kv?s=redis"</a>',
+            '<br><a href="' . URL_BASE . 'test/kv?s=redis-simulator">View "test/kv?s=redis-simulator"</a>',
 
             '<br><br><b>Net:</b>',
             '<br><br><a href="' . URL_BASE . 'test/net">View "test/net"</a>',
@@ -207,8 +203,8 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
 
-        if (!($stmt = $db->query('SELECT * FROM `lt_session` WHERE `token` LIMIT 1;'))) {
-            return [0 ,'Failed("lt_session" not found).'];
+        if (!($stmt = $db->query('SELECT * FROM `m_session` WHERE `token` LIMIT 1;'))) {
+            return [0 ,'Failed("m_session" not found).'];
         }
 
         Mod::setDb($db);
@@ -218,7 +214,8 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
                 ['token', 'LIKE', 'test_%']
             ]);
             return $this->_location('test/mod');
-        } else {
+        }
+        else {
 
             $time = time();
             $session = Session::getCreate();
@@ -244,7 +241,7 @@ json_encode(\$result);</pre>" . json_encode($result);
 
             $echo[] = "<br><br>Session table:";
 
-            $stmt = $db->query('SELECT * FROM `lt_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
+            $stmt = $db->query('SELECT * FROM `m_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
             $this->_dbTable($stmt, $echo);
 
             $echo[] = "<br><a href=\"".URL_BASE."test/mod?action=remove\">Remove all test data</a> | <a href=\"".URL_BASE."test\">Return</a>";
@@ -333,7 +330,7 @@ json_encode(\$orig);</pre>" . json_encode($orig);
 
     public function db() {
         if (!$this->_checkInput($_GET, [
-            's' => ['require', ['Mysql', 'Sqlite'], [0, 'Object not found.']]
+            's' => ['require', ['mysql', 'sqlite'], [0, 'Object not found.']]
         ], $return)) {
             return $return;
         }
@@ -343,8 +340,8 @@ json_encode(\$orig);</pre>" . json_encode($orig);
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
 
-        if (!($stmt = $db->query('SELECT * FROM `lt_session` LIMIT 10;'))) {
-            return [0 ,'Failed("lt_session" not found).'];
+        if (!($stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;'))) {
+            return [0 ,'Failed("m_session" not found. ' . $stmt . ').'];
         }
 
         $echo = ["<pre>\$db = Db::get('" . $_GET['s'] . "');
@@ -352,46 +349,60 @@ if (!(\$rtn = \$db->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
 
-\$stmt = \$db->query('SELECT * FROM `lt_session` LIMIT 10;');</pre>"];
+\$stmt = \$db->query('SELECT * FROM `m_session` LIMIT 10;');</pre>"];
 
         $this->_dbTable($stmt, $echo);
 
-        $exec = $db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
-        $insertId = $db->getInsertID();
+        $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $errorCode = $db->getErrorCode();
+        $error = $db->getErrorInfo();
+        if ($errorCode === '23000') {
+            $insertId = $db->query('SELECT * FROM `m_session` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
+        }
+        else {
+            $insertId = $db->getInsertID();
+        }
 
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
-\$insertId = \$db->getInsertID();</pre>
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+\$errorCode = \$db->getErrorCode();
+\$error = \$db->getErrorInfo();
+if (\$errorCode === '23000') {
+    \$insertId = \$db->query('SELECT * FROM `m_session` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
+}
+else {
+    \$insertId = \$db->getInsertID();
+}</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
-errorCode: " . json_encode($db->getErrorCode()) . "<br>
-error: ".json_encode($db->getErrorInfo())."<br><br>";
+errorCode: " . json_encode($errorCode) . "<br>
+error: ".json_encode($error)."<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `lt_session` LIMIT 1;');
+        $stmt = $db->query('SELECT * FROM `m_session` LIMIT 1;');
         $this->_dbTable($stmt, $echo);
 
-        $exec = $db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $exec = $db->exec('REPLACE INTO `lt_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
-        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `lt_session` (`id`, `token`, `data`, `time_update`, `time_add`) VALUES (\'" . $insertId . "\', \'test2-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('REPLACE INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_session` (`id`, `token`, `data`, `time_update`, `time_add`) VALUES (\'" . $insertId . "\', \'test2-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 " . ($exec ? "insertId: " . json_encode($db->getInsertID()) . "<br>" : "") . "
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `lt_session` LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
-        $exec = $db->exec('DELETE FROM `lt_session` WHERE `id` = \'' . $insertId . '\';');
-        $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `lt_session` WHERE `id` = \'$insertId\';');</pre>
+        $exec = $db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');
+        $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');</pre>
 exec: " . $exec . "<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `lt_session` LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         return join('', $echo) . "<br>" . $this->_getEnd();
@@ -408,7 +419,7 @@ exec: " . $exec . "<br><br>";
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $echo[] = '<tr>';
                 foreach ($row as $key => $val) {
-                    $echo[] = '<td>' . htmlspecialchars($val) . '</td>';
+                    $echo[] = '<td>' . htmlspecialchars($val . '') . '</td>';
                 }
                 $echo[] = '</tr>';
             }
@@ -420,14 +431,14 @@ exec: " . $exec . "<br><br>";
 
     public function kv() {
         if (!$this->_checkInput($_GET, [
-            's' => ['require', ['Memcached', 'Redis', 'RedisSimulator'], [0, 'Object not found.']]
+            's' => ['require', ['redis', 'redis-simulator'], [0, 'Object not found.']]
         ], $return)) {
             return $return;
         }
 
         $kv = Kv::get($_GET['s']);
         $db = null;
-        if ($_GET['s'] === 'RedisSimulator') {
+        if ($_GET['s'] === 'redis-simulator') {
             $db = Db::get(Db::MYSQL);
             if (!$db->connect()) {
                 return [0, 'Failed, MySQL can not be connected.'];
@@ -1246,7 +1257,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
      */
     private function _getEnd(): string {
         $rt = $this->_getRunTime();
-        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding: 10px;background-color:rgba(0,0,0,.07);}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style>';
+        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding:10px;background-color:rgba(0,0,0,.07);white-space:pre-wrap;}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style>';
     }
 
 }

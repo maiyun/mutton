@@ -1,5 +1,5 @@
 <?php
 // --- Sql ---
 
-const SQL_PRE = 'lt_';
+const SQL_PRE = 'm_';
 

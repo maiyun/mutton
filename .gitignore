@@ -2,7 +2,6 @@
 .buildpath
 .settings/
 etc/__*
-lib/Captcha*
 log/*
 !log/index.html
-stc-ts/node_modules/
+stc/node_modules/

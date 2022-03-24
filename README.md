@@ -9,11 +9,11 @@ Simple, easy to use, full functionality of the PHP framework.
 
 ## Languages
 
-[简体中文](doc/README.zh-CN.md) | [繁體中文](doc/README.zh-TW.md)
+[简体中文](doc/README.sc.md) | [繁體中文](doc/README.tc.md)
 
 ## Requirement
 
-PHP 7.3+  
+PHP 8.0+  
 Nginx/Apache
 
 ## Installation
@@ -30,7 +30,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## Library
 
-Captcha, Crypto, Db (MySQL, Sqlite), Kv (Memcached, Redis, RedisSimulator), Net, Session, Sql, Text.
+Captcha, Crypto, Db (MySQL, Sqlite), Kv (Redis, RedisSimulator), Net, Session, Sql, Text.
 
 ## Features
 
@@ -184,5 +184,5 @@ Sheep are so cute.
 
 我们工作基于中文语言环境，若对本项目感兴趣并对除中文简体、中文繁体之外语种熟悉的朋友，欢迎一起参与翻译工作，感兴趣的朋友可以加入以下群组。
 
-除中国大陆之外翻译 Telegram 群组：[https://t.me/maiyunlocal](https://t.me/maiyunlocal)  
-中国大陆翻译 QQ 群：24158113
+Telegram 群：[https://t.me/maiyunlocale](https://t.me/maiyunlocale)  
+QQ 群：24158113

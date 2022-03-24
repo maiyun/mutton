@@ -2,7 +2,7 @@
 
 ## Languages
 
-[简体中文](./CHANGELOG.zh-CN.md) | [繁體中文](./CHANGELOG.zh-TW.md)
+[简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
 # 6.3.0
 

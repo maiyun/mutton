@@ -1,0 +1,3 @@
+From https://github.com/Gregwar/Captcha/releases/tag/v1.1.9
+
+Because the official merger is not very timely, we have included a copy of the bug fix here.

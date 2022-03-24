@@ -17,16 +17,16 @@ define('START_MEMORY', memory_get_usage());
 define('PATH', isset($_GET['__path']) ? $_GET['__path'] : '');
 unset($_GET['__path']);
 
-// --- 国际化 ---
+// --- 本地化 ---
 
-require 'sys/Locale.php';
+require 'sys/locale.php';
 
 // --- 正式启动 ---
 
-require 'sys/Boot.php';
+require 'sys/boot.php';
 
 // --- 加载控制器 ---
 
-require SYS_PATH.'Route.php';
+require SYS_PATH . 'route.php';
 Route::run();
 
