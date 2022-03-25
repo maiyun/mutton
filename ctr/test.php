@@ -209,6 +209,8 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
             $echo[] = "<input type=\"button\" value=\"Post '" . $p . "'\" onclick=\"post('" . $p . "')\"><br>";
         }
 
+        $echo[] = "<input type=\"button\" value=\"Post FormData'\" onclick=\"postFd()\"><br>";
+
         $echo[] = "<script>
 function post(p) {
     document.getElementById('result').innerText = 'Waiting...';
@@ -218,6 +220,20 @@ function post(p) {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
         body: p
+    }).then(function(r) {
+        return r.text();
+    }).then(function(t) {
+        document.getElementById('result').innerText = t;
+    });
+}
+
+function postFd() {
+    var fd = new FormData();
+    fd.append('he', 'ho');
+    document.getElementById('result').innerText = 'Waiting...';
+    fetch('" . URL_BASE . "test/ctr-checkinput1', {
+        method: 'POST',
+        body: fd
     }).then(function(r) {
         return r.text();
     }).then(function(t) {
