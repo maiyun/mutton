@@ -501,29 +501,42 @@ class Ctr {
      * @param string $key 多样性混合 key，可留空
      * @return string
      */
-    public function _muid($key = ''): string {
-        return self::_getMuid($key);
+    public function _muid($time = true, $append = '', $key = ''): string {
+        return self::_getMuid($time, $append, $key);
     }
 
     /**
      * --- 获取 MUID ---
+     * @param boolean $time true: 包含显式时间 （16位）, false 时间敏感不包含（32位）
+     * @param string $append 追加字符，可用作区别不同服务器，若不想通过 ID 知晓是哪台服务器生成的场景下不要使用
      * @param string $key 多样性混合 key，可留空
      * @return string
      */
-    public static function _getMuid($key = ''): string {
-        if ($key === '') {
-            $key = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : 'muid');
-        }
+    public static function _getMuid($time = true, $append = '', $key = ''): string {
+        $key = (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '') .
+        (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '') .
+        (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '') .
+        (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '') .
+        (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '') .
+        (isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '') . 'muid' . $key;
         $key = hash_hmac('md5', $key, 'muid');
-        $date = explode('-', date('Y-m-d-H-i'));
-        $y = base_convert($date[0], 10, 36); // --- 3 位数，从 1296 到 46655 年 ---
-        $m = base_convert($date[1], 10, 36);
-        $d = base_convert($date[2], 10, 36);
-        $h = base_convert($date[3], 10, 36);
-        $rand = self::_getRandom(10);
-        $last = hash_hmac('md5', $rand, $key);
-        // ---    1       1      1         1           3             3           4              1       1   ---
-        return $rand[0] . $h . $rand[1] . $m . substr($rand, 2, 3) . $y . substr($last, 5, 4) . $d . $last[0];
+        if ($time) {
+            // --- 用于用户 ID、车辆 ID 等时间不敏感且总量较少的场景 ---
+            $date = explode('-', date('Y-m-d-H-i'));
+            $y = base_convert($date[0], 10, 36); // --- 3 位数，从 1296 到 46655 年 ---
+            $m = base_convert($date[1], 10, 36);
+            $d = base_convert($date[2], 10, 36);
+            $h = base_convert($date[3], 10, 36);
+            $rand = self::_getRandom(10);
+            $last = hash_hmac('md5', $rand, $key);
+            // ---    1       1      1         1           3             3           4              1       1   ---
+            return $rand[0] . $h . $rand[1] . $m . substr($rand, 2, 3) . $y . substr($last, 5, 4) . $d . $last[0] . $append;
+        }
+        else {
+            $rand = self::_getRandom(16);
+            $rand2 = substr(hash_hmac('md5', self::_getRandom(16), $key), 8, 16);
+            return $rand . $rand2 . $append;
+        }
     }
 
     /**

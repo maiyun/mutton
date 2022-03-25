@@ -277,13 +277,61 @@ function postFd() {
     }
 
     public function ctrMuid() {
-        return
-            "<pre>\$this->_muid();</pre>" . $this->_muid() .
-            "<pre>\$this->_muid();</pre>" . $this->_muid() .
-            "<pre>\$this->_muid('1');</pre>" . $this->_muid('1') .
-            "<pre>\$this->_muid('1');</pre>" . $this->_muid('1') .
-            "<pre>strlen(\$this->_muid());</pre>" . strlen($this->_muid()) .
-            "<br><br>" . $this->_getEnd();
+        $ac = isset($_GET['ac']) ? $_GET['ac'] : '';
+
+        $echo = [
+            '<a href="'.URL_BASE.'test/ctr-muid">Default</a> | ' .
+            '<a href="'.URL_BASE.'test/ctr-muid?ac=big">Big</a> | ' .
+            '<a href="'.URL_BASE.'test">Return</a>'
+        ];
+
+        if ($ac === '') {
+            $muid = $this->_muid();
+            $echo[] = "<pre>\$this->_muid();</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = $this->_muid();
+            $echo[] = "<pre>\$this->_muid();</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = $this->_muid(false);
+            $echo[] = "<pre>\$this->_muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = $this->_muid(false);
+            $echo[] = "<pre>\$this->_muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = $this->_muid(true, 'xa');
+            $echo[] = "<pre>\$this->_muid(true, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = $this->_muid(false, 'xa');
+            $echo[] = "<pre>\$this->_muid(false, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = $this->_muid(false, '', 'ha');
+            $echo[] = "<pre>\$this->_muid(false, '', 'ha');</pre>" . $muid . " (" . strlen($muid) . ")";
+        }
+        else {
+            $parr = [];
+            $oarr = [];
+            for ($i = 0; $i < 30000; ++$i) {
+                $muid = $this->_muid();
+                if (in_array($muid, $oarr)) {
+                    $parr[] = $muid;
+                    continue;
+                }
+                $oarr[] = $muid;
+            }
+            $echo[] = "<pre>
+\$parr = [];
+\$oarr = [];
+for (\$i = 0; \$i < 30000; ++\$i) {
+    \$muid = \$this->_muid();
+    if (in_array(\$muid, \$oarr)) {
+        \$parr[] = \$muid;
+        continue;
+    }
+    \$oarr[] = \$muid;
+}</pre>parr length: " . count($parr) . "<br>oarr length: " . count($oarr) . "<br><br>parr:<pre>" . json_encode($parr) . "</pre>oarr:<pre>" . substr(json_encode(array_slice($oarr, 0, 20)), 0, -1) . "...</pre>";
+        }
+
+        return join('', $echo). $this->_getEnd();
     }
 
     public function mod() {
@@ -1492,7 +1540,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
      */
     private function _getEnd(): string {
         $rt = $this->_getRunTime();
-        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding:10px;background-color:rgba(0,0,0,.07);white-space:pre-wrap;}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">';
+        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding:10px;background-color:rgba(0,0,0,.07);white-space:pre-wrap;word-break:break-all;}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">';
     }
 
 }
