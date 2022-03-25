@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-17 15:29:33
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-25 17:05:01
  */
 declare(strict_types = 1);
 
@@ -166,7 +166,7 @@ class Ctr {
                                         return false;
                                     }
                                 }
-                                else if (preg_match('/^([><=]+) *([0-9]+)$/', $input[$key], $match)) {
+                                else if (preg_match('/^([><=]+) *([0-9]+)$/', $v, $match)) {
                                     // --- 判断表达式 ---
                                     $needReturn = false;
                                     $inputNum = (float)$input[$key];

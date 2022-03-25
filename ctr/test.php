@@ -61,6 +61,7 @@ class test extends Ctr {
 
             '<br><br><b>Ctr:</b>',
             '<br><br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-checkinput">View "test/ctr-checkinput"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-rand">View "test/ctr-rand"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-muid">View "test/ctr-muid"</a>',
@@ -162,6 +163,79 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
     }
     public function ctrXsrf1() {
         if (!$this->_checkXInput($_POST, [], $return)) {
+            return $return;
+        }
+        return [1, 'post' => $_POST];
+    }
+
+    public function ctrCheckinput() {
+        $echo = ["rule:
+<pre>[
+    'he' => ['require', [0, 'The he param does not exist.']],
+    'num' => ['> 10', [0, 'The num param must > 10.']],
+    'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
+    'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+]</pre>"];
+
+        $post = [
+            [],
+            [
+                'he' => 'ok'
+            ],
+            [
+                'he' => 'ok',
+                'num' => '5'
+            ],
+            [
+                'he' => 'ok',
+                'num' => '12',
+                'reg' => 'Hello'
+            ],
+            [
+                'he' => 'ok',
+                'num' => '12',
+                'reg' => 'BBB6YYY6',
+                'arr' => 'heihei'
+            ],
+            [
+                'he' => 'ok',
+                'num' => '12',
+                'reg' => 'BBB6YYY6',
+                'arr' => 'hehe'
+            ]
+        ];
+        foreach ($post as $item) {
+            $p = http_build_query($item);
+            $echo[] = "<input type=\"button\" value=\"Post '" . $p . "'\" onclick=\"post('" . $p . "')\"><br>";
+        }
+
+        $echo[] = "<script>
+function post(p) {
+    document.getElementById('result').innerText = 'Waiting...';
+    fetch('" . URL_BASE . "test/ctr-checkinput1', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: p
+    }).then(function(r) {
+        return r.text();
+    }).then(function(t) {
+        document.getElementById('result').innerText = t;
+    });
+}
+</script>
+<br>Result:<pre id=\"result\">Nothing.</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+    public function ctrCheckinput1() {
+        if (!$this->_checkInput($_POST, [
+            'he' => ['require', [0, 'The he param does not exist.']],
+            'num' => ['> 10', [0, 'The num param must > 10.']],
+            'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
+            'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+        ], $return)) {
             return $return;
         }
         return [1, 'post' => $_POST];
