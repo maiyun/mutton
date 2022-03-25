@@ -119,11 +119,22 @@ class Ctr {
             }
             // --- ['require', '> 6', [0, 'xx 必须大于 6']] ---
             $lastK = $c - 1;
+            if (!isset($val[$lastK][0]) || !isset($val[$lastK][1]) || !is_int($val[$lastK][0]) || !is_string($val[$lastK][1])) {
+                $rtn = [0, 'Param error'];
+                return false;
+            }
             for ($k = 0; $k < $lastK; ++$k) {
                 $v = $val[$k];
                 if (is_array($v)) {
-                    // --- 判断提交的数据是否在此 array 之内 ---
-                    if ($input[$key] !== null && !in_array($input[$key], $v)) {
+                    if (count($v) === 0) {
+                        $rtn = $val[$lastK];
+                        return false;
+                    }
+                    // --- 判断提交的数据是否在此 array 之内，若没有提交数据，则自动设置为第一个项 ---
+                    if ($input[$key] === null) {
+                        $input[$key] = $v[0];
+                    }
+                    else if (!in_array($input[$key], $v)) {
                         // --- 不在 ---
                         $rtn = $val[$lastK];
                         return false;
@@ -205,7 +216,8 @@ class Ctr {
                                         $rtn = $val[$lastK];
                                         return false;
                                     }
-                                } else {
+                                }
+                                else {
                                     if ($input[$key] !== $v) {
                                         $rtn = $val[$lastK];
                                         return false;
