@@ -526,5 +526,37 @@ class Ctr {
         return $rand[0] . $h . $rand[1] . $m . substr($rand, 2, 3) . $y . substr($last, 5, 4) . $d . $last[0];
     }
 
+    /**
+     * --- 获取 IP （非安全 IP）---
+     * @return string
+     */
+    public function _ip(): string {
+        if (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            return $_SERVER['HTTP_CF_CONNECTING_IP'];
+        }
+        else if (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            return $_SERVER['HTTP_X_FORWARDED_FOR'];
+        }
+        else {
+            return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        }
+    }
+
+    /** @var string HTTP_X_FORWARDED_FOR */
+    public const REAL_IP_X = 'HTTP_X_FORWARDED_FOR';
+    /** @var string HTTP_CF_CONNECTING_IP */
+    public const REAL_IP_CF = 'HTTP_CF_CONNECTING_IP';
+    /**
+     * --- 获取直连 IP（安全 IP） ---
+     * @param string $name 输入安全的 header
+     * @return string
+     */
+    public function _realIP($name = ''): string {
+        if (($name !== '') && isset($_SERVER[$name])) {
+            return $_SERVER[$name];
+        }
+        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+    }
+
 }
 

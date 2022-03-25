@@ -10,13 +10,13 @@
             "action": "down",
             "save": "cacert.pem"
         },
-        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/Request.php": {
-            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/Request.php",
+        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/request.php": {
+            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/request.php",
             "action": "down",
             "save": "Request.php"
         },
-        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/Response.php": {
-            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/Response.php",
+        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/response.php": {
+            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/response.php",
             "action": "down",
             "save": "Response.php"
         }
@@ -24,7 +24,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-17 14:04:48
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-25 20:30:12
  */
 declare(strict_types = 1);
 
@@ -545,44 +545,6 @@ class Net {
                 unset($cookie[$key]);
             }
         }
-    }
-
-    /**
-     * --- 获取 IP （非安全 IP）---
-     * @return string
-     */
-    public static function getIP(): string {
-        if (isset($_SERVER['HTTP_X_REAL_IP']) && $_SERVER['HTTP_X_REAL_IP']) {
-            return $_SERVER['HTTP_X_REAL_IP'];
-        } else if (isset($_SERVER['HTTP_X_REAL_FORWARDED_FOR']) && $_SERVER['HTTP_X_REAL_FORWARDED_FOR']) {
-            return $_SERVER['HTTP_X_REAL_FORWARDED_FOR'];
-        } else if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR']) {
-            return $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } else if (isset($_SERVER['HTTP_CLIENT_IP']) && $_SERVER['HTTP_CLIENT_IP']) {
-            return $_SERVER['HTTP_CLIENT_IP'];
-        } else if (isset($_SERVER['HTTP_X_CONNECTING_IP']) && $_SERVER['HTTP_X_CONNECTING_IP']) {
-            return $_SERVER['HTTP_X_CONNECTING_IP'];
-        } else if (isset($_SERVER['HTTP_CF_CONNECTING_IP']) && $_SERVER['HTTP_CF_CONNECTING_IP']) {
-            return $_SERVER['HTTP_CF_CONNECTING_IP'];
-        } else {
-            return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
-        }
-    }
-
-    /** @var string HTTP_X_CONNECTING_IP */
-    public const REAL_IP_X = 'HTTP_X_CONNECTING_IP';
-    /** @var string HTTP_CF_CONNECTING_IP */
-    public const REAL_IP_CF = 'HTTP_CF_CONNECTING_IP';
-    /**
-     * --- 获取直连 IP（安全 IP） ---
-     * @param string $name 输入安全的 header
-     * @return string
-     */
-    public static function getRealIP($name = ''): string {
-        if (($name !== '') && isset($_SERVER[$name]) && $_SERVER[$name]) {
-            return $_SERVER[$name];
-        }
-        return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
 }

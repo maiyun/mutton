@@ -28,13 +28,16 @@ class test extends Ctr {
     public function index() {
         $echo = [
             'Hello world! Welcome to use <strong>Mutton ' . VER . '</strong>!',
-
-            '<br><br>PATH: ' . PATH,
-            '<br>HTTPS: ' . (HTTPS ? 'true' : 'false'),
-            '<br>MOBILE: ' . (MOBILE ? 'true' : 'false'),
+            
+            '<br><br>PHP version: ' . PHP_VERSION,
             '<br>HOST: ' . HOST,
             '<br>HOSTNAME: ' . HOSTNAME,
-            '<br>PHP Version: ' . PHP_VERSION,
+            '<br>PATH: ' . PATH,
+            '<br>HTTPS: ' . (HTTPS ? 'true' : 'false'),
+
+            '<br><br>MOBILE: ' . (MOBILE ? 'true' : 'false'),
+            '<br>Real IP: ' . $this->_ip(),
+            '<br>Client IP: ' . $this->_realIP(),
 
             '<br><br>URL_BASE: ' . URL_BASE,
             '<br>URL_STC: ' . URL_STC,

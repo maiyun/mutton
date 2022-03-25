@@ -41,8 +41,7 @@ register_shutdown_function('\\sys\\exception');
 // --- 写入文件日志 ---
 function log(string $msg, string $fend = ''): void {
     $realIp = $_SERVER['REMOTE_ADDR'];
-    $twoIp = isset($_SERVER['HTTP_X_CONNECTING_IP']) ? $_SERVER['HTTP_X_CONNECTING_IP'] : $_SERVER['REMOTE_ADDR'];
-    $clientIp = isset($_SERVER['HTTP_X_REAL_FORWARDED_FOR']) ? $_SERVER['HTTP_X_REAL_FORWARDED_FOR'] : (isset($_SERVER['HTTP_CLIENT_IP']) ? $_SERVER['HTTP_CLIENT_IP'] : $twoIp);
+    $clientIp = isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR']);
 
     list($y, $m, $d, $h) = explode('-', date('Y-m-d-H'));
     $path = LOG_PATH . $y . '/';
@@ -69,7 +68,7 @@ function log(string $msg, string $fend = ''): void {
     $path .= $h . $fend . '.csv';
 
     if(!is_file($path)) {
-        if (!@file_put_contents($path, 'TIME,UNIX,URL,RAWPOST,POST,COOKIE,USER_AGENT,REALIP,TWOIP,CLIENTIP,MESSAGE'."\n")) {
+        if (!@file_put_contents($path, 'TIME,UNIX,URL,RAWPOST,POST,COOKIE,USER_AGENT,REALIP,CLIENTIP,MESSAGE'."\n")) {
             return;
         }
         @chmod($path, 0777);
@@ -83,7 +82,6 @@ function log(string $msg, string $fend = ''): void {
         str_replace('"', '""', http_build_query($_COOKIE)) . '","' .
         str_replace('"', '""', (isset($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : 'No HTTP_USER_AGENT') . '","' .
         str_replace('"', '""', $realIp) . '","' .
-        str_replace('"', '""', $twoIp) . '","' .
         str_replace('"', '""', $clientIp) . '","' .
         str_replace('"', '""', $msg) . "\"\n", FILE_APPEND);
 }
