@@ -30,7 +30,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## 庫
 
-Captcha, Crypto, Db (MySQL, Sqlite), Kv (Redis, RedisSimulator), Net, Session, Sql, Text.
+Captcha, Crypto, Db (MySQL, Sqlite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
 
 ## 特性
 
@@ -125,7 +125,7 @@ $user = User::select(['id', 'user'])->filter([
 
 ### 中國大陸庫支援
 
-完整封裝了微信支付、微信登錄、阿裡雲 OSS、騰訊雲 COS、阿裡巴巴等中國特有服務的支援。（因內核框架更新升級，這些庫還未來得及更新，暫時移除，將很快進行更新）
+完整封裝了微信支付、微信登錄、阿裡雲 OSS、騰訊雲 COS、支付寶等中國大陸公司的服務支援。（因內核框架更新升級，這些庫還未來得及更新，暫時移除，將很快進行更新）
 
 #### 還有更多特性等你探索
 

@@ -30,7 +30,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## Library
 
-Captcha, Crypto, Db (MySQL, Sqlite), Kv (Redis, RedisSimulator), Net, Session, Sql, Text.
+Captcha, Crypto, Db (MySQL, Sqlite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
 
 ## Features
 
@@ -41,16 +41,6 @@ Simple and easy-to-use interface with rich code tips (phpDoc-based).
 ### Autoload
 
 Using the various libraries directly, the system loads them automatically.
-
-### Mutton Portal
-
-In Mutton Portal, it includes file anomaly detection, version detection, upgrade, and more.
-
-> Tip: We're just adopting the nostalgic style of Windows 2000, but our framework is very advanced.
-
-[![Mutton Portal](doc/portal-check.png)](doc/portal-check.png)
-
-[![Mutton Portal](doc/portal-system.png)](doc/portal-system.png)
 
 ### Super-friendly Net library
 
@@ -134,7 +124,7 @@ The checkXInput method enables XSRF detection to prevent malicious access.
 
 ### Mainland China library support
 
-For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment (forthcoming support) has been completed package.(Due to the kernel framework update upgrade, these libraries have not yet been updated, temporarily removed, will be updated soon)
+For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment has been completed package.(Due to the kernel framework update upgrade, these libraries have not yet been updated, temporarily removed, will be updated soon)
 
 #### And more...
 

@@ -8,6 +8,7 @@ use lib\Captcha;
 use lib\Db;
 use lib\Kv;
 use lib\Net;
+use lib\Scan;
 use lib\Sql;
 use lib\Text;
 use mod\Mod;
@@ -100,6 +101,9 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/net-save">View "test/net-save"</a>',
             '<br><a href="' . URL_BASE . 'test/net-follow">View "test/net-follow"</a>',
             '<br><a href="' . URL_BASE . 'test/net-reuse">View "test/net-reuse"</a>',
+
+            '<br><br><b>Scan</b>',
+            '<br><br><a href="' . URL_BASE . 'test/scan">View "test/scan"</a>',
 
             '<br><br><b>Session:</b>',
             '<br><br><a href="' . URL_BASE . 'test/session?s=db">View "test/session?s=db"</a>',
@@ -899,6 +903,144 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         return join('', $echo) . $this->_getEnd();
     }
 
+    public function scan() {
+        $db = Db::get(Db::MYSQL);
+        if (!$db->connect()) {
+            return [0, 'Failed, MySQL can not be connected.'];
+        }
+
+        $echo = [];
+
+        $scan = Scan::get($this, $db, null, 30);
+        $token = $scan->getToken();
+        $echo[] = "<pre>\$scan = Scan::get(\$this, \$db, null, 30);
+\$token = \$scan->getToken();</pre>
+token: " . $token . "<br><br>
+Scan status: <b id=\"status\" style=\"color: red;\">Waiting...</b><br>
+Poll count: <span id=\"count\">0</span>, expiration date: <span id=\"exp\"></span><br><br>
+Simulated scan URL: http://www.test.simu/scan?token=" . $token . " (QR Code can be generated)<br><br>
+<input type=\"button\" value=\"Visit the simulated URL\" onclick=\"this.disabled=true;document.getElementById('url').innerText='http://www.test.simu/scan?token=" . $token . "';visit();\"><br><br>
+<div style=\"border: solid 1px rgba(0,0,0,.3); box-shadow: 0 5px 20px rgba(0, 0, 0, .25); width: 90%; margin: auto;\">
+    <div id=\"url\" style=\"background: rgba(0,0,0,.07); border-bottom: solid 1px rgba(0,0,0,.3); padding: 10px;\">about:blank</div>
+    <div id=\"content\" style=\"height: 200px; font-size: 16px; display: flex; justify-content: center; align-items: center; flex-direction: column;\"></div>
+</div>
+<script>
+var token = '" . $token . "';
+var count = 0;
+function poll() {
+    fetch('" . URL_BASE . "test/scan1', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'token=" . $token . "'
+    }).then(function(r) {
+        return r.json();
+    }).then(function(j) {
+        ++count;
+        document.getElementById('status').innerText = j.msg;
+        document.getElementById('count').innerText = count;
+        if (j.result > 0) {
+            document.getElementById('exp').innerText = j.exp;
+            setTimeout(poll, 1000);
+        }
+    }).catch(function(e) {
+        ++count;
+        document.getElementById('status').innerText = 'Network error.';
+        document.getElementById('count').innerText = count;
+        setTimeout(poll, 1000);
+    });
+}
+poll();
+
+function visit() {
+    document.getElementById('content').innerText = 'Loading...';
+    fetch('" . URL_BASE . "test/scan2', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'token=" . $token . "'
+    }).then(function(r) {
+        return r.json();
+    }).then(function(j) {
+        if (j.result > 0) {
+            document.getElementById('content').innerHTML = 'Are you sure logged in the computer?<br><br><button id=\"confirm\" style=\"padding: 10px 20px;\" onclick=\"this.disabled=true;confirm()\">Confirm</button>';
+        }
+        else {
+            document.getElementById('content').innerText = j.msg;
+        }
+    });
+}
+
+function confirm() {
+    fetch('" . URL_BASE . "test/scan3', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: 'token=" . $token . "'
+    }).then(function(r) {
+        return r.json();
+    }).then(function(j) {
+        if (j.result > 0) {
+            document.getElementById('content').innerText = 'Finish the operation!';
+        }
+        else {
+            document.getElementById('content').innerText = j.msg;
+        }
+    });
+}
+</script>";
+
+        return join('', $echo) . "<br>" . $this->_getEnd();
+    }
+    public function scan1() {
+        $db = Db::get(Db::MYSQL);
+        if (!$db->connect()) {
+            return [0, 'Failed, MySQL can not be connected.'];
+        }
+        $scan = Scan::get($this, $db, $_POST['token']);
+        $rtn = $scan->poll();
+        switch ($rtn) {
+            case -3: {
+                return [0, 'System error.'];
+            }
+            case -2: {
+                return [0, 'Token has expired.'];
+            }
+            case -1: {
+                return [1, 'Waiting...', 'exp' => $scan->getTimeLeft()];
+            }
+            case 0: {
+                return [1, 'Scanned, waiting for confirmation...', 'exp' => $scan->getTimeLeft()];
+            }
+        }
+        return [0, 'Scan result: ' . json_encode($rtn)];
+    }
+    public function scan2() {
+        $db = Db::get(Db::MYSQL);
+        if (!$db->connect()) {
+            return [0, 'Failed, MySQL can not be connected.'];
+        }
+        if (!Scan::scanned($db, $_POST['token'])) {
+            return [0, 'Token has expired.'];
+        }
+        return [1];
+    }
+    public function scan3() {
+        $db = Db::get(Db::MYSQL);
+        if (!$db->connect()) {
+            return [0, 'Failed, MySQL can not be connected.'];
+        }
+        if (!Scan::setData($db, $_POST['token'], [
+            'uid' => '5'
+        ])) {
+            return [0, 'Token has expired.'];
+        }
+        return [1];
+    }
+
     public function session() {
         if (!$this->_checkInput($_GET, [
             's' => ['require', ['db', 'kv'], [0, 'Object not found.']],
@@ -1257,7 +1399,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
      */
     private function _getEnd(): string {
         $rt = $this->_getRunTime();
-        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding:10px;background-color:rgba(0,0,0,.07);white-space:pre-wrap;}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style>';
+        return 'Processed in ' . $rt . ' second(s), ' . round($rt * 1000, 4) . 'ms, ' . round($this->_getMemoryUsage() / 1024, 2) . ' K.<style>*{font-family:Consolas,"Courier New",Courier,FreeMono,monospace;line-height: 1.5;font-size:12px;}pre{padding:10px;background-color:rgba(0,0,0,.07);white-space:pre-wrap;}hr{margin:20px 0;border-color:#000;border-style:dashed;border-width:1px 0 0 0;}td,th{padding:5px;border:solid 1px #000;}</style><meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">';
     }
 
 }

@@ -2,7 +2,7 @@
 /*
 CREATE TABLE if not exists `scan` (
     `id` int (10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `token` varchar (32) NOT NULL,
+    `token` varchar (32) BINARY NOT NULL,
     `data` text NOT NULL,
     `time_update` int (10) UNSIGNED NOT NULL,
     `time_add` int (10) UNSIGNED NOT NULL,
@@ -16,13 +16,14 @@ CREATE TABLE if not exists `scan` (
  * Project: Mutton, User: Jiansuo Qiyue
  * CONF - {"ver":"0.1","folder":false} - END
  * Date: 2020-11-21 15:38:01
- * Last: 2020-11-21 15:38:04, 2020-11-22 22:12:02
+ * Last: 2020-11-21 15:38:04, 2020-11-22 22:12:02, 2022-3-25 14:31:38
  */
 declare(strict_types = 1);
 
 namespace lib;
 
 use PDO;
+use PDOException;
 use sys\Ctr;
 
 class Scan {
@@ -36,7 +37,7 @@ class Scan {
 
     /** @var $_token string */
     private $_token = null;
-    /** @var int 有效期 */
+    /** @var int 有效期，默认 5 分钟 */
     private $_exp = 60 * 5;
 
     public function __construct(Ctr $ctr, Db $link, string $token = null, int $exp = null, string $sqlPre = null) {
@@ -71,7 +72,7 @@ class Scan {
     private $timeLeft = null;
     /**
      * --- 生成二维码处的轮询，检查是否被扫码、被录入数据 ---
-     * @return mixed -1 无操作, 0 已扫码, 其他返回为存的数据并结束轮询
+     * @return mixed -3 系统错误 -2 token 不存在或已过期 -1 无操作, 0 已扫码, 其他返回为存的数据并结束轮询
      */
     public function poll() {
         $time = time();
@@ -80,17 +81,16 @@ class Scan {
             ['time_exp', '>=', $time]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
-        $ps->execute($this->_sql->getData());
+        try {
+            $ps->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            // --- 出错 ---
+            return -3;
+        }
         if (!($data = $ps->fetch(PDO::FETCH_ASSOC))) {
             // --- 创建 ---
-            $this->createToken();
-            $this->_sql->select('*', 'scan')->where([
-                'token' => $this->_token,
-                ['time_exp', '>=', $time]
-            ]);
-            $ps = $this->_link->prepare($this->_sql->getSql());
-            $ps->execute($this->_sql->getData());
-            $data = $ps->fetch(PDO::FETCH_ASSOC);
+            return -2;
         }
         // --- 存在，判断是否被扫码，以及是否被注入数据 ---
         $this->timeLeft = $data['time_exp'] - $time;
@@ -111,7 +111,7 @@ class Scan {
     /**
      * --- 创建 token ---
      * @param int|null $exp 有效期，默认 5 分钟
-     * @return string
+     * @return string|boolean
      */
     public function createToken(int $exp = null) {
         $this->_gc();
@@ -119,7 +119,11 @@ class Scan {
             $exp = $this->_exp;
         }
         $time = time();
-        do {
+        $count = 0;
+        while (true) {
+            if ($count === 5) {
+                return false;
+            }
             $this->_token = $this->_ctr->_random(32, Ctr::RANDOM_LUN);
             $this->_sql->insert('scan')->values([
                 'token' => $this->_token,
@@ -129,7 +133,16 @@ class Scan {
                 'time_exp' => $time + $exp
             ]);
             $ps = $this->_link->prepare($this->_sql->getSql());
-        } while (!$ps->execute($this->_sql->getData()));
+            try {
+                $ps->execute($this->_sql->getData());
+                break;
+            }
+            catch (PDOException $e) {
+                if ($e->errorInfo[0] !== '23000') {
+                    return false;
+                }
+            }
+        }
         return $this->_token;
     }
 
@@ -151,7 +164,7 @@ class Scan {
 
     /**
      * --- 获取设置的有效期 ---
-     * @return float|int
+     * @return int
      */
     public function getExpire() {
         return $this->_exp;
@@ -183,7 +196,10 @@ class Scan {
             ['time_exp', '>=', $time]
         ]);
         $ps = $link->prepare($sql->getSql());
-        if (!$ps->execute($sql->getData())) {
+        try {
+            $ps->execute($sql->getData());
+        }
+        catch (PDOException $e) {
             return false;
         }
         if ($ps->rowCount() > 0) {
@@ -202,7 +218,7 @@ class Scan {
      */
     public static function setData(Db $link, string $token, $data, string $sqlPre = null) {
         if (is_int($data)) {
-            if ($data >= -1 && $data <= 1) {
+            if ($data >= -3 && $data <= 1) {
                 return false;
             }
         }
@@ -216,7 +232,10 @@ class Scan {
             ['time_exp', '>=', $time]
         ]);
         $ps = $link->prepare($sql->getSql());
-        if (!$ps->execute($sql->getData())) {
+        try {
+            $ps->execute($sql->getData());
+        }
+        catch (PDOException $e) {
             return false;
         }
         if ($ps->rowCount() > 0) {
@@ -236,7 +255,12 @@ class Scan {
             ['time_exp', '<', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
-        $ps->execute($this->_sql->getData());
+        try {
+            $ps->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            // --- GC 出错 ---
+        }
     }
 
 }

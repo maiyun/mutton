@@ -30,7 +30,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## 库
 
-Captcha, Crypto, Db (MySQL, Sqlite), Kv (Redis, RedisSimulator), Net, Session, Sql, Text.
+Captcha, Crypto, Db (MySQL, Sqlite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
 
 ## 特性
 
@@ -124,7 +124,7 @@ $user = User::select(['id', 'user'])->filter([
 
 ### 中国大陆库支持
 
-完整封装了微信支付、微信登录、阿里云 OSS、腾讯云 COS、阿里巴巴等中国特有服务的支持。（因内核框架更新升级，这些库还未来得及更新，暂时移除，将很快进行更新）
+完整封装了微信支付、微信登录、阿里云 OSS、腾讯云 COS、支付宝等中国大陆公司的服务支持。（因内核框架更新升级，这些库还未来得及更新，暂时移除，将很快进行更新）
 
 #### 还有更多特性等你探索
 
