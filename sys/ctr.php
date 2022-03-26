@@ -525,7 +525,7 @@ class Ctr {
         (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '') .
         (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '') .
         (isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '') . 'muid' . $key;
-        $key = hash_hmac('md5', $key, 'muid');
+        $key = hash_hmac('md5', $key, 'mu' . rand(0, 100) . 'id');
         if ($time) {
             // --- 用于用户 ID、车辆 ID 等时间不敏感且总量较少的场景 ---
             $date = explode('-', date('Y-m-d-H-i'));

@@ -307,6 +307,8 @@ function postFd() {
     
             $muid = $this->_muid(false, '', 'ha');
             $echo[] = "<pre>\$this->_muid(false, '', 'ha');</pre>" . $muid . " (" . strlen($muid) . ")";
+
+            $echo[] = "<br><br>";
         }
         else {
             $parr = [];
