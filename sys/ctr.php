@@ -270,7 +270,8 @@ class Ctr {
         $auth = '';
         if (isset($this->_headers['authorization']) && $this->_headers['authorization']) {
             $auth = $this->_headers['authorization'];
-        } else if (isset($this->_post['_auth'])) {
+        }
+        else if (isset($this->_post['_auth'])) {
             $auth = $this->_post['_auth'];
         }
         $authArr = explode(' ', $auth);
@@ -293,7 +294,8 @@ class Ctr {
     public function _loadData(string $path) {
         if ($f = file_get_contents(DATA_PATH . $path . '.json')) {
             return json_decode($f, true);
-        } else {
+        }
+        else {
             return null;
         }
     }
@@ -305,7 +307,8 @@ class Ctr {
     public function _mustHttps(): bool {
         if (HTTPS) {
             return true;
-        } else {
+        }
+        else {
             $this->_location('https://' . HOST . $_SERVER['REQUEST_URI']);
             return false;
         }
@@ -375,8 +378,9 @@ class Ctr {
             $_locale = $loc;
             $this->_loadLocaleDeep($locData);
             $_localeFiles[] = $lName;
-        } else {
-            $_local = $loc;
+        }
+        else {
+            $_locale = $loc;
         }
         return true;
     }
@@ -386,7 +390,8 @@ class Ctr {
         foreach ($locData as $k => $v) {
             if (is_array($v)) {
                 $this->_loadLocaleDeep($v, $pre . $k . '.');
-            } else {
+            }
+            else {
                 $_localeData[$_locale][$pre . $k] = $v;
             }
         }
@@ -401,7 +406,8 @@ class Ctr {
 
         if (isset($_localeData[$_locale])) {
             return json_encode($_localeData[$_locale]);
-        } else {
+        }
+        else {
             return '{}';
         }
     }

@@ -68,6 +68,7 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-rand">View "test/ctr-rand"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-muid">View "test/ctr-muid"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-locale">View "test/ctr-locale"</a>',
 
             '<br><br><b>Middle:</b>',
             '<br><br><a href="' . URL_BASE . 'test/middle">View "test/middle"</a>',
@@ -331,7 +332,32 @@ for (\$i = 0; \$i < 30000; ++\$i) {
 }</pre>parr length: " . count($parr) . "<br>oarr length: " . count($oarr) . "<br><br>parr:<pre>" . json_encode($parr) . "</pre>oarr:<pre>" . substr(json_encode(array_slice($oarr, 0, 20)), 0, -1) . "...</pre>";
         }
 
-        return join('', $echo). $this->_getEnd();
+        return join('', $echo) . $this->_getEnd();
+    }
+
+    public function ctrLocale() {
+        if (!$this->_checkInput($_GET, [
+            'lang' => [['en', 'sc', 'tc', 'ja'], [0, 'Wrong language.']]
+        ], $rtn)) {
+            return $rtn;
+        }
+
+        $echo = [
+            '<a href="'.URL_BASE.'test/ctr-locale">English</a> | ' .
+            '<a href="'.URL_BASE.'test/ctr-locale?lang=sc">简体中文</a> | ' .
+            '<a href="'.URL_BASE.'test/ctr-locale?lang=tc">繁體中文</a> | ' .
+            '<a href="'.URL_BASE.'test/ctr-locale?lang=ja">日本語</a> | ' .
+            '<a href="'.URL_BASE.'test">Return</a>'
+        ];
+
+        $rtn = $this->_loadLocale($_GET['lang'], 'test');
+        $echo[] = "<pre>\$this->_loadLocale(\$_GET['lang'], 'test');</pre>" . ($rtn ? 'true' : 'false');
+
+        $echo[] = "<pre>l('hello')</pre>" . l('hello');
+        $echo[] = "<pre>l('copy')</pre>" . l('copy');
+        $echo[] = "<pre>l('test', ['a1', 'a2'])</pre>" . l('test', ['a1', 'a2']);
+
+        return join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
     public function mod() {

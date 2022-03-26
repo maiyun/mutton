@@ -34,11 +34,13 @@ function l(string $key, ?array $data = null): string {
             ++$i;
             if (isset($data[$i])) {
                 return $data[$i];
-            } else {
+            }
+            else {
                 return '';
             }
         }, $_localeData[$_locale][$key]);
-    } else {
+    }
+    else {
         return $_localeData[$_locale][$key];
     }
 }
