@@ -106,6 +106,7 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/net-save">View "test/net-save"</a>',
             '<br><a href="' . URL_BASE . 'test/net-follow">View "test/net-follow"</a>',
             '<br><a href="' . URL_BASE . 'test/net-reuse">View "test/net-reuse"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-error">View "test/net-error"</a>',
 
             '<br><br><b>Scan</b>',
             '<br><br><a href="' . URL_BASE . 'test/scan">View "test/scan"</a>',
@@ -1068,6 +1069,20 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         Net::closeAll();
         $echo[] = "<pre>Net::closeAll();</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+
+    public function netError() {
+        $echo = [];
+
+        $res = Net::get('https://192.111.000.222/xxx.zzz');
+        $echo[] = "<pre>Net::get('https://192.111.000.222/xxx.zzz');</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . $res->content . "</pre>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }

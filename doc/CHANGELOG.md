@@ -4,6 +4,22 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.0.0
+
+[+] Added the Scan library for scan QR Code authentication.  
+[+] The Mod class adds an sql statement to get the relevant methods.  
+[+] The Mod class adds an updateByWhereSql method.  
+[+] New _displayErrors methods have been added to the Ctr class.  
+[+] The Ctr class adds a new way for rand to generate purely numeric random numbers.  
+[+] A new muid generation method is added to the Ctr class.  
+[+] The random method of the Ctr class adds a new block parameter.  
+[+] New string data submission for the Net library.  
+[\*] Fixed some issues with the Sql library.  
+[\*] Log is changed to one file per hour.  
+[\*] Log adds user POST data (excluding file uploads).  
+[\*] Log adds a Net library access error.  
+[\*] PHP 8.0 compatible.
+
 # 6.3.0
 
 [+] New _staticPath, _staticVer variables are added to the template.  

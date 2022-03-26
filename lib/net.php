@@ -34,6 +34,8 @@ use CURLFile;
 use lib\Net\Request;
 use lib\Net\Response;
 
+use function sys\log;
+
 class Net {
 
     /** @var array 连接池 */
@@ -51,7 +53,8 @@ class Net {
         }
         if (isset(self::$_pool[$host . '-' . $local])) {
             return self::$_pool[$host . '-' . $local];
-        } else {
+        }
+        else {
             self::$_pool[$host . '-' . $local] = curl_init();
             return self::$_pool[$host . '-' . $local];
         }
@@ -160,7 +163,8 @@ class Net {
         }
         if ($reuse) {
             $ch = self::getLink($uri['host'] . (isset($uri['port']) ? ':' . $uri['port'] : ''), $local);
-        } else {
+        }
+        else {
             $ch = curl_init();
         }
         // --- DATA ---
@@ -267,7 +271,8 @@ class Net {
                         fwrite($fh, $dat);
                         $total += $len;
                     }
-                } else {
+                }
+                else {
                     $resHeaders .= $dat;
                     $pos = strpos($resHeaders, "\r\n\r\n");
                     if ($pos) {
@@ -301,13 +306,15 @@ class Net {
         // --- 处理返回值 ---
         if ($resHeaders === '') {
             if ($output === false) {
+                log('[' . $u . ']error:' . $res->error . ',errno:' . $res->errno . ',info:' . json_encode($res->info), '-neterror');
                 return $res;
             }
             $sp = strpos($output, "\r\n\r\n");
             $resHeaders = substr($output, 0, $sp);
             $content = substr($output, $sp + 4);
             $res->content = $content;
-        } else {
+        }
+        else {
             $res->content = (string)$total;
         }
         $res->headers = self::_formatHeader($resHeaders, $u);
@@ -360,7 +367,8 @@ class Net {
                     // --- 用户定义的信息 ---
                     $cookieTmp['name'] = $key;
                     $cookieTmp['value'] = urldecode($val);
-                } else {
+                }
+                else {
                     // --- cookie 配置信息，可转小写方便读取 ---
                     $cookieTmp[strtolower($key)] = $val;
                 }
@@ -371,11 +379,13 @@ class Net {
                 if ($cookieTmp['domain'][0] !== '.') {
                     $domain = '.' . $cookieTmp['domain'];
                     $domainN = $cookieTmp['domain'];
-                } else {
+                }
+                else {
                     $domain = $cookieTmp['domain'];
                     $domainN = substr($cookieTmp['domain'], 1);
                 }
-            } else {
+            }
+            else {
                 $domain = '.' . $uri['host'];
                 $domainN = $uri['host'];
             }
@@ -420,7 +430,8 @@ class Net {
             if ($path === '') {
                 $srp = strrpos($uri['path'], '/');
                 $path = substr($uri['path'], 0, $srp + 1);
-            } else if ($path[0] !== '/') {
+            }
+            else if ($path[0] !== '/') {
                 $path = '/' . $path;
             }
             $cookie[$cookieKey] = [
@@ -480,7 +491,8 @@ class Net {
         }
         if ($cookieStr !== '') {
             return substr($cookieStr, 0, -1);
-        } else {
+        }
+        else {
             return '';
         }
     }
@@ -515,7 +527,8 @@ class Net {
                     $h[$k] = [];
                 }
                 $h[$k][] = substr($val, $sp + $spl);
-            } else {
+            }
+            else {
                 $h[$k] = substr($val, $sp + $spl);
             }
         }

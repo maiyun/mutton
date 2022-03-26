@@ -4,6 +4,22 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.sc.md)
 
+# 7.0.0
+
+[+] 新增 Scan 庫，用於掃碼認證。  
+[+] Mod 類新增 sql 語句獲取的相關的方法。  
+[+] Mod 類新增 updateByWhereSql 方法。  
+[+] Ctr 類新增 _displayErrors 方法。  
+[+] Ctr 類新增 rand 產生純數位隨機數的方法。  
+[+] Ctr 類新增 muid 生成方法。  
+[+] Ctr 類的 random 方法新增 block 參數。  
+[+] Net 庫新增 string 數據提交。  
+[\*] 修復 Sql 庫的一些問題。  
+[\*] 日誌記錄變更為以每小時為一個檔。  
+[\*] 日誌記錄新增使用者 POST 數據（不含文件上傳）。  
+[\*] 日誌記錄新增 Net 庫存取錯誤。  
+[\*] 兼容 PHP 8.0。
+
 # 6.3.0
 
 [+] 範本中新增 _staticPath、_staticVer 變數。  
