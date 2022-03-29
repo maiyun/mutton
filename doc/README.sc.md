@@ -1,4 +1,4 @@
-<p align="center"><img src="logo.png" width="260" height="70" alt="Mutton"></p>
+<p align="center"><img src="[2022-03-29]logo.png" width="205" height="70" alt="Mutton"></p>
 
 [![License](https://img.shields.io/github/license/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/blob/master/LICENSE)
 [![GitHub issues](https://img.shields.io/github/issues/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/issues)

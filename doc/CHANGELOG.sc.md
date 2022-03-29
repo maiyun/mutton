@@ -4,6 +4,11 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.0.1
+
+[\*] Mutton 7 正式版发布，启用新的 LOGO，[新LOGO]([2022-03-29]logo.png) / [旧LOGO](logo.png)。  
+[\*] 优化 Session 库。
+
 # 7.0.0
 
 [+] 新增 Scan 库，用于扫码认证。  
