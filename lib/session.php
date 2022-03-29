@@ -31,9 +31,12 @@ namespace lib;
 
 use lib\Kv\IKv;
 use PDO;
+use PDOException;
 use sys\Ctr;
 
-require ETC_PATH.'session.php';
+use function sys\log;
+
+require ETC_PATH . 'session.php';
 
 /*
  * 模式分为：Db, Kv
@@ -71,7 +74,8 @@ class Session {
             if (($a = $ctr->_getAuthorization()) && ($a['user'] === 'token')) {
                 $this->_token = $a['pwd'];
             }
-        } else if (isset($_COOKIE[$this->_name])) {
+        }
+        else if (isset($_COOKIE[$this->_name])) {
             $this->_token = $_COOKIE[$this->_name];
         }
 
@@ -91,10 +95,12 @@ class Session {
                 // --- Kv ---
                 if (($data = $this->_link->getJson($this->_name . '_' . $this->_token)) === null) {
                     $needInsert = true;
-                } else {
+                }
+                else {
                     $_SESSION = $data;
                 }
-            } else {
+            }
+            else {
                 // --- 数据库 ---
                 $this->_sql->select('*', 'session')->where([
                     ['time_update', '>=', $time - $this->_ttl],
@@ -104,12 +110,14 @@ class Session {
                 $ps->execute($this->_sql->getData());
                 if ($data = $ps->fetch(PDO::FETCH_ASSOC)) {
                     $_SESSION = json_decode($data['data'], true);
-                } else {
+                }
+                else {
                     $needInsert = true;
                 }
             }
             $ctr->_session = &$_SESSION;
-        } else {
+        }
+        else {
             // --- 全新的机子 ---
             $needInsert = true;
         }
@@ -122,8 +130,13 @@ class Session {
                 do {
                     $this->_token = $ctr->_random(16, Ctr::RANDOM_LUN);
                 } while (!$this->_link->set($this->_name . '_' . $this->_token, [], $this->_ttl, 'nx'));
-            } else {
-                do {
+            }
+            else {
+                $count = 0;
+                while (true) {
+                    if ($count === 5) {
+                        return false;
+                    }
                     $this->_token = $ctr->_random(16, Ctr::RANDOM_LUN);
                     $this->_sql->insert('session')->values([
                         'token' => $this->_token,
@@ -132,7 +145,17 @@ class Session {
                         'time_add' => $time
                     ]);
                     $ps = $this->_link->prepare($this->_sql->getSql());
-                } while (!$ps->execute($this->_sql->getData()));
+                    ++$count;
+                    try {
+                        $ps->execute($this->_sql->getData());
+                        break;
+                    }
+                    catch (PDOException $e) {
+                        if ($e->errorInfo[0] !== '23000') {
+                            return false;
+                        }
+                    }
+                }
             }
         }
 
@@ -156,9 +179,10 @@ class Session {
      * --- 页面整体结束时，要写入到 Redis 或 数据库 ---
      */
     public function __update(): void {
-        if($this->_link instanceof IKv) {
+        if ($this->_link instanceof IKv) {
             $this->_link->set($this->_name . '_' . $this->_token, $_SESSION, $this->_ttl);
-        } else {
+        }
+        else {
             $this->_sql->update('session', [
                 'data' => json_encode($_SESSION),
                 'time_update' => time()
@@ -166,7 +190,12 @@ class Session {
                 'token' => $this->_token
             ]);
             $ps = $this->_link->prepare($this->_sql->getSql());
-            $ps->execute($this->_sql->getData());
+            try {
+                $ps->execute($this->_sql->getData());
+            }
+            catch (PDOException $e) {
+                log('[Session][__update]' . $e->getMessage(), '-error');
+            }
         }
     }
 
@@ -182,7 +211,12 @@ class Session {
             ['time_update', '<', time() - $this->_ttl]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
-        $ps->execute($this->_sql->getData());
+        try {
+            $ps->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            log('[Session][_gc]' . $e->getMessage(), '-error');
+        }
     }
 
 }

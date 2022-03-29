@@ -3,8 +3,6 @@ declare(strict_types = 1);
 
 namespace mod;
 
-use sys\Ctr;
-
 class Session extends Mod {
 
     protected static $_table = 'session';

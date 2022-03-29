@@ -99,7 +99,7 @@ class Redis implements IKv {
             $val = json_encode($val);
         }
         $opt = [];
-        if($mod != '') {
+        if ($mod != '') {
             $opt[] = $mod;
         }
         if ($ttl > 0) {
