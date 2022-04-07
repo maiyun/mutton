@@ -19,9 +19,15 @@ use sys\Ctr;
 
 class test extends Ctr {
 
+    private $_internalUrl = URL_FULL;
+
     public function _load() {
-        if (HOST !== '127.0.0.1' && HOST !== 'local-test.brc-app.com') {
+        if (HOST !== '127.0.0.1' && HOST !== '172.17.0.1' && HOST !== 'local-test.brc-app.com') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
+        }
+        $realIp = $this->_ip();
+        if ((HOSTNAME === '127.0.0.1' || HOSTNAME === 'localhost') && $realIp === '172.17.0.1') {
+            $this->_internalUrl = 'http' . (HTTPS ? 's' : '') . '://' . $realIp . URL_BASE;
         }
     }
 
@@ -42,6 +48,7 @@ class test extends Ctr {
             '<br><br>URL_BASE: ' . URL_BASE,
             '<br>URL_STC: ' . URL_STC,
             '<br>URL_FULL: ' . URL_FULL,
+            '<br>$_internalUrl: ' . $this->_internalUrl,
 
             '<br><br>headers: ' . htmlspecialchars(json_encode($this->_headers)),
 
@@ -836,8 +843,8 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     public function netPost() {
         $echo = [];
 
-        $res = Net::post(URL_FULL . 'test/netPost1', ['a' => '1', 'b' => '2', 'c' => ['1', '2', '3']]);
-        $echo[] = "<pre>Net::post('" . URL_FULL . "test/netPost1', ['a' => '1', 'b' => '2', 'c' => ['1', '2', '3']]);</pre>
+        $res = Net::post($this->_internalUrl . 'test/netPost1', ['a' => '1', 'b' => '2', 'c' => ['1', '2', '3']]);
+        $echo[] = "<pre>Net::post('" . $this->_internalUrl . "test/netPost1', ['a' => '1', 'b' => '2', 'c' => ['1', '2', '3']]);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
 error: " . json_encode($res->error) . "<br>
@@ -853,8 +860,8 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     public function netPostString() {
         $echo = [];
 
-        $res = Net::post(URL_FULL . 'test/netPostString1', 'HeiHei');
-        $echo[] = "<pre>Net::post('" . URL_FULL . "test/netPostString1', 'HeiHei');</pre>
+        $res = Net::post($this->_internalUrl . 'test/netPostString1', 'HeiHei');
+        $echo[] = "<pre>Net::post('" . $this->_internalUrl . "test/netPostString1', 'HeiHei');</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
 error: " . json_encode($res->error) . "<br>
@@ -870,8 +877,8 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     public function netOpen() {
         $echo = [];
 
-        $res = Net::open(URL_FULL . 'test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();
-        $echo[] = "<pre>Net::open(URL_FULL . 'test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();</pre>
+        $res = Net::open($this->_internalUrl . 'test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();
+        $echo[] = "<pre>Net::open('" . $this->_internalUrl . "test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>";
 
@@ -909,7 +916,7 @@ CODE;
     public function netUpload() {
         $echo = [];
 
-        $res = Net::post(URL_FULL . 'test/net-upload1', [
+        $res = Net::post($this->_internalUrl . 'test/net-upload1', [
             'a' => '1',
             'file' => curl_file_create(LIB_PATH . 'Net/cacert.pem'),
             'multiple' => [
@@ -917,7 +924,7 @@ CODE;
                 curl_file_create(LIB_PATH . 'Net/cacert.pem')
             ]
         ]);
-        $echo[] = "<pre>Net::post('" . URL_FULL . "test/net-upload1', [
+        $echo[] = "<pre>Net::post('" . $this->_internalUrl . "test/net-upload1', [
     'a' => '1',
     'file' => curl_file_create(LIB_PATH . 'Net/cacert.pem'),
     'multiple' => [
@@ -942,15 +949,15 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $echo = [];
 
         $cookie = [];
-        $res = Net::get(URL_FULL.'test/net-cookie1', [], $cookie);
+        $res = Net::get($this->_internalUrl . 'test/net-cookie1', [], $cookie);
         $echo[] = "<pre>\$cookie = [];
-Net::get('".URL_FULL."test/net-cookie1', [], \$cookie);</pre>
+Net::get('" . $this->_internalUrl . "test/net-cookie1', [], \$cookie);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
 cookie: <pre>" . json_encode($cookie, JSON_PRETTY_PRINT) . "</pre><hr>";
 
-        $res = Net::get(URL_FULL.'test/net-cookie2', [], $cookie);
-        $echo[] = "<pre>Net::get('".URL_FULL."test/net-cookie2', [], \$cookie);</pre>
+        $res = Net::get($this->_internalUrl . 'test/net-cookie2', [], $cookie);
+        $echo[] = "<pre>Net::get('" . $this->_internalUrl . "test/net-cookie2', [], \$cookie);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>";
 
@@ -1003,13 +1010,13 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     public function netFollow() {
         $echo = [];
 
-        $res = Net::post(URL_FULL . 'test/net-follow1', [
+        $res = Net::post($this->_internalUrl . 'test/net-follow1', [
             'a' => '1',
             'b' => '2'
         ], [
             'follow' => 5
         ]);
-        $echo[] = "<pre>Net::post('" . URL_FULL . "test/net-follow1', [
+        $echo[] = "<pre>Net::post('" . $this->_internalUrl . "test/net-follow1', [
     'a' => '1',
     'b' => '2
 ], [
