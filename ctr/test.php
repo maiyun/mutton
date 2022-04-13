@@ -221,7 +221,7 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
             $echo[] = "<input type=\"button\" value=\"Post '" . $p . "'\" onclick=\"post('" . $p . "')\"><br>";
         }
 
-        $echo[] = "<input type=\"button\" value=\"Post FormData'\" onclick=\"postFd()\"><br>";
+        $echo[] = "<input type=\"button\" value=\"Post FormData (fd.append('he', 'ho'))\" onclick=\"postFd()\"><br>";
 
         $echo[] = "<script>
 function post(p) {
