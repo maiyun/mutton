@@ -143,7 +143,7 @@ class Ctr {
                 else {
                     switch ($v) {
                         case 'require': {
-                            if ($input[$key] === null) {
+                            if ($input[$key] === null || $input[$key] === '') {
                                 $rtn = $val[$lastK];
                                 return false;
                             }
