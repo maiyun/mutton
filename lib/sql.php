@@ -526,11 +526,17 @@ class LSql {
         $sql = ' ORDER BY ';
         if (is_string($c)) {
             $sql .= $this->field($c) . ' ' . $d;
-        } else {
-            foreach ($c as $k => $v) {
-                $sql .= $this->field($v) . ', ';
+        }
+        else {
+            foreach ($c as $v) {
+                if (is_string($v)) {
+                    $sql .= $this->field($v) . ' ' . $d . ', ';
+                }
+                else {
+                    $sql .= $this->field($v[0]) . ' ' . $v[1] . ', ';
+                }
             }
-            $sql = substr($sql, 0, -2) . ' ' . $d;
+            $sql = substr($sql, 0, -2);
         }
         $this->_sql[] = $sql;
         return $this;

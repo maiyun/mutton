@@ -131,6 +131,7 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/sql?type=delete">View "test/sql?type=delete"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=where">View "test/sql?type=where"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=having">View "test/sql?type=having"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=by">View "test/sql?type=by"</a>',
 
             '<br><br><b>Text:</b>',
             '<br><br><a href="' . URL_BASE . 'test/text">View "test/text"</a>'
@@ -1503,6 +1504,29 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
+                break;
+            }
+            case 'by': {
+                $s = $sql->select('*', 'test')->by('id')->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select('*', 'test')->by('id');</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+
+                $s = $sql->select('*', 'test')->by(['index', 'id'])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select('*', 'test')->by(['index', 'id']);</pre>
+                <b>getSql() :</b> {$s}<br>
+                <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+                <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+
+                $s = $sql->select('*', 'test')->by(['index', ['id', 'ASC']], 'DESC')->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select('*', 'test')->by(['index', ['id', 'ASC']], 'DESC');</pre>
+                <b>getSql() :</b> {$s}<br>
+                <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+                <b>format() :</b> " . $sql->format($s, $sd);
                 break;
             }
         }
