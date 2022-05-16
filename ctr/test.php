@@ -132,6 +132,7 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/sql?type=where">View "test/sql?type=where"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=having">View "test/sql?type=having"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=by">View "test/sql?type=by"</a>',
+            '<br><a href="' . URL_BASE . 'test/sql?type=field">View "test/sql?type=field"</a>',
 
             '<br><br><b>Text:</b>',
             '<br><br><a href="' . URL_BASE . 'test/text">View "test/text"</a>'
@@ -1390,14 +1391,21 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $echo[] = "<pre>\$sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => '#user.id', 'state' => '1'])</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
-<b>format() :</b> " . $sql->format($s, $sd);
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 $s = $sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1'])</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
-<b>format() :</b> " . $sql->format($s, $sd);
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+
+                $s = $sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])</pre>
+                <b>getSql() :</b> {$s}<br>
+                <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+                <b>format() :</b> " . $sql->format($s, $sd);
                 break;
             }
             case 'update': {
@@ -1527,6 +1535,20 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 <b>getSql() :</b> {$s}<br>
                 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
                 <b>format() :</b> " . $sql->format($s, $sd);
+                break;
+            }
+            case 'field': {
+                $echo[] = "<pre>\$sql->field('abc');</pre>" . $sql->field('abc');
+                $echo[] = "<pre>\$sql->field('abc', 'a_');</pre>" . $sql->field('abc', 'a_');
+                $echo[] = "<pre>\$sql->field('x.abc');</pre>" . $sql->field('x.abc');
+                $echo[] = "<pre>\$sql->field('def f');</pre>" . $sql->field('def f');
+                $echo[] = "<pre>\$sql->field('def `f`', 'a_');</pre>" . $sql->field('def `f`', 'a_');
+                $echo[] = "<pre>\$sql->field('x.def f');</pre>" . $sql->field('x.def f');
+                $echo[] = "<pre>\$sql->field('x.def as f');</pre>" . $sql->field('x.def as f');
+                $echo[] = "<pre>\$sql->field('SUM(num) all');</pre>" . $sql->field('SUM(num) all');
+                $echo[] = "<pre>\$sql->field('SUM(x.num) all');</pre>" . $sql->field('SUM(x.num) all');
+                $echo[] = "<pre>\$sql->field('FROM_UNIXTIME(time, \'%Y-%m-%d\') time');</pre>" . $sql->field('FROM_UNIXTIME(time, \'%Y-%m-%d\') time');
+                $echo[] = "<pre>\$sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))) )');</pre>" . $sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))) )');
                 break;
             }
         }

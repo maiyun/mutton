@@ -637,44 +637,52 @@ class LSql {
      * @return string
      */
     public function field(string $str, string $pre = ''): string {
-        $str = trim($str);
-        $str = preg_replace('/ {2,}/', ' ', $str);
-        if (preg_match('/^[a-zA-Z0-9*`_ .-]+?$/', $str)) {
-            $loStr = strtolower($str);
-            $asPos = strpos($loStr, ' as ');
-            // $left = '';
-            $right = '';
-            if ($asPos !== false) {
-                // --- xx as xx ---
-                $left = substr($str, 0, $asPos);
-                if ($left[0] === '`') {
-                    $left = str_replace('`', '', $left);
-                }
-                $right = substr($str, $asPos + 4);
-                if ($right[0] !== '`') {
-                    $right = '`' . $pre . $right . '`';
+        $str = trim($str);                          // --- 去除前导尾随 ---
+        $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
+        $str = preg_replace('/ +([),])/', '$1', $str);
+        $str = preg_replace('/([(,]) +/', '$1', $str);
+        // --- 先判断有没有别名（也就是 as） ---
+        $loStr = strtolower($str);
+        $asPos = strpos($loStr, ' as ');
+        if ($asPos === false) {
+            $spacePos = strrpos($str, ' ');
+            if ($spacePos !== false) {
+                $spaceRight = substr($str, $spacePos + 1);
+                if (preg_match('/^[a-zA-Z_`][\w`]*$/', $spaceRight)) {
+                    // --- OK ---
+                    $left = substr($str, 0, $spacePos);
+                    $right = $spaceRight;
                 }
                 else {
-                    $right = $pre . $right;
+                    $left = $str;
+                    $right = '';
                 }
-                $right = ' AS ' . $right;
             }
             else {
-                // --- xx xx ---
-                $l = explode(' ', $str);
-                $left = $l[0];
-                if (isset($l[1])) {
-                    if ($l[1][0] !== '`') {
-                        $l[1] = '`' . $pre . $l[1] . '`';
-                    } else {
-                        $l[1] = $pre . $l[1];
-                    }
-                    $right = ' AS ' . $l[1];
-                }
+                $left = $str;
+                $right = '';
             }
+        }
+        else {
+            // --- 有 as ---
+            $left = substr($str, 0, $asPos);
+            $right = substr($str, $asPos + 4);
+        }
+        if ($right !== '') {
+            // --- 处理右侧 ---
+            if ($right[0] === '`') {
+                $right = '`' . $pre . substr($right, 1);
+            }
+            else {
+                $right = '`' . $pre . $right . '`';
+            }
+            $right = ' AS ' . $right;
+        }
+        // --- 处理 left ---
+        if (preg_match('/^[\w`_.*]+$/', $left)) {
             $l = explode('.', $left);
             if ($l[0] === '*') {
-                return '*';
+                return '*' . $right;
             }
             if ($l[0][0] === '`') {
                 $l[0] = str_replace('`', '', $l[0]);
@@ -688,7 +696,9 @@ class LSql {
             return '`' . $this->_pre . $l[0] . '`.' . $w . $right;
         }
         else {
-            return $str;
+            return preg_replace_callback('/([(,])([a-zA-Z`_][\w`_.]*)([),])/', function ($matches) use ($pre) {
+                return $matches[1] . $this->field($matches[2], $pre) . $matches[3];
+            }, $left) . $right;
         }
     }
 
@@ -711,17 +721,20 @@ class LSql {
             if ($str[1] === '#') {
                 // --- 不是 field ---
                 return [false, substr($str, 1)];
-            } else {
+            }
+            else {
                 // --- 是 field ---
                 $data = [];
                 $str = substr($str, 1);
                 $str = preg_replace_callback('/{##{([\\S\\s]+?)}##}/', function ($matches) use (&$data) {
+                    // --- 表达式当中的 data 值，如 'type' => '#(CASE `id` WHEN 1 THEN ' . data('val1') . ' WHEN 2 THEN ' . data('val2') . ' END)' ---
                     $data[] = $matches[1];
                     return '?';
                 }, $str);
                 return [true, $str, $data];
             }
-        } else {
+        }
+        else {
             // --- 肯定不是 field ---
             return [false, $str];
         }
