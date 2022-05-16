@@ -4,6 +4,11 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.0.2 
+
+[\*] Optimize the by and field methods of the Sql library.  
+[\*] Optimizes the _checkInput method of the Ctr class.
+
 # 7.0.1
 
 [\*] The official version of Mutton 7 is released, enabling the new LOGO, [new LOGO]([2022-03-29]logo.png) / [old LOGO](logo.png).  

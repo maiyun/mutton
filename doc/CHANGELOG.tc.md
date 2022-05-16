@@ -4,6 +4,11 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.sc.md)
 
+# 7.0.2 
+
+[\*] 優化 Sql 庫的 by 和 field 方法。  
+[\*] 優化 Ctr 類的 _checkInput 方法。
+
 # 7.0.1
 
 [\*] Mutton 7 正式版發佈，啟用新的 LOGO，[新LOGO]([2022-03-29]logo.png) / [舊LOGO](logo.png)。  
