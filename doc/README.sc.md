@@ -13,7 +13,7 @@
 
 ## 环境
 
-PHP 7.3+  
+PHP 8.0+  
 Nginx/Apache
 
 ## 安装
@@ -122,9 +122,9 @@ $user = User::select(['id', 'user'])->filter([
 
 使用 checkXInput 方法，可以进行 XSRF 检测，防止恶意访问。
 
-### 中国大陆库支持
+### 扫码登录
 
-完整封装了微信支付、微信登录、阿里云 OSS、腾讯云 COS、支付宝等中国大陆公司的服务支持。（因内核框架更新升级，这些库还未来得及更新，暂时移除，将很快进行更新）
+借助 Scan 库可以轻松实现扫码登录的功能。
 
 #### 还有更多特性等你探索
 
@@ -154,9 +154,47 @@ $userList = User::where([
 
 提示：所有数据库操作都已经做了安全防注入处理。
 
+### Sql 库自动增加表前缀和包裹字符“`”
+
+```php
+$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])
+```
+
+将输出：
+
+```sql
+SELECT SUM(`test_user`.`age`) AS `age` FROM `test_order` LEFT JOIN `test_user` ON `test_order`.`user_id` = `test_user`.`id`
+```
+
+写起来好轻松！
+
+### 本地化
+
+```php
+$this->_loadLocale($_GET['lang'], 'test');
+echo l('copy');
+```
+
+根据 lang 值不同，将输出：Copy、复制、複製、コピー等，在目录 /data/locale/ 中配置。
+
+### 数据校验
+
+根据字符串、数字、比对大小甚至是正则，对提交的数据进行直接校验，方便！
+
+```php
+[
+    'he' => ['require', [0, 'The he param does not exist.']],
+    'num' => ['> 10', [0, 'The num param must > 10.']],
+    'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
+    'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+]
+```
+
+参见：/test/ctr-checkinput
+
 ## 其他示例
 
-你可以访问 ctr/test.php 来查看更多示例。
+你可以访问 /test/ 来查看更多示例。
 
 ## 更新日志
 
@@ -165,10 +203,6 @@ $userList = User::where([
 ## 许可
 
 基于 [Apache-2.0](../LICENSE) 许可。
-
-## 名称含义
-
-羊肉他不香吗？
 
 ## 参与翻译
 

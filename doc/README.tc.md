@@ -13,7 +13,7 @@
 
 ## 環境
 
-PHP 7.3+  
+PHP 8.0+  
 Nginx/Apache
 
 ## 安裝
@@ -55,7 +55,6 @@ $res = Net::open('https://xxx/test')->post()->data(['a' => '1', 'b' => '2'])->re
 ```php
 $res = Net::get('https://xxx/test');
 ```
-
 
 可以設置自訂的解析結果：
 
@@ -123,9 +122,9 @@ $user = User::select(['id', 'user'])->filter([
 
 使用 checkXInput 方法，可以進行 XSRF 檢測，防止惡意訪問。
 
-### 中國大陸庫支援
+### 扫码登录
 
-完整封裝了微信支付、微信登錄、阿裡雲 OSS、騰訊雲 COS、支付寶等中國大陸公司的服務支援。（因內核框架更新升級，這些庫還未來得及更新，暫時移除，將很快進行更新）
+借助 Scan 庫可以輕鬆實現掃碼登入的功能。
 
 #### 還有更多特性等你探索
 
@@ -155,9 +154,47 @@ $userList = User::where([
 
 提示：所有資料庫操作都已經做了安全防注入處理。
 
+### Sql 庫自動增加表前綴和包裹字元「`」”
+
+```php
+$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])
+```
+
+將輸出：
+
+```sql
+SELECT SUM(`test_user`.`age`) AS `age` FROM `test_order` LEFT JOIN `test_user` ON `test_order`.`user_id` = `test_user`.`id`
+```
+
+寫起來好輕鬆！
+
+### 本地化
+
+```php
+$this->_loadLocale($_GET['lang'], 'test');
+echo l('copy');
+```
+
+根據 lang 值不同，將輸出：Copy、复制、複製、コピー等，在目錄 /data/locale/ 中配置。
+
+### 數據校驗
+
+根據字串、數位、比對大小甚至是正則，對提交的數據進行直接校驗，方便！
+
+```php
+[
+    'he' => ['require', [0, 'The he param does not exist.']],
+    'num' => ['> 10', [0, 'The num param must > 10.']],
+    'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
+    'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+]
+```
+
+參見：/test/ctr-checkinput
+
 ## 其他示例
 
-你可以訪問 ctr/test.php 來查看更多示例。
+你可以訪問 /test/ 來查看更多示例。
 
 ## 更新日誌
 
@@ -166,10 +203,6 @@ $userList = User::where([
 ## 許可
 
 基於 [Apache-2.0](../LICENSE) 許可。
-
-## 名稱含義
-
-作者愛吃羊 XD。
 
 ## 參與翻譯
 

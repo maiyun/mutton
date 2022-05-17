@@ -122,15 +122,15 @@ $user = User::select(['id', 'user'])->filter([
 
 The checkXInput method enables XSRF detection to prevent malicious access.
 
-### Mainland China library support
+### Scan the QRCode to log in
 
-For WeChat payment, WeChat login, Alibaba Cloud OSS, Tencent Cloud COS, Alipay payment has been completed package.(Due to the kernel framework update upgrade, these libraries have not yet been updated, temporarily removed, will be updated soon)
+The Scan library makes it easy to implement the ability to scan QRCode to log in.
 
 #### And more...
 
 ## Demonstrate
 
-### Generate 16-bit random numbers
+### Generate random numbers
 
 ```php
 $str = $this->_random(16, Ctr::RANDOM_N);
@@ -154,9 +154,47 @@ $userList = User::where([
 
 Note: All database operations are secure in this framework.
 
+### The Sql library automatically adds table prefixes and wrapped characters '`'
+
+```php
+$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])
+```
+
+Output:
+
+```sql
+SELECT SUM(`test_user`.`age`) AS `age` FROM `test_order` LEFT JOIN `test_user` ON `test_order`.`user_id` = `test_user`.`id`
+```
+
+Cool!
+
+### Localization
+
+```php
+$this->_loadLocale($_GET['lang'], 'test');
+echo l('copy');
+```
+
+Depending on the lang value, the output: Copy、复制、複製、コピー, etc., is configured in the directory /data/locale/.
+
+### Data validation
+
+Based on strings, numbers, alignment sizes, and even regularities, the submitted data is directly validated, convenient!
+
+```php
+[
+    'he' => ['require', [0, 'The he param does not exist.']],
+    'num' => ['> 10', [0, 'The num param must > 10.']],
+    'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
+    'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+]
+```
+
+See: /test/ctr-checkinput
+
 ## Other demos
 
-You can download and view the home Code (ctr/test.php) to see more examples.
+You can visit /test/ to see more examples.
 
 ## Changelog
 
@@ -166,13 +204,9 @@ You can download and view the home Code (ctr/test.php) to see more examples.
 
 This library is published under [Apache-2.0](./LICENSE) license.
 
-## Name meaning
+## Join the translation team
 
-Sheep are so cute.
+If you speak multiple languages, join the translation team:
 
-## 参与翻译
-
-我们工作基于中文语言环境，若对本项目感兴趣并对除中文简体、中文繁体之外语种熟悉的朋友，欢迎一起参与翻译工作，感兴趣的朋友可以加入以下群组。
-
-Telegram 群：[https://t.me/maiyunlocale](https://t.me/maiyunlocale)  
-QQ 群：24158113
+Telegram team: [https://t.me/maiyunlocale](https://t.me/maiyunlocale)  
+QQ team: 24158113
