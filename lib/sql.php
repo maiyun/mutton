@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17
  */
 declare(strict_types = 1);
 
@@ -34,7 +34,8 @@ class Sql {
             ++$i;
             if (isset($data[$i])) {
                 return self::quote($data[$i]);
-            } else {
+            }
+            else {
                 return '\'\'';
             }
         }, $sql);
@@ -71,23 +72,6 @@ class Sql {
             }
         }
         return "'" . join('', $rStr) . "'";
-    }
-
-    /**
-     * --- 包裹一些数据用来组合 SQL  ---
-     * @param string|int|float|array $val 包裹的数据
-     * @return string
-     */
-    public static function data($val): string {
-        if (is_array($val)) {
-            $sql = [];
-            foreach ($val as $v) {
-                $sql[] = '{##{' . $v . '}##}';
-            }
-            return join(', ', $sql);
-        } else {
-            return '{##{' . $val . '}##}';
-        }
     }
 
 }
@@ -136,7 +120,7 @@ class LSql {
      */
     public function replace(string $table): LSql {
         $this->_data = [];
-        $sql = 'REPLACE' . ' INTO ' . $this->field($table, $this->_pre);
+        $sql = 'REPLACE INTO ' . $this->field($table, $this->_pre);
         $this->_sql = [$sql];
         return $this;
     }
@@ -149,7 +133,7 @@ class LSql {
      */
     public function values(array $cs, array $vs = []): LSql {
         $sql = ' (';
-        if (count($vs) > 0) {
+        if (isset($cs[0])) {
             // --- ['id', 'name'], [['1', 'wow'], ['2', 'oh']] ---
             // --- ['id', 'name'], ['1', 'wow'] ---
             foreach ($cs as $i) {
@@ -170,7 +154,8 @@ class LSql {
                 $sql = substr($sql, 0, -2) . '), ';
             }
             $sql = substr($sql, 0, -2);
-        } else {
+        }
+        else {
             // --- ['id' => '1', 'name' => 'wow'] ---
             // --- INSERT INTO xx (id, name) VALUES (?, ?) ---
             $values = '';
@@ -264,7 +249,7 @@ class LSql {
      */
     public function update(string $f, array $s): LSql {
         $this->_data = [];
-        $sql = 'UPDATE ' . $this->field($f, $this->_pre) . ' SET '.$this->_updateSub($s);
+        $sql = 'UPDATE ' . $this->field($f, $this->_pre) . ' SET ' . $this->_updateSub($s);
         $this->_sql = [$sql];
         return $this;
     }
@@ -273,34 +258,45 @@ class LSql {
         [
             ['total', '+', '1'],        // 1, '1' 可能也是 1 数字类型
             'type' => '6',              // 2
-            'type' => '#(CASE `id` WHEN 1 THEN ' . data('val1') . ' WHEN 2 THEN ' . data('val2') . ' END)'      // 3
+            'type' => '#type2'          // 3
+            'type' => ['type3']         // 4
+            'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']]     // 5
         ]
         */
         $sql = '';
         foreach ($s as $k => $v) {
-            if (is_array($v)) {
+            if (is_int($k) || is_numeric($k)) {
                 // --- 1 ---
                 $isf = $this->_isField($v[2]);
                 if ($isf[0]) {
                     $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($isf[1]) . ', ';
-                    if (count($isf[2]) > 0) {
-                        $this->_data = array_merge($this->_data, $isf[2]);
-                    }
-                } else {
+                }
+                else {
                     $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ?, ';
                     $this->_data[] = $isf[1];
                 }
-            } else {
-                // --- 2, 3 ---
-                $isf = $this->_isField($v);
-                if ($isf[0]) {
-                    $sql .= $this->field($k) . ' = ' . $this->field($isf[1]) . ', ';
-                    if (count($isf[2]) > 0) {
-                        $this->_data = array_merge($this->_data, $isf[2]);
+            }
+            else {
+                // --- 2, 3, 4, 5 ---
+                if (!is_string($v)) {
+                    // --- 4, 5 ---
+                    $sql .= $this->field($k) . ' = ' . $this->field($v[0]) . ', ';
+                    if (isset($v[1]) && is_array($v[1])) {
+                        // --- 5 ---
+                        $this->_data = array_merge($this->_data, $v[1]);
                     }
-                } else {
-                    $sql .= $this->field($k) . ' = ?, ';
-                    $this->_data[] = $isf[1];
+                }
+                else {
+                    // --- 2, 3 ---
+                    $isf = $this->_isField($v);
+                    if ($isf[0]) {
+                        // --- field ---
+                        $sql .= $this->field($k) . ' = ' . $this->field($isf[1]) . ', ';
+                    }
+                    else {
+                        $sql .= $this->field($k) . ' = ?, ';
+                        $this->_data[] = $isf[1];
+                    }
                 }
             }
         }
@@ -315,7 +311,7 @@ class LSql {
      */
     public function delete(string $f): LSql {
         $this->_data = [];
-        $this->_sql = ['DELETE ' . 'FROM ' . $this->field($f, $this->_pre)];
+        $this->_sql = ['DELETE FROM ' . $this->field($f, $this->_pre)];
         return $this;
     }
 
@@ -394,7 +390,8 @@ class LSql {
             if ($s !== '') {
                 $this->_sql[] = ' HAVING ' . $s;
             }
-        } else {
+        }
+        else {
             // --- array ---
             if (count($s) > 0) {
                 $whereSub = $this->_whereSub($s);
@@ -408,12 +405,12 @@ class LSql {
 
     /**
      * --- 筛选器 ---
-     * --- 1. ['city' => 'bj', 'type' => '2'] ---
-     * --- 2. ['city' => 'bj', ['type', '>', '1']] ---
-     * --- 3. ['city' => 'bj', ['type', 'in', ['1', '2']]] ---
-     * --- 4. ['city' => 'bj', 'type' => ['1', '2']] ---
-     * --- 5. ['$or' => [['city' => 'bj'], ['city' => 'sh']], 'type' => '2'] ---
-     * --- 6. ['city_in' => '#city_out'] ---
+     * --- 1. 'city' => 'bj', 'type' => '2' ---
+     * --- 2. ['type', '>', '1'] ---
+     * --- 3. ['type', 'in', ['1', '2']] ---
+     * --- 4. 'type' => ['1', '2'] ---
+     * --- 5. '$or' => [['city' => 'bj'], ['city' => 'sh'], [['age', '>', '10']]], 'type' => '2' ---
+     * --- 6. 'city_in' => '#city_out' ---
      * @param array|string $s 筛选数据
      * @return LSql
      */
@@ -423,7 +420,8 @@ class LSql {
             if ($s !== '') {
                 $this->_sql[] = ' WHERE ' . $s;
             }
-        } else {
+        }
+        else {
             // --- array ---
             if (count($s) > 0) {
                 $whereSub = $this->_whereSub($s);
@@ -434,32 +432,67 @@ class LSql {
         }
         return $this;
     }
+
     private function _whereSub(array $s): string {
         $sql = '';
         foreach ($s as $k => $v) {
-            if (is_array($v)) {
-                // --- 2, 3, 4, 5 ---
-                if (is_string($k)) {
-                    if ($k[0] === '$') {
-                        // --- 5 - '$or' => [['city' => 'bj'], ['city' => 'sh']] ---
-                        $sp = ' ' . strtoupper(substr($k, 1)) . ' ';
-                        $sql .= '(';
-                        foreach ($v as $v1) {
-                            // --- v1 是 ['city' => 'bj'] ---
-                            if (isset($v1[1]) && is_string($v1[1])) {
-                                // --- v1 可能是 ['age', '>', '5'] ---
-                                $sql .= $this->_whereSub([$v1]) . $sp;
-                            }
-                            else {
-                                if (count($v1) > 1) {
-                                    $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
-                                } else {
-                                    $sql .= $this->_whereSub($v1) . $sp;
-                                }
-                            }
+            if (is_int($k) || is_numeric($k)) {
+                // --- 2, 3 ---
+                if (is_array($v[2])) {
+                    // --- 3 ---
+                    $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
+                    foreach ($v[2] as $k1 => $v1) {
+                        $sql .= '?, ';
+                        $this->_data[] = $v1;
+                    }
+                    $sql = substr($sql, 0, -2) . ') AND ';
+                }
+                else {
+                    // --- 2 ---
+                    $isf = $this->_isField($v[2]);
+                    if ($isf[0]) {
+                        // --- field ---
+                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($isf[1])  . ' AND ';
+                    }
+                    else {
+                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
+                        $this->_data[] = $v[2];
+                    }
+                }
+            }
+            else {
+                // --- 1, 4, 5, 6 ---
+                if ($k[0] === '$') {
+                    // --- 5 - '$or' => [['city' => 'bj'], ['city' => 'sh']] ---
+                    $sp = ' ' . strtoupper(substr($k, 1)) . ' ';
+                    $sql .= '(';
+                    foreach ($v as $v1) {
+                        // --- v1 是 ['city' => 'bj'] ---
+                        if (count($v1) > 1) {
+                            $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
                         }
-                        $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
-                    } else {
+                        else {
+                            $sql .= $this->_whereSub($v1) . $sp;
+                        }
+                    }
+                    $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
+                }
+                else {
+                    // --- 1, 4, 6 ---
+                    if (is_string($v)) {
+                        // --- 1, 6 ---
+                        // --- 'city' => 'bj', 'city_in' => '#city_out' ---
+                        $isf = $this->_isField($v);
+                        if ($isf[0]) {
+                            // --- 6 ---
+                            $sql .= $this->field($k) . ' = ' . $this->field($isf[1]) . ' AND ';
+                        }
+                        else {
+                            $sql .= $this->field($k) . ' = ? AND ';
+                            $this->_data[] = $isf[1];
+                        }
+                    }
+                    else {
                         // --- 4 - 'type' => ['1', '2'] ---
                         if (count($v) > 0) {
                             $sql .= $this->field($k) . ' IN (';
@@ -474,40 +507,6 @@ class LSql {
                         }
                     }
                 }
-                else if (isset($v[2]) && is_array($v[2])) {
-                    // --- 3 ---
-                    $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
-                    foreach ($v[2] as $k1 => $v1) {
-                        $sql .= '?, ';
-                        $this->_data[] = $v1;
-                    }
-                    $sql = substr($sql, 0, -2) . ') AND ';
-                }
-                else {
-                    // --- 2 ---
-                    $isf = $this->_isField($v[2]);
-                    if ($isf[0]) {
-                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($isf[1])  . ' AND ';
-                        if (count($isf[2]) > 0) {
-                            $this->_data = array_merge($this->_data, $isf[2]);
-                        }
-                    } else {
-                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
-                        $this->_data[] = $v[2];
-                    }
-                }
-            } else {
-                // --- 1 - 'type' => '2', 'city_in' => '#city_out' ---
-                $isf = $this->_isField($v);
-                if ($isf[0]) {
-                    $sql .= $this->field($k) . ' = ' . $this->field($isf[1]) . ' AND ';
-                    if (count($isf[2]) > 0) {
-                        $this->_data = array_merge($this->_data, $isf[2]);
-                    }
-                } else {
-                    $sql .= $this->field($k) . ' = ? AND ';
-                    $this->_data[] = $isf[1];
-                }
             }
         }
         if ($sql === '') {
@@ -518,7 +517,7 @@ class LSql {
 
     /**
      * --- ORDER BY ---
-     * @param string|string[] $c 字段字符串或数组
+     * @param string|string[]|string[][] $c 字段字符串或数组
      * @param string $d 排序规则
      * @return LSql
      */
@@ -551,7 +550,8 @@ class LSql {
         $sql = ' GROUP BY ';
         if (is_string($c)) {
             $sql .= $this->field($c);
-        } else {
+        }
+        else {
             foreach ($c as $k => $v) {
                 $sql .= $this->field($v) . ', ';
             }
@@ -622,15 +622,6 @@ class LSql {
     }
 
     /**
-     * --- 包裹一些数据用来组合 SQL  ---
-     * @param string|int|float|array $val
-     * @return string
-     */
-    public function data($val): string {
-        return Sql::data($val);
-    }
-
-    /**
      * --- 对字段进行包裹 ---
      * @param string $str
      * @param string $pre 表前缀，仅请在 field 表名时倒入前缀
@@ -639,8 +630,8 @@ class LSql {
     public function field(string $str, string $pre = ''): string {
         $str = trim($str);                          // --- 去除前导尾随 ---
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
-        $str = preg_replace('/ +([),])/', '$1', $str);
-        $str = preg_replace('/([(,]) +/', '$1', $str);
+        $str = preg_replace('/ +([),])/', ' $1', $str);
+        $str = preg_replace('/([(,]) +/', '$1 ', $str);
         // --- 先判断有没有别名（也就是 as） ---
         $loStr = strtolower($str);
         $asPos = strpos($loStr, ' as ');
@@ -692,7 +683,7 @@ class LSql {
                 return '`' . $pre . $l[0] . '`' . $right;
             }
             // --- x.xxx ---
-            $w = $l[1] === '*' ? '*' : '`' . $l[1] . '`';
+            $w = $l[1] === '*' ? '*' : ($l[1][0] === '`' ? $l[1] : ('`' . $l[1] . '`'));
             return '`' . $this->_pre . $l[0] . '`.' . $w . $right;
         }
         else {
@@ -703,35 +694,20 @@ class LSql {
     }
 
     /**
-     * --- 转义包裹字符串防注入静态方法 ---
-     * @param $str
-     * @return string
-     */
-    public function quote($str): string {
-        return Sql::quote($str);
-    }
-
-    /**
      * --- 判断用户输入值是否是 field 还是普通字符串 ---
      * @param string|int|float $str
      * @return array
      */
     private function _isField($str): array {
-        if (is_string($str) && isset($str[0]) && $str[0] === '#' && isset($str[1])) {
+        if (is_string($str) && isset($str[0]) && ($str[0] === '#') && isset($str[1])) {
             if ($str[1] === '#') {
                 // --- 不是 field ---
                 return [false, substr($str, 1)];
             }
             else {
                 // --- 是 field ---
-                $data = [];
                 $str = substr($str, 1);
-                $str = preg_replace_callback('/{##{([\\S\\s]+?)}##}/', function ($matches) use (&$data) {
-                    // --- 表达式当中的 data 值，如 'type' => '#(CASE `id` WHEN 1 THEN ' . data('val1') . ' WHEN 2 THEN ' . data('val2') . ' END)' ---
-                    $data[] = $matches[1];
-                    return '?';
-                }, $str);
-                return [true, $str, $data];
+                return [true, $str];
             }
         }
         else {

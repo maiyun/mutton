@@ -46,7 +46,8 @@ class Mod {
 
     /* @var Db $__db 设置映射静态数据库对象 */
     protected static $__db = null;
-    /** @var string|null Mutton 独有，设置 Sql 库的 pre 配置 */
+
+    /** @var string|null --- 设置 Sql 库的 pre 配置 --- */
     protected static $__pre = null;
 
     // --- Mutton PHP 框架配置项 [ 结束 ] ---
@@ -251,7 +252,7 @@ class Mod {
         }
     }
 
-     /**
+    /**
      * --- 根据条件更新数据（仅获取 SQL 对象） ---
      * @param array $data 要更新的数据
      * @param array|string $where 筛选条件

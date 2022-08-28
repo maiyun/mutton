@@ -136,7 +136,7 @@ class Net {
      * --- 发起请求 ---
      * @param string $u 提交的 url
      * @param array|string|null $data 提交的 data 数据
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, reuse
      * @param array|null $cookie
      * @return Response
      */

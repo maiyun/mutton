@@ -251,7 +251,7 @@ class RedisSimulator implements IKv {
             'time_add' => time(),
             'time_exp' => 4294967295
         ])->duplicate([
-            'value' => '#CONCAT(`value`, ' . Sql::data($val) . ')'
+            'value' => ['CONCAT(`value`, ?)', [$val]]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -277,7 +277,7 @@ class RedisSimulator implements IKv {
         $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->update($this->_table, [
-            'value' => '#CONCAT(' . Sql::data($val) . ', `value`)'
+            'value' => ['CONCAT(?, `value`)', [$val]]
         ])->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
             ['time_exp', '>=', time()]
@@ -523,7 +523,7 @@ class RedisSimulator implements IKv {
             'time_add' => $time,
             'time_exp' => 4294967295
         ])->duplicate([
-            'value' => '#IF(`value` REGEXP ' . Sql::data('^-?\\d+\\.?\\d*$') . ', `value` ' . $op . ' ' . $value . ', `value`)'
+            'value' => ['#IF(`value` REGEXP ?, `value` ' . $op . ' ' . $value . ', `value`)', ['^-?\\d+\\.?\\d*$']]
         ]);
 
         $ps = $this->_link->prepare($this->_sql->getSql());

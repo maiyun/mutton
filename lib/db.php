@@ -70,15 +70,6 @@ class Db {
     }
 
     /**
-     * --- 转义 ---
-     * @param string $str
-     * @return string
-     */
-    public function quote(string $str): string {
-        return $this->_link->quote($str);
-    }
-
-    /**
      * --- 执行一个 query，有返回列表 ---
      * @param string $sql
      * @return false|PDOStatement

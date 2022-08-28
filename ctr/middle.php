@@ -7,7 +7,7 @@ use sys\Ctr;
 
 class middle extends Ctr {
 
-    public function _load() {
+    public function onLoad() {
         if (PATH !== 'test/middle') {
             return true;
         }

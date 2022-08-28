@@ -71,11 +71,11 @@ class Session {
         $this->_ttl = isset($opt['ttl']) ? $opt['ttl'] : SESSION_TTL;
 
         if ($auth) {
-            if (($a = $ctr->_getAuthorization()) && ($a['user'] === 'token')) {
+            if (($a = $ctr->getAuthorization()) && ($a['user'] === 'token')) {
                 $this->_token = $a['pwd'];
             }
         }
-        else if (isset($_COOKIE[$this->_name])) {
+        if (($this->_token === '') && isset($_COOKIE[$this->_name])) {
             $this->_token = $_COOKIE[$this->_name];
         }
 
@@ -128,7 +128,7 @@ class Session {
         if ($needInsert) {
             if ($this->_link instanceof IKv) {
                 do {
-                    $this->_token = $ctr->_random(16, Ctr::RANDOM_LUN);
+                    $this->_token = Core::random(16, Core::RANDOM_LUN);
                 } while (!$this->_link->set($this->_name . '_' . $this->_token, [], $this->_ttl, 'nx'));
             }
             else {
@@ -137,7 +137,7 @@ class Session {
                     if ($count === 5) {
                         return false;
                     }
-                    $this->_token = $ctr->_random(16, Ctr::RANDOM_LUN);
+                    $this->_token = Core::random(16, Core::RANDOM_LUN);
                     $this->_sql->insert('session')->values([
                         'token' => $this->_token,
                         'data' => json_encode([]),
@@ -159,7 +159,7 @@ class Session {
             }
         }
 
-        $ctr->_setCookie($this->_name, $this->_token, [
+        Core::setCookie($this->_name, $this->_token, [
             'ttl' => $this->_ttl,
             'ssl' => $ssl
         ]);
@@ -173,6 +173,13 @@ class Session {
      */
     public function getToken(): string {
         return $this->_token;
+    }
+
+    /**
+     * --- 获取当前的 cookie 的 name 值 ---
+     */
+    public function getName(): string {
+        return $this->_name;
     }
 
     /**

@@ -5,6 +5,7 @@ namespace ctr;
 
 use lib\Crypto;
 use lib\Captcha;
+use lib\Core;
 use lib\Db;
 use lib\Kv;
 use lib\Net;
@@ -21,12 +22,12 @@ class test extends Ctr {
 
     private $_internalUrl = URL_FULL;
 
-    public function _load() {
+    public function onLoad() {
         if (HOST !== '127.0.0.1' && HOST !== '172.17.0.1' && HOST !== 'local-test.brc-app.com') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
         }
-        $realIp = $this->_ip();
-        if ((HOSTNAME === '127.0.0.1' || HOSTNAME === 'localhost') && $realIp === '172.17.0.1') {
+        $realIp = Core::realIP();
+        if ((HOSTNAME === '127.0.0.1' || HOSTNAME === 'localhost') && ($realIp === '172.17.0.1')) {
             $this->_internalUrl = 'http' . (HTTPS ? 's' : '') . '://' . $realIp . URL_BASE;
         }
     }
@@ -42,8 +43,8 @@ class test extends Ctr {
             '<br>HTTPS: ' . (HTTPS ? 'true' : 'false'),
 
             '<br><br>MOBILE: ' . (MOBILE ? 'true' : 'false'),
-            '<br>Real IP: ' . $this->_ip(),
-            '<br>Client IP: ' . $this->_realIP(),
+            '<br>Real IP: ' . Core::ip(),
+            '<br>Client IP: ' . Core::realIP(),
 
             '<br><br>URL_BASE: ' . URL_BASE,
             '<br>URL_STC: ' . URL_STC,
@@ -72,9 +73,6 @@ class test extends Ctr {
             '<br><br><b>Ctr:</b>',
             '<br><br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-checkinput">View "test/ctr-checkinput"</a>',
-            '<br><a href="' . URL_BASE . 'test/ctr-random">View "test/ctr-random"</a>',
-            '<br><a href="' . URL_BASE . 'test/ctr-rand">View "test/ctr-rand"</a>',
-            '<br><a href="' . URL_BASE . 'test/ctr-muid">View "test/ctr-muid"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-locale">View "test/ctr-locale"</a>',
 
             '<br><br><b>Middle:</b>',
@@ -90,6 +88,11 @@ class test extends Ctr {
             '<br><br><b>Captcha:</b>',
             '<br><br><a href="' . URL_BASE . 'test/captcha-fastbuild">View "test/captcha-fastbuild"</a>',
             '<br><a href="' . URL_BASE . 'test/captcha-base64">View "test/captcha-base64"</a>',
+
+            '<br><br><b>Core:</b>',
+            '<br><br><a href="' . URL_BASE . 'test/core-random">View "test/core-random"</a>',
+            '<br><a href="' . URL_BASE . 'test/core-rand">View "test/core-rand"</a>',
+            '<br><a href="' . URL_BASE . 'test/core-muid">View "test/core-muid"</a>',
 
             '<br><br><b>Crypto:</b>',
             '<br><br><a href="' . URL_BASE . 'test/crypto">View "test/crypto"</a>',
@@ -271,82 +274,6 @@ function postFd() {
         return [1, 'post' => $_POST];
     }
 
-    public function ctrRandom() {
-        return
-            "<pre>\$this->_random(16, Ctr::RANDOM_LUNS);</pre>" . htmlspecialchars($this->_random(16, Ctr::RANDOM_LUNS)) .
-            "<pre>\$this->_random(4, Ctr::RANDOM_V);</pre>" . htmlspecialchars($this->_random(4, Ctr::RANDOM_V)) .
-            "<pre>\$this->_random(8, Ctr::RANDOM_N, '0349');</pre>" . htmlspecialchars($this->_random(8, Ctr::RANDOM_N, '0349')) .
-            "<br><br>" . $this->_getEnd();
-    }
-
-    public function ctrRand() {
-        return
-            "<pre>\$this->_rand(1.2, 7.1, 1)</pre>" . $this->_rand(1.2, 7.1, 1) .
-            "<pre>\$this->_rand(1.2, 7.1, 5)</pre>" . $this->_rand(1.2, 7.1, 5) .
-            "<pre>\$this->_rand(1.298, 7.1891, 2);</pre>" . $this->_rand(1.298, 7.1891, 2) .
-            "<br><br>" . $this->_getEnd();
-    }
-
-    public function ctrMuid() {
-        $ac = isset($_GET['ac']) ? $_GET['ac'] : '';
-
-        $echo = [
-            '<a href="'.URL_BASE.'test/ctr-muid">Default</a> | ' .
-            '<a href="'.URL_BASE.'test/ctr-muid?ac=big">Big</a> | ' .
-            '<a href="'.URL_BASE.'test">Return</a>'
-        ];
-
-        if ($ac === '') {
-            $muid = $this->_muid();
-            $echo[] = "<pre>\$this->_muid();</pre>" . $muid . " (" . strlen($muid) . ")";
-    
-            $muid = $this->_muid();
-            $echo[] = "<pre>\$this->_muid();</pre>" . $muid . " (" . strlen($muid) . ")";
-    
-            $muid = $this->_muid(false);
-            $echo[] = "<pre>\$this->_muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
-    
-            $muid = $this->_muid(false);
-            $echo[] = "<pre>\$this->_muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
-    
-            $muid = $this->_muid(true, 'xa');
-            $echo[] = "<pre>\$this->_muid(true, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
-    
-            $muid = $this->_muid(false, 'xa');
-            $echo[] = "<pre>\$this->_muid(false, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
-    
-            $muid = $this->_muid(false, '', 'ha');
-            $echo[] = "<pre>\$this->_muid(false, '', 'ha');</pre>" . $muid . " (" . strlen($muid) . ")";
-
-            $echo[] = "<br><br>";
-        }
-        else {
-            $parr = [];
-            $oarr = [];
-            for ($i = 0; $i < 30000; ++$i) {
-                $muid = $this->_muid();
-                if (in_array($muid, $oarr)) {
-                    $parr[] = $muid;
-                    continue;
-                }
-                $oarr[] = $muid;
-            }
-            $echo[] = "<pre>
-\$parr = [];
-\$oarr = [];
-for (\$i = 0; \$i < 30000; ++\$i) {
-    \$muid = \$this->_muid();
-    if (in_array(\$muid, \$oarr)) {
-        \$parr[] = \$muid;
-        continue;
-    }
-    \$oarr[] = \$muid;
-}</pre>parr length: " . count($parr) . "<br>oarr length: " . count($oarr) . "<br><br>parr:<pre>" . json_encode($parr) . "</pre>oarr:<pre>" . substr(json_encode(array_slice($oarr, 0, 20)), 0, -1) . "...</pre>";
-        }
-
-        return join('', $echo) . $this->_getEnd();
-    }
-
     public function ctrLocale() {
         if (!$this->_checkInput($_GET, [
             'lang' => [['en', 'sc', 'tc', 'ja'], [0, 'Wrong language.']]
@@ -403,7 +330,7 @@ for (\$i = 0; \$i < 30000; ++\$i) {
             $time = time();
             $session = Session::getCreate();
             $session->set([
-                'data' => json_encode(['test' => $this->_random(4)]),
+                'data' => json_encode(['test' => Core::random(4)]),
                 'time_update' => $time,
                 'time_add' => $time
             ]);
@@ -413,7 +340,7 @@ for (\$i = 0; \$i < 30000; ++\$i) {
 \$time = time();
 \$session = \mod\Session::getCreate();
 \$session->set([
-    'data' => json_encode(['ok' => '1']),
+    'data' => json_encode(['test' => Core::random(4)]),
     'time_update' => \$time,
     'time_add' => \$time
 ]);
@@ -452,6 +379,82 @@ echo \$phrase;</pre>"];
 
         $echo[] = '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
         $echo[] = '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
+
+        return join('', $echo) . $this->_getEnd();
+    }
+
+    public function coreRandom() {
+        return
+            "<pre>Core::random(16, Core::RANDOM_LUNS);</pre>" . htmlspecialchars(Core::random(16, Core::RANDOM_LUNS)) .
+            "<pre>Core::random(4, Core::RANDOM_V);</pre>" . htmlspecialchars(Core::random(4, Core::RANDOM_V)) .
+            "<pre>Core::random(8, Core::RANDOM_N, '0349');</pre>" . htmlspecialchars(Core::random(8, Core::RANDOM_N, '0349')) .
+            "<br><br>" . $this->_getEnd();
+    }
+
+    public function coreRand() {
+        return
+            "<pre>Core::rand(1.2, 7.1, 1)</pre>" . Core::rand(1.2, 7.1, 1) .
+            "<pre>Core::rand(1.2, 7.1, 5)</pre>" . Core::rand(1.2, 7.1, 5) .
+            "<pre>Core::rand(1.298, 7.1891, 2);</pre>" . Core::rand(1.298, 7.1891, 2) .
+            "<br><br>" . $this->_getEnd();
+    }
+
+    public function coreMuid() {
+        $ac = isset($_GET['ac']) ? $_GET['ac'] : '';
+
+        $echo = [
+            '<a href="'.URL_BASE.'test/core-muid">Default</a> | ' .
+            '<a href="'.URL_BASE.'test/core-muid?ac=big">Big</a> | ' .
+            '<a href="'.URL_BASE.'test">Return</a>'
+        ];
+
+        if ($ac === '') {
+            $muid = Core::muid();
+            $echo[] = "<pre>Core::muid();</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = Core::muid();
+            $echo[] = "<pre>Core::muid();</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = Core::muid(false);
+            $echo[] = "<pre>Core::muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = Core::muid(false);
+            $echo[] = "<pre>Core::muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = Core::muid(true, 'xa');
+            $echo[] = "<pre>Core::muid(true, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = Core::muid(false, 'xa');
+            $echo[] = "<pre>Core::muid(false, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
+    
+            $muid = Core::muid(false, '', 'ha');
+            $echo[] = "<pre>Core::muid(false, '', 'ha');</pre>" . $muid . " (" . strlen($muid) . ")";
+
+            $echo[] = "<br><br>";
+        }
+        else {
+            $parr = [];
+            $oarr = [];
+            for ($i = 0; $i < 30000; ++$i) {
+                $muid = Core::muid();
+                if (in_array($muid, $oarr)) {
+                    $parr[] = $muid;
+                    continue;
+                }
+                $oarr[] = $muid;
+            }
+            $echo[] = "<pre>
+\$parr = [];
+\$oarr = [];
+for (\$i = 0; \$i < 30000; ++\$i) {
+    \$muid = Core::muid();
+    if (in_array(\$muid, \$oarr)) {
+        \$parr[] = \$muid;
+        continue;
+    }
+    \$oarr[] = \$muid;
+}</pre>parr length: " . count($parr) . "<br>oarr length: " . count($oarr) . "<br><br>parr:<pre>" . json_encode($parr) . "</pre>oarr:<pre>" . substr(json_encode(array_slice($oarr, 0, 20)), 0, -1) . "...</pre>";
+        }
 
         return join('', $echo) . $this->_getEnd();
     }
@@ -1349,9 +1352,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')'])->getSql();
+                $s = $sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => ['CONCAT(`time_update`, ?)', ['01']]])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'})->duplicate(['time_update' => '#CONCAT(`time_update`, ' . Sql::data('01') . ')']);</pre>
+                $echo[] = "<pre>\$sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'})->duplicate(['time_update' => ['CONCAT(`time_update`, ?)', ['01']]]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
@@ -1420,18 +1423,18 @@ Result:<pre id=\"result\">Nothing.</pre>";
 
                 // --- 3 ---
 
-                $s = $sql->update('user', ['name' => 'Serene', 'type' => '#(CASE `id` WHEN 1 THEN ' . $sql->data('val1') . ' WHEN 2 THEN ' . $sql->data('val2') . ' END)'])->where(['name' => 'Ah'])->getSql();
+                $s = $sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']]])->where(['name' => 'Ah'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->update('user', ['name' => 'Serene', 'type' => '#(CASE `id` WHEN 1 THEN ' . \$sql->data('val1') . ' WHEN 2 THEN ' . \$sql->data('val2') . ' END)'])->where(['name' => 'Ah']);</pre>
+                $echo[] = "<pre>\$sql->update('user', ['name' => 'Serene', 'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']]])->where(['name' => 'Ah']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 // --- # ---
 
-                $s = $sql->update('user', ['age' => '#age_verify', 'date' => '##'])->where(['date_birth' => '2001'])->getSql();
+                $s = $sql->update('user', ['age' => '#age_verify', 'date' => '##', 'he' => ['he2']])->where(['date_birth' => '2001'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->update('user', ['age' => '#age_verify', 'date' => '##'])->where(['date_birth' => '2001']);</pre>
+                $echo[] = "<pre>\$sql->update('user', ['age' => '#age_verify', 'date' => '##', 'he' => ['he2']])->where(['date_birth' => '2001']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
@@ -1477,13 +1480,13 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $s = $sql->update('order', ['state' => '1'])->where([
                     'user_id' => '2',
                     'state' => ['1', '2', '3'],
-                    '$or' => [['type' => '1', 'find' => '0'], ['type' => '2', 'find' => '1'], ['type', '<', '-1']]
+                    '$or' => [['type' => '1', 'find' => '0'], ['type' => '2', 'find' => '1'], [['type', '<', '-1']]]
                 ])->getSql();
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->update('order', ['state' => '1'])->where([
     'user_id' => '2',
     'state' => ['1', '2', '3'],
-    '\$or' => [['type' => '1', 'find' => '0'], ['type' => '2', 'find' => '1'], ['type', '<', '-1']]
+    '\$or' => [['type' => '1', 'find' => '0'], ['type' => '2', 'find' => '1'], [['type', '<', '-1']]]
 ]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
@@ -1547,8 +1550,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $echo[] = "<pre>\$sql->field('x.def as f');</pre>" . $sql->field('x.def as f');
                 $echo[] = "<pre>\$sql->field('SUM(num) all');</pre>" . $sql->field('SUM(num) all');
                 $echo[] = "<pre>\$sql->field('SUM(x.num) all');</pre>" . $sql->field('SUM(x.num) all');
+                $echo[] = "<pre>\$sql->field('SUM(x.`num`) all');</pre>" . $sql->field('SUM(x.`num`) all');
                 $echo[] = "<pre>\$sql->field('FROM_UNIXTIME(time, \'%Y-%m-%d\') time');</pre>" . $sql->field('FROM_UNIXTIME(time, \'%Y-%m-%d\') time');
-                $echo[] = "<pre>\$sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))) )');</pre>" . $sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))) )');
+                $echo[] = "<pre>\$sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(lat)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))))');</pre>" . $sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(lat)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))))');
                 break;
             }
         }

@@ -9,6 +9,8 @@ declare(strict_types = 1);
 namespace sys;
 
 use ctr\middle;
+use lib\Core;
+use lib\Text;
 
 require ETC_PATH.'route.php';
 
@@ -51,41 +53,41 @@ class Route {
         $middle = new middle();
         // --- 对信息进行初始化 ---
         // --- 路由定义的参数序列 ---
-        $middle->_param = $param;
+        $middle->setPrototype('_param', $param);
         // --- action 名 ---
-        $middle->_action = $pathRight;
+        $middle->setPrototype('_action', $pathRight);
         // --- 处理 headers ---
         foreach ($_SERVER as $key => $val) {
             if ($key === 'CONTENT_TYPE') {
-                $middle->_headers['content-type'] = $val;
+                $middle->getPrototype('_headers')['content-type'] = $val;
                 continue;
             }
             if (substr($key, 0, 5) !== 'HTTP_') {
                 continue;
             }
-            $middle->_headers[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
+            $middle->getPrototype('_headers')[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
         }
-        if (!isset($middle->_headers['authorization'])) {
-            $middle->_headers['authorization'] = '';
+        if (!isset($middle->getPrototype('_headers')['authorization'])) {
+            $middle->getPrototype('_headers')['authorization'] = '';
         }
 
         // --- 原始 GET ---
-        $middle->_get = &$_GET;
+        $middle->setPrototype('_get', $_GET);
         // --- 处理 POST 的值 JSON 或 FILE ---
         if (!isset($_POST) || !$_POST) {
             $_POST = [];
         }
         // --- 原始 POST ---
-        $middle->_rawPost = $_POST;
+        $middle->setPrototype('_rawPost', $_POST);
         // --- 原始 input ---
-        $middle->_input = file_get_contents('php://input');
+        $middle->setPrototype('_input', file_get_contents('php://input'));
         if (!isset($_FILES) || !$_FILES) {
             $_FILES = [];
         }
-        $contentType = isset($middle->_headers['content-type']) ? strtolower($middle->_headers['content-type']) : '';
+        $contentType = isset($middle->getPrototype('_headers')['content-type']) ? strtolower($middle->getPrototype('_headers')['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
-            $_POST = json_decode($middle->_input, true);
+            $_POST = json_decode($middle->getPrototype('_input'), true);
             if (!$_POST) {
                 $_POST = [];
             }
@@ -108,25 +110,26 @@ class Route {
                 }
                 $_FILES[$key] = $files;
             }
-            $middle->_files = &$_FILES;
+            $middle->setPrototype('_files', $_FILES);
         }
         // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
-        $middle->_post = &$_POST;
+        $middle->setPrototype('_post', $_POST);
 
         // --- Cookie ---
-        $middle->_cookie = &$_COOKIE;
+        $middle->setPrototype('_cookie', $_COOKIE);
         // --- 设置 XSRF 值 ---
         if (!isset($_COOKIE['XSRF-TOKEN'])) {
-            $middle->_xsrf = $middle->_random(16, Ctr::RANDOM_LUN);
-            setcookie('XSRF-TOKEN', $middle->_xsrf, 0, '/', '', false, true);
-            $_COOKIE['XSRF-TOKEN'] = $middle->_xsrf;
-        } else {
-            $middle->_xsrf = $_COOKIE['XSRF-TOKEN'];
+            $middle->setPrototype('_xsrf', Core::random(16, Core::RANDOM_LUN));
+            setcookie('XSRF-TOKEN', $middle->getPrototype('_xsrf'), 0, '/', '', false, true);
+            $_COOKIE['XSRF-TOKEN'] = $middle->getPrototype('_xsrf');
+        }
+        else {
+            $middle->setPrototype('_xsrf', $_COOKIE['XSRF-TOKEN']);
         }
 
-        // --- 执行中间件的 _load ---
-        $rtn = $middle->_load();
+        // --- 执行中间件的 onLoad ---
+        $rtn = $middle->onLoad();
         if (!isset($rtn) || $rtn === true) {
             // --- 只有不返回或返回 true 时才加载控制文件 ---
             // --- 判断真实控制器文件是否存在 ---
@@ -145,30 +148,32 @@ class Route {
             $ctr = new $ctrName();
             // --- 对信息进行初始化 ---
             // --- 路由定义的参数序列 ---
-            $ctr->_param = &$middle->_param;
-            $ctr->_action = $middle->_action;
-            $ctr->_headers = &$middle->_headers;
+            $ctr->setPrototype('_param', $middle->getPrototype('_param'));
+            $ctr->setPrototype('_action', $middle->getPrototype('_action'));
+            $ctr->setPrototype('_headers', $middle->getPrototype('_headers'));
 
-            $ctr->_get = &$middle->_get;
-            $ctr->_rawPost = &$middle->_rawPost;
-            $ctr->_post = &$middle->_post;
-            $ctr->_input = &$middle->_input;
-            $ctr->_files = &$middle->_files;
+            $ctr->setPrototype('_get', $middle->getPrototype('_get'));
+            $ctr->setPrototype('_rawPost', $middle->getPrototype('_rawPost'));
+            $ctr->setPrototype('_post', $middle->getPrototype('_post'));
+            $ctr->setPrototype('_input', $middle->getPrototype('_input'));
+            $ctr->setPrototype('_files', $middle->getPrototype('_files'));
 
-            $ctr->_cookie = &$middle->_cookie;
-            if (!$ctr->_sess && $middle->_sess) {
-                $ctr->_session = &$middle->_session;
-                $ctr->_sess = &$middle->_sess;
+            $ctr->setPrototype('_cookie', $middle->getPrototype('_cookie'));
+            if (!$ctr->getPrototype('_sess') && $middle->getPrototype('_sess')) {
+                $ctr->setPrototype('_session', $middle->getPrototype('_session'));
+                $ctr->setPrototype('_sess', $middle->getPrototype('_sess'));
             }
 
-            $ctr->_cacheTTL = $middle->_cacheTTL;
-            $ctr->_xsrf = $middle->_xsrf;
+            $ctr->setPrototype('_cacheTTL', $middle->getPrototype('_cacheTTL'));
+            $ctr->setPrototype('_xsrf', $middle->getPrototype('_xsrf'));
             // --- 强制 HTTPS ---
-            if (MUST_HTTPS && !$ctr->_mustHttps()) {
+            if (MUST_HTTPS && !HTTPS) {
+                http_response_code(302);
+                header('location: ' . Text::urlResolve(URL_BASE, $location));
                 return;
             }
-            // --- 检测 action 是否存在 ---
-            if ($pathRight[0] === '_') {
+            // --- 检测 action 是否存在，以及排除内部方法 ---
+            if ($pathRight[0] === '_' || $pathRight === 'onLoad' || $pathRight === 'setPrototype' || $pathRight === 'getPrototype' || $pathRight === 'getAuthorization') {
                 // --- _ 开头的 action 是内部方法，不允许访问 ---
                 http_response_code(404);
                 echo '[Error] Action not found, path: ' . PATH . '.';
@@ -182,16 +187,16 @@ class Route {
                 echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
             }
-            // --- 执行 _load 方法 ---
-            $rtn = $ctr->_load();
+            // --- 执行 onLoad 方法 ---
+            $rtn = $ctr->onLoad();
             // --- 执行 action ---
             if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
             }
             // --- 在返回值输出之前，设置缓存 ---
-            if ($ctr->_cacheTTL > 0) {
-                header('expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->_cacheTTL) . ' GMT');
-                header('cache-control: max-age=' . $ctr->_cacheTTL);
+            if ($ctr->getPrototype('_cacheTTL') > 0) {
+                header('expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->getPrototype('_cacheTTL')) . ' GMT');
+                header('cache-control: max-age=' . $ctr->getPrototype('_cacheTTL'));
             } else {
                 header('expires: Mon, 26 Jul 1994 05:00:00 GMT');
                 header('cache-control: no-store');
