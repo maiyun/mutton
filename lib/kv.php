@@ -23,7 +23,7 @@
     }
 } - END
  * Date: 2019-12-16 14:52:51
- * Last: 2019-12-16 14:52:54, 2020-3-28 12:51:43, 2020-4-17 14:54:05, 2022-3-24 23:59:09
+ * Last: 2019-12-16 14:52:54, 2020-3-28 12:51:43, 2020-4-17 14:54:05, 2022-3-24 23:59:09, 2022-08-31 17:47:40
  */
 
 namespace lib;
@@ -44,7 +44,7 @@ class Kv {
      * @param string $core
      * @return IKv
      */
-    public static function get(string $core) {
+    public static function get(string $core = self::REDIS) {
         // $class = 'lib\\kv\\' . $core;
         if ($core === self::REDIS) {
             return new Redis();

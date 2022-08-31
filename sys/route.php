@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29
+ * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29, 2022-08-30 12:56:07
  */
 declare(strict_types = 1);
 
@@ -53,26 +53,28 @@ class Route {
         $middle = new middle();
         // --- 对信息进行初始化 ---
         // --- 路由定义的参数序列 ---
-        $middle->setPrototype('_param', $param);
+        $middle->setPrototypeRef('_param', $param);
         // --- action 名 ---
         $middle->setPrototype('_action', $pathRight);
         // --- 处理 headers ---
+        $headers = [];
         foreach ($_SERVER as $key => $val) {
             if ($key === 'CONTENT_TYPE') {
-                $middle->getPrototype('_headers')['content-type'] = $val;
+                $headers['content-type'] = $val;
                 continue;
             }
             if (substr($key, 0, 5) !== 'HTTP_') {
                 continue;
             }
-            $middle->getPrototype('_headers')[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
+            $headers[str_replace('_', '-', strtolower(substr($key, 5)))] = $val;
         }
-        if (!isset($middle->getPrototype('_headers')['authorization'])) {
-            $middle->getPrototype('_headers')['authorization'] = '';
+        if (!isset($headers['authorization'])) {
+            $headers['authorization'] = '';
         }
+        $middle->setPrototypeRef('_headers', $headers);
 
         // --- 原始 GET ---
-        $middle->setPrototype('_get', $_GET);
+        $middle->setPrototypeRef('_get', $_GET);
         // --- 处理 POST 的值 JSON 或 FILE ---
         if (!isset($_POST) || !$_POST) {
             $_POST = [];
@@ -80,14 +82,16 @@ class Route {
         // --- 原始 POST ---
         $middle->setPrototype('_rawPost', $_POST);
         // --- 原始 input ---
-        $middle->setPrototype('_input', file_get_contents('php://input'));
+        $input = file_get_contents('php://input');
+        $middle->setPrototype('_input', $input);
+        // --- 文件 ---
         if (!isset($_FILES) || !$_FILES) {
             $_FILES = [];
         }
-        $contentType = isset($middle->getPrototype('_headers')['content-type']) ? strtolower($middle->getPrototype('_headers')['content-type']) : '';
+        $contentType = isset($headers['content-type']) ? strtolower($headers['content-type']) : '';
         if (strpos($contentType, 'json') !== false) {
             // --- POST 的数据是 JSON ---
-            $_POST = json_decode($middle->getPrototype('_input'), true);
+            $_POST = json_decode($input, true);
             if (!$_POST) {
                 $_POST = [];
             }
@@ -110,19 +114,20 @@ class Route {
                 }
                 $_FILES[$key] = $files;
             }
-            $middle->setPrototype('_files', $_FILES);
+            $middle->setPrototypeRef('_files', $_FILES);
         }
         // --- 格式化 post 数据 ---
         self::_trimPost($_POST);
-        $middle->setPrototype('_post', $_POST);
+        $middle->setPrototypeRef('_post', $_POST);
 
         // --- Cookie ---
-        $middle->setPrototype('_cookie', $_COOKIE);
+        $middle->setPrototypeRef('_cookie', $_COOKIE);
         // --- 设置 XSRF 值 ---
         if (!isset($_COOKIE['XSRF-TOKEN'])) {
-            $middle->setPrototype('_xsrf', Core::random(16, Core::RANDOM_LUN));
-            setcookie('XSRF-TOKEN', $middle->getPrototype('_xsrf'), 0, '/', '', false, true);
-            $_COOKIE['XSRF-TOKEN'] = $middle->getPrototype('_xsrf');
+            $xsrf = Core::random(16, Core::RANDOM_LUN);
+            $middle->setPrototype('_xsrf', $xsrf);
+            setcookie('XSRF-TOKEN', $xsrf, 0, '/', '', false, true);
+            $_COOKIE['XSRF-TOKEN'] = $xsrf;
         }
         else {
             $middle->setPrototype('_xsrf', $_COOKIE['XSRF-TOKEN']);
@@ -148,19 +153,19 @@ class Route {
             $ctr = new $ctrName();
             // --- 对信息进行初始化 ---
             // --- 路由定义的参数序列 ---
-            $ctr->setPrototype('_param', $middle->getPrototype('_param'));
+            $ctr->setPrototypeRef('_param', $param);
             $ctr->setPrototype('_action', $middle->getPrototype('_action'));
-            $ctr->setPrototype('_headers', $middle->getPrototype('_headers'));
+            $ctr->setPrototypeRef('_headers', $headers);
 
-            $ctr->setPrototype('_get', $middle->getPrototype('_get'));
+            $ctr->setPrototypeRef('_get', $_GET);
             $ctr->setPrototype('_rawPost', $middle->getPrototype('_rawPost'));
-            $ctr->setPrototype('_post', $middle->getPrototype('_post'));
-            $ctr->setPrototype('_input', $middle->getPrototype('_input'));
-            $ctr->setPrototype('_files', $middle->getPrototype('_files'));
+            $ctr->setPrototype('_input', $input);
+            $ctr->setPrototypeRef('_files', $_FILES);
+            $ctr->setPrototypeRef('_post', $_POST);
 
-            $ctr->setPrototype('_cookie', $middle->getPrototype('_cookie'));
+            $ctr->setPrototypeRef('_cookie', $_COOKIE);
             if (!$ctr->getPrototype('_sess') && $middle->getPrototype('_sess')) {
-                $ctr->setPrototype('_session', $middle->getPrototype('_session'));
+                $ctr->setPrototypeRef('_session', $_SESSION);
                 $ctr->setPrototype('_sess', $middle->getPrototype('_sess'));
             }
 
@@ -194,10 +199,12 @@ class Route {
                 $rtn = $ctr->$pathRight();
             }
             // --- 在返回值输出之前，设置缓存 ---
-            if ($ctr->getPrototype('_cacheTTL') > 0) {
-                header('expires: ' . gmdate('D, d M Y H:i:s', $time + $ctr->getPrototype('_cacheTTL')) . ' GMT');
-                header('cache-control: max-age=' . $ctr->getPrototype('_cacheTTL'));
-            } else {
+            $cacheTTL = $ctr->getPrototype('_cacheTTL');
+            if ($cacheTTL > 0) {
+                header('expires: ' . gmdate('D, d M Y H:i:s', $time + $cacheTTL) . ' GMT');
+                header('cache-control: max-age=' . $cacheTTL);
+            }
+            else {
                 header('expires: Mon, 26 Jul 1994 05:00:00 GMT');
                 header('cache-control: no-store');
             }
@@ -254,7 +261,8 @@ class Route {
         $pathLio = strrpos($path, '/');
         if ($pathLio === false) {
             return [strtolower($path), 'index'];
-        } else {
+        }
+        else {
             $right = substr($path, $pathLio + 1);
             return [strtolower(substr($path, 0, $pathLio)), $right === '' ? 'index' : strtolower($right)];
         }
@@ -268,7 +276,8 @@ class Route {
         foreach ($post as $key => $val) {
             if (is_string($val)) {
                 $post[$key] = trim($val);
-            } else if (is_array($val)) {
+            }
+            else if (is_array($val)) {
                 self::_trimPost($post[$key]);
             }
         }

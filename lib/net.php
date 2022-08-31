@@ -24,7 +24,7 @@
 } - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-25 20:30:12
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-25 20:30:12, 2022-08-29 21:12:09
  */
 declare(strict_types = 1);
 
@@ -332,7 +332,6 @@ class Net {
         }
         // --- 哦，要追踪 ---
         $headers['referer'] = $u;
-        var_dump($data);
         return self::request(Text::urlResolve($u, $res->headers['location']), $data, [
             'method' => $method,
             'type' => $type,

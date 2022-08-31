@@ -133,7 +133,7 @@ $user = User::select(['id', 'user'])->filter([
 ### 创建 16 位随机数
 
 ```php
-$str = $this->_random(16, Ctr::RANDOM_N);
+$str = Core::random(16, Core::RANDOM_N);
 ```
 
 ### 创建一个验证码

@@ -23,7 +23,7 @@ CREATE TABLE `redis` (
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/09/29 15:26
- * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47, 2020-3-28 13:21:16, 2022-3-25 00:44:31
+ * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47, 2020-3-28 13:21:16, 2022-3-25 00:44:31, 2022-08-31 15:20:35
  */
 declare(strict_types = 1);
 
@@ -166,7 +166,7 @@ class RedisSimulator implements IKv {
                 'time_exp' => $time_exp
             ])->where([
                 'tag' => $this->_index . '_' . $this->_pre . $key,
-                ['time_exp', '>=', $time]
+                ['time_exp', '>', $time]
             ]);
             $ps = $this->_link->prepare($this->_sql->getSql());
             try {
@@ -280,7 +280,7 @@ class RedisSimulator implements IKv {
             'value' => ['CONCAT(?, `value`)', [$val]]
         ])->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -320,7 +320,7 @@ class RedisSimulator implements IKv {
         }
         $this->_sql->select(['tag'], $this->_table)->where([
             'tag' => $key,
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -352,7 +352,7 @@ class RedisSimulator implements IKv {
         $this->_gc();
         $this->_sql->select('*', $this->_table)->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -376,6 +376,70 @@ class RedisSimulator implements IKv {
     }
 
     /**
+     * --- 获取相应的剩余有效期秒数 ---
+     * @param string $key
+     * @return int|null
+     */
+    public function ttl(string $key) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        $this->_gc();
+        $this->_sql->select('*', $this->_table)->where([
+            'tag' => $this->_index . '_' . $this->_pre . $key,
+            ['time_exp', '>', time()]
+        ]);
+        $ps = $this->_link->prepare($this->_sql->getSql());
+        try {
+            $ps->execute($this->_sql->getData());
+            if ($obj = $ps->fetchObject()) {
+                if ((int)$obj->time_exp === 4294967295) {
+                    return -1;
+                }
+                $time = time();
+                return $obj->time_exp - $time;
+            }
+            else {
+                return null;
+            }
+        }
+        catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
+     * --- 获取相应的剩余有效期毫秒数 ---
+     * @param string $key
+     * @return int|null
+     */
+    public function pttl(string $key) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        $this->_gc();
+        $this->_sql->select('*', $this->_table)->where([
+            'tag' => $this->_index . '_' . $this->_pre . $key,
+            ['time_exp', '>', time()]
+        ]);
+        $ps = $this->_link->prepare($this->_sql->getSql());
+        try {
+            $ps->execute($this->_sql->getData());
+            if ($obj = $ps->fetchObject()) {
+                if ((int)$obj->time_exp === 4294967295) {
+                    return -1;
+                }
+                $time = floor(microtime(true) * 1000);
+                return ($obj->time_exp * 1000) - $time;
+            }
+            else {
+                return null;
+            }
+        }
+        catch (PDOException $e) {
+            return null;
+        }
+    }
+
+    /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
      * @return array 顺序数组
@@ -391,7 +455,7 @@ class RedisSimulator implements IKv {
         }
         $this->_sql->select('*', $this->_table)->where([
             'tag' => $keys,
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -460,7 +524,7 @@ class RedisSimulator implements IKv {
         }
         $this->_sql->delete($this->_table)->where([
             'tag' => $key,
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -572,7 +636,7 @@ class RedisSimulator implements IKv {
             'time_exp' => time() + $ttl
         ])->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
         try {
@@ -616,7 +680,7 @@ class RedisSimulator implements IKv {
         $this->_gc();
         $this->_sql->select(['tag'], $this->_table);
         $where = [
-            ['time_exp', '>=', time()]
+            ['time_exp', '>', time()]
         ];
         if ($pattern !== '*') {
             $pattern = str_replace('*', '%', $pattern);

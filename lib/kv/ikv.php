@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-12-21 11:56:27
- * Last: 2019-12-21 11:56:30, 2020-3-29 21:29:53
+ * Last: 2019-12-21 11:56:30, 2020-3-29 21:29:53, 2022-08-31 15:20:29
  */
 declare(strict_types = 1);
 
@@ -86,6 +86,20 @@ interface IKv {
     public function get(string $key);
 
     /**
+     * --- 获取相应的剩余有效期秒数 ---
+     * @param string $key
+     * @return int|null
+     */
+    public function ttl(string $key);
+
+    /**
+     * --- 获取相应的剩余有效期毫秒数 ---
+     * @param string $key
+     * @return int|null
+     */
+    public function pttl(string $key);
+
+    /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
      * @return array 顺序数组
@@ -102,7 +116,7 @@ interface IKv {
     /**
      * --- 获取 json 对象 ---
      * @param string $key
-     * @return bool|null
+     * @return mixed|null
      */
     public function getJson(string $key);
 

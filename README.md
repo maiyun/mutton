@@ -133,7 +133,7 @@ The Scan library makes it easy to implement the ability to scan QRCode to log in
 ### Generate random numbers
 
 ```php
-$str = $this->_random(16, Ctr::RANDOM_N);
+$str = Core::random(16, Core::RANDOM_N);
 ```
 
 ### Generate a verification code picture

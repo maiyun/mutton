@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/01/31 10:30
- * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08, 2022-3-24 22:46:41
+ * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08, 2022-3-24 22:46:41, 2022-08-31 15:20:41
  */
 declare(strict_types = 1);
 
@@ -222,6 +222,36 @@ SCRIPT;
             return null;
         }
         return $v;
+    }
+
+    /**
+     * --- 获取相应的剩余有效期秒数 ---
+     * @param string $key
+     * @return int|null
+     */
+    public function ttl(string $key) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        $r = $this->_link->ttl($this->_pre . $key);
+        if ($r === -2) {
+            return null;
+        }
+        return $r;
+    }
+
+    /**
+     * --- 获取相应的剩余有效期毫秒数 ---
+     * @param string $key
+     * @return int|null
+     */
+    public function pttl(string $key) {
+        $this->_resultCode = 0;
+        $this->_resultMessage = 'SUCCESS';
+        $r = $this->_link->pttl($this->_pre . $key);
+        if ($r === -2) {
+            return null;
+        }
+        return $r;
     }
 
     /**

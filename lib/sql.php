@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03
  */
 declare(strict_types = 1);
 
@@ -278,7 +278,7 @@ class LSql {
             }
             else {
                 // --- 2, 3, 4, 5 ---
-                if (!is_string($v)) {
+                if (!is_string($v) && !is_numeric($v)) {
                     // --- 4, 5 ---
                     $sql .= $this->field($k) . ' = ' . $this->field($v[0]) . ', ';
                     if (isset($v[1]) && is_array($v[1])) {
@@ -479,7 +479,7 @@ class LSql {
                 }
                 else {
                     // --- 1, 4, 6 ---
-                    if (is_string($v)) {
+                    if (is_string($v) || is_numeric($v)) {
                         // --- 1, 6 ---
                         // --- 'city' => 'bj', 'city_in' => '#city_out' ---
                         $isf = $this->_isField($v);
@@ -528,7 +528,7 @@ class LSql {
         }
         else {
             foreach ($c as $v) {
-                if (is_string($v)) {
+                if (is_string($v) || is_numeric($v)) {
                     $sql .= $this->field($v) . ' ' . $d . ', ';
                 }
                 else {
@@ -623,12 +623,12 @@ class LSql {
 
     /**
      * --- 对字段进行包裹 ---
-     * @param string $str
+     * @param string|int|float $str
      * @param string $pre 表前缀，仅请在 field 表名时倒入前缀
      * @return string
      */
-    public function field(string $str, string $pre = ''): string {
-        $str = trim($str);                          // --- 去除前导尾随 ---
+    public function field(string|int|float $str, string $pre = ''): string {
+        $str = trim($str . '');                          // --- 去除前导尾随 ---
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
         $str = preg_replace('/ +([),])/', ' $1', $str);
         $str = preg_replace('/([(,]) +/', '$1 ', $str);

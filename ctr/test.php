@@ -8,6 +8,7 @@ use lib\Captcha;
 use lib\Core;
 use lib\Db;
 use lib\Kv;
+use lib\Kv\IKv;
 use lib\Net;
 use lib\Scan;
 use lib\Sql;
@@ -119,7 +120,8 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/net-error">View "test/net-error"</a>',
 
             '<br><br><b>Scan</b>',
-            '<br><br><a href="' . URL_BASE . 'test/scan">View "test/scan"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/scan?s=db">View "test/scan?s=db"</a>',
+            '<br><a href="' . URL_BASE . 'test/scan?s=kv">View "test/scan?s=kv"</a>',
 
             '<br><br><b>Session:</b>',
             '<br><br><a href="' . URL_BASE . 'test/session?s=db">View "test/session?s=db"</a>',
@@ -657,7 +659,15 @@ json_encode(\$kv->getServerList());</pre>" . json_encode($kv->getServerList());
             $echo[] = "<pre>json_encode(\$kv->delete('test'));</pre>" . json_encode($kv->delete('test'));
 
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
-        } else if ($ac == 'incr-decr-replace') {
+        }
+        else if ($ac === 'ttl') {
+            $echo[] = "<pre>json_encode(\$kv->ttl('test'));</pre>" . json_encode($kv->ttl('test'));
+            $echo[] = "<pre>json_encode(\$kv->pttl('test'));</pre>" . json_encode($kv->pttl('test'));
+            $echo[] = "<pre>json_encode(\$kv->set('test', 'ttl', 10));</pre>" . json_encode($kv->set('test', 'ttl', 10));
+            $echo[] = "<pre>json_encode(\$kv->ttl('test'));</pre>" . json_encode($kv->ttl('test'));
+            $echo[] = "<pre>json_encode(\$kv->pttl('test'));</pre>" . json_encode($kv->pttl('test'));
+        }
+        else if ($ac == 'incr-decr-replace') {
             $echo[] = "<pre>json_encode(\$kv->getResultCode());
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
@@ -710,7 +720,8 @@ json_encode(\$kv->getLastError());</pre>";
 json_encode(\$kv->getResultMessage());
 json_encode(\$kv->getLastError());</pre>";
             $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
-        } else if ($ac === 'append-prepend') {
+        }
+        else if ($ac === 'append-prepend') {
             $echo[] = "<pre>json_encode(\$kv->prepend('test', '0'));</pre>" . json_encode($kv->prepend('test', '0'));
 
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
@@ -737,7 +748,8 @@ json_encode(\$kv->getLastError());</pre>";
             $echo[] = "<pre>json_encode(\$kv->get('tmp_test'));</pre>" . json_encode($kv->get('tmp_test'));
 
             $echo[] = "<pre>json_encode(\$kv->delete('tmp_test'));</pre>" . json_encode($kv->delete('tmp_test'));
-        } else if ($ac === 'hash') {
+        }
+        else if ($ac === 'hash') {
             $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>" . json_encode($kv->hSet('hTest', 'name', 'Cheng Xin'));
 
             $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'age', '16', 'nx'));</pre>" . json_encode($kv->hSet('hTest', 'age', '16', 'nx'));
@@ -787,7 +799,8 @@ json_encode(\$kv->getLastError());</pre>";
             $echo[] = "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>" . json_encode($kv->hGet('hTest', 'name'));
 
             $echo[] = "<pre>json_encode(\$kv->hGetAll('hTest'));</pre>" . json_encode($kv->hGetAll('hTest'));
-        } else if ($ac === 'other') {
+        }
+        else if ($ac === 'other') {
             $echo[] = "<pre>for (\$i = 0; \$i < 50; ++\$i) {
     \$kv->add('t' . \$i, \$i, 10);
 }
@@ -806,7 +819,9 @@ echo 'Added.';</pre>";
             $echo[] = "<pre>json_encode(\$kv->scan('*2*'));</pre>" . json_encode($kv->scan('*2*'));
 
             $echo[] = "<pre>json_encode(\$kv->scan('*'));</pre>" . json_encode($kv->scan('*'));
-        } else {
+        }
+        else {
+            // --- default ---
             $echo[] = "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>" . json_encode($kv->exists(['test', 'heheda']));
 
             $echo[] = "<pre>json_encode(\$kv->mGet(['test', 'heheda']));</pre>" . json_encode($kv->mGet(['test', 'heheda']));
@@ -824,6 +839,7 @@ echo 'Added.';</pre>";
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&value=aaa">Set "aaa"</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&value=bbb">Set "bbb"</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=delete">Delete</a> | ' .
+            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=ttl">ttl</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=incr-decr-replace">Incr/Decr/Replace</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=append-prepend">Append/Prepend</a> | ' .
             '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=hash">Hash</a> | ' .
@@ -1100,16 +1116,16 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     }
 
     public function scan() {
-        $db = Db::get(Db::MYSQL);
-        if (!$db->connect()) {
-            return [0, 'Failed, MySQL can not be connected.'];
+        $link = $this->_scanLink();
+        if (!$link) {
+            return [0, 'Failed, link can not be connected.'];
         }
+        $s = isset($this->_get['s']) ? $this->_get['s'] : 'db';
 
         $echo = [];
-
-        $scan = Scan::get($this, $db, null, 30);
+        $scan = Scan::get($this->_scanLink(), null, [ 'ttl' => 30 ]);
         $token = $scan->getToken();
-        $echo[] = "<pre>\$scan = Scan::get(\$this, \$db, null, 30);
+        $echo[] = "<pre>\$scan = Scan::get(\$link, null, [ 'ttl' => 30 ]);
 \$token = \$scan->getToken();</pre>
 token: " . $token . "<br><br>
 Scan status: <b id=\"status\" style=\"color: red;\">Waiting...</b><br>
@@ -1124,7 +1140,7 @@ Simulated scan URL: http://www.test.simu/scan?token=" . $token . " (QR Code can 
 var token = '" . $token . "';
 var count = 0;
 function poll() {
-    fetch('" . URL_BASE . "test/scan1', {
+    fetch('" . URL_BASE . "test/scan1?s=" . $s . "', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -1151,7 +1167,7 @@ poll();
 
 function visit() {
     document.getElementById('content').innerText = 'Loading...';
-    fetch('" . URL_BASE . "test/scan2', {
+    fetch('" . URL_BASE . "test/scan2?s=" . $s . "', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -1170,7 +1186,7 @@ function visit() {
 }
 
 function confirm() {
-    fetch('" . URL_BASE . "test/scan3', {
+    fetch('" . URL_BASE . "test/scan3?s=" . $s . "', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
@@ -1192,11 +1208,12 @@ function confirm() {
         return join('', $echo) . "<br>" . $this->_getEnd();
     }
     public function scan1() {
-        $db = Db::get(Db::MYSQL);
-        if (!$db->connect()) {
-            return [0, 'Failed, MySQL can not be connected.'];
+        $link = $this->_scanLink();
+        if (!$link) {
+            return [0, 'Failed, link can not be connected.'];
         }
-        $scan = Scan::get($this, $db, $_POST['token']);
+
+        $scan = Scan::get($link, $_POST['token']);
         $rtn = $scan->poll();
         switch ($rtn) {
             case -3: {
@@ -1215,26 +1232,44 @@ function confirm() {
         return [0, 'Scan result: ' . json_encode($rtn)];
     }
     public function scan2() {
-        $db = Db::get(Db::MYSQL);
-        if (!$db->connect()) {
-            return [0, 'Failed, MySQL can not be connected.'];
+        $link = $this->_scanLink();
+        if (!$link) {
+            return [0, 'Failed, link can not be connected.'];
         }
-        if (!Scan::scanned($db, $_POST['token'])) {
+        if (!Scan::scanned($link, $_POST['token'])) {
             return [0, 'Token has expired.'];
         }
         return [1];
     }
     public function scan3() {
-        $db = Db::get(Db::MYSQL);
-        if (!$db->connect()) {
-            return [0, 'Failed, MySQL can not be connected.'];
+        $link = $this->_scanLink();
+        if (!$link) {
+            return [0, 'Failed, link can not be connected.'];
         }
-        if (!Scan::setData($db, $_POST['token'], [
+        if (!Scan::setData($link, $_POST['token'], [
             'uid' => '5'
         ])) {
             return [0, 'Token has expired.'];
         }
         return [1];
+    }
+    private function _scanLink(): Db|IKv {
+        $s = isset($this->_get['s']) ? $this->_get['s'] : 'db';
+        if ($s === 'db') {
+            $db = Db::get(Db::MYSQL);
+            if (!$db->connect()) {
+                return false;
+            }
+            $link = $db;
+        }
+        else {
+            $kv = Kv::get();
+            if (!$kv->connect()) {
+                return false;
+            }
+            $link = $kv;
+        }
+        return $link;
     }
 
     public function session() {
@@ -1255,12 +1290,13 @@ function confirm() {
                 return [0, 'Failed, MySQL can not be connected.'];
             }
             $echo[] = "\$link = Db::get(Db::MYSQL);\n";
-        } else {
-            $link = Kv::get(Kv::REDIS);
+        }
+        else {
+            $link = Kv::get();
             if (!$link->connect()) {
                 return [0, 'Failed, Redis can not be connected.'];
             }
-            $echo[] = "\$link = Kv::get(Kv::REDIS);\n";
+            $echo[] = "\$link = Kv::get();\n";
         }
 
         if ($_GET['auth'] === '') {
@@ -1276,19 +1312,20 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
                 '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '&value=aaa">Set "aaa"</a> | ' .
                 '<a href="' . URL_BASE . 'test/session?s=' . $_GET['s'] . '&value=bbb">Set "bbb"</a> | ' .
                 '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . '<br><br>' . $this->_getEnd();
-        } else {
+        }
+        else {
             // --- AUTH 模式 ---
             $this->_startSession($link, true, ['ttl' => 60]);
             if (count($_POST) > 0) {
                 if (!isset($_SESSION['count'])) {
                     $_SESSION['count'] = 1;
-                } else {
+                }
+                else {
                     ++$_SESSION['count'];
                 }
                 return [1, 'txt' => "\$_SESSION: " . json_encode($_SESSION) . "\nToken: " . $this->_sess->getToken(), 'token' => $this->_sess->getToken(), '_auth' => $this->_getBasicAuth('token', $this->_sess->getToken())];
-            } else {
-                $echo[] = '<script>document.write((typeof fetch !== "function") ? "<script src=\\"https://cdn.jsdelivr.net/npm/whatwg-fetch@3.0.0/dist/fetch.umd.min.js\\">" : "")</script>';
-
+            }
+            else {
                 $echo[] = "\$this->_startSession(\$link, true, ['ttl' => 60]);
 json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
@@ -1296,7 +1333,7 @@ json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
                 $echo[] = "<pre>\$_SESSION['value'] = '" . date('H:i:s') . "';
 json_encode(\$_SESSION);</pre>" . htmlspecialchars(json_encode($_SESSION));
 
-                $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',headers:{'Authorization':document.getElementById('_auth').innerText,'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;document.getElementById('token').innerText=j.token;document.getElementById('_auth').innerText=j._auth;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>
+                $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',credentials:'omit',headers:{'Authorization':document.getElementById('_auth').innerText,'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;document.getElementById('token').innerText=j.token;document.getElementById('_auth').innerText=j._auth;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/session?s=" . $_GET['s'] . "&auth=1',{method:'POST',credentials:'omit',headers:{'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>
 Token: <span id=\"token\">" . $this->_sess->getToken() . "</span><br>
 Post Authorization header: <span id=\"_auth\">" . $this->_getBasicAuth('token', $this->_sess->getToken()) . "</span><br><br>
 Result:<pre id=\"result\">Nothing.</pre>";

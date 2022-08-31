@@ -64,6 +64,11 @@ class Ctr {
         $this->{$name} = $val;
     }
 
+    /** --- 设置类内部的 prototype 并且是引用，Mutton: true, Kebab: false --- */
+    public function setPrototypeRef($name, &$val): void {
+        $this->{$name} = &$val;
+    }
+
     /**
      * --- 实例化后会执行的方法 ---
      * @return bool|array|string|null|void

@@ -93,7 +93,7 @@ class Session {
             // --- 如果启用了内存加速则在内存找 ---
             if ($this->_link instanceof IKv) {
                 // --- Kv ---
-                if (($data = $this->_link->getJson($this->_name . '_' . $this->_token)) === null) {
+                if (($data = $this->_link->getJson('sess-' . $this->_name . '_' . $this->_token)) === null) {
                     $needInsert = true;
                 }
                 else {
@@ -115,7 +115,7 @@ class Session {
                     $needInsert = true;
                 }
             }
-            $ctr->_session = &$_SESSION;
+            $ctr->setPrototypeRef('_session', $_SESSION);
         }
         else {
             // --- 全新的机子 ---
@@ -129,7 +129,7 @@ class Session {
             if ($this->_link instanceof IKv) {
                 do {
                     $this->_token = Core::random(16, Core::RANDOM_LUN);
-                } while (!$this->_link->set($this->_name . '_' . $this->_token, [], $this->_ttl, 'nx'));
+                } while (!$this->_link->set('sess-' . $this->_name . '_' . $this->_token, [], $this->_ttl, 'nx'));
             }
             else {
                 $count = 0;
@@ -187,7 +187,7 @@ class Session {
      */
     public function __update(): void {
         if ($this->_link instanceof IKv) {
-            $this->_link->set($this->_name . '_' . $this->_token, $_SESSION, $this->_ttl);
+            $this->_link->set('sess-' . $this->_name . '_' . $this->_token, $_SESSION, $this->_ttl);
         }
         else {
             $this->_sql->update('session', [
