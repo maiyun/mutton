@@ -82,7 +82,8 @@ class test extends Ctr {
             '<br><br><b>Model test:</b>',
 
             '<br><br><b style="color: red;">In a production environment, please delete the "Mod/Session.php" file.</b>',
-            '<br><a href="' . URL_BASE . 'test/mod">Click to see an example of a Session model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod?s=mysql">[MySQL] Click to see an example of a Session model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod?s=sqlite">[SQLite] Click to see an example of a Session model</a>',
 
             '<br><br><b>Library test:</b>',
 
@@ -310,7 +311,7 @@ function postFd() {
 
         $echo = ['<b style="color: red;">In a production environment, please delete the "Mod/Session.php file.</b>'];
 
-        $db = Db::get(Db::MYSQL);
+        $db = Db::get((isset($this->_get['s']) && $this->_get['s'] === 'mysql') ? Db::MYSQL : Db::SQLITE);
         if (!($rtn = $db->connect())) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
@@ -359,7 +360,7 @@ json_encode(\$result);</pre>" . json_encode($result);
             // --- explain ---
 
             $ls = Session::where([
-                ['time_add', '>', time() - 60 * 5]
+                ['time_update', '>', time() - 60 * 5]
             ]);
             $r = $ls->explain();
             $echo[] = "<pre>\$ls = Session::where([
@@ -377,7 +378,9 @@ json_encode(\$result);</pre>" . json_encode($result);
 
             $echo[] = '<br><a href="' . URL_BASE . 'test/mod?action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
 
-            return join('', $echo) . '<br><br>' . $this->_getEnd();
+            return '<a href="'.URL_BASE.'test/mod?s=mysql">MySQL</a> | ' .
+            '<a href="'.URL_BASE.'test/mod?s=sqlite">SQLite</a> | ' .
+            '<a href="'.URL_BASE.'test">Return</a><br><br>' . join('', $echo) . '<br><br>' . $this->_getEnd();
         }
     }
 
