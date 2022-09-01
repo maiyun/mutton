@@ -356,7 +356,26 @@ json_encode(\$result);</pre>" . json_encode($result);
             $stmt = $db->query('SELECT * FROM `m_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
             $this->_dbTable($stmt, $echo);
 
-            $echo[] = "<br><a href=\"".URL_BASE."test/mod?action=remove\">Remove all test data</a> | <a href=\"".URL_BASE."test\">Return</a>";
+            // --- explain ---
+
+            $ls = Session::where([
+                ['time_add', '>', time() - 60 * 5]
+            ]);
+            $r = $ls->explain();
+            $echo[] = "<pre>\$ls = Session::where([
+    ['time_add', '>', time() - 60 * 5]
+]);
+\$ls->explain();</pre>" . htmlspecialchars($r);
+
+            $r = $ls->explain(true);
+            $echo[] = '<pre>$ls->explain(true);</pre>';
+            $echo[] = '<table style="width: 100%;">';
+            foreach ($r as $k => $v) {
+                $echo[] = '<tr><th>' . htmlspecialchars($k) . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+            }
+            $echo[] = '</table>';
+
+            $echo[] = '<br><a href="' . URL_BASE . 'test/mod?action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
 
             return join('', $echo) . '<br><br>' . $this->_getEnd();
         }
@@ -586,6 +605,11 @@ error: ".json_encode($db->getErrorInfo())."<br><br>";
         $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
+        $explain = $_GET['s'] === 'mysql' ? 'EXPLAIN' : 'EXPLAIN QUERY PLAN';
+        $echo[] = "<pre>\$exec = \$db->query('" . $explain . " SELECT * FROM `m_session` LIMIT 10;');</pre>";
+        $stmt = $db->query($explain . ' SELECT * FROM `m_session` LIMIT 10;');
+        $this->_dbTable($stmt, $echo);
+
         $exec = $db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');
         $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');</pre>
 exec: " . $exec . "<br><br>";
@@ -593,7 +617,9 @@ exec: " . $exec . "<br><br>";
         $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
-        return join('', $echo) . "<br>" . $this->_getEnd();
+        return '<a href="'.URL_BASE.'test/db?s=mysql">MySQL</a> | ' .
+        '<a href="'.URL_BASE.'test/db?s=sqlite">SQLite</a> | ' .
+        '<a href="'.URL_BASE.'test">Return</a>' . join('', $echo) . "<br>" . $this->_getEnd();
     }
     private function _dbTable(PDOStatement $stmt, &$echo) {
         $echo[] = '<table style="width: 100%;"><tr>';
@@ -611,7 +637,8 @@ exec: " . $exec . "<br><br>";
                 }
                 $echo[] = '</tr>';
             }
-        } else {
+        }
+        else {
             $echo[] = '<th>No data</th></tr>';
         }
         $echo[] = '</table>';
@@ -1205,7 +1232,9 @@ function confirm() {
 }
 </script>";
 
-        return join('', $echo) . "<br>" . $this->_getEnd();
+        return '<a href="'.URL_BASE.'test/scan?s=db">db</a> | ' .
+        '<a href="'.URL_BASE.'test/scan?s=kv">kv</a> | ' .
+        '<a href="'.URL_BASE.'test">Return</a>' . join('', $echo) . "<br>" . $this->_getEnd();
     }
     public function scan1() {
         $link = $this->_scanLink();

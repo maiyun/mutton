@@ -36,7 +36,7 @@ class Mod {
     /** @var array --- 模型获取的属性 --- */
     protected $_data = [];
 
-    /* @var Db $_db --- 数据库连接对象 --- */
+    /** @var Db $_db --- 数据库连接对象 --- */
     protected $_db = null;
 
     /** @var LSql $_sql --- Sql 对象 --- */
@@ -647,6 +647,30 @@ class Mod {
             }
         }
         return $list;
+    }
+
+    /**
+     * --- 获取数查询（SELECT）扫描情况，获取字符串或kv数组 ---
+     * @param bool $all 是否获取完全的情况，默认不获取，只返回扫描情况
+     * @return false|array|string
+     */
+    public function explain($all = false) {
+        $mysql = $this->_db->getCore() === Db::MYSQL;
+        $explain = $mysql ? 'EXPLAIN' : 'EXPLAIN QUERY PLAN';
+        $ps = $this->_db->prepare($explain . ' ' . $this->_sql->getSql());
+        try {
+            $ps->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            return false;
+        }
+        if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
+            return false;
+        }
+        if (!$all) {
+            return $mysql ? $row['type'] : $row['detail'];
+        }
+        return $row;
     }
 
     /**

@@ -2,12 +2,15 @@
 /*
  * --- mysql ---
 CREATE TABLE `session` (
-  `id` int(10) UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  `token` varchar(16) NOT NULL UNIQUE KEY,
-  `data` text NOT NULL,
-  `time_update` int(10) UNSIGNED NOT NULL,
-  `time_add` int(10) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+  `id` int (10) unsigned NOT NULL AUTO_INCREMENT,
+  `token` varchar (16) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `data` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
+  `time_update` int (10) unsigned NOT NULL,
+  `time_add` int (10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `time_update` (`time_update`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
 
  * --- sqlite ---
 CREATE TABLE `session` (
@@ -17,13 +20,14 @@ CREATE TABLE `session` (
   `time_update` INT(10) NOT NULL,
   `time_add` INT(10) NOT NULL
 );
+CREATE INDEX `time_update` ON `session` (`time_update`);
 */
 
 /**
  * Project: Mutton, User: JianSuoQiYue
  * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/05/25 19:56
- * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33, 2020-3-29 20:38:57, 2020-11-20 14:25:14
+ * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33, 2020-3-29 20:38:57, 2020-11-20 14:25:14, 2022-09-01 16:21:08
  */
 declare(strict_types = 1);
 

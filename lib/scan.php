@@ -1,6 +1,6 @@
 <?php
 /*
-CREATE TABLE if not exists `scan` (
+CREATE TABLE IF NOT EXISTS `scan` (
     `id` int (10) UNSIGNED NOT NULL AUTO_INCREMENT,
     `token` varchar (32) BINARY NOT NULL,
     `data` text NOT NULL,
