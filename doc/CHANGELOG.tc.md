@@ -4,6 +4,12 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.sc.md)
 
+# 7.1.0
+
+[+] 新增 Consistent 庫。  
+[+] Mod 新增 index 參數。  
+[+] Mod 新增 explain 方法。
+
 # 7.0.2 
 
 [\*] 優化 Sql 庫的 by 和 field 方法。  

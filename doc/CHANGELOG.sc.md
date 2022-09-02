@@ -4,6 +4,12 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.1.0
+
+[+] 新增 Consistent 库。  
+[+] Mod 新增 index 参数。  
+[+] Mod 新增 explain 方法。
+
 # 7.0.2 
 
 [\*] 优化 Sql 库的 by 和 field 方法。  

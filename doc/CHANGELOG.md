@@ -4,6 +4,12 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.1.0
+
+[+] Add Consistent library.  
+[+] Add index param of Mod.  
+[+] Add explain method of Mod.
+
 # 7.0.2 
 
 [\*] Optimize the by and field methods of the Sql library.  
