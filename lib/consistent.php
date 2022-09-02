@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2022-09-01 21:56:06
- * Last: 2022-09-01 21:56:06
+ * Last: 2022-09-01 21:56:06, 2022-09-03 00:56:29
  */
 declare(strict_types = 1);
 
@@ -27,6 +27,18 @@ class Consistent {
     */
     public static function get($vcount = 300): Consistent {
         return new Consistent($vcount);
+    }
+
+    /**
+     * --- 快速查找一个 key 属于哪个 node ---
+     * @param string $key 要查找的key
+     * @param array $nodes node 列表
+     * @param int $vcount 虚拟节点数量
+     */
+    public static function fast($key, $nodes, $vcount = 300) {
+        $cons = new Consistent($vcount);
+        $cons->add($nodes);
+        return $cons->find($key);
     }
 
     /**

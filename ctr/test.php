@@ -16,6 +16,8 @@ use lib\Sql;
 use lib\Text;
 use mod\Mod;
 use mod\Session;
+use mod\Test as ModTest;
+use mod\TestData;
 use PDO;
 use PDOStatement;
 use sys\Ctr;
@@ -82,9 +84,10 @@ class test extends Ctr {
 
             '<br><br><b>Model test:</b>',
 
-            '<br><br><b style="color: red;">In a production environment, please delete the "Mod/Session.php" file.</b>',
-            '<br><a href="' . URL_BASE . 'test/mod?s=mysql">[MySQL] Click to see an example of a Session model</a>',
-            '<br><a href="' . URL_BASE . 'test/mod?s=sqlite">[SQLite] Click to see an example of a Session model</a>',
+            '<br><br><b style="color: red;">In a production environment, please delete "mod/session.php", "mod/test.php", "mod/testdata.php" files.</b>',
+            '<br><a href="' . URL_BASE . 'test/mod-session?s=mysql">[MySQL] Click to see an example of a Session model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod-session?s=sqlite">[SQLite] Click to see an example of a Session model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod-split">View "test/mod-split"</a>',
 
             '<br><br><b>Library test:</b>',
 
@@ -308,14 +311,14 @@ function postFd() {
         return join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
-    public function mod() {
+    public function modSession() {
         if (!($this->_checkInput($_GET, [
             'action' => [['', 'remove'], [0, 'Error']]
         ], $return))) {
             return $return;
         }
 
-        $echo = ['<b style="color: red;">In a production environment, please delete the "Mod/Session.php file.</b>'];
+        $echo = ['<b style="color: red;">In a production environment, please delete the "mod/session.php" file.</b>'];
 
         $db = Db::get((isset($this->_get['s']) && $this->_get['s'] === 'mysql') ? Db::MYSQL : Db::SQLITE);
         if (!($rtn = $db->connect())) {
@@ -388,6 +391,85 @@ json_encode(\$result);</pre>" . json_encode($result);
             '<a href="'.URL_BASE.'test/mod?s=sqlite">SQLite</a> | ' .
             '<a href="'.URL_BASE.'test">Return</a><br><br>' . join('', $echo) . '<br><br>' . $this->_getEnd();
         }
+    }
+
+    public function modSplit() {
+        $echo = ['<b style="color: red;">In a production environment, please delete "mod/test.php" and "mod/testdata.php" files.</b>'];
+
+        $db = Db::get();
+        if (!($rtn = $db->connect())) {
+            return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
+        }
+
+        $echo[] = "<br><br>Test SQL:<pre>CREATE TABLE `m_test` (
+    `id` int unsigned NOT NULL AUTO_INCREMENT,
+    `name` varchar(32) COLLATE ascii_bin NOT NULL,
+    `time_add` int unsigned NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin;
+CREATE TABLE `m_test_data_0` (
+    `id` int unsigned NOT NULL AUTO_INCREMENT,
+    `test_id` int unsigned NOT NULL,
+    `content` varchar(128) COLLATE ascii_bin NOT NULL,
+    `time_add` int unsigned NOT NULL,
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin;</pre>m_test_data_0 - m_test_data_4<br><br>";
+
+        // --- 操作按钮 ---
+
+        $echo[] = "<input type=\"button\" value=\"Create user\" onclick=\"this.value='Waiting...';fetch('" . URL_BASE . "test/mod-split1',{method:'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(function(r){window.location.href=window.location.href})\">
+<input type=\"button\" value=\"Random post\" onclick=\"this.value='Waiting...';fetch('" . URL_BASE . "test/mod-split2',{method:'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(function(r){return r.json()}).then(function(j){alert('ID:'+j.id+'\\nINDEX:'+j.index);window.location.href=window.location.href})\">";
+
+        // --- 读取 test 和 test_data 表 ---
+
+        $stmt = $db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 0, 20;');
+        $echo[] = '<br><br><b>m_test</b> table:';
+        $this->_dbTable($stmt, $echo);
+
+        for ($i = 0; $i < 5; ++$i) {
+            $stmt = $db->query('SELECT * FROM `m_test_data_' . $i . '` ORDER BY `id` DESC LIMIT 0, 20;');
+            $echo[] = '<br><b>m_test_data_' . $i . '</b> table:';
+            $this->_dbTable($stmt, $echo);
+        }
+
+        return join('', $echo) . '<br>' . $this->_getEnd();
+    }
+    public function modSplit1() {
+        $db = Db::get();
+        $db->connect();
+        Mod::setDb($db);
+
+        $test = ModTest::getCreate();
+        $test->set([
+            'name' => Core::random((int)Core::rand(8, 32)),
+            'time_add' => time()
+        ]);
+        $test->create();
+    }
+    public function modSplit2() {
+        $db = Db::get();
+        $db->connect();
+        Mod::setDb($db);
+
+        $ids = [];
+        $ls = ModTest::select(['id'])->by('time_add')->limit(0, 50)->all();
+        foreach ($ls as $item) {
+            $ids[] = $item->id;
+        }
+        $id = $ids[Core::rand(0, count($ids) - 1)];
+
+        // --- 一致性 hash ---
+        $index = Consistent::fast($id, ['0', '1', '2', '3', '4']);
+
+        $testData = TestData::getCreate($index);
+        $testData->set([
+            'test_id' => $id,
+            'content' => Core::random((int)Core::rand(8, 32)),
+            'time_add' => time()
+        ]);
+        $testData->create();
+
+        return [1, 'id' => $id, 'index' => $index];
     }
 
     public function captchaFastbuild() {
