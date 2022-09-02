@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2022-08-27 02:13:04
- * Last: 2022-08-27 02:13:08
+ * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07
  */
 declare(strict_types = 1);
 
@@ -65,7 +65,7 @@ class Core {
      * @param int $prec 保留几位小数
      * @return float
      */
-    public static function rand(float $min, float $max, int $prec): float {
+    public static function rand(float $min, float $max, int $prec = 0): float {
         if ($prec < 0) {
             $prec = 0;
         }

@@ -5,6 +5,7 @@ namespace ctr;
 
 use lib\Crypto;
 use lib\Captcha;
+use lib\Consistent;
 use lib\Core;
 use lib\Db;
 use lib\Kv;
@@ -139,6 +140,11 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/sql?type=having">View "test/sql?type=having"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=by">View "test/sql?type=by"</a>',
             '<br><a href="' . URL_BASE . 'test/sql?type=field">View "test/sql?type=field"</a>',
+
+            '<br><br><b>Consistent:</b>',
+            '<br><br><a href="' . URL_BASE . 'test/consistent-hash">View "test/consistent-hash"</a>',
+            '<br><a href="' . URL_BASE . 'test/consistent-distributed">View "test/consistent-distributed"</a>',
+            '<br><a href="' . URL_BASE . 'test/consistent-migration">View "test/consistent-migration"</a>',
 
             '<br><br><b>Text:</b>',
             '<br><br><a href="' . URL_BASE . 'test/text">View "test/text"</a>'
@@ -1626,6 +1632,148 @@ Result:<pre id=\"result\">Nothing.</pre>";
             }
         }
         return join('', $echo) . '<br><br>' . $this->_getEnd();
+    }
+    
+    public function consistentHash() {
+        $echo = [];
+
+        $echo[] = "<pre>Consistent::hash('abc')</pre>" . Consistent::hash('abc');
+        $echo[] = "<pre>Consistent::hash('thisisnone')</pre>" . Consistent::hash('thisisnone');
+        $echo[] = "<pre>Consistent::hash('haha')</pre>" . Consistent::hash('haha');
+
+        return join('', $echo) . '<br><br>' . $this->_getEnd();
+    }
+
+    public function consistentDistributed() {
+        $echo = [];
+
+        $servers = ['srv-sh.test.simu', 'srv-cd.test.simu', 'srv-tk.test.simu'];
+        $files = [8, 12, 18, 32, 89, 187, 678, 1098, 3012, 8901, 38141, 76291, 99981];
+        $map = [];
+        $cons = Consistent::get();
+        $cons->add($servers);
+        foreach ($files as $file) {
+            $map[$file] = $cons->find($file);
+        }
+        $echo[] = "<pre>\$servers = ['srv-sh.test.simu', 'srv-cd.test.simu', 'srv-tk.test.simu'];
+\$files = [8, 12, 18, 32, 89, 187, 678, 1098, 3012, 8901, 38141, 76291, 99981];
+\$map = [];
+\$cons = Consistent::get();
+\$cons->add(\$servers);
+foreach (\$files as \$file) {
+    \$map[\$file] = \$cons->find(\$file);
+}</pre>";
+        $echo[] = '<table style="width: 100%;">';
+        foreach ($map as $k => $v) {
+            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+        }
+        $echo[] = '</table>';
+
+        $cons->add('srv-sg.test.simu');
+        $file = $files[Core::rand(0, count($files) - 1)];
+        $oldSrv = $map[$file];
+        $newSrv = $cons->find($file);
+        $echo[] = "<pre>\$cons->add('srv-sg.test.simu');
+\$file = \$files[Core::rand(0, count(\$files) - 1)];
+\$oldSrv = \$map[\$file];
+\$newSrv = \$cons->find(\$file);</pre>";
+        $echo[] = "<table style=\"width: 100%;\">
+    <tr><th>File</th><td>$file</td></tr>
+    <tr><th>Old</th><td>$oldSrv</td></tr>
+    <tr><th>New</th><td>$newSrv</td></tr>
+    <tr><th>State</th><td>" . (($oldSrv === $newSrv) ? '<b>Hit</b>' : 'Miss') . "</td></tr>
+</table>";
+
+        return join('', $echo) . '<br>' . $this->_getEnd();
+    }
+
+    public function consistentMigration() {
+        $echo = [];
+
+        // --- 生成初始数据，5000 条数据分 5 长表 ---
+        $tables = ['table-0', 'table-2', 'table-3', 'table-4', 'table-4'];
+        $rows = [];
+        for ($i = 1; $i <= 5000; ++$i) {
+            $rows[] = $i;
+        }
+        $cons = Consistent::get();
+        $cons->add($tables);
+        $oldMap = [];
+        $mapCount = [];
+        foreach ($rows as $row) {
+            $table = $cons->find($row);
+            $oldMap[$row] = $table;
+            if (isset($mapCount[$table])) {
+                ++$mapCount[$table];
+            }
+            else {
+                $mapCount[$table] = 1;
+            }
+        }
+        $echo[] = "<pre>\$tables = ['table-0', 'table-2', 'table-3', 'table-4', 'table-4'];
+\$rows = [];
+for (\$i = 1; \$i <= 5000; ++\$i) {
+    \$rows[] = \$i;
+}
+\$cons = Consistent::get();
+\$cons->add(\$tables);
+\$oldMap = [];
+\$mapCount = [];
+foreach (\$rows as \$row) {
+    \$table = \$cons->find(\$row);
+    \$oldMap[\$row] = \$table;
+    if (isset(\$mapCount[\$table])) {
+        ++\$mapCount[\$table];
+    }
+    else {
+        \$mapCount[\$table] = 1;
+    }
+}</pre>";
+        $echo[] = '<table style="width: 100%;">';
+        foreach ($mapCount as $k => $v) {
+            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+        }
+        $echo[] = '</table>';
+
+        // --- 即将增长到 10000 条数据，然后先模拟 5 表拆分为 10 表，再查看要迁移哪些数据，迁移量有多少 ---
+        $migration = [];
+        $cons->add(['table-5', 'table-6', 'table-7', 'table-8', 'table-9']);
+        foreach ($rows as $row) {
+            $newTable = $cons->find($row);
+            $oldTable = $oldMap[$row];
+            if ($newTable === $oldTable) {
+                continue;
+            }
+            if (isset($migration[$oldTable])) {
+                ++$migration[$oldTable];
+            }
+            else {
+                $migration[$oldTable] = 1;
+            }
+        }
+        $echo[] = "<pre>\$migration = [];
+\$cons->add(['table-5', 'table-6', 'table-7', 'table-8', 'table-9']);
+foreach (\$rows as \$row) {
+    \$newTable = \$cons->find(\$row);
+    \$oldTable = \$oldMap[\$row];
+    if (\$newTable === \$oldTable) {
+        continue;
+    }
+    if (isset(\$migration[\$oldTable])) {
+        ++\$migration[\$oldTable];
+    }
+    else {
+        \$migration[\$oldTable] = 1;
+    }
+}</pre>";
+
+        $echo[] = '<table style="width: 100%;">';
+        foreach ($migration as $k => $v) {
+            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+        }
+        $echo[] = '</table>';
+
+        return join('', $echo) . '<br>' . $this->_getEnd();
     }
 
     public function text() {
