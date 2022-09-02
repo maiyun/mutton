@@ -335,7 +335,7 @@ function postFd() {
             Session::removeByWhere([
                 ['token', 'LIKE', 'test_%']
             ]);
-            return $this->_location('test/mod');
+            return $this->_location('test/mod-session?s=' . $this->_get['s']);
         }
         else {
 
@@ -385,7 +385,7 @@ json_encode(\$result);</pre>" . json_encode($result);
             }
             $echo[] = '</table>';
 
-            $echo[] = '<br><a href="' . URL_BASE . 'test/mod?action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
+            $echo[] = '<br><a href="' . URL_BASE . 'test/mod-session?s=' . $this->_get['s'] . '&action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
 
             return '<a href="'.URL_BASE.'test/mod?s=mysql">MySQL</a> | ' .
             '<a href="'.URL_BASE.'test/mod?s=sqlite">SQLite</a> | ' .
