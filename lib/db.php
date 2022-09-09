@@ -15,7 +15,7 @@ use PDOException;
 use PDOStatement;
 use function sys\log;
 
-require ETC_PATH.'db.php';
+require ETC_PATH . 'db.php';
 
 class Db {
 

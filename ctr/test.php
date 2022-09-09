@@ -13,6 +13,7 @@ use lib\Kv\IKv;
 use lib\Net;
 use lib\Scan;
 use lib\Sql;
+use lib\Tcaptcha;
 use lib\Text;
 use mod\Mod;
 use mod\Session;
@@ -26,8 +27,8 @@ class test extends Ctr {
 
     private $_internalUrl = URL_FULL;
 
-    public function onLoad() {
-        if (HOST !== '127.0.0.1' && HOST !== '172.17.0.1' && HOST !== 'local-test.brc-app.com') {
+    public function onload() {
+        if (HOST !== '127.0.0.1' && HOST !== '172.17.0.1' && HOST !== 'local-test.brc-app.com' && substr(HOST, 0, 8) !== '192.168.') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
         }
         $realIp = Core::realIP();
@@ -94,6 +95,9 @@ class test extends Ctr {
             '<br><br><b>Captcha:</b>',
             '<br><br><a href="' . URL_BASE . 'test/captcha-fastbuild">View "test/captcha-fastbuild"</a>',
             '<br><a href="' . URL_BASE . 'test/captcha-base64">View "test/captcha-base64"</a>',
+
+            '<br><br><b>Tcaptcha:</b>',
+            '<br><br><a href="' . URL_BASE . 'test/tcaptcha">View "test/tcaptcha"</a>',
 
             '<br><br><b>Core:</b>',
             '<br><br><a href="' . URL_BASE . 'test/core-random">View "test/core-random"</a>',
@@ -493,6 +497,104 @@ echo \$phrase;</pre>"];
         $echo[] = '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
 
         return join('', $echo) . $this->_getEnd();
+    }
+
+    public function tcaptcha() {
+        $mode = isset($this->_get['mode']) ? $this->_get['mode'] + 0 : 0;
+        $domain = isset($this->_get['domain']) ? $this->_get['domain'] : Tcaptcha::CO;
+
+        $echo = [Tcaptcha::getScript($mode, $domain)];
+        $echo[] = '<div style="width: 350px; border: solid 1px #000; padding: 15px;">' .
+            '<div>DOMAIN: ' . $domain . '</div>' .
+            '<div style="margin-top: 10px;">MODE: ' . $mode . '</div>' .
+            '<div style="margin-top: 10px;">Cid: <span id="cid"></span></div>' .
+            '<div style="margin-top: 10px;">USER: <input id="user"></div>' .
+            '<div style="margin-top: 10px;">CAPTCHA:</div>' .
+            '<div id="captcha" style="margin-top: 10px; display: flex; justify-content: center;">Loading...</div>' .
+            '<div style="margin-top: 10px; text-align: center;">' .
+                '<input id="login" type="button" value="login" onclick="login()">' .
+                '<input type="button" value="reset" onclick="Tcaptcha.reset(cid)" style="margin-left:10px;">' .
+            '</div>' .
+        '</div>' .
+        '<script>' .
+        'var cid = 0;' .
+        'Tcaptcha.ready(function() {' .
+            'var captcha = document.getElementById("captcha");' .
+            'cid = Tcaptcha.render(captcha, {' .
+                'sitekey:"6LdeKeEhAAAAAHRxDmW0uQzAAZstzkjTHHgzYUWn",' .
+                'url:"' . URL_BASE . 'test/tcaptcha1?mode=' . $mode . '&domain=' . $domain . '"' .
+            '});' .
+            'document.getElementById("cid").innerHTML = cid' .
+        '});' .
+        'function login() {' .
+            'var loginBtn = document.getElementById("login");' .
+            'var val = Tcaptcha.get(cid);' .
+            'if (!val) { alert("Captcha is empty.");return; }' .
+            'loginBtn.value = "loading...";' .
+            'var user = document.getElementById("user").value;' .
+            'fetch("' . URL_BASE . 'test/tcaptcha2",{method:"POST",headers:{"content-type":"application/x-www-form-urlencoded"},body:"user="+user+"&captcha="+val}).then(function(r){return r.json();}).then(function(j){' .
+                'if (j.result <= 0) {' .
+                    'alert(j.msg);' .
+                '} else {' .
+                    'alert("Successful.");' .
+                '}' .
+                'Tcaptcha.reset(cid);' .
+                'loginBtn.value = "login";' .
+            '});' .
+        '}' .
+        '</script>';
+        return '<a href="' . URL_BASE . 'test/tcaptcha">Default</a> | ' .
+            '<a href="' . URL_BASE . 'test/tcaptcha?mode=0&domain=' . $domain . '">Mode 0</a> | ' .
+            '<a href="' . URL_BASE . 'test/tcaptcha?mode=1&domain=' . $domain . '">Mode 1</a> | ' .
+            '<a href="' . URL_BASE . 'test/tcaptcha?mode=2&domain=' . $domain . '">Mode 2</a> | ' .
+            '<a href="' . URL_BASE . 'test/tcaptcha?mode=' . $mode . '&domain=' . Tcaptcha::CO . '">Domain ' . Tcaptcha::CO . '</a> | ' .
+            '<a href="' . URL_BASE . 'test/tcaptcha?mode=' . $mode . '&domain=' . Tcaptcha::GL . '">Domain ' . Tcaptcha::GL . '</a> | ' .
+            '<a href="' . URL_BASE . 'test">Return</a><br><br>' . join('', $echo) . '<br>' . $this->_getEnd();
+    }
+
+    public function tcaptcha1() {
+        $mode = isset($this->_get['mode']) ? $this->_get['mode'] + 0 : 0;
+        $domain = isset($this->_get['domain']) ? $this->_get['domain'] : Tcaptcha::CO;
+
+        $captcha = Tcaptcha::get($mode, $domain);
+        if (!$captcha) {
+            return [0, 'Local captcha can not be allow.'];
+        }
+        $link = Db::get(Db::MYSQL);
+        if (!$link->connect()) {
+            return [0, 'Failed, MySQL can not be connected.'];
+        }
+        $this->_startSession($link, false, ['ttl' => 60]);
+        $code = $captcha->getPhrase();
+        $_SESSION['tcaptcha'] = $code;
+        return $captcha->getBuffer();
+    }
+
+    public function tcaptcha2() {
+        if (!$this->_checkInput($this->_post, [
+            'user' => ['require', [0, 'User must input.']],
+            'captcha' => ['require', [0, 'Captcha must input.']]
+        ], $rtn)) {
+            return $rtn;
+        }
+        $secret = ''; // recaptcha 的密钥 ---
+        if (strlen($this->_post['captcha']) === 4) {
+            // --- 启动 session ---
+            $link = Db::get(Db::MYSQL);
+            if (!$link->connect()) {
+                return [0, 'Failed, MySQL can not be connected.'];
+            }
+            $this->_startSession($link, false, ['ttl' => 60]);
+            if (!isset($_SESSION['tcaptcha'])) {
+                return [0, 'Param error.'];
+            }
+            $secret = $_SESSION['tcaptcha'];
+            unset($_SESSION['tcaptcha']);
+        }
+        if (!Tcaptcha::verify($this->_post['captcha'], $secret)) {
+            return [0, 'Captcha is incorrect.'];
+        }
+        return [1];
     }
 
     public function coreRandom() {

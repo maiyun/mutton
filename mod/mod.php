@@ -55,8 +55,8 @@ class Mod {
     // --- Mutton PHP 框架配置项 [ 结束 ] ---
 
     /**
-     * 构造函数，etc 选项可选
-     * @param array $opt row, select, where, raw
+     * 构造函数
+     * @param array $opt index, row, select, where, raw
      */
     public function __construct(array $opt = []) {
         // --- 导入数据库连接 ---
@@ -89,7 +89,7 @@ class Mod {
         }
     }
 
-    // --- Mutton PHP 框架函数 [ 开始 ] ---
+    // --- Mutton: true, Kebab: false [ 开始 ] ---
 
     /**
      * --- 传入数据库对象 ---
@@ -120,7 +120,7 @@ class Mod {
         self::$__db->rollBack();
     }
 
-    // --- Mutton 框架函数 [ 结束 ] ---
+    // --- Mutton: true, Kebe: false [ 结束 ] ---
 
     // --- 静态方法 ---
 
@@ -511,10 +511,16 @@ class Mod {
                 return false;
             }
         }
-        $this->_updates = [];
-        $this->_data[static::$_primary] = $this->_db->getInsertID();
-        $this->{static::$_primary} = $this->_data[static::$_primary];
-        return true;
+        if ($ps->rowCount() > 0) {
+            $this->_updates = [];
+            $this->_data[static::$_primary] = $this->_db->getInsertID();
+            $this->{static::$_primary} = $this->_data[static::$_primary];
+            return true;
+        }
+        else {
+            // --- 感觉不会执行到这里，但 Kebab 中写了这个，待 Kebab 测试后再回过头详测 ---
+            return false;
+        }
     }
 
     /**
@@ -721,7 +727,7 @@ class Mod {
     }
 
     /**
-     * --- 动态获取列表，大大减少内存的使用量 ---
+     * --- 动态获取列表，大大减少内存的使用量（Mutton: true, Kebab: false） ---
      * @return Generator|boolean
      */
     public function cursor() {
@@ -741,7 +747,7 @@ class Mod {
 
     /**
      * --- 获取总条数，自动抛弃 LIMIT，仅用于获取数据的情况（select） ---
-     * @return int|boolean
+     * @return int
      */
     public function total(): int {
         $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
@@ -751,35 +757,31 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
-            return false;
+            return 0;
         }
         if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
             return (int)$row['count'];
         }
-        else {
-            return 0;
-        }
+        return 0;
     }
 
     /**
      * --- 根据当前条件，筛选出当前条目该有的数据条数 ---
-     * @return int|boolean
+     * @return int
      */
-    public function count(): int {
+    public function count(): int{
         $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
         $ps = $this->_db->prepare($sql);
         try {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
-            return false;
+            return 0;
         }
         if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
             return (int)$row['count'];
         }
-        else {
-            return 0;
-        }
+        return 0;
     }
 
     /**

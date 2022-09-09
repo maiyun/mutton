@@ -70,7 +70,7 @@ class Ctr {
     }
 
     /**
-     * --- 实例化后会执行的方法 ---
+     * --- 实例化后会执行的方法，可重写此方法 ---
      * @return bool|array|string|null|void
      */
     public function onload() {
@@ -318,20 +318,6 @@ class Ctr {
     }
 
     /**
-     * --- 强制 https 下访问 ---
-     * @return bool
-     */
-    protected function _mustHttps(): bool {
-        if (HTTPS) {
-            return true;
-        }
-        else {
-            $this->_location('https://' . HOST . $_SERVER['REQUEST_URI']);
-            return false;
-        }
-    }
-
-    /**
      * --- 跳转（302临时跳转），支持相对本项目根路径的路径或绝对路径 ---
      * @param string $location 相对或绝对网址
      * @return false
@@ -363,7 +349,7 @@ class Ctr {
     // --- 本地化 ---
 
     /**
-     * --- 根据当前设定语言加载语言包 ---
+     * --- 设定语言加载语言包 ---
      * @param string $loc 要加载的目标语言
      * @param string $pkg 包名，为空自动填充为 default
      * @return bool
@@ -377,10 +363,10 @@ class Ctr {
             if (($locData = $this->_loadData('locale/' . $lName)) === null) {
                 return false;
             }
+            $_locale = $loc;
             if (!isset($_localeData[$loc])) {
                 $_localeData[$loc] = [];
             }
-            $_locale = $loc;
             $this->_loadLocaleDeep($locData);
             $_localeFiles[] = $lName;
         }

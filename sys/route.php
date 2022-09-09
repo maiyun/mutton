@@ -10,7 +10,6 @@ namespace sys;
 
 use ctr\middle;
 use lib\Core;
-use lib\Text;
 
 require ETC_PATH.'route.php';
 
@@ -133,8 +132,8 @@ class Route {
             $middle->setPrototype('_xsrf', $_COOKIE['XSRF-TOKEN']);
         }
 
-        // --- 执行中间件的 onLoad ---
-        $rtn = $middle->onLoad();
+        // --- 执行中间控制器的 onload ---
+        $rtn = $middle->onload();
         if (!isset($rtn) || $rtn === true) {
             // --- 只有不返回或返回 true 时才加载控制文件 ---
             // --- 判断真实控制器文件是否存在 ---
@@ -159,7 +158,7 @@ class Route {
 
             $ctr->setPrototypeRef('_get', $_GET);
             $ctr->setPrototype('_rawPost', $middle->getPrototype('_rawPost'));
-            $ctr->setPrototype('_input', $input);
+            $ctr->setPrototype('_input', $middle->getPrototype('_input'));
             $ctr->setPrototypeRef('_files', $_FILES);
             $ctr->setPrototypeRef('_post', $_POST);
 
@@ -174,11 +173,11 @@ class Route {
             // --- 强制 HTTPS ---
             if (MUST_HTTPS && !HTTPS) {
                 http_response_code(302);
-                header('location: ' . Text::urlResolve(URL_BASE, $location));
+                header('location: ' . $_SERVER['REQUEST_URI']);
                 return;
             }
             // --- 检测 action 是否存在，以及排除内部方法 ---
-            if ($pathRight[0] === '_' || $pathRight === 'onLoad' || $pathRight === 'setPrototype' || $pathRight === 'getPrototype' || $pathRight === 'getAuthorization') {
+            if ($pathRight[0] === '_' || $pathRight === 'onload' || $pathRight === 'setPrototype' || $pathRight === 'getPrototype' || $pathRight === 'getAuthorization') {
                 // --- _ 开头的 action 是内部方法，不允许访问 ---
                 http_response_code(404);
                 echo '[Error] Action not found, path: ' . PATH . '.';
@@ -192,8 +191,8 @@ class Route {
                 echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
             }
-            // --- 执行 onLoad 方法 ---
-            $rtn = $ctr->onLoad();
+            // --- 执行 onload 方法 ---
+            $rtn = $ctr->onload();
             // --- 执行 action ---
             if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
@@ -222,23 +221,28 @@ class Route {
             // 别用 JSON_UNESCAPED_UNICODE 啊，Android 可能解不了
             header('content-type: application/json; charset=utf-8');
             if (isset($rtn[0]) && is_int($rtn[0])) {
+                // --- [0, 'xxx'] 模式 ---
                 $json = ['result' => $rtn[0]];
                 if (isset($rtn[1])) {
                     if (is_array($rtn[1])) {
+                        // --- [0, ['xx' => 'xx']] ---
                         echo json_encode(array_merge($json, $rtn[1]));
                     }
                     else {
+                        // --- [0, 'xxx'] ---
                         $json['msg'] = $rtn[1];
                         if (isset($rtn[2])) {
                             echo json_encode(array_merge($json, $rtn[2]));
                         }
                         else {
+                            // --- Kebab 不会有这种情况 ---
                             unset($rtn[0], $rtn[1]);
                             echo json_encode(array_merge($json, $rtn));
                         }
                     }
                 }
                 else {
+                    // --- Kebab 不会出现这种情况 ---
                     unset($rtn[0]);
                     echo json_encode(array_merge($json, $rtn));
                 }
@@ -262,10 +266,8 @@ class Route {
         if ($pathLio === false) {
             return [strtolower($path), 'index'];
         }
-        else {
-            $right = substr($path, $pathLio + 1);
-            return [strtolower(substr($path, 0, $pathLio)), $right === '' ? 'index' : strtolower($right)];
-        }
+        $right = substr($path, $pathLio + 1);
+        return [strtolower(substr($path, 0, $pathLio)), $right === '' ? 'index' : strtolower($right)];
     }
 
     /**
