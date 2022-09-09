@@ -4,6 +4,10 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.0
+
+[+] 新增 Tcaptcha 库。
+
 # 7.1.0
 
 [+] 新增 Consistent 库。  

@@ -4,6 +4,10 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.0
+
+[+] Add Tcaptcha library.
+
 # 7.1.0
 
 [+] Add Consistent library.  
