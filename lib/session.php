@@ -25,7 +25,6 @@ CREATE INDEX `time_update` ON `session` (`time_update`);
 
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {"ver":"0.2","folder":false} - END
  * Date: 2015/05/25 19:56
  * Last: 2019-1-29 17:18:25, 2020-01-04 17:38:33, 2020-3-29 20:38:57, 2020-11-20 14:25:14, 2022-09-01 16:21:08
  */
@@ -64,7 +63,7 @@ class Session {
      * Session constructor.
      * @param Ctr $ctr 模型实例
      * @param IKv|Db $link Kv 或 Db 实例
-     * @param bool $auth 设为 true 则从头 Authorization 或 post _auth 值读取 token
+     * @param bool $auth 设为 true 则优先从头 Authorization 或 post _auth 值读取 token
      * @param array $opt name, ttl, ssl, sqlPre
      */
     public function __construct(Ctr $ctr, $link, bool $auth = false, array $opt = []) {

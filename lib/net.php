@@ -1,27 +1,6 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {
-    "ver": "0.1",
-    "folder": true,
-    "url": {
-        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/cacert.pem": {
-            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/cacert.pem",
-            "action": "down",
-            "save": "cacert.pem"
-        },
-        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/request.php": {
-            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/request.php",
-            "action": "down",
-            "save": "Request.php"
-        },
-        "https://github.com/maiyun/Mutton/raw/{ver}/lib/net/response.php": {
-            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/net/response.php",
-            "action": "down",
-            "save": "Response.php"
-        }
-    }
-} - END
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
  * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-25 20:30:12, 2022-08-29 21:12:09
@@ -161,6 +140,7 @@ class Net {
         if (!isset($headers['user-agent'])) {
             $headers['user-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36';
         }
+        // --- reuse: Mutton: true, Kebab: false ---
         if ($reuse) {
             $ch = self::getLink($uri['host'] . (isset($uri['port']) ? ':' . $uri['port'] : ''), $local);
         }
@@ -195,6 +175,7 @@ class Net {
                     if ($upload === false) {
                         if ($type === 'json') {
                             $data = json_encode($data);
+                            $headers['content-type'] = 'application/json; charset=utf-8';
                         }
                         else {
                             $data = http_build_query($data);
@@ -238,10 +219,6 @@ class Net {
             $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
             // curl_setopt($ch, 10243, [$host . ':' . $port . ':' . $hosts[$host]]);                       // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
             curl_setopt($ch, CURLOPT_RESOLVE, [$host . ':' . $port . ':' . $hosts[$host]]);        // --- CURL 7.21.3 ---
-        }
-        // --- 设定头部以及判断提交的数据类型 ---
-        if ($type === 'json') {
-            $headers['content-type'] = 'application/json; charset=utf-8';
         }
         // --- 设置 expect 防止出现 100 continue ---
         if (!isset($headers['expect'])) {

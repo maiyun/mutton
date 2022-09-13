@@ -90,7 +90,7 @@ class Consistent {
         }
         foreach ($node as $v) {
             for ($i = 0; $i < $this->_vcount; $i++) {
-                unset($this->_circle[self::hash($node . $i)]);
+                unset($this->_circle[self::hash($v . $i)]);
             }
         }
         $this->_keys = [];
@@ -101,12 +101,16 @@ class Consistent {
      * @param string key 为给定键取Hash，取得顺时针方向上最近的一个虚拟节点对应的实际节点
      */
     public function find($key) {
-        $count = count($this->_circle);
+        if (count($this->_keys) === 0) {
+            $this->_keys = array_keys($this->_circle);
+            sort($this->_keys);
+        }
+        $count = count($this->_keys);
         if ($count === 0) {
             return null;
         }
         if ($count === 1) {
-            return current($this->_circle);
+            return $this->_circle[$this->_keys[0]];
         }
         $hash = self::hash($key);
         if (isset($this->_circle[$hash])) {
@@ -116,10 +120,6 @@ class Consistent {
         SortedMap<Long, T> tailMap = circle.tailMap(hash); 
         hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
         */
-        if (count($this->_keys) === 0) {
-            $this->_keys = array_keys($this->_circle);
-            sort($this->_keys);
-        }
         foreach ($this->_keys as $v) {
             if ($v < $hash) {
                 continue;

@@ -173,7 +173,7 @@ class Route {
             // --- 强制 HTTPS ---
             if (MUST_HTTPS && !HTTPS) {
                 http_response_code(302);
-                header('location: ' . $_SERVER['REQUEST_URI']);
+                header('location: ' . 'https://' . HOST . $_SERVER['REQUEST_URI']);
                 return;
             }
             // --- 检测 action 是否存在，以及排除内部方法 ---

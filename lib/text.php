@@ -1,17 +1,6 @@
 <?php
 /**
  * Project: Mutton, User: JianSuoQiYue
- * CONF - {
-    "ver": "0.8",
-    "folder": true,
-    "url": {
-        "https://github.com/maiyun/Mutton/raw/{ver}/lib/Text/tld.json": {
-            "mirror-cn": "https://gitee.com/MaiyunNET/Mutton/raw/{ver}/lib/Text/tld.json",
-            "action": "down",
-            "save": "tld.json"
-        }
-    }
-} - END
  * Date: 2015/05/07 13:50
  * TLD: https://raw.githubusercontent.com/lupomontero/psl/master/data/rules.json
  * Last: 2019-6-7 13:10:04, 2020-1-17 00:56:44, 2020-03-21 16:23:45
@@ -81,9 +70,9 @@ class Text {
             return $from;
         }
         // --- 获取 from 的 scheme, host, path ---
-        $f = Text::parseUrl($from);
+        $f = self::parseUrl($from);
         // --- 以 // 开头的，加上 from 的 protocol 返回 ---
-        if (strpos($to,'//') === 0) {
+        if (strpos($to, '//') === 0) {
             return $f['protocol'] ? $f['protocol'] . $to : $to;
         }
         if ($f['protocol']) {
@@ -91,7 +80,7 @@ class Text {
             $from = $f['protocol'] . substr($from, strlen($f['protocol']));
         }
         // --- 获取 to 的 scheme, host, path ---
-        $t = Text::parseUrl($to);
+        $t = self::parseUrl($to);
         // --- 已经是绝对路径，直接返回 ---
         if ($t['protocol']) {
             // --- 获取小写的 protocol ---

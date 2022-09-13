@@ -14,8 +14,10 @@ class Request {
 
     /** @var array|null --- get 或 post 的数据 --- */
     private $_data = null;
+
     /** @var string --- 访问的 URL --- */
     private $_url = '';
+
     /** @var array --- 要传递的参数 --- */
     private $_opt = [];
 
@@ -128,16 +130,6 @@ class Request {
     }
 
     /**
-     * --- 是否连接复用，为空则为复用，默认不复用，复用后需要手动关闭连接 ---
-     * @param bool $reuse
-     * @return $this
-     */
-    public function reuse(bool $reuse = true) {
-        $this->_opt['reuse'] = $reuse;
-        return $this;
-    }
-
-    /**
      * --- 批量设置提交的 headers ---
      * @param array $headers
      * @return $this
@@ -168,6 +160,16 @@ class Request {
      */
     public function request(?array &$cookie = null) {
         return Net::request($this->_url, $this->_data, $this->_opt, $cookie);
+    }
+
+    /**
+     * --- 是否连接复用，为空则为复用，默认不复用，复用后需要手动关闭连接，Mutton: true, Kebab: fasle ---
+     * @param bool $reuse
+     * @return $this
+     */
+    public function reuse(bool $reuse = true) {
+        $this->_opt['reuse'] = $reuse;
+        return $this;
     }
 
 }

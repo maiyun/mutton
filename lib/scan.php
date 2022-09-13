@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS `scan` (
 
 /**
  * Project: Mutton, User: Jiansuo Qiyue
- * CONF - {"ver":"0.1","folder":false} - END
  * Date: 2020-11-21 15:38:01
  * Last: 2020-11-21 15:38:04, 2020-11-22 22:12:02, 2022-3-25 14:31:38
  */
