@@ -167,7 +167,9 @@ class Session {
             'ssl' => $ssl
         ]);
 
-        register_shutdown_function([$this, '__update']); // self::class
+        register_shutdown_function([$this, 'update']); // self::class
+
+        return true;
     }
 
     /**
@@ -186,9 +188,9 @@ class Session {
     }
 
     /**
-     * --- 页面整体结束时，要写入到 Redis 或 数据库 ---
+     * --- 页面整体结束时，要写入到 Kv 或 数据库 ---
      */
-    public function __update(): void {
+    public function update(): void {
         if ($this->_link instanceof IKv) {
             $this->_link->set('sess-' . $this->_name . '_' . $this->_token, $_SESSION, $this->_ttl);
         }
@@ -204,7 +206,7 @@ class Session {
                 $ps->execute($this->_sql->getData());
             }
             catch (PDOException $e) {
-                log('[Session][__update]' . $e->getMessage(), '-error');
+                log('[Session][update]' . $e->getMessage(), '-error');
             }
         }
     }

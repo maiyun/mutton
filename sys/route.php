@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29, 2022-08-30 12:56:07
+ * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29, 2022-08-30 12:56:07, 2022-09-13 14:40:45
  */
 declare(strict_types = 1);
 
@@ -49,7 +49,7 @@ class Route {
         require SYS_PATH . 'ctr.php';
         require CTR_PATH . 'middle.php';
         /** @var Ctr $middle */
-        $middle = new middle();
+        $middle = new Middle();
         // --- 对信息进行初始化 ---
         // --- 路由定义的参数序列 ---
         $middle->setPrototypeRef('_param', $param);
@@ -148,6 +148,10 @@ class Route {
             require $filePath;
             // --- 获取类名 ---
             $ctrName = '\\ctr\\' . str_replace('/', '\\', $pathLeft);
+            $lio = strrpos($ctrName, '\\');
+            if ($lio !== false) {
+                $ctrName = substr($ctrName, 0, $lio + 1) . ucwords(substr($ctrName, $lio + 1));
+            }
             /** @var Ctr $ctr */
             $ctr = new $ctrName();
             // --- 对信息进行初始化 ---

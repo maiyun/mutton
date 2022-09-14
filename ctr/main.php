@@ -5,7 +5,7 @@ namespace ctr;
 
 use sys\Ctr;
 
-class main extends Ctr {
+class Main extends Ctr {
 
     public function index() {
         return '<a href="' . URL_BASE . 'test">Hello world! Click here to visit demo.</a>';

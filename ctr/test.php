@@ -23,12 +23,12 @@ use PDO;
 use PDOStatement;
 use sys\Ctr;
 
-class test extends Ctr {
+class Test extends Ctr {
 
     private $_internalUrl = URL_FULL;
 
     public function onload() {
-        if (HOST !== '127.0.0.1' && HOST !== '172.17.0.1' && HOST !== 'local-test.brc-app.com' && substr(HOST, 0, 8) !== '192.168.') {
+        if (HOSTNAME !== '127.0.0.1' && HOSTNAME !== '172.17.0.1' && HOSTNAME !== 'local-test.brc-app.com' && substr(HOSTNAME, 0, 8) !== '192.168.') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
         }
         $realIp = Core::realIP();
@@ -74,6 +74,7 @@ class test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/json?type=4">View "test/json?type=4"</a>',
             '<br><a href="' . URL_BASE . 'test/json?type=5">View "test/json?type=5"</a>',
             '<br><a href="' . URL_BASE . 'test/json?type=6">View "test/json?type=6"</a>',
+            '<br><a href="' . URL_BASE . 'test/json?type=7">View "test/json?type=7"</a>',
 
             '<br><br><b>Ctr:</b>',
             '<br><br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
@@ -166,7 +167,7 @@ class test extends Ctr {
     }
 
     public function qs() {
-        return 'json_encode($_GET): <br><br>' . htmlspecialchars(json_encode($_GET)) . '<br><br>' . $this->_getEnd();
+        return 'json_encode($_GET):<br><br>' . htmlspecialchars(json_encode($_GET)) . '<br><br>' . $this->_getEnd();
     }
 
     public function json() {
@@ -183,6 +184,8 @@ class test extends Ctr {
                 return [1, 'list' => [['id' => '0'], ['id' => '1'], ['id' => '2']], 'total' => '3'];
             case '6':
                 return ['oh' => 'yeah', 'sb' => 'is me'];
+            case '7':
+                return [1, 'success', 'list' => [1, 2, 3]];
             default:
                 return [];
         }
@@ -1967,6 +1970,8 @@ foreach (\$rows as \$row) {
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admx%20w2Ksiz/dszas'))) . "
 <pre>json_encode(Text::parseUrl('C:\Windows\Mi@sc'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('C:\Windows\Mi@sc'))) . "
+<pre>json_encode(Text::parseUrl('../../abc?q=e'))</pre>
+" . htmlspecialchars(json_encode(Text::parseUrl('../../abc?q=e'))) . "
 <pre>Text::urlResolve('/', 'path?id=1');</pre>
 " . htmlspecialchars(Text::urlResolve('/', 'path?id=1')) . "
 <pre>Text::urlResolve('https://www.url.com/view/path', 'find');</pre>
