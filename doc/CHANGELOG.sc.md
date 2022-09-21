@@ -4,6 +4,11 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.1
+
+[+] 新增 getRange 方法在 Consistent 类。  
+[\*] 优化代码。
+
 # 7.2.0
 
 [+] 新增 Tcaptcha 库。

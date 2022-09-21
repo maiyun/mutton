@@ -45,7 +45,7 @@ class Consistent {
      * --- hash 函数 ---
      * @param string|int|float $val 要 hash 的值
      */
-    public static function hash(string|int|float $val) {
+    public static function hash($val) {
         if (is_int($val) || is_float($val)) {
             $val = $val . '';
         }
@@ -55,6 +55,21 @@ class Consistent {
             ((ord($bKey[1]) & 0xFF) << 8) | 
             (ord($bKey[0]) & 0xFF);
         return $res & 0xFFFFFFFF;
+    }
+
+    /**
+     * --- 获取区间节点系列 ---
+     * @param int $min 最小值（含）
+     * @param int $max 最大值（含）
+     * @param string $pre 前导
+     * @return string[]
+     */
+    public static function getRange($min, $max, $pre = '') {
+        $ls = [];
+        for ($i = $min; $i <= $max; ++$i) {
+            $ls[] = $pre . $i;
+        }
+        return $ls;
     }
 
     /**

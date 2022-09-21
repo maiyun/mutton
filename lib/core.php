@@ -37,6 +37,7 @@ class Core {
      * --- 生成随机字符串 ---
      * @param int $length 长度
      * @param string $source 采样值
+     * @param string $block 排除的字符
      * @return string
      */
     public static function random(int $length = 8, string $source = self::RANDOM_LN, string $block = ''): string {
@@ -75,6 +76,8 @@ class Core {
 
     /**
      * --- 获取 MUID ---
+     * @param bool $time 包含显式时间因素
+     * @param string $append 追加字符
      * @param string $key 多样性混合 key，可留空
      * @return string
      */

@@ -2,7 +2,7 @@
 /**
  * --- 注意了注意了 ---
  * 本模拟器基于 Db 类，尽量不要用于任何实际运行环境。
- * 效率低意义不大，仅为方便测试不用装 Redis 环境。
+ * 效率低意义不大，仅为没有 Redis 环境测试使用，仅支持 MySQL Core。
  */
 
 /*
@@ -23,7 +23,7 @@ CREATE TABLE `redis` (
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/09/29 15:26
- * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47, 2020-3-28 13:21:16, 2022-3-25 00:44:31, 2022-08-31 15:20:35
+ * Last: 2018-6-16 01:26, 2019-12-27 17:15:29, 2020-01-05 00:50:07, 2020-1-28 15:06:46, 2020-2-19 10:04:47, 2020-3-28 13:21:16, 2022-3-25 00:44:31, 2022-08-31 15:20:35, 2022-09-21 12:01:02
  */
 declare(strict_types = 1);
 
@@ -31,28 +31,24 @@ namespace lib\Kv;
 
 use lib\Db;
 use lib\Sql;
+use lib\LSql;
 use PDO;
 use PDOException;
 
 class RedisSimulator implements IKv {
 
-    /* @var $_link Db */
+    /** @var Db */
     private $_link = null;
 
     /** @var string key 的前置 */
     private $_pre = '';
 
-    /* @var $_sql LSql 类 */
+    /** @var LSql sql 类 */
     private $_sql = null;
+
     /** @var string 模拟器的数据库表名 */
     private $_table = 'redis';
 
-    /** @var array 当前连接的 redis 服务器信息 */
-    private $_serverList = [];
-    /** @var int 最后一次执行返回的 code */
-    private $_resultCode = 0;
-    /** @var string 最后一次执行返回的说明 */
-    private $_resultMessage = 'SUCCESS';
     /** @var string|null 最后一次错误信息 */
     private $_lastError = null;
 
@@ -89,30 +85,7 @@ class RedisSimulator implements IKv {
             $this->_table = $opt['table'];
         }
 
-        $this->_serverList[] = [
-            'host' => $host,
-            'port' => $port,
-            'type' => 'TCP'
-        ];
         return true;
-    }
-
-    /**
-     * --- 判断是否连接成功 ---
-     * @return bool
-     */
-    public function isConnect(): bool {
-        if ($this->_link === null) {
-            return false;
-        }
-        return $this->_link->isConnected();
-    }
-
-    /**
-     * --- 退出断开连接 ---
-     */
-    public function quit(): void {
-        // --- 无需退出，因为连接的实际上是 Db ---
     }
 
     /**
@@ -125,8 +98,6 @@ class RedisSimulator implements IKv {
      */
     public function set(string $key, $val, int $ttl = 0, string $mod = '') {
         $time = time();
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         if (is_array($val)) {
             $val = json_encode($val);
         }
@@ -152,9 +123,7 @@ class RedisSimulator implements IKv {
                 return true;
             }
             catch (PDOException $e) {
-                $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[2];
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = $e->errorInfo[2];
                 return false;
             }
         }
@@ -175,16 +144,12 @@ class RedisSimulator implements IKv {
                     return true;
                 }
                 else {
-                    $this->_resultCode = -1;
-                    $this->_resultMessage = 'Key does not exist.';
-                    $this->_lastError = $this->_resultMessage;
+                    $this->_lastError = 'Key does not exist.';
                     return false;
                 }
             }
             catch (PDOException $e) {
-                $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[2];
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = $e->errorInfo[2];
                 return false;
             }
         }
@@ -205,9 +170,7 @@ class RedisSimulator implements IKv {
                 return true;
             }
             catch (PDOException $e) {
-                $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[2];
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = $e->errorInfo[2];
                 return false;
             }
         }
@@ -242,8 +205,6 @@ class RedisSimulator implements IKv {
      * @return bool
      */
     public function append(string $key, $val) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->insert($this->_table)->values([
             'tag' => $this->_index . '_' . $this->_pre . $key,
@@ -259,9 +220,7 @@ class RedisSimulator implements IKv {
             return true;
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return false;
         }
     }
@@ -273,8 +232,6 @@ class RedisSimulator implements IKv {
      * @return bool
      */
     public function prepend(string $key, $val) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->update($this->_table, [
             'value' => ['CONCAT(?, `value`)', [$val]]
@@ -289,16 +246,12 @@ class RedisSimulator implements IKv {
                 return true;
             }
             else {
-                $this->_resultCode = -1;
-                $this->_resultMessage = 'Key does not exist.';
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = 'Key does not exist.';
                 return false;
             }
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return false;
         }
     }
@@ -309,8 +262,6 @@ class RedisSimulator implements IKv {
      * @return int
      */
     public function exists($key) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         if (is_string($key)) {
             $key = [$key];
@@ -334,9 +285,7 @@ class RedisSimulator implements IKv {
             return $i;
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return 0;
         }
     }
@@ -347,8 +296,6 @@ class RedisSimulator implements IKv {
      * @return mixed|null
      */
     public function get(string $key) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->select('*', $this->_table)->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
@@ -361,16 +308,12 @@ class RedisSimulator implements IKv {
                 return $obj->value;
             }
             else {
-                $this->_resultCode = -1;
-                $this->_resultMessage = $ps->errorInfo()[2];
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = $ps->errorInfo()[2];
                 return null;
             }
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $e->errorInfo[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return null;
         }
     }
@@ -381,8 +324,6 @@ class RedisSimulator implements IKv {
      * @return int|null
      */
     public function ttl(string $key) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->select('*', $this->_table)->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
@@ -413,8 +354,6 @@ class RedisSimulator implements IKv {
      * @return int|null
      */
     public function pttl(string $key) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->select('*', $this->_table)->where([
             'tag' => $this->_index . '_' . $this->_pre . $key,
@@ -442,19 +381,18 @@ class RedisSimulator implements IKv {
     /**
      * --- 批量获取值 ---
      * @param array $keys key 序列
-     * @return array 顺序数组
+     * @return array key => value 键值对
      */
     public function mGet(array $keys) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $rtn = [];
-        foreach ($keys as $k => $v) {
-            $keys[$k] = $this->_index . '_' . $this->_pre . $v;
-            $rtn[$k] = null;
+        $prekeys = [];
+        foreach ($keys as $v) {
+            $prekeys[] = $this->_index . '_' . $this->_pre . $v;
+            $rtn[$v] = null;
         }
         $this->_sql->select('*', $this->_table)->where([
-            'tag' => $keys,
+            'tag' => $prekeys,
             ['time_exp', '>', time()]
         ]);
         $ps = $this->_link->prepare($this->_sql->getSql());
@@ -464,30 +402,15 @@ class RedisSimulator implements IKv {
             while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
                 $rows[$row['tag']] = $row['value'];
             }
-            foreach ($keys as $k => $v) {
-                if (isset($rows[$v])) {
-                    $rtn[$k] = $rows[$v];
+            foreach ($prekeys as $k => $v) {
+                if (!isset($rows[$v])) {
+                    continue;
                 }
+                $rtn[$keys[$k]] = $rows[$v];
             }
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
-        }
-        return $rtn;
-    }
-
-    /**
-     * --- 批量获取值 ---
-     * @param array $keys key 序列
-     * @return array key => value 键值对
-     */
-    public function getMulti(array $keys) {
-        $r = $this->mGet($keys);
-        $rtn = [];
-        foreach ($keys as $k => $v) {
-            $rtn[$v] = $r[$k];
+            $this->_lastError = $e->errorInfo[2];
         }
         return $rtn;
     }
@@ -510,9 +433,7 @@ class RedisSimulator implements IKv {
      * @param string|string[] $key
      * @return bool
      */
-    public function delete($key) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
+    public function del($key) {
         $this->_gc();
         if (is_string($key)) {
             $key = [$this->_index . '_' . $this->_pre . $key];
@@ -533,16 +454,12 @@ class RedisSimulator implements IKv {
                 return true;
             }
             else {
-                $this->_resultCode = -1;
-                $this->_resultMessage = 'Key does not exist.';
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = 'Key does not exist.';
                 return false;
             }
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $e->errorInfo[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return false;
         }
     }
@@ -551,20 +468,20 @@ class RedisSimulator implements IKv {
     /**
      * --- 自增 ---
      * @param string $key
-     * @param int $num
-     * @return false|int
+     * @param int|float $num 整数或浮点正数
+     * @return false|int|float
      */
-    public function incr(string $key, int $num = 1) {
+    public function incr(string $key, $num = 1) {
         return $this->_incrDecr($key, $num, '+');
     }
 
     /**
      * --- 自减 ---
      * @param string $key
-     * @param int $num
-     * @return false|int
+     * @param int|float $num 整数或浮点正数
+     * @return false|int|float
      */
-    public function decr(string $key, int $num = 1) {
+    public function decr(string $key, $num = 1) {
         return $this->_incrDecr($key, $num, '-');
     }
 
@@ -573,11 +490,9 @@ class RedisSimulator implements IKv {
      * @param string $key
      * @param int $value
      * @param string $op
-     * @return false|int
+     * @return false|int|float
      */
     private function _incrDecr(string $key, int $value, string $op = '+') {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
 
         $time = time();
@@ -594,9 +509,7 @@ class RedisSimulator implements IKv {
         try {
             $ps->execute($this->_sql->getData());
             if ($ps->rowCount() === 0) {
-                $this->_resultCode = -1;
-                $this->_resultMessage = 'ERR value is not an integer or out of range';
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = 'ERR value is not an integer or out of range';
                 return false;
             }
             $this->_sql->select(['value'], $this->_table)->where([
@@ -608,45 +521,12 @@ class RedisSimulator implements IKv {
                 return (int)($ps->fetch(PDO::FETCH_ASSOC)['value']);
             }
             catch (PDOException $e) {
-                $this->_resultCode = -1;
-                $this->_resultMessage = $e->errorInfo[2];
-                $this->_lastError = $this->_resultMessage;
+                $this->_lastError = $e->errorInfo[2];
                 return false;
             }
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $e->errorInfo[2];
-            $this->_lastError = $this->_resultMessage;
-            return false;
-        }
-    }
-
-    /**
-     * --- 仅修改过期时间不修改值 ---
-     * @param string $key
-     * @param int $ttl
-     * @return bool
-     */
-    public function touch(string $key, int $ttl) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
-        $this->_gc();
-        $this->_sql->update($this->_table, [
-            'time_exp' => time() + $ttl
-        ])->where([
-            'tag' => $this->_index . '_' . $this->_pre . $key,
-            ['time_exp', '>', time()]
-        ]);
-        $ps = $this->_link->prepare($this->_sql->getSql());
-        try {
-            $ps->execute($this->_sql->getData());
-            return true;
-        }
-        catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return false;
         }
     }
@@ -658,15 +538,23 @@ class RedisSimulator implements IKv {
      * @return bool
      */
     public function expire(string $key, int $ttl) {
-        return $this->touch($key, $ttl);
-    }
-
-    /**
-     * --- 获取服务器上的所有 key 列表 ---
-     * @return string[]|false
-     */
-    public function getAllKeys() {
-        return $this->keys('*');
+        $this->_gc();
+        $time = time();
+        $this->_sql->update($this->_table, [
+            'time_exp' => $time + $ttl
+        ])->where([
+            'tag' => $this->_index . '_' . $this->_pre . $key,
+            ['time_exp', '>', $time]
+        ]);
+        $ps = $this->_link->prepare($this->_sql->getSql());
+        try {
+            $ps->execute($this->_sql->getData());
+            return true;
+        }
+        catch (PDOException $e) {
+            $this->_lastError = $e->errorInfo[2];
+            return false;
+        }
     }
 
     /**
@@ -675,8 +563,6 @@ class RedisSimulator implements IKv {
      * @return string[]|false
      */
     public function keys($pattern) {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
         $this->_gc();
         $this->_sql->select(['tag'], $this->_table);
         $where = [
@@ -692,9 +578,7 @@ class RedisSimulator implements IKv {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return false;
         }
         $rtn = [];
@@ -706,21 +590,50 @@ class RedisSimulator implements IKv {
     }
 
     /**
-     * --- 根据条件获取服务器上的 key ---
-     * @param string $pattern
+     * --- 根据条件分批获取服务器上的 keys ---
+     * @param int|null $cursor
+     * @param string $pattern 例如 *
+     * @param int $count 获取的条数
      * @return string[]|false
      */
-    public function scan($pattern = '*') {
-        return $this->keys($pattern);
+    public function scan(&$cursor = null, $pattern = '*', $count = 10) {
+        $this->_gc();
+        if ($cursor === 0) {
+            return false;
+        }
+        if ($cursor === null) {
+            $cursor = 0;
+        }
+        $where = [
+            ['time_exp', '>', time()],
+            ['id', '>', $cursor]
+        ];
+        if ($pattern !== '*') {
+            $pattern = str_replace('*', '%', $pattern);
+            $where[] = ['tag', 'LIKE', $this->_index . '_' . $this->_pre . $pattern];
+        }
+        $this->_sql->where($where)->limit(0, $count);
+        $ps = $this->_link->prepare($this->_sql->getSql());
+        try {
+            $ps->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            $this->_lastError = $e->errorInfo[2];
+            return false;
+        }
+        $rtn = [];
+        $pl = strlen($this->_index . '_' . $this->_pre);
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            $rtn[] = substr($row['tag'], $pl);
+        }
+        return $rtn;
     }
 
     /**
-     * --- 清除服务器上所有的数据 ---
+     * --- 清除当前所选数据库的所有内容 ---
      * @return bool
      */
-    public function flush() {
-        $this->_resultCode = 0;
-        $this->_resultMessage = 'SUCCESS';
+    public function flushDB() {
         $this->_sql->delete($this->_table)->where([
             ['tag', 'LIKE', $this->_index . '_%']
         ]);
@@ -730,35 +643,9 @@ class RedisSimulator implements IKv {
             return true;
         }
         catch (PDOException $e) {
-            $this->_resultCode = -1;
-            $this->_resultMessage = $ps->errorInfo()[2];
-            $this->_lastError = $this->_resultMessage;
+            $this->_lastError = $e->errorInfo[2];
             return false;
         }
-    }
-
-    /**
-     * --- 清除服务器上所有的数据 ---
-     * @return bool
-     */
-    public function flushDB() {
-        return $this->flush();
-    }
-
-    /**
-     * --- 获取最后一次执行结果码 ---
-     * @return int
-     */
-    public function getResultCode() {
-        return $this->_resultCode;
-    }
-
-    /**
-     * --- 获取最后一次执行结果文本 ---
-     * @return string
-     */
-    public function getResultMessage() {
-        return $this->_resultMessage;
     }
 
     /**
@@ -770,41 +657,14 @@ class RedisSimulator implements IKv {
     }
 
     /**
-     * --- 获取当前服务器列表 ---
-     * @return array
-     */
-    public function getServerList() {
-        if ($this->_link === null || !$this->isConnect()) {
-            return [];
-        }
-        return $this->_serverList;
-    }
-
-    /**
-     * --- 清除所有已连接的 server ---
-     * @return bool
-     */
-    public function resetServerList() {
-        $this->_link = null;
-        $this->_serverList = [];
-        return true;
-    }
-
-    /**
      * --- 发送 ping ---
      * @return false|string
      */
     public function ping() {
-        return $this->isConnect();
-    }
-
-    /**
-     * --- 获取状态 ---
-     * @param string $name
-     * @return array
-     */
-    public function getStats(string $name) {
-        return [];
+        if (!$this->_link) {
+            return false;
+        }
+        return $this->_link->isConnected() ? 'PONG' : false;
     }
 
     /**
@@ -891,7 +751,7 @@ class RedisSimulator implements IKv {
             $inKeys[] = $key . '-' . $v;
         }
         $kl = strlen($key) + 1;
-        $r = $this->getMulti($inKeys);
+        $r = $this->mGet($inKeys);
         $rtn = [];
         foreach ($r as $k => $v) {
             $rtn[substr($k, $kl)] = $v;
@@ -932,7 +792,7 @@ class RedisSimulator implements IKv {
         }
         $count = 0;
         foreach ($fields as $field) {
-            if ($this->delete($key . '-' . $field)) {
+            if ($this->del($key . '-' . $field)) {
                 ++$count;
             }
         }
@@ -941,7 +801,7 @@ class RedisSimulator implements IKv {
                 $v = str_replace('-' . $field . '-', '-', $v);
             }
             if ($v === '-') {
-                $this->delete($v);
+                $this->del($v);
             }
             else {
                 $this->set($key, $v);

@@ -4,6 +4,11 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.1
+
+[+] Added getRange method in the Consistent class.  
+[\*] Optimize code.
+
 # 7.2.0
 
 [+] Add Tcaptcha library.

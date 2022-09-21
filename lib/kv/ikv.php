@@ -17,17 +17,6 @@ interface IKv {
     public function connect(array $opt = []);
 
     /**
-     * --- 判断是否连接成功 ---
-     * @return bool
-     */
-    public function isConnect();
-
-    /**
-     * --- 退出断开连接 ---
-     */
-    public function quit(): void;
-
-    /**
      * --- 设定一个值 ---
      * @param string $key
      * @param mixed $val
@@ -107,13 +96,6 @@ interface IKv {
     public function mGet(array $keys);
 
     /**
-     * --- 批量获取值 ---
-     * @param array $keys key 序列
-     * @return array key => value 键值对
-     */
-    public function getMulti(array $keys);
-
-    /**
      * --- 获取 json 对象 ---
      * @param string $key
      * @return mixed|null
@@ -125,31 +107,23 @@ interface IKv {
      * @param string|string[] $key
      * @return bool
      */
-    public function delete($key);
+    public function del($key);
 
     /**
      * --- 自增 ---
      * @param string $key
-     * @param int $num
+     * @param int|float $num 整数或浮点正数
      * @return false|int
      */
-    public function incr(string $key, int $num = 1);
+    public function incr(string $key, $num = 1);
 
     /**
      * --- 自减 ---
      * @param string $key
-     * @param int $num
+     * @param int|float $num 整数或浮点正数
      * @return false|int
      */
-    public function decr(string $key, int $num = 1);
-
-    /**
-     * --- 仅修改过期时间不修改值 ---
-     * @param string $key
-     * @param int $ttl
-     * @return bool
-     */
-    public function touch(string $key, int $ttl);
+    public function decr(string $key, $num = 1);
 
     /**
      * --- 仅修改过期时间不修改值 ---
@@ -160,12 +134,6 @@ interface IKv {
     public function expire(string $key, int $ttl);
 
     /**
-     * --- 获取服务器上的所有 key 列表 ---
-     * @return string[]|false
-     */
-    public function getAllKeys();
-
-    /**
      * --- 获取服务器上的所有 key 列表（同步） ---
      * @param string $pattern
      * @return string[]|false
@@ -173,35 +141,19 @@ interface IKv {
     public function keys($pattern);
 
     /**
-     * --- 根据条件获取服务器上的 key ---
-     * @param string $pattern
+     * --- 根据条件分批获取服务器上的 keys ---
+     * @param int|null $cursor
+     * @param string $pattern 例如 *
+     * @param int $count 获取的条数
      * @return string[]|false
      */
-    public function scan($pattern = '*');
+    public function scan(&$cursor = null, $pattern = '*', $count = 10);
 
     /**
-     * --- 清除服务器上所有的数据 ---
-     * @return bool
-     */
-    public function flush();
-
-    /**
-     * --- 清除服务器上所有的数据 ---
+     * --- 清除当前所选数据库的所有内容 ---
      * @return bool
      */
     public function flushDB();
-
-    /**
-     * --- 获取最后一次执行结果码 ---
-     * @return int
-     */
-    public function getResultCode();
-
-    /**
-     * --- 获取最后一次执行结果文本 ---
-     * @return string
-     */
-    public function getResultMessage();
 
     /**
      * --- 获取最后一次错误信息 ---
@@ -210,29 +162,10 @@ interface IKv {
     public function getLastError();
 
     /**
-     * --- 获取当前服务器列表 ---
-     * @return array
-     */
-    public function getServerList();
-
-    /**
-     * --- 清除所有已连接的 server ---
-     * @return bool
-     */
-    public function resetServerList();
-
-    /**
      * --- 发送 ping ---
      * @return false|string
      */
     public function ping();
-
-    /**
-     * --- 获取状态 ---
-     * @param string $name
-     * @return array
-     */
-    public function getStats(string $name);
 
     /**
      * --- 设置哈希表值 ---

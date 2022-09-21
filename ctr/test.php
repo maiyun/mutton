@@ -301,11 +301,11 @@ function postFd() {
         }
 
         $echo = [
-            '<a href="'.URL_BASE.'test/ctr-locale">English</a> | ' .
-            '<a href="'.URL_BASE.'test/ctr-locale?lang=sc">简体中文</a> | ' .
-            '<a href="'.URL_BASE.'test/ctr-locale?lang=tc">繁體中文</a> | ' .
-            '<a href="'.URL_BASE.'test/ctr-locale?lang=ja">日本語</a> | ' .
-            '<a href="'.URL_BASE.'test">Return</a>'
+            '<a href="' . URL_BASE . 'test/ctr-locale">English</a> | ' .
+            '<a href="' . URL_BASE . 'test/ctr-locale?lang=sc">简体中文</a> | ' .
+            '<a href="' . URL_BASE . 'test/ctr-locale?lang=tc">繁體中文</a> | ' .
+            '<a href="' . URL_BASE . 'test/ctr-locale?lang=ja">日本語</a> | ' .
+            '<a href="' . URL_BASE . 'test">Return</a>'
         ];
 
         $rtn = $this->_loadLocale($_GET['lang'], 'test');
@@ -376,27 +376,32 @@ json_encode(\$result);</pre>" . json_encode($result);
             // --- explain ---
 
             $ls = Session::where([
-                ['time_update', '>', time() - 60 * 5]
+                ['time_update', '>', $time - 60 * 5]
             ]);
             $r = $ls->explain();
             $echo[] = "<pre>\$ls = Session::where([
     ['time_add', '>', time() - 60 * 5]
 ]);
-\$ls->explain();</pre>" . htmlspecialchars($r);
+\$ls->explain();</pre>" . htmlspecialchars(json_encode($r));
 
-            $r = $ls->explain(true);
+            $r2 = $ls->explain(true);
             $echo[] = '<pre>$ls->explain(true);</pre>';
-            $echo[] = '<table style="width: 100%;">';
-            foreach ($r as $k => $v) {
-                $echo[] = '<tr><th>' . htmlspecialchars($k) . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+            if ($r2) {
+                $echo[] = '<table style="width: 100%;">';
+                foreach ($r2 as $k => $v) {
+                    $echo[] = '<tr><th>' . htmlspecialchars($k) . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+                }
+                $echo[] = '</table>';
             }
-            $echo[] = '</table>';
+            else {
+                $echo[] = '<div>false</div>';
+            }
 
             $echo[] = '<br><a href="' . URL_BASE . 'test/mod-session?s=' . $this->_get['s'] . '&action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
 
-            return '<a href="'.URL_BASE.'test/mod?s=mysql">MySQL</a> | ' .
-            '<a href="'.URL_BASE.'test/mod?s=sqlite">SQLite</a> | ' .
-            '<a href="'.URL_BASE.'test">Return</a><br><br>' . join('', $echo) . '<br><br>' . $this->_getEnd();
+            return '<a href="' . URL_BASE . 'test/mod?s=mysql">MySQL</a> | ' .
+            '<a href="' . URL_BASE . 'test/mod?s=sqlite">SQLite</a> | ' .
+            '<a href="' . URL_BASE . 'test">Return</a><br><br>' . join('', $echo) . '<br><br>' . $this->_getEnd();
         }
     }
 
@@ -460,8 +465,10 @@ CREATE TABLE `m_test_data_0` (
 
         $ids = [];
         $ls = ModTest::select(['id'])->by('time_add')->limit(0, 50)->all();
-        foreach ($ls as $item) {
-            $ids[] = $item->id;
+        if ($ls) {
+            foreach ($ls as $item) {
+                $ids[] = $item->id;
+            }
         }
         $id = $ids[Core::rand(0, count($ids) - 1)];
 
@@ -486,18 +493,17 @@ CREATE TABLE `m_test_data_0` (
     public function captchaBase64() {
         $echo = ["<pre>\$cap = Captcha::get(400, 100);
 \$phrase = \$cap->getPhrase();
-\$base64 = \$cap->getBase64();
-echo \$phrase;</pre>"];
+\$base64 = \$cap->getBase64();</pre>\$phrase:"];
         $cap = Captcha::get(400, 100);
         $phrase = $cap->getPhrase();
         $base64 = $cap->getBase64();
-        $echo[] = '<pre>'.$phrase.'</pre>';
+        $echo[] = '<pre>' . $phrase . '</pre>';
 
-        $echo[] = 'echo $base64;';
-        $echo[] = '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">'.$base64.'</pre>';
+        $echo[] = '$base64:';
+        $echo[] = '<pre style="white-space: pre-wrap; word-wrap: break-word; overflow-y: auto; max-height: 200px;">' . $base64 . '</pre>';
 
         $echo[] = '&lt;img src="&lt;?php echo $base64 ?&gt;" style="width: 200px; height: 50px;"&gt;';
-        $echo[] = '<pre><img alt="captcha" src="'.$base64.'" style="width: 200px; height: 50px;"></pre>';
+        $echo[] = '<pre><img alt="captcha" src="' . $base64 . '" style="width: 200px; height: 50px;"></pre>';
 
         return join('', $echo) . $this->_getEnd();
     }
@@ -601,53 +607,51 @@ echo \$phrase;</pre>"];
     }
 
     public function coreRandom() {
-        return
-            "<pre>Core::random(16, Core::RANDOM_LUNS);</pre>" . htmlspecialchars(Core::random(16, Core::RANDOM_LUNS)) .
-            "<pre>Core::random(4, Core::RANDOM_V);</pre>" . htmlspecialchars(Core::random(4, Core::RANDOM_V)) .
-            "<pre>Core::random(8, Core::RANDOM_N, '0349');</pre>" . htmlspecialchars(Core::random(8, Core::RANDOM_N, '0349')) .
-            "<br><br>" . $this->_getEnd();
+        return '<pre>Core::random(16, Core::RANDOM_LUNS);</pre>' . htmlspecialchars(Core::random(16, Core::RANDOM_LUNS)) .
+            '<pre>Core::random(4, Core::RANDOM_V);</pre>' . htmlspecialchars(Core::random(4, Core::RANDOM_V)) .
+            '<pre>Core::random(8, Core::RANDOM_N, \'0349\');</pre>' . htmlspecialchars(Core::random(8, Core::RANDOM_N, '0349')) .
+            '<br><br>' . $this->_getEnd();
     }
 
     public function coreRand() {
-        return
-            "<pre>Core::rand(1.2, 7.1, 1)</pre>" . Core::rand(1.2, 7.1, 1) .
-            "<pre>Core::rand(1.2, 7.1, 5)</pre>" . Core::rand(1.2, 7.1, 5) .
-            "<pre>Core::rand(1.298, 7.1891, 2);</pre>" . Core::rand(1.298, 7.1891, 2) .
-            "<br><br>" . $this->_getEnd();
+        return '<pre>Core::rand(1.2, 7.1, 1)</pre>' . Core::rand(1.2, 7.1, 1) .
+            '<pre>Core::rand(1.2, 7.1, 5)</pre>' . Core::rand(1.2, 7.1, 5) .
+            '<pre>Core::rand(1.298, 7.1891, 2);</pre>' . Core::rand(1.298, 7.1891, 2) .
+            '<br><br>' . $this->_getEnd();
     }
 
     public function coreMuid() {
         $ac = isset($_GET['ac']) ? $_GET['ac'] : '';
 
         $echo = [
-            '<a href="'.URL_BASE.'test/core-muid">Default</a> | ' .
-            '<a href="'.URL_BASE.'test/core-muid?ac=big">Big</a> | ' .
-            '<a href="'.URL_BASE.'test">Return</a>'
+            '<a href="' . URL_BASE . 'test/core-muid">Default</a> | ' .
+            '<a href="' . URL_BASE . 'test/core-muid?ac=big">Big</a> | ' .
+            '<a href="' . URL_BASE . 'test">Return</a>'
         ];
 
         if ($ac === '') {
             $muid = Core::muid();
-            $echo[] = "<pre>Core::muid();</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid();</pre>' . $muid . ' (' . strlen($muid) . ')';
     
             $muid = Core::muid();
-            $echo[] = "<pre>Core::muid();</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid();</pre>' . $muid . ' (' . strlen($muid) . ')';
     
             $muid = Core::muid(false);
-            $echo[] = "<pre>Core::muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid(false);</pre>' . $muid . ' (' . strlen($muid) . ')';
     
             $muid = Core::muid(false);
-            $echo[] = "<pre>Core::muid(false);</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid(false);</pre>' . $muid . ' (' . strlen($muid) . ')';
     
             $muid = Core::muid(true, 'xa');
-            $echo[] = "<pre>Core::muid(true, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid(true, \'xa\');</pre>' . $muid . ' (' . strlen($muid) . ')';
     
             $muid = Core::muid(false, 'xa');
-            $echo[] = "<pre>Core::muid(false, 'xa);</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid(false, \'xa\');</pre>' . $muid . ' (' . strlen($muid) . ')';
     
             $muid = Core::muid(false, '', 'ha');
-            $echo[] = "<pre>Core::muid(false, '', 'ha');</pre>" . $muid . " (" . strlen($muid) . ")";
+            $echo[] = '<pre>Core::muid(false, \'\', \'ha\');</pre>' . $muid . ' (' . strlen($muid) . ')';
 
-            $echo[] = "<br><br>";
+            $echo[] = '<br><br>';
         }
         else {
             $parr = [];
@@ -704,11 +708,12 @@ json_encode(\$orig);</pre>" . json_encode($orig);
 json_encode(\$text);</pre>" . json_encode($text);
 
         $orig = Crypto::aesDecrypt($text, $key, $iv);
-        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, \$iv);\njson_encode(\$orig);</pre>" . json_encode($orig);
+        $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, \$iv);
+json_encode(\$orig);</pre>" . json_encode($orig);
 
         $orig = Crypto::aesDecrypt($text, $key, 'otherIv');
         $echo[] = "<pre>\$orig = Crypto::aesDecrypt(\$text, \$key, 'otherIv');
-json_encode(\$orig);</pre>" . (json_encode($orig) ? 'true' : 'false');
+json_encode(\$orig) ? 'true' : 'false';</pre>" . (json_encode($orig) ? 'true' : 'false');
 
         // ----------
 
@@ -743,8 +748,9 @@ json_encode(\$orig);</pre>" . json_encode($orig);
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
 
-        if (!($stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;'))) {
-            return [0 ,'Failed("m_session" not found. ' . $stmt . ').'];
+        // --- 先获取 session 表的情况 ---
+        if (!($stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;'))) {
+            return [0 ,'Failed("m_session" not found)'];
         }
 
         $echo = ["<pre>\$db = Db::get('" . $_GET['s'] . "');
@@ -752,10 +758,11 @@ if (!(\$rtn = \$db->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
 
-\$stmt = \$db->query('SELECT * FROM `m_session` LIMIT 10;');</pre>"];
+\$stmt = \$db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');</pre>"];
 
         $this->_dbTable($stmt, $echo);
 
+        // --- 插入 test-token 的条目 ---
         $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
@@ -778,45 +785,55 @@ else {
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($errorCode) . "<br>
-error: ".json_encode($error)."<br><br>";
+error: " . json_encode($error) . "<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `m_session` LIMIT 1;');
+        // --- 获取最近的一条 ---
+        $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 1;');
         $this->_dbTable($stmt, $echo);
 
+        // --- 再次插入 test-token 的条目 ---
         $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $insertId = $db->getInsertID();
         $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
+insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
+        // --- 依据唯一键替换值 ---
         $exec = $db->exec('REPLACE INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
-        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_session` (`id`, `token`, `data`, `time_update`, `time_add`) VALUES (\'" . $insertId . "\', \'test2-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $insertId = $db->getInsertID();
+        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
-" . ($exec ? "insertId: " . json_encode($db->getInsertID()) . "<br>" : "") . "
+insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
 error: ".json_encode($db->getErrorInfo())."<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
+        // --- 显示近 10 条 ---
+        $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
+        // --- explain 开始 ---
         $explain = $_GET['s'] === 'mysql' ? 'EXPLAIN' : 'EXPLAIN QUERY PLAN';
-        $echo[] = "<pre>\$exec = \$db->query('" . $explain . " SELECT * FROM `m_session` LIMIT 10;');</pre>";
+        $echo[] = "<pre>\$stmt = \$db->query('" . $explain . " SELECT * FROM `m_session` LIMIT 10;');</pre>";
         $stmt = $db->query($explain . ' SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
+        // --- 删除测试添加的 token ---
         $exec = $db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');
         $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');</pre>
-exec: " . $exec . "<br><br>";
+exec: " . json_encode($exec) . "<br><br>";
 
         $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
-        return '<a href="'.URL_BASE.'test/db?s=mysql">MySQL</a> | ' .
-        '<a href="'.URL_BASE.'test/db?s=sqlite">SQLite</a> | ' .
-        '<a href="'.URL_BASE.'test">Return</a>' . join('', $echo) . "<br>" . $this->_getEnd();
+        return '<a href="' . URL_BASE . 'test/db?s=mysql">MySQL</a> | ' .
+        '<a href="' . URL_BASE.'test/db?s=sqlite">SQLite</a> | ' .
+        '<a href="' . URL_BASE.'test">Return</a>' . join('', $echo) .'<br>' . $this->_getEnd();
     }
+
     private function _dbTable(PDOStatement $stmt, &$echo) {
         $echo[] = '<table style="width: 100%;"><tr>';
         if ($stmt->getColumnMeta(0)) {
@@ -824,7 +841,7 @@ exec: " . $exec . "<br><br>";
             for ($i = 0; $i < $cc; ++$i) {
                 $echo[] = '<th>' . htmlspecialchars($stmt->getColumnMeta($i)['name']) . '</th>';
             }
-            $echo[] = "</tr>";
+            $echo[] = '</tr>';
 
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $echo[] = '<tr>';
@@ -859,7 +876,7 @@ exec: " . $exec . "<br><br>";
             'binary' => false,
             'db' => $db
         ]))) {
-            return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
+            return [0, 'Failed(' . ($rtn === null ? 'null' : 'false').').'];
         }
         $value = isset($_GET['value']) ? $_GET['value'] : '';
         $ac = isset($_GET['ac']) ? $_GET['ac'] : '';
@@ -867,19 +884,17 @@ exec: " . $exec . "<br><br>";
         $kvGet = strtoupper($_GET['s']);
         $kvGet = str_replace('SS', 'S_S', $kvGet);
 
-        $echo[] = "<pre>\$kv = Kv::get(Kv::$kvGet);
+        
+        $echo = ["<pre>\$kv = Kv::get(Kv::$kvGet);
 if (!(\$rtn = \$kv->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
-json_encode(\$kv->getServerList());</pre>" . json_encode($kv->getServerList());
-
-        $echo[] = "<pre>json_encode(\$kv->isConnect());</pre>";
-        $echo[] = json_encode($kv->isConnect());
+json_encode(\$kv->ping());</pre>" . json_encode($kv->ping())];
 
         if ($ac == 'delete') {
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            $echo[] = "<pre>json_encode(\$kv->delete('test'));</pre>" . json_encode($kv->delete('test'));
+            $echo[] = "<pre>json_encode(\$kv->delete('test'));</pre>" . json_encode($kv->del('test'));
 
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
         }
@@ -891,26 +906,17 @@ json_encode(\$kv->getServerList());</pre>" . json_encode($kv->getServerList());
             $echo[] = "<pre>json_encode(\$kv->pttl('test'));</pre>" . json_encode($kv->pttl('test'));
         }
         else if ($ac == 'incr-decr-replace') {
-            $echo[] = "<pre>json_encode(\$kv->getResultCode());
-json_encode(\$kv->getResultMessage());
-json_encode(\$kv->getLastError());</pre>";
-            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
+            $echo[] = "<pre>json_encode(\$kv->getLastError());</pre>" . json_encode($kv->getLastError());
 
-            $echo[] = "<pre>json_encode(\$kv->delete('test'));</pre>" . json_encode($kv->delete('test'));
+            $echo[] = "<pre>json_encode(\$kv->del('test'));</pre>" . json_encode($kv->del('test'));
 
             $echo[] = "<pre>json_encode(\$kv->replace('test', 'QAQ'));</pre>" . json_encode($kv->replace('test', 'QAQ'));
 
-            $echo[] = "<pre>json_encode(\$kv->getResultCode());
-json_encode(\$kv->getResultMessage());
-json_encode(\$kv->getLastError());</pre>";
-            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
+            $echo[] = "<pre>json_encode(\$kv->getLastError());</pre>" . json_encode($kv->getLastError());
 
             $echo[] = "<pre>json_encode(\$kv->incr('test'));</pre>" . json_encode($kv->incr('test'));
 
-            $echo[] = "<pre>json_encode(\$kv->getResultCode());
-json_encode(\$kv->getResultMessage());
-json_encode(\$kv->getLastError());</pre>";
-            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
+            $echo[] = "<pre>json_encode(\$kv->getLastError());</pre>" . json_encode($kv->getLastError());
 
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
@@ -932,17 +938,11 @@ json_encode(\$kv->getLastError());</pre>";
 
             $echo[] = "<pre>json_encode(\$kv->incr('test', 10));</pre>" . json_encode($kv->incr('test', 10));
 
-            $echo[] = "<pre>json_encode(\$kv->getResultCode());
-json_encode(\$kv->getResultMessage());
-json_encode(\$kv->getLastError());</pre>";
-            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
+            $echo[] = "<pre>json_encode(\$kv->getLastError());</pre>" . json_encode($kv->getLastError());
 
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
-            $echo[] = "<pre>json_encode(\$kv->getResultCode());
-json_encode(\$kv->getResultMessage());
-json_encode(\$kv->getLastError());</pre>";
-            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
+            $echo[] = "<pre>json_encode(\$kv->getLastError());</pre>" . json_encode($kv->getLastError());
         }
         else if ($ac === 'append-prepend') {
             $echo[] = "<pre>json_encode(\$kv->prepend('test', '0'));</pre>" . json_encode($kv->prepend('test', '0'));
@@ -963,14 +963,11 @@ json_encode(\$kv->getLastError());</pre>";
 
             $echo[] = "<pre>json_encode(\$kv->append('tmp_test', 'hehe'));</pre>" . json_encode($kv->append('tmp_test', 'hehe'));
 
-            $echo[] = "<pre>json_encode(\$kv->getResultCode());
-json_encode(\$kv->getResultMessage());
-json_encode(\$kv->getLastError());</pre>";
-            $echo[] = json_encode($kv->getResultCode()) . '<br>' . json_encode($kv->getResultMessage()) . '<br>' . json_encode($kv->getLastError());
+            $echo[] = "<pre>json_encode(\$kv->getLastError());</pre>" . json_encode($kv->getLastError());
 
             $echo[] = "<pre>json_encode(\$kv->get('tmp_test'));</pre>" . json_encode($kv->get('tmp_test'));
 
-            $echo[] = "<pre>json_encode(\$kv->delete('tmp_test'));</pre>" . json_encode($kv->delete('tmp_test'));
+            $echo[] = "<pre>json_encode(\$kv->del('tmp_test'));</pre>" . json_encode($kv->del('tmp_test'));
         }
         else if ($ac === 'hash') {
             $echo[] = "<pre>json_encode(\$kv->hSet('hTest', 'name', 'Cheng Xin'));</pre>" . json_encode($kv->hSet('hTest', 'name', 'Cheng Xin'));
@@ -1017,7 +1014,7 @@ json_encode(\$kv->getLastError());</pre>";
 
             $echo[] = "<pre>json_encode(\$kv->hMGet('hTest', ['age', 'sex', 'school']));</pre>" . json_encode($kv->hMGet('hTest', ['age', 'sex', 'school']));
 
-            $echo[] = "<pre>json_encode(\$kv->delete('hTest'));</pre>" . json_encode($kv->delete('hTest'));
+            $echo[] = "<pre>json_encode(\$kv->del('hTest'));</pre>" . json_encode($kv->del('hTest'));
 
             $echo[] = "<pre>json_encode(\$kv->hGet('hTest', 'name'));</pre>" . json_encode($kv->hGet('hTest', 'name'));
 
@@ -1033,23 +1030,38 @@ echo 'Added.';</pre>";
             }
             $echo[] = 'Added.';
 
-            $echo[] = "<pre>json_encode(\$kv->getAllKeys());</pre>" . json_encode($kv->getAllKeys());
-
             $echo[] = "<pre>json_encode(\$kv->keys('t*'));</pre>" . json_encode($kv->keys('t*'));
 
-            $echo[] = "<pre>json_encode(\$kv->scan());</pre>" . json_encode($kv->scan());
+            $echo[] = '<pre>json_encode(\$kv->scan());</pre>' . json_encode($kv->scan());
 
-            $echo[] = "<pre>json_encode(\$kv->scan('*2*'));</pre>" . json_encode($kv->scan('*2*'));
-
-            $echo[] = "<pre>json_encode(\$kv->scan('*'));</pre>" . json_encode($kv->scan('*'));
+            $echo[] = "<pre>\$cursor = null;
+while (true) {
+    \$echo[] = '&lt;br&gt;WHILE (' . json_encode(\$cursor) . ')';
+    \$r = \$kv->scan(\$cursor, '*2*', 5);
+    if (\$r === false) {
+        \$echo[] = '&lt;br&gt;DONE';
+        break;
+    }
+    \$echo[] = '&lt;br&gt;' . json_encode(\$r);
+}
+\$echo[count(\$echo) - 1] = substr(\$echo[count(\$echo) - 1], 0, -4);</pre>";
+            $cursor = null;
+            while (true) {
+                $echo[] = 'WHILE (' . json_encode($cursor) . ')<br>';
+                $r = $kv->scan($cursor, '*2*', 5);
+                if ($r === false) {
+                    $echo[] = 'DONE<br>';
+                    break;
+                }
+                $echo[] = json_encode($r). '<br>';
+            }
+            $echo[count($echo) - 1] = substr($echo[count($echo) - 1], 0, -4);
         }
         else {
             // --- default ---
             $echo[] = "<pre>json_encode(\$kv->exists(['test', 'heheda']));</pre>" . json_encode($kv->exists(['test', 'heheda']));
 
             $echo[] = "<pre>json_encode(\$kv->mGet(['test', 'heheda']));</pre>" . json_encode($kv->mGet(['test', 'heheda']));
-
-            $echo[] = "<pre>json_encode(\$kv->getMulti(['test', 'heheda']));</pre>" . json_encode($kv->getMulti(['test', 'heheda']));
 
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
 
@@ -1058,16 +1070,16 @@ echo 'Added.';</pre>";
             $echo[] = "<pre>json_encode(\$kv->get('test'));</pre>" . json_encode($kv->get('test'));
         }
 
-        return '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'">Default</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&value=aaa">Set "aaa"</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&value=bbb">Set "bbb"</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=delete">Delete</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=ttl">ttl</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=incr-decr-replace">Incr/Decr/Replace</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=append-prepend">Append/Prepend</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=hash">Hash</a> | ' .
-            '<a href="'.URL_BASE.'test/kv?s='.$_GET['s'].'&ac=other">Other</a> | ' .
-            '<a href="'.URL_BASE.'test">Return</a>' . join('', $echo) . '<br><br>' . $this->_getEnd();
+        return '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '">Default</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&value=aaa">Set "aaa"</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&value=bbb">Set "bbb"</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&ac=delete">Delete</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&ac=ttl">ttl</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&ac=incr-decr-replace">Incr/Decr/Replace</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&ac=append-prepend">Append/Prepend</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&ac=hash">Hash</a> | ' .
+            '<a href="' . URL_BASE . 'test/kv?s=' . $_GET['s'] . '&ac=other">Other</a> | ' .
+            '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
     public function net() {

@@ -518,7 +518,6 @@ class Mod {
             return true;
         }
         else {
-            // --- 感觉不会执行到这里，但 Kebab 中写了这个，待 Kebab 测试后再回过头详测 ---
             return false;
         }
     }

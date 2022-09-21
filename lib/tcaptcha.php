@@ -31,7 +31,7 @@ class Tcaptcha {
             'isReady:0,' .
             'readyFun:null,' .
             'cid:0,' .
-            'ready:function(fun){'.
+            'ready:function(fun){' .
                 'if(this.isReady>0){' .
                     'fun();' .
                 '}else{' .
@@ -105,7 +105,7 @@ class Tcaptcha {
         else {
             // --- 2 ---
             $echo[] = 'Tcaptcha.isReady=2;' .
-            'if(Tcaptcha.readyFun){Tcaptcha.readyFun()}' . 
+            'if(Tcaptcha.readyFun){Tcaptcha.readyFun()}' .
             '</script>';
         }
         return join('', $echo);
