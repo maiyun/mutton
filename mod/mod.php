@@ -469,7 +469,7 @@ class Mod {
         if ((static::$_key !== '') && !isset($updates[static::$_key])) {
             $count = 0;
             while (true) {
-                if ($count === 5) {
+                if ($count === 3) {
                     return false;
                 }
                 $updates[static::$_key] = $this->_keyGenerator();

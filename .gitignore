@@ -2,7 +2,7 @@
 .project
 .buildpath
 .settings/
-etc/__*
+etc/db.php
 log/*
 !log/index.html
 stc/node_modules/

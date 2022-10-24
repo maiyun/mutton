@@ -73,7 +73,7 @@ class Ctr {
      * --- 实例化后会执行的方法，可重写此方法 ---
      * @return bool|array|string|null|void
      */
-    public function onload() {
+    public function onLoad() {
         return true;
     }
 

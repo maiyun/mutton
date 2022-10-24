@@ -250,16 +250,15 @@ SCRIPT;
     public function incr(string $key, $num = 1) {
         if (is_int($num)) {
             if ($num === 1) {
-                $r = $this->_link->incr($this->_pre . $key);
+                return $this->_link->incr($this->_pre . $key);
             }
             else {
-                $r = $this->_link->incrBy($this->_pre . $key, $num);
+                return $this->_link->incrBy($this->_pre . $key, $num);
             }
         }
         else {
-            $r = $this->_link->incrByFloat($this->_pre . $key, $num);
+            return $this->_link->incrByFloat($this->_pre . $key, $num);
         }
-        return $r;
     }
 
     /**
@@ -294,7 +293,7 @@ SCRIPT;
     }
 
     /**
-     * --- 获取服务器上的所有 key 列表（同步） ---
+     * --- 获取服务器上的所有 key 列表 ---
      * @param string $pattern
      * @return string[]|false
      */
@@ -319,14 +318,23 @@ SCRIPT;
      * @return string[]|false
      */
     public function scan(&$cursor = null, $pattern = '*', $count = 10) {
-        return $this->_link->scan($cursor, $this->_pre . $pattern, $count);
+        $r = $this->_link->scan($cursor, $this->_pre . $pattern, $count);
+        if ($r === false) {
+            return false;
+        }
+        $length = count($r);
+        $pl = strlen($this->_pre);
+        for ($i = 0; $i < $length; ++$i) {
+            $r[$i] = substr($r[$i], $pl);
+        }
+        return $r;
     }
 
     /**
      * --- 清除当前所选数据库的所有内容 ---
      * @return bool
      */
-    public function flushDB() {
+    public function flushDb() {
         return $this->_link->flushDB();
     }
 

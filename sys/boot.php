@@ -2,11 +2,13 @@
 /**
  * Project: Mutton (#f49292), User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:00:43, 2022-3-22 23:31:04
+ * Last: 2020-1-17 01:00:43, 2022-3-22 23:31:04, 2022-9-28 15:44:54
  */
 declare(strict_types = 1);
 
 namespace sys;
+
+use lib\Core;
 
 require 'etc/const.php';
 require ETC_PATH.'set.php';
@@ -41,7 +43,7 @@ register_shutdown_function('\\sys\\exception');
 // --- 写入文件日志 ---
 function log(string $msg, string $fend = ''): void {
     $realIp = $_SERVER['REMOTE_ADDR'];
-    $clientIp = isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR']);
+    $clientIp = Core::ip();
 
     list($y, $m, $d, $h) = explode('-', date('Y-m-d-H'));
     $path = LOG_PATH . $y . '/';
@@ -75,7 +77,7 @@ function log(string $msg, string $fend = ''): void {
     }
     @file_put_contents($path, '"' .
         date('H:i:s') . '","' .
-        time().'","' .
+        time() . '","' .
         URL_FULL . PATH . (count($_GET) ? '?' . str_replace('"', '""', http_build_query($_GET)) : '') . '","' .
         str_replace('"', '""', file_get_contents('php://input')) . '","' .
         str_replace('"', '""', json_encode($_POST)) . '","' .

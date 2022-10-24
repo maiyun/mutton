@@ -2,13 +2,13 @@
 /*
 CREATE TABLE IF NOT EXISTS `scan` (
     `id` int (10) UNSIGNED NOT NULL AUTO_INCREMENT,
-    `token` varchar (32) BINARY NOT NULL,
+    `token` char (32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     `data` text NOT NULL,
     `time_update` int (10) UNSIGNED NOT NULL,
     `time_add` int (10) UNSIGNED NOT NULL,
     `time_exp` int (10) UNSIGNED NOT NULL,
     PRIMARY KEY (`id`),
-    UNIQUE KEY `token` (`token`) USING btree
+    UNIQUE KEY `token` (`token`) USING btree,
     KEY `time_update` (`time_update`),
     KEY `time_exp` (`time_exp`)
 ) ENGINE = InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
@@ -31,14 +31,17 @@ class Scan {
 
     /* @var $_link Db|Kv */
     private $_link;
-    /* @var $_sql LSql */
-    private $_sql;
 
-    /** @var string 表明或者 kv 里 key 的前缀 */
+    /* @var $_sql LSql */
+    private $_sql = null;
+
+    /** @var string --- 表名或者 kv 里 key 的前缀 --- */
     private $_name = 'scan';
+
     /** @var $_token string */
     private $_token = null;
-    /** @var int 有效期，默认 5 分钟 */
+
+    /** @var int --- 有效期，默认 5 分钟 --- */
     private $_ttl = 60 * 5;
 
     /**
@@ -55,7 +58,9 @@ class Scan {
         if ($link instanceof Db) {
             $this->_sql = Sql::get(isset($opt['sqlPre']) ? $opt['sqlPre'] : null);
         }
-        $this->_token = $token ? $token : $this->createToken();
+        if ($token) {
+            $this->_token = $token;
+        }
     }
 
     /**
@@ -66,16 +71,24 @@ class Scan {
      * @return Scan
      */
     public static function get(Db|IKv $link, string $token = null, $opt = []): Scan {
-        return new Scan($link, $token, $opt);
+        $scan = new Scan($link, $token, $opt);
+        if (!$token) {
+            $scan->createToken();
+        }
+        return $scan;
     }
 
-    /** @var int|null 二维码剩余有效时间 */
-    private $timeLeft = null;
+    /** @var int|null --- 二维码剩余有效时间 --- */
+    private $_timeLeft = null;
+
     /**
      * --- 生成二维码处的轮询，检查是否被扫码、被录入数据 ---
      * @return mixed -3 系统错误 -2 token 不存在或已过期 -1 无操作, 0 已扫码, 其他返回为存的数据并结束轮询
      */
     public function poll() {
+        if (!$this->_token) {
+            return -3;
+        }
         $time = time();
         if ($this->_link instanceof Db) {
             // --- Db ---
@@ -96,13 +109,17 @@ class Scan {
                 return -2;
             }
             // --- 存在，判断是否被扫码，以及是否被写入数据 ---
-            $this->timeLeft = $data['time_exp'] - $time;
+            $this->_timeLeft = $data['time_exp'] - $time;
             if ($data['data'] !== '') {
                 // --- 已经写入数据了，删除数据库条目并返回写入的数据内容 ---
                 $this->_sql->delete($this->_name)->where([
                     'id' => $data['id']
                 ]);
-                return json_decode($data['data'], true);
+                $rtn = json_decode($data['data'], true);
+                if (!$rtn) {
+                    return -3;
+                }
+                return $rtn;
             }
             else if ($data['time_update'] > 0) {
                 // --- 已被扫描 ---
@@ -124,10 +141,10 @@ class Scan {
             if ($ttl === null) {
                 return -3;
             }
-            $this->timeLeft = $ttl;
+            $this->_timeLeft = $ttl;
             if ($data['data'] !== null) {
                 // --- 已经写入数据了，删除数据库条目并返回写入的数据内容 ---
-                $this->_link->delete('scan-' . $this->_name . '_' . $this->_token);
+                $this->_link->del('scan-' . $this->_name . '_' . $this->_token);
                 return $data;
             }
             else if ($data['time_update'] > 0) {
@@ -142,15 +159,11 @@ class Scan {
     }
 
     /**
-     * --- 创建 token ---
-     * @param int|null $ttl 有效秒数，默认 5 分钟，仅当次设置本 token 有效
-     * @return string|boolean
+     * --- 创建 token，直接应用到本类 ---
+     * @return boolean
      */
-    public function createToken(int $ttl = null) {
+    public function createToken() {
         $this->_gc();
-        if ($ttl === null) {
-            $ttl = $this->_ttl;
-        }
         $time = time();
         $count = 0;
         while (true) {
@@ -165,7 +178,7 @@ class Scan {
                     'data' => '',
                     'time_update' => '0',
                     'time_add' => $time,
-                    'time_exp' => $time + $ttl
+                    'time_exp' => $time + $this->_ttl
                 ]);
                 $ps = $this->_link->prepare($this->_sql->getSql());
                 try {
@@ -183,17 +196,18 @@ class Scan {
                 if ($this->_link->set('scan-' . $this->_name . '_' . $this->_token, [
                     'time_update' => 0,
                     'data' => null
-                ], $ttl, 'nx')) {
+                ], $this->_ttl, 'nx')) {
                     break;
                 }
             }
+            ++$count;
         }
-        return $this->_token;
+        return true;
     }
 
     /**
      * --- 获取当前 token ---
-     * @return string
+     * @return string|null
      */
     public function getToken() {
         return $this->_token;
@@ -203,16 +217,16 @@ class Scan {
      * --- 设置有效期，设置后的新 token 被创建有效 ---
      * @param int $ttl
      */
-    public function setTtl(int $ttl) {
+    public function setTTL(int $ttl) {
         $this->_ttl = $ttl;
     }
 
     /**
-     * --- 获取设置的有效期 ---
+     * --- 获取设置的有效期，设置后的新 token 被创建有效 ---
      * @return int
      */
-    public function getTtl() {
-        return $this->_exp;
+    public function getTTL() {
+        return $this->_ttl;
     }
 
     /**
@@ -220,7 +234,7 @@ class Scan {
      * @return int|null
      */
     public function getTimeLeft() {
-        return $this->timeLeft;
+        return $this->_timeLeft;
     }
 
     /**
@@ -275,7 +289,7 @@ class Scan {
     }
 
     /**
-     * --- 将数据写入 token，通常在客户的逻辑下去写，服务器会 roll 到 ---
+     * --- 将数据写入 token，通常在客户的逻辑下去写，服务器会 poll 到 ---
      * @param Db|IKv $link
      * @param string $token
      * @param $data

@@ -27,7 +27,7 @@ class Test extends Ctr {
 
     private $_internalUrl = URL_FULL;
 
-    public function onload() {
+    public function onLoad() {
         if (HOSTNAME !== '127.0.0.1' && HOSTNAME !== '172.17.0.1' && HOSTNAME !== 'local-test.brc-app.com' && substr(HOSTNAME, 0, 8) !== '192.168.') {
             return [0, 'Please use 127.0.0.1 to access the file.'];
         }
@@ -109,11 +109,11 @@ class Test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'test/crypto">View "test/crypto"</a>',
 
             '<br><br><b>Db:</b>',
-            '<br><a href="' . URL_BASE . 'test/db?s=mysql">View "test/db?s=mysql"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/db?s=mysql">View "test/db?s=mysql"</a>',
             '<br><a href="' . URL_BASE . 'test/db?s=sqlite">View "test/db?s=sqlite"</a>',
 
             '<br><br><b>Kv:</b>',
-            '<br><a href="' . URL_BASE . 'test/kv?s=redis">View "test/kv?s=redis"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/kv?s=redis">View "test/kv?s=redis"</a>',
             '<br><a href="' . URL_BASE . 'test/kv?s=redis-simulator">View "test/kv?s=redis-simulator"</a>',
 
             '<br><br><b>Net:</b>',
@@ -389,7 +389,7 @@ json_encode(\$result);</pre>" . json_encode($result);
             if ($r2) {
                 $echo[] = '<table style="width: 100%;">';
                 foreach ($r2 as $k => $v) {
-                    $echo[] = '<tr><th>' . htmlspecialchars($k) . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+                    $echo[] = '<tr><th>' . htmlspecialchars($k) . '</th><td>' . ($v === null ? 'null' : htmlspecialchars($v . '')) . '</td></tr>';
                 }
                 $echo[] = '</table>';
             }
@@ -747,7 +747,6 @@ json_encode(\$orig);</pre>" . json_encode($orig);
         if (!($rtn = $db->connect())) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
-
         // --- 先获取 session 表的情况 ---
         if (!($stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;'))) {
             return [0 ,'Failed("m_session" not found)'];
@@ -757,13 +756,13 @@ json_encode(\$orig);</pre>" . json_encode($orig);
 if (!(\$rtn = \$db->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
-
 \$stmt = \$db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');</pre>"];
 
         $this->_dbTable($stmt, $echo);
 
         // --- 插入 test-token 的条目 ---
-        $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $time = (string)time();
+        $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . $time . '\', \'' . $time . '\');');
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
         if ($errorCode === '23000') {
@@ -826,7 +825,7 @@ error: ".json_encode($db->getErrorInfo())."<br><br>";
         $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');</pre>
 exec: " . json_encode($exec) . "<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `m_session` LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         return '<a href="' . URL_BASE . 'test/db?s=mysql">MySQL</a> | ' .
@@ -846,7 +845,7 @@ exec: " . json_encode($exec) . "<br><br>";
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $echo[] = '<tr>';
                 foreach ($row as $key => $val) {
-                    $echo[] = '<td>' . htmlspecialchars($val . '') . '</td>';
+                    $echo[] = '<td>' . ($val === null ? 'null' : htmlspecialchars($val . '')) . '</td>';
                 }
                 $echo[] = '</tr>';
             }
@@ -884,7 +883,6 @@ exec: " . json_encode($exec) . "<br><br>";
         $kvGet = strtoupper($_GET['s']);
         $kvGet = str_replace('SS', 'S_S', $kvGet);
 
-        
         $echo = ["<pre>\$kv = Kv::get(Kv::$kvGet);
 if (!(\$rtn = \$kv->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
@@ -1036,13 +1034,13 @@ echo 'Added.';</pre>";
 
             $echo[] = "<pre>\$cursor = null;
 while (true) {
-    \$echo[] = '&lt;br&gt;WHILE (' . json_encode(\$cursor) . ')';
+    \$echo[] = 'WHILE (' . json_encode(\$cursor) . ')&lt;br&gt;';
     \$r = \$kv->scan(\$cursor, '*2*', 5);
     if (\$r === false) {
-        \$echo[] = '&lt;br&gt;DONE';
+        \$echo[] = 'DONE&lt;br&gt;';
         break;
     }
-    \$echo[] = '&lt;br&gt;' . json_encode(\$r);
+    \$echo[] =  json_encode(\$r) . '&lt;br&gt;';
 }
 \$echo[count(\$echo) - 1] = substr(\$echo[count(\$echo) - 1], 0, -4);</pre>";
             $cursor = null;
@@ -1053,7 +1051,7 @@ while (true) {
                     $echo[] = 'DONE<br>';
                     break;
                 }
-                $echo[] = json_encode($r). '<br>';
+                $echo[] = json_encode($r) . '<br>';
             }
             $echo[count($echo) - 1] = substr($echo[count($echo) - 1], 0, -4);
         }
@@ -1109,6 +1107,7 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }
+
     public function netPost1() {
         return "\$_POST:\n\n" . json_encode($_POST) . "\n\nRequest headers:\n\n" . json_encode($this->_headers, JSON_PRETTY_PRINT) . "\n\nIP: " . $_SERVER['REMOTE_ADDR'];
     }
@@ -1126,6 +1125,7 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }
+
     public function netPostString1() {
         return [1, $this->_input];
     }
@@ -1136,7 +1136,10 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $res = Net::open($this->_internalUrl . 'test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();
         $echo[] = "<pre>Net::open('" . $this->_internalUrl . "test/netPost1')->post()->data(['a' => '2', 'b' => '0', 'c' => ['0', '1', '3']])->request();</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
-content: <pre>" . $res->content . "</pre>";
+content: <pre>" . $res->content . "</pre>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }
@@ -1219,6 +1222,7 @@ content: <pre>" . $res->content . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }
+
     public function netCookie1() {
         setcookie('test1', 'normal', $_SERVER['REQUEST_TIME'] + 10);
         setcookie('test2', 'baidu.com', $_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
@@ -1229,6 +1233,7 @@ content: <pre>" . $res->content . "</pre>";
         setcookie('test7', 'localhost', $_SERVER['REQUEST_TIME'] + 30, '/', 'localhost');
         setcookie('test8', 'com', $_SERVER['REQUEST_TIME'] + 20, '/', 'com');
         setcookie('test9', 'com.cn', $_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');
+        setcookie('test10', 'httponly', $_SERVER['REQUEST_TIME'] + 60, '', '', false, true);
         return "setcookie('test1', 'normal', \$_SERVER['REQUEST_TIME'] + 10);
 setcookie('test2', 'baidu.com', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
 setcookie('test3', '" . HOSTNAME .  "', \$_SERVER['REQUEST_TIME'] + 30, '/', '" . HOSTNAME . "');
@@ -1237,8 +1242,10 @@ setcookie('test5', 'secure', \$_SERVER['REQUEST_TIME'] + 50, '', '', true);
 setcookie('test6', '0.1', \$_SERVER['REQUEST_TIME'] + 40, '/', '0.1');
 setcookie('test7', 'localhost', \$_SERVER['REQUEST_TIME'] + 30, '/', 'localhost');
 setcookie('test8', 'com', \$_SERVER['REQUEST_TIME'] + 20, '/', 'com');
-setcookie('test9', 'com.cn', \$_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');";
+setcookie('test9', 'com.cn', \$_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');
+setcookie('test10', 'httponly', \$_SERVER['REQUEST_TIME'] + 60, '', '', false, true);";
     }
+
     public function netCookie2() {
         return "\$_COOKIE: \n\n" . json_encode($_COOKIE, JSON_PRETTY_PRINT);
     }
@@ -1286,9 +1293,11 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
     }
+
     public function netFollow1() {
         $this->_location('test/net-follow2');
     }
+
     public function netFollow2() {
         return [1, 'post' => $this->_post['a'] . ',' . $this->_post['b']];
     }
@@ -1358,7 +1367,7 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $s = isset($this->_get['s']) ? $this->_get['s'] : 'db';
 
         $echo = [];
-        $scan = Scan::get($this->_scanLink(), null, [ 'ttl' => 30 ]);
+        $scan = Scan::get($link, null, [ 'ttl' => 30 ]);
         $token = $scan->getToken();
         $echo[] = "<pre>\$scan = Scan::get(\$link, null, [ 'ttl' => 30 ]);
 \$token = \$scan->getToken();</pre>
@@ -1440,10 +1449,11 @@ function confirm() {
 }
 </script>";
 
-        return '<a href="'.URL_BASE.'test/scan?s=db">db</a> | ' .
-        '<a href="'.URL_BASE.'test/scan?s=kv">kv</a> | ' .
-        '<a href="'.URL_BASE.'test">Return</a>' . join('', $echo) . "<br>" . $this->_getEnd();
+        return '<a href="' . URL_BASE . 'test/scan?s=db">db</a> | ' .
+        '<a href="' . URL_BASE . 'test/scan?s=kv">kv</a> | ' .
+        '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . '<br>' . $this->_getEnd();
     }
+
     public function scan1() {
         $link = $this->_scanLink();
         if (!$link) {
@@ -1468,6 +1478,7 @@ function confirm() {
         }
         return [0, 'Scan result: ' . json_encode($rtn)];
     }
+
     public function scan2() {
         $link = $this->_scanLink();
         if (!$link) {
@@ -1478,6 +1489,7 @@ function confirm() {
         }
         return [1];
     }
+
     public function scan3() {
         $link = $this->_scanLink();
         if (!$link) {
@@ -1490,7 +1502,8 @@ function confirm() {
         }
         return [1];
     }
-    private function _scanLink(): Db|IKv {
+
+    private function _scanLink(): Db|IKv|false {
         $s = isset($this->_get['s']) ? $this->_get['s'] : 'db';
         if ($s === 'db') {
             $db = Db::get(Db::MYSQL);

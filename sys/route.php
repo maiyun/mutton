@@ -16,6 +16,8 @@ require ETC_PATH.'route.php';
 class Route {
 
     public static function run(): void {
+        header('expires: Mon, 26 Jul 1994 05:00:00 GMT');
+        header('cache-control: no-store');
         $time = time();
         // --- PATH 是安全的，不会是 ../../ 来访问到了外层，Apache Nginx 都会做处理的（已经通过模拟请求验证） ---
         $path = PATH;
@@ -132,8 +134,8 @@ class Route {
             $middle->setPrototype('_xsrf', $_COOKIE['XSRF-TOKEN']);
         }
 
-        // --- 执行中间控制器的 onload ---
-        $rtn = $middle->onload();
+        // --- 执行中间控制器的 onLoad ---
+        $rtn = $middle->onLoad();
         if (!isset($rtn) || $rtn === true) {
             // --- 只有不返回或返回 true 时才加载控制文件 ---
             // --- 判断真实控制器文件是否存在 ---
@@ -141,7 +143,7 @@ class Route {
             if (!is_file($filePath)) {
                 // --- 指定的控制器不存在 ---
                 http_response_code(404);
-                echo '[Error] Controller not found.';
+                echo '[Error] Controller not found, path: ' . PATH . '.';
                 return;
             }
             // --- 加载控制器文件 ---
@@ -181,7 +183,7 @@ class Route {
                 return;
             }
             // --- 检测 action 是否存在，以及排除内部方法 ---
-            if ($pathRight[0] === '_' || $pathRight === 'onload' || $pathRight === 'setPrototype' || $pathRight === 'getPrototype' || $pathRight === 'getAuthorization') {
+            if ($pathRight[0] === '_' || $pathRight === 'onLoad' || $pathRight === 'setPrototype' || $pathRight === 'getPrototype' || $pathRight === 'getAuthorization') {
                 // --- _ 开头的 action 是内部方法，不允许访问 ---
                 http_response_code(404);
                 echo '[Error] Action not found, path: ' . PATH . '.';
@@ -195,8 +197,8 @@ class Route {
                 echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
             }
-            // --- 执行 onload 方法 ---
-            $rtn = $ctr->onload();
+            // --- 执行 onLoad 方法 ---
+            $rtn = $ctr->onLoad();
             // --- 执行 action ---
             if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
@@ -206,10 +208,6 @@ class Route {
             if ($cacheTTL > 0) {
                 header('expires: ' . gmdate('D, d M Y H:i:s', $time + $cacheTTL) . ' GMT');
                 header('cache-control: max-age=' . $cacheTTL);
-            }
-            else {
-                header('expires: Mon, 26 Jul 1994 05:00:00 GMT');
-                header('cache-control: no-store');
             }
         }
         // --- 判断返回值 ---
@@ -268,10 +266,10 @@ class Route {
     private static function _getPathLeftRight($path) {
         $pathLio = strrpos($path, '/');
         if ($pathLio === false) {
-            return [strtolower($path), 'index'];
+            return [$path, 'index'];
         }
         $right = substr($path, $pathLio + 1);
-        return [strtolower(substr($path, 0, $pathLio)), $right === '' ? 'index' : strtolower($right)];
+        return [substr($path, 0, $pathLio), $right === '' ? 'index' : $right];
     }
 
     /**

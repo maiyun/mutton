@@ -4,6 +4,26 @@
  * Date: 2015/7/7 17:59
  * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04, 2020-2-17 23:26:01
  */
+
+// --- /etc/db.php ---
+/*
+<?php
+// --- MySQL ---
+
+const MY_HOST = '172.17.0.1';
+const MY_PORT = 3306;
+const MY_CHARSET = 'utf8mb4';
+const MY_NAME = 'db';
+
+const MY_USER = 'root';
+const MY_PWD = 'DashAdmin';
+
+// --- Sqlite ---
+
+const SL_PATH = DATA_PATH . 'db/db.sqlite';
+
+*/
+
 declare(strict_types = 1);
 
 namespace lib;
