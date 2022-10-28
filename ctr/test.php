@@ -103,6 +103,7 @@ class Test extends Ctr {
             '<br><br><b>Core:</b>',
             '<br><br><a href="' . URL_BASE . 'test/core-random">View "test/core-random"</a>',
             '<br><a href="' . URL_BASE . 'test/core-rand">View "test/core-rand"</a>',
+            '<br><a href="' . URL_BASE . 'test/core-convert62">View "test/core-convert62"</a>',
             '<br><a href="' . URL_BASE . 'test/core-muid">View "test/core-muid"</a>',
 
             '<br><br><b>Crypto:</b>',
@@ -614,9 +615,26 @@ CREATE TABLE `m_test_data_0` (
     }
 
     public function coreRand() {
-        return '<pre>Core::rand(1.2, 7.1, 1)</pre>' . Core::rand(1.2, 7.1, 1) .
-            '<pre>Core::rand(1.2, 7.1, 5)</pre>' . Core::rand(1.2, 7.1, 5) .
+        return '<pre>Core::rand(1.2, 7.1, 1);</pre>' . Core::rand(1.2, 7.1, 1) .
+            '<pre>Core::rand(1.2, 7.1, 5);</pre>' . Core::rand(1.2, 7.1, 5) .
             '<pre>Core::rand(1.298, 7.1891, 2);</pre>' . Core::rand(1.298, 7.1891, 2) .
+            '<br><br>' . $this->_getEnd();
+    }
+
+    public function coreConvert62() {
+        return '<pre>Core::convert62(10);</pre>' . Core::convert62(10) .
+            '<pre>Core::convert62(100);</pre>' . Core::convert62(100) .
+            '<pre>Core::convert62(1992199519982001);</pre>' . Core::convert62(1992199519982001) .
+            '<pre>Core::convert62(9223372036854770000);</pre>' . Core::convert62(9223372036854770000) .
+            '<pre>Core::convert62(9223372036854775807);</pre>' . Core::convert62(9223372036854775807) .
+
+            '<pre>Core::unconvert62(\'a\');</pre>' . Core::unconvert62('a') .
+            '<pre>Core::unconvert62(\'100\');</pre>' . Core::unconvert62('100') .
+            '<pre>Core::unconvert62(\'zzz\');</pre>' . Core::unconvert62('zzz') .
+            '<pre>Core::unconvert62(\'ZZZ\');</pre>' . Core::unconvert62('ZZZ') .
+            '<pre>Core::unconvert62(\'97HMXKQql\');</pre>' . Core::unconvert62('97HMXKQql') .
+            '<pre>Core::unconvert62(\'aZl8N0y57gs\');</pre>' . Core::unconvert62('aZl8N0y57gs') .
+            '<pre>Core::unconvert62(\'aZl8N0y58M7\');</pre>' . Core::unconvert62('aZl8N0y58M7') .
             '<br><br>' . $this->_getEnd();
     }
 
@@ -635,21 +653,21 @@ CREATE TABLE `m_test_data_0` (
     
             $muid = Core::muid();
             $echo[] = '<pre>Core::muid();</pre>' . $muid . ' (' . strlen($muid) . ')';
-    
-            $muid = Core::muid(false);
-            $echo[] = '<pre>Core::muid(false);</pre>' . $muid . ' (' . strlen($muid) . ')';
-    
-            $muid = Core::muid(false);
-            $echo[] = '<pre>Core::muid(false);</pre>' . $muid . ' (' . strlen($muid) . ')';
-    
-            $muid = Core::muid(true, 'xa');
-            $echo[] = '<pre>Core::muid(true, \'xa\');</pre>' . $muid . ' (' . strlen($muid) . ')';
-    
-            $muid = Core::muid(false, 'xa');
-            $echo[] = '<pre>Core::muid(false, \'xa\');</pre>' . $muid . ' (' . strlen($muid) . ')';
-    
-            $muid = Core::muid(false, '', 'ha');
-            $echo[] = '<pre>Core::muid(false, \'\', \'ha\');</pre>' . $muid . ' (' . strlen($muid) . ')';
+
+            $muid = Core::muid([ 'bin' => false ]);
+            $echo[] = "<pre>Core::muid([ 'bin' => false ]);</pre>" . $muid . ' (' . strlen($muid) . ')';
+
+            $muid = Core::muid([ 'len' => 16 ]);
+            $echo[] = "<pre>Core::muid([ 'len' => 16 ]);</pre>" . $muid . ' (' . strlen($muid) . ')';
+
+            $muid = Core::muid([ 'len' => 16, 'bin' => false ]);
+            $echo[] = "<pre>Core::muid([ 'len' => 16, 'bin' => false ]);</pre>" . $muid . ' (' . strlen($muid) . ')';
+
+            $muid = Core::muid([ 'insert' => 'Aa', 'len' => 32 ]);
+            $echo[] = "<pre>Core::muid([ 'insert' => 'Aa', 'len' => 32 ]);</pre>" . $muid . ' (' . strlen($muid) . ')';
+
+            $muid = Core::muid([ 'key' => 'M' ]);
+            $echo[] = "<pre>Core::muid([ 'key' => 'M' ]);</pre>" . $muid . ' (' . strlen($muid) . ')';
 
             $echo[] = '<br><br>';
         }
@@ -657,9 +675,10 @@ CREATE TABLE `m_test_data_0` (
             $parr = [];
             $oarr = [];
             for ($i = 0; $i < 30000; ++$i) {
-                $muid = Core::muid();
-                if (in_array($muid, $oarr)) {
-                    $parr[] = $muid;
+                $muid = Core::muid([ 'insert' => '0' ]);
+                $sp = array_search($muid, $oarr);
+                if ($sp !== false) {
+                    $parr[] = $muid . '[' . $sp . ']' . $oarr[$sp];
                     continue;
                 }
                 $oarr[] = $muid;
@@ -668,13 +687,13 @@ CREATE TABLE `m_test_data_0` (
 \$parr = [];
 \$oarr = [];
 for (\$i = 0; \$i < 30000; ++\$i) {
-    \$muid = Core::muid();
+    \$muid = Core::muid([ 'insert' => '0' ]);
     if (in_array(\$muid, \$oarr)) {
         \$parr[] = \$muid;
         continue;
     }
     \$oarr[] = \$muid;
-}</pre>parr length: " . count($parr) . "<br>oarr length: " . count($oarr) . "<br><br>parr:<pre>" . json_encode($parr) . "</pre>oarr:<pre>" . substr(json_encode(array_slice($oarr, 0, 20)), 0, -1) . "...</pre>";
+}</pre>parr length: " . count($parr) . "<br>oarr length: " . count($oarr) . "<br><br>parr:<pre>" . json_encode($parr) . "</pre>oarr:<pre>" . substr(json_encode(array_slice($oarr, 0, 100)), 0, -1) . "...</pre>";
         }
 
         return join('', $echo) . $this->_getEnd();

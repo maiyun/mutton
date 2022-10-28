@@ -59,6 +59,37 @@ class Core {
         return $temp;
     }
 
+    /**
+     * --- 将 10 进制转换为 62 进制 ---
+     * @param int|string $n 10 进制数字最大 9223372036854775807
+     */
+    public static function convert62(int|string $n) {
+        if (!is_string($n)) {
+            $n = (string)$n;
+        }
+        $char = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $res = '';
+        while ($n > 0) {
+            $res = $char[bcmod($n, '62', 0)] . $res;
+            $n = bcdiv($n, '62', 0);
+        }
+        return $res;
+    }
+
+    /**
+     * --- 将 62 进制转换为 10 进制 ---
+     * @param string $n 62 进制数字最大 aZl8N0y58M7
+     */
+    public static function unconvert62(string $n): string {
+        $char = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $res = '0';
+        $nl = strlen($n);
+        for ($i = 1; $i <= $nl; ++$i) {
+            $res = bcadd($res, bcmul((string)strpos($char, $n[$i - 1]), bcpow('62', (string)($nl - $i), 0), 0), 0);
+        }
+        return $res;
+    }
+
     /*
      * --- 生成范围内的随机数，带小数点 ---
      * @param float $min 最小数
@@ -76,36 +107,29 @@ class Core {
 
     /**
      * --- 获取 MUID ---
-     * @param bool $time 包含显式时间因素
-     * @param string $append 追加字符
-     * @param string $key 多样性混合 key，可留空
+     * @param $opt len: 8 - 32, 默认 8; bin: 是否含有大小写, 默认 true; key: 多样性混合, 默认空; insert: 插入指定字符, 不超过 2 字符，默认空
      * @return string
      */
-    public static function muid($time = true, $append = '', $key = ''): string {
-        $key = (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '') .
+    public static function muid($opt = []): string {
+        $len = isset($opt['len']) ? $opt['len'] : 8;
+        $bin = isset($opt['bin']) ? $opt['bin'] : true;
+        $key = isset($opt['key']) ? $opt['key'] : '';
+        $insert = isset($opt['insert']) ? $opt['insert'] : '';
+        $ilen = strlen($insert);
+
+        $char = hash_hmac('sha1', (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '') .
         (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '') .
         (isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? $_SERVER['HTTP_ACCEPT_LANGUAGE'] : '') .
         (isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '') .
         (isset($_SERVER['HTTP_X_FORWARDED_FOR']) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : '') .
-        (isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '') . 'muid' . $key;
-        $key = hash_hmac('md5', $key, 'mu' . rand(0, 100) . 'id');
-        if ($time) {
-            // --- 用于用户 ID、车辆 ID 等时间不敏感且总量较少的场景 ---
-            $date = explode('-', date('Y-m-d-H-i'));
-            $y = base_convert($date[0], 10, 36); // --- 3 位数，从 1296 到 46655 年 ---
-            $m = base_convert($date[1], 10, 36);
-            $d = base_convert($date[2], 10, 36);
-            $h = base_convert($date[3], 10, 36);
-            $rand = self::random(10);
-            $last = hash_hmac('md5', $rand, $key);
-            // ---    1       1      1         1           3             3           4              1       1   ---
-            return $rand[0] . $h . $rand[1] . $m . substr($rand, 2, 3) . $y . substr($last, 5, 4) . $d . $last[0] . $append;
+        (isset($_SERVER['HTTP_CF_CONNECTING_IP']) ? $_SERVER['HTTP_CF_CONNECTING_IP'] : '') . 'muid' . $key . rand(0, 1000000000), 'muid');
+        if (!$char) {
+            return '';
         }
-        else {
-            $rand = self::random(16);
-            $rand2 = substr(hash_hmac('md5', self::random(16), $key), 8, 16);
-            return $rand . $rand2 . $append;
-        }
+
+        // --- 生成随机数 ---
+        $over = self::random($len - 1 - $ilen, $bin ? self::RANDOM_LUN : self::RANDOM_LN) . $char[20];
+        return $over[0] . $insert . substr($over, 1);
     }
 
     /**
