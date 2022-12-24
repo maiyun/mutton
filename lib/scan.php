@@ -1,12 +1,12 @@
 <?php
 /*
 CREATE TABLE IF NOT EXISTS `scan` (
-    `id` int (10) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `id` bigint NOT NULL AUTO_INCREMENT,
     `token` char (32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
     `data` text NOT NULL,
-    `time_update` int (10) UNSIGNED NOT NULL,
-    `time_add` int (10) UNSIGNED NOT NULL,
-    `time_exp` int (10) UNSIGNED NOT NULL,
+    `time_update` bigint NOT NULL,
+    `time_add` bigint NOT NULL,
+    `time_exp` bigint NOT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `token` (`token`) USING btree,
     KEY `time_update` (`time_update`),

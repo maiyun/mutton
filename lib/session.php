@@ -2,11 +2,11 @@
 /*
  * --- mysql ---
 CREATE TABLE `session` (
-  `id` int (10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `token` char(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
   `data` text NOT NULL,
-  `time_update` int (10) UNSIGNED NOT NULL,
-  `time_add` int (10) UNSIGNED NOT NULL,
+  `time_update` bigint NOT NULL,
+  `time_add` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`),
   KEY `time_update` (`time_update`)

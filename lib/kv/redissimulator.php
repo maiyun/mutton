@@ -8,11 +8,11 @@
 /*
  * --- Mysql ---
 CREATE TABLE `redis` (
-  `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id` bigint NOT NULL AUTO_INCREMENT,
   `tag` varchar(255) NOT NULL,
   `value` text NOT NULL,
-  `time_add` int(10) UNSIGNED NOT NULL,
-  `time_exp` int(10) UNSIGNED NOT NULL,
+  `time_add` bigint NOT NULL,
+  `time_exp` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `tag` (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

@@ -9,10 +9,6 @@
 [+] Added getRange method in the Consistent class.  
 [\*] Optimize code.
 
-# 7.2.0
-
-[+] Add Tcaptcha library.
-
 # 7.1.0
 
 [+] Add Consistent library.  

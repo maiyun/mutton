@@ -9,10 +9,6 @@
 [+] 新增 getRange 方法在 Consistent 类。  
 [\*] 优化代码。
 
-# 7.2.0
-
-[+] 新增 Tcaptcha 库。
-
 # 7.1.0
 
 [+] 新增 Consistent 库。  

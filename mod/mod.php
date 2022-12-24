@@ -18,7 +18,7 @@ use PDOException;
 /**
  * Class Mod
  * @package mod
- * --- 开启软更需要在表添加字段：ALTER TABLE `table_name` ADD `time_remove` INT(10) UNSIGNED NOT NULL DEFAULT '0' AFTER `xxx`; ---
+ * --- 开启软更需要在表添加字段：ALTER TABLE `table_name` ADD `time_remove` BIGINT NOT NULL DEFAULT '0' AFTER `xxx`; ---
  */
 class Mod {
 
