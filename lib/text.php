@@ -67,7 +67,7 @@ class Text {
         $to = str_replace('\\', '/', $to);
         // --- to 为空，直接返回 form ---
         if ($to === '') {
-            return $from;
+            return self::urlAtom($from);
         }
         // --- 获取 from 的 scheme, host, path ---
         $f = self::parseUrl($from);
@@ -90,9 +90,10 @@ class Text {
         if ($to[0] === '#' || $to[0] === '?') {
             $sp = strpos($from, $to[0]);
             if ($sp !== false) {
-                return substr($from, 0, $sp) . $to;
-            } else {
-                return $from . $to;
+                return self::urlAtom(substr($from, 0, $sp) . $to);
+            }
+            else {
+                return self::urlAtom($from . $to);
             }
         }
         // --- 处理后面的尾随路径 ---
@@ -100,33 +101,45 @@ class Text {
         if ($to[0] === '/') {
             // -- abs 类似是 /xx/xx ---
             $abs .= $to;
-        } else {
+        }
+        else {
             // --- to 是 xx/xx 这样的 ---
             // --- 移除基准 path 不是路径的部分，如 /ab/c 变成了 /ab，/ab 变成了 空 ---
             $path = preg_replace('/\/[^\/]*$/', '', $f['pathname']);
             // --- abs 是 /xx/xx 了，因为如果 path 是空，则跟上了 /，如果 path 不为空，也是 / 开头 ---
             $abs .= $path . '/' . $to;
         }
+        // --- 返回最终结果 ---
+        if ($f['protocol'] && ($f['protocol'] !== 'file:') && !$f['host']) {
+            // --- 类似 c:/ ---
+            return self::urlAtom($f['protocol'] . $abs);
+        } else {
+            // --- 类似 http:// ---
+            return self::urlAtom(($f['protocol'] ? $f['protocol'] . '//' : '') . $abs);
+        }
+    }
+
+    /**
+     * --- 将路径中的 ../ ./ 都按规范妥善处理 ---
+     * @param string $url 基准路径
+     */
+    public static function urlAtom(string $url): string {
         // --- 删掉 ./ ---
-        $abs = preg_replace('/\/\.\//', '/', $abs);
-        // --- 删掉 ../ ---
         while (true) {
-            // --- 用循环法把 /xx/../ 变成 / 进行返回上级目录 ---
-            $abs = preg_replace('/\/(?!\.\.)[^\/]+\/\.\.\//', '/', $abs, -1, $count);
+            $url = preg_replace('/\/\.\//', '/', $url, -1, $count);
             if ($count === 0) {
                 break;
             }
         }
-        // --- 剩下的 ../ 就是无效的直接替换为空 ---
-        $abs = str_replace('../', '', $abs);
-        // --- 返回最终结果 ---
-        if ($f['protocol'] && !$f['host']) {
-            // --- 类似 c:/ ---
-            return $f['protocol'] . $abs;
-        } else {
-            // --- 类似 http:// ---
-            return ($f['protocol'] ? $f['protocol'] . '//' : '') . $abs;
+        // --- 删掉 ../ ---
+        while (true) {
+            $url = preg_replace('/\/(?!\.\.)[^\/]+\/\.\.\//', '/', $url, -1, $count);
+            if ($count === 0) {
+                break;
+            }
         }
+        $url = preg_replace('/\.\.\/', '', $url);
+        return $url;
     }
 
     /**
@@ -196,7 +209,8 @@ class Text {
         ];
         if ($domain === '') {
             $domain = $_SERVER['HTTP_HOST'];
-        } else {
+        }
+        else {
             if (!self::isDomain($domain)) {
                 return $rtn;
             }
@@ -206,9 +220,10 @@ class Text {
         if ($length === 1) {
             $rtn['tld'] = strtolower($arr[0]);
             $rtn['domain'] = $rtn['tld'];
-        } else {
+        }
+        else {
             if (self::$_tldList === null) {
-                self::$_tldList = json_decode(file_get_contents(LIB_PATH . 'Text/tld.json'), true);
+                self::$_tldList = json_decode(file_get_contents(LIB_PATH . 'text/tld.json'), true);
             }
             $last2 = strtolower($arr[$length - 2] . '.' . $arr[$length - 1]);
             if (in_array($last2, self::$_tldList)) {
@@ -227,7 +242,8 @@ class Text {
                 }
                 array_splice($arr, -3);
                 $rtn['sub'] = strtolower(join('.', $arr));
-            } else {
+            }
+            else {
                 $rtn['tld'] = strtolower($arr[$length - 1]);
                 $rtn['sld'] = strtolower($arr[$length - 2]);
                 $rtn['domain'] = $rtn['sld'] . '.' . $rtn['tld'];

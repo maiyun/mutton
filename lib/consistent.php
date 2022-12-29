@@ -47,7 +47,7 @@ class Consistent {
      */
     public static function hash($val) {
         if (is_int($val) || is_float($val)) {
-            $val = $val . '';
+            $val = (string)$val;
         }
         $bKey = md5($val);
         $res = ((ord($bKey[3]) & 0xFF) << 24) | 
@@ -80,8 +80,8 @@ class Consistent {
     }
 
     /**
-     * 添加节点
-     * @param string|string[] node 节点名一个或多个
+     * --- 添加节点 ---
+     * @param string|string[] $node 节点名一个或多个
      */
     public function add($node) {
         if (is_string($node)) {
@@ -96,8 +96,8 @@ class Consistent {
     }
 
     /**
-     * 移除节点
-     * @param string node 节点名
+     * --- 移除节点 ---
+     * @param string $node 节点名
      */
     public function remove($node) {
         if (is_string($node)) {
@@ -112,8 +112,8 @@ class Consistent {
     }
 
     /**
-     * 获得一个最近的顺时针节点
-     * @param string key 为给定键取Hash，取得顺时针方向上最近的一个虚拟节点对应的实际节点
+     * --- 获得一个最近的顺时针节点 ---
+     * @param string|int|float $key 为给定键取Hash，取得顺时针方向上最近的一个虚拟节点对应的实际节点
      */
     public function find($key) {
         if (count($this->_keys) === 0) {
@@ -127,22 +127,59 @@ class Consistent {
         if ($count === 1) {
             return $this->_circle[$this->_keys[0]];
         }
-        $hash = self::hash($key);
-        if (isset($this->_circle[$hash])) {
-            return $this->_circle[$hash];
+        $hashv = self::hash($key);
+        if (isset($this->_circle[$hashv])) {
+            return $this->_circle[$hashv];
         }
         /*
         SortedMap<Long, T> tailMap = circle.tailMap(hash); 
         hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
         */
         foreach ($this->_keys as $v) {
-            if ($v < $hash) {
+            if ((float)$v < $hashv) {
                 continue;
             }
             return $this->_circle[$v];
         }
         // --- 没找到 ---
         return $this->_circle[$this->_keys[0]];
+    }
+
+    /**
+     * --- 原数据迁移到新地址 ---
+     * @param string|string[] $keys 原始数据 key 集
+     * @param string|string[] $node 新增的节点一个或多个
+     */
+    public function migration($keys, $node) {
+        $rtn = [];
+        if (is_string($keys)) {
+            $keys = [$keys];
+        }
+        // --- 获取老的 key 对应的 node ---
+        $mapOld = [];
+        foreach ($keys as $key) {
+            $oldNode = $this->find($key);
+            if (!$oldNode) {
+                continue;
+            }
+            $mapOld[$key] = $oldNode;
+        }
+        $this->add($node);
+        // --- 再逐一检测老的和新的的 node 是否一致 ---
+        foreach ($keys as $key) {
+            $newNode = $this->find($key);
+            if (!$newNode) {
+                continue;
+            }
+            if ($mapOld[$key] === $newNode) {
+                continue;
+            }
+            $rtn[$key] = [
+                'old' => $mapOld[$key],
+                'new' => $newNode
+            ];
+        }
+        return $rtn;
     }
 
 }

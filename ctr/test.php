@@ -427,7 +427,7 @@ CREATE TABLE `m_test_data_0` (
         // --- 操作按钮 ---
 
         $echo[] = "<input type=\"button\" value=\"Create user\" onclick=\"this.value='Waiting...';fetch('" . URL_BASE . "test/mod-split1',{method:'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(function(r){window.location.href=window.location.href})\">
-<input type=\"button\" value=\"Random post\" onclick=\"this.value='Waiting...';fetch('" . URL_BASE . "test/mod-split2',{method:'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(function(r){return r.json()}).then(function(j){alert('ID:'+j.id+'\\nINDEX:'+j.index);window.location.href=window.location.href})\">";
+<input type=\"button\" value=\"Random post\" onclick=\"this.value='Waiting...';fetch('" . URL_BASE . "test/mod-split2',{method:'GET',headers:{'Content-Type':'application/x-www-form-urlencoded'}}).then(function(r){return r.json()}).then(function(j){alert('TESTID:'+j.id+'\\nTABLEINDEX:'+j.index);window.location.href=window.location.href})\">";
 
         // --- 读取 test 和 test_data 表 ---
 
@@ -586,8 +586,9 @@ CREATE TABLE `m_test_data_0` (
 \$oarr = [];
 for (\$i = 0; \$i < 30000; ++\$i) {
     \$muid = Core::muid([ 'insert' => '0' ]);
-    if (in_array(\$muid, \$oarr)) {
-        \$parr[] = \$muid;
+    \$sp = array_search(\$muid, \$oarr);
+    if (\$sp !== false) {
+        \$parr[] = \$muid . '[' . \$sp . ']' . \$oarr[\$sp];
         continue;
     }
     \$oarr[] = \$muid;
@@ -660,6 +661,8 @@ json_encode(\$orig);</pre>" . json_encode($orig);
             return $return;
         }
 
+        $echo = ["<br><br>ms: " . round($this->_getRunTime() * 1000, 4)];
+
         $db = Db::get($_GET['s']);
         if (!($rtn = $db->connect())) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
@@ -669,21 +672,25 @@ json_encode(\$orig);</pre>" . json_encode($orig);
             return [0 ,'Failed("m_session" not found)'];
         }
 
-        $echo = ["<pre>\$db = Db::get('" . $_GET['s'] . "');
+        $echo[] = "<pre>\$db = Db::get('" . $_GET['s'] . "');
 if (!(\$rtn = \$db->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
-\$stmt = \$db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');</pre>"];
+\$stmt = \$db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');</pre>";
 
         $this->_dbTable($stmt, $echo);
+
+        $echo[] = "<br>ms: " . round($this->_getRunTime() * 1000, 4);
 
         // --- 插入 test-token 的条目 ---
         $time = (string)time();
         $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . $time . '\', \'' . $time . '\');');
+        $ms = round($this->_getRunTime() * 1000, 4);
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
         if ($errorCode === '23000') {
             $insertId = $db->query('SELECT * FROM `m_session` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
+            $ms .= ', ' . round($this->_getRunTime() * 1000, 4);
         }
         else {
             $insertId = $db->getInsertID();
@@ -701,7 +708,8 @@ else {
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($errorCode) . "<br>
-error: " . json_encode($error) . "<br><br>";
+error: " . json_encode($error) . "<br>
+ms: " . $ms . "<br><br>";
 
         // --- 获取最近的一条 ---
         $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 1;');
@@ -709,13 +717,16 @@ error: " . json_encode($error) . "<br><br>";
 
         // --- 再次插入 test-token 的条目 ---
         $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $errorCode = $db->getErrorCode();
+        $error = $db->getErrorInfo();
         $insertId = $db->getInsertID();
         $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
-errorCode: " . json_encode($db->getErrorCode()) . "<br>
-error: ".json_encode($db->getErrorInfo())."<br><br>";
+errorCode: " . json_encode($errorCode) . "<br>
+error: " . json_encode($error) . "<br>
+ms: " . round($this->_getRunTime() * 1000, 4) . "<br>";
 
         // --- 依据唯一键替换值 ---
         $exec = $db->exec('REPLACE INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
@@ -725,7 +736,8 @@ error: ".json_encode($db->getErrorInfo())."<br><br>";
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
 errorCode: " . json_encode($db->getErrorCode()) . "<br>
-error: ".json_encode($db->getErrorInfo())."<br><br>";
+error: ".json_encode($db->getErrorInfo())."<br>
+ms: " . round($this->_getRunTime() * 1000, 4) . "<br><br>";
 
         // --- 显示近 10 条 ---
         $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');
@@ -737,6 +749,8 @@ error: ".json_encode($db->getErrorInfo())."<br><br>";
         $stmt = $db->query($explain . ' SELECT * FROM `m_session` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
+        $echo[] = '<br>ms: ' . round($this->_getRunTime() * 1000, 4);
+
         // --- 删除测试添加的 token ---
         $exec = $db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');
         $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');</pre>
@@ -747,7 +761,7 @@ exec: " . json_encode($exec) . "<br><br>";
 
         return '<a href="' . URL_BASE . 'test/db?s=mysql">MySQL</a> | ' .
         '<a href="' . URL_BASE.'test/db?s=sqlite">SQLite</a> | ' .
-        '<a href="' . URL_BASE.'test">Return</a>' . join('', $echo) .'<br>' . $this->_getEnd();
+        '<a href="' . URL_BASE.'test">Return</a>' . join('', $echo) . '<br>queries: ' . $db->getQueries() . '<br>' . $this->_getEnd();
     }
 
     private function _dbTable(PDOStatement $stmt, &$echo) {
@@ -1170,13 +1184,13 @@ setcookie('test10', 'httponly', \$_SERVER['REQUEST_TIME'] + 60, '', '', false, t
     public function netSave() {
         $echo = [];
 
-        $res = Net::get('https://github.com/maiyun/Mutton/raw/master/README.md', [
+        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json', [
             'follow' => 5,
-            'save' => LOG_PATH . 'test-must-remove.md'
+            'save' => LOG_PATH . 'test-must-remove.json'
         ]);
-        $echo[] = "<pre>Net::get('https://github.com/maiyun/Mutton/raw/master/README.md', [
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json', [
     'follow' => 5,
-    'save' => LOG_PATH . 'test-must-remove.md'
+    'save' => LOG_PATH . 'test-must-remove.json'
 ]);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
@@ -1595,24 +1609,24 @@ Result:<pre id=\"result\">Nothing.</pre>";
 
                 $s = $sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => '#user.id', 'state' => '1'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => '#user.id', 'state' => '1'])</pre>
+                $echo[] = "<pre>\$sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => '#user.id', 'state' => '1']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 $s = $sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1'])</pre>
+                $echo[] = "<pre>\$sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 $s = $sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])</pre>
-                <b>getSql() :</b> {$s}<br>
-                <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
-                <b>format() :</b> " . $sql->format($s, $sd);
+                $echo[] = "<pre>\$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id']);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd);
                 break;
             }
             case 'update': {
@@ -1732,16 +1746,16 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $s = $sql->select('*', 'test')->by(['index', 'id'])->getSql();
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->select('*', 'test')->by(['index', 'id']);</pre>
-                <b>getSql() :</b> {$s}<br>
-                <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
-                <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 $s = $sql->select('*', 'test')->by(['index', ['id', 'ASC']], 'DESC')->getSql();
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->select('*', 'test')->by(['index', ['id', 'ASC']], 'DESC');</pre>
-                <b>getSql() :</b> {$s}<br>
-                <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
-                <b>format() :</b> " . $sql->format($s, $sd);
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd);
                 break;
             }
             case 'field': {
@@ -1766,9 +1780,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
     public function consistentHash() {
         $echo = [];
 
-        $echo[] = "<pre>Consistent::hash('abc')</pre>" . Consistent::hash('abc');
-        $echo[] = "<pre>Consistent::hash('thisisnone')</pre>" . Consistent::hash('thisisnone');
-        $echo[] = "<pre>Consistent::hash('haha')</pre>" . Consistent::hash('haha');
+        $echo[] = "<pre>Consistent::hash('abc');</pre>" . Consistent::hash('abc');
+        $echo[] = "<pre>Consistent::hash('thisisnone');</pre>" . Consistent::hash('thisisnone');
+        $echo[] = "<pre>Consistent::hash('haha');</pre>" . Consistent::hash('haha');
 
         return join('', $echo) . '<br><br>' . $this->_getEnd();
     }
@@ -1794,12 +1808,13 @@ foreach (\$files as \$file) {
 }</pre>";
         $echo[] = '<table style="width: 100%;">';
         foreach ($map as $k => $v) {
-            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v ? $v : 'null') . ' (' . Consistent::hash($k) . ')</td></tr>';
         }
         $echo[] = '</table>';
 
         $cons->add('srv-sg.test.simu');
         $file = $files[Core::rand(0, count($files) - 1)];
+        // $file = $files[3];
         $oldSrv = $map[$file];
         $newSrv = $cons->find($file);
         $echo[] = "<pre>\$cons->add('srv-sg.test.simu');
@@ -1818,102 +1833,59 @@ foreach (\$files as \$file) {
 
     public function consistentMigration() {
         $echo = [];
-
         // --- 生成初始数据，5000 条数据分 5 长表 ---
-        $tables = ['table-0', 'table-2', 'table-3', 'table-4', 'table-4'];
+        $tables = ['table-0', 'table-1', 'table-2', 'table-3', 'table-4'];
         $rows = [];
         for ($i = 1; $i <= 5000; ++$i) {
             $rows[] = $i;
         }
         $cons = Consistent::get();
         $cons->add($tables);
-        $oldMap = [];
-        $mapCount = [];
-        foreach ($rows as $row) {
-            $table = $cons->find($row);
-            $oldMap[$row] = $table;
-            if (isset($mapCount[$table])) {
-                ++$mapCount[$table];
-            }
-            else {
-                $mapCount[$table] = 1;
-            }
+
+        $echo[] = 'Row length: ' . count($rows) . '<br>Old tables:';
+        foreach ($tables as $table) {
+            $echo[] = ' ' . $table;
         }
-        $echo[] = "<pre>\$tables = ['table-0', 'table-2', 'table-3', 'table-4', 'table-4'];
-\$rows = [];
-for (\$i = 1; \$i <= 5000; ++\$i) {
-    \$rows[] = \$i;
-}
-\$cons = Consistent::get();
-\$cons->add(\$tables);
-\$oldMap = [];
-\$mapCount = [];
-foreach (\$rows as \$row) {
-    \$table = \$cons->find(\$row);
-    \$oldMap[\$row] = \$table;
-    if (isset(\$mapCount[\$table])) {
-        ++\$mapCount[\$table];
-    }
-    else {
-        \$mapCount[\$table] = 1;
-    }
-}</pre>";
-        $echo[] = '<table style="width: 100%;">';
-        foreach ($mapCount as $k => $v) {
-            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
-        }
-        $echo[] = '</table>';
+
+        $echo[] = "<pre>\$newTables = ['table-5', 'table-6', 'table-7', 'table-8', 'table-9'];
+\$rtn = \$cons->migration(\$rows, \$newTables);</pre>";
 
         // --- 即将增长到 10000 条数据，然后先模拟 5 表拆分为 10 表，再查看要迁移哪些数据，迁移量有多少 ---
-        $migration = [];
-        $cons->add(['table-5', 'table-6', 'table-7', 'table-8', 'table-9']);
-        foreach ($rows as $row) {
-            $newTable = $cons->find($row);
-            $oldTable = $oldMap[$row];
-            if ($newTable === $oldTable) {
-                continue;
-            }
-            if (isset($migration[$oldTable])) {
-                ++$migration[$oldTable];
-            }
-            else {
-                $migration[$oldTable] = 1;
-            }
-        }
-        $echo[] = "<pre>\$migration = [];
-\$cons->add(['table-5', 'table-6', 'table-7', 'table-8', 'table-9']);
-foreach (\$rows as \$row) {
-    \$newTable = \$cons->find(\$row);
-    \$oldTable = \$oldMap[\$row];
-    if (\$newTable === \$oldTable) {
-        continue;
-    }
-    if (isset(\$migration[\$oldTable])) {
-        ++\$migration[\$oldTable];
-    }
-    else {
-        \$migration[\$oldTable] = 1;
-    }
-}</pre>";
+        $newTables = ['table-5', 'table-6', 'table-7', 'table-8', 'table-9'];
+        $rtn = $cons->migration($rows, $newTables);
 
+        $count = count($rtn);
+        $echo[] = 'Migration length: ' . $count . '<br>Added new tables: ';
+        foreach ($newTables as $table) {
+            $echo[] = ' ' . $table;
+        }
+        $echo[] = '<br><br>';
+
+        $i = 0;
         $echo[] = '<table style="width: 100%;">';
-        foreach ($migration as $k => $v) {
-            $echo[] = '<tr><th>' . htmlspecialchars($k . '') . '</th><td>' . htmlspecialchars($v . '') . '</td></tr>';
+        foreach ($rtn as $key => $item) {
+            $echo[] = '<tr><th>' . $key . '</th><td>' . $item['old'] . '</td><td>' . $item['new'] . '</td></tr>';
+            if ($i === 199) {
+                break;
+            }
+            ++$i;
         }
         $echo[] = '</table>';
 
-        return join('', $echo) . '<br>' . $this->_getEnd();
+        return join('', $echo) . '... More ' . ($count - 200) . ' ...<br><br>' . $this->_getEnd();
     }
 
     public function text() {
-        $echo = "<pre>json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Adm@xw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))</pre>
+        $echo = "<pre>Text::sizeFormat(2005)</pre>
+" . Text::sizeFormat(2005, '') . "
+<pre>json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Adm@xw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer:pAss@sUBDom.TopdOm23.CoM:29819/Adm@xw2Ksiz/dszas?Mdi=KdiMs1&a=JDd#hehHe'))) . "
 <pre>json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admx%20w2Ksiz/dszas'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('HtTp://uSer@sUBDom.TopdOm23.CoM/Admx%20w2Ksiz/dszas'))) . "
 <pre>json_encode(Text::parseUrl('C:\Windows\Mi@sc'))</pre>
 " . htmlspecialchars(json_encode(Text::parseUrl('C:\Windows\Mi@sc'))) . "
 <pre>json_encode(Text::parseUrl('../../abc?q=e'))</pre>
-" . htmlspecialchars(json_encode(Text::parseUrl('../../abc?q=e'))) . "
+" . htmlspecialchars(json_encode(Text::parseUrl("../../abc?q=e"))) . "
 <pre>Text::urlResolve('/', 'path?id=1');</pre>
 " . htmlspecialchars(Text::urlResolve('/', 'path?id=1')) . "
 <pre>Text::urlResolve('https://www.url.com/view/path', 'find');</pre>

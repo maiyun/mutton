@@ -21,6 +21,21 @@ class Core {
         setcookie($name, $value, time() + $ttl, isset($opt['path']) ? $opt['path'] : "/", isset($opt['domain']) ? $opt['domain'] : "", isset($opt['ssl']) ? $opt['ssl'] : true, isset($opt['httponly']) ? $opt['httponly'] : true);
     }
 
+    /*
+     * --- 生成范围内的随机数，带小数点 ---
+     * @param float $min >= 最小值
+     * @param float $max <= 最大值
+     * @param int $prec 保留几位小数
+     * @return float
+     */
+    public static function rand(float $min, float $max, int $prec = 0): float {
+        if ($prec < 0) {
+            $prec = 0;
+        }
+        $p = pow(10, $prec);
+        return rand((int)($min * $p), (int)($max * $p)) / $p;
+    }
+
     // --- 随机 ---
     const RANDOM_N = '0123456789';
     const RANDOM_U = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -59,6 +74,8 @@ class Core {
         return $temp;
     }
 
+    const CONVERT62_CHAR = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
     /**
      * --- 将 10 进制转换为 62 进制 ---
      * @param int|string $n 10 进制数字最大 9223372036854775807
@@ -67,10 +84,9 @@ class Core {
         if (!is_string($n)) {
             $n = (string)$n;
         }
-        $char = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $res = '';
         while ($n > 0) {
-            $res = $char[bcmod($n, '62', 0)] . $res;
+            $res = self::CONVERT62_CHAR[bcmod($n, '62', 0)] . $res;
             $n = bcdiv($n, '62', 0);
         }
         return $res;
@@ -81,28 +97,12 @@ class Core {
      * @param string $n 62 进制数字最大 aZl8N0y58M7
      */
     public static function unconvert62(string $n): string {
-        $char = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $res = '0';
         $nl = strlen($n);
         for ($i = 1; $i <= $nl; ++$i) {
-            $res = bcadd($res, bcmul((string)strpos($char, $n[$i - 1]), bcpow('62', (string)($nl - $i), 0), 0), 0);
+            $res = bcadd($res, bcmul((string)strpos(self::CONVERT62_CHAR, $n[$i - 1]), bcpow('62', (string)($nl - $i), 0), 0), 0);
         }
         return $res;
-    }
-
-    /*
-     * --- 生成范围内的随机数，带小数点 ---
-     * @param float $min 最小数
-     * @param float $max 最大数
-     * @param int $prec 保留几位小数
-     * @return float
-     */
-    public static function rand(float $min, float $max, int $prec = 0): float {
-        if ($prec < 0) {
-            $prec = 0;
-        }
-        $p = pow(10, $prec);
-        return rand((int)($min * $p), (int)($max * $p)) / $p;
     }
 
     /**

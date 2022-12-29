@@ -107,7 +107,7 @@ class LSql {
      */
     public function insert(string $table): LSql {
         $this->_data = [];
-        $sql = 'INSERT' . ' INTO ' . $this->field($table, $this->_pre);
+        $sql = 'INSERT INTO ' . $this->field($table, $this->_pre);
         $this->_sql = [$sql];
         return $this;
     }
@@ -199,7 +199,7 @@ class LSql {
      * @return LSql
      */
     public function duplicate(array $s): LSql {
-        if (count($s) > 0) {
+        if (count($s)) {
             $sql = ' ON DUPLICATE KEY UPDATE ' . $this->_updateSub($s);
             $this->_sql[] = $sql;
         }
@@ -323,7 +323,7 @@ class LSql {
      */
     public function join(string $f, array $s = [], $type = 'INNER'): LSql {
         $sql = ' ' . $type . ' JOIN ' . $this->field($f, $this->_pre);
-        if (count($s) > 0) {
+        if (count($s)) {
             $sql .= ' ON ' . $this->_whereSub($s);
         }
         $this->_sql[] = $sql;
@@ -392,7 +392,7 @@ class LSql {
         }
         else {
             // --- array ---
-            if (count($s) > 0) {
+            if (count($s)) {
                 $whereSub = $this->_whereSub($s);
                 if ($whereSub !== '') {
                     $this->_sql[] = ' HAVING ' . $whereSub;
@@ -422,7 +422,7 @@ class LSql {
         }
         else {
             // --- array ---
-            if (count($s) > 0) {
+            if (count($s)) {
                 $whereSub = $this->_whereSub($s);
                 if ($whereSub !== '') {
                     $this->_sql[] = ' WHERE ' . $whereSub;
@@ -634,7 +634,7 @@ class LSql {
      * @return string
      */
     public function field(string|int|float $str, string $pre = ''): string {
-        $str = trim($str . '');                          // --- 去除前导尾随 ---
+        $str = trim($str . '');                     // --- 去除前导尾随 ---
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
         $str = preg_replace('/ +([),])/', ' $1', $str);
         $str = preg_replace('/([(,]) +/', '$1 ', $str);
