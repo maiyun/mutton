@@ -1,9 +1,9 @@
 <p align="center"><img src="doc/[2022-03-29]logo.png" width="260" height="80" alt="Mutton"></p>
 
-[![License](https://img.shields.io/github/license/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/blob/master/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/issues)
-[![GitHub Releases](https://img.shields.io/github/release/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/releases "Stable Release")
-[![GitHub Pre-Releases](https://img.shields.io/github/release/maiyun/Mutton/all.svg)](https://github.com/maiyun/Mutton/releases "Pre-Release")
+[![License](https://img.shields.io/github/license/maiyun/mutton.svg)](https://github.com/maiyun/mutton/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/maiyun/mutton.svg)](https://github.com/maiyun/mutton/issues)
+[![GitHub Releases](https://img.shields.io/github/release/maiyun/mutton.svg)](https://github.com/maiyun/mutton/releases "Stable Release")
+[![GitHub Pre-Releases](https://img.shields.io/github/release/maiyun/mutton/all.svg)](https://github.com/maiyun/mutton/releases "Pre-Release")
 
 Simple, easy to use, full functionality of the PHP framework.
 
@@ -13,8 +13,7 @@ Simple, easy to use, full functionality of the PHP framework.
 
 ## Requirement
 
-PHP 8.0+  
-Nginx/Apache
+PHP 8.0 +
 
 ## Installation
 
@@ -30,7 +29,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## Library
 
-Captcha, Consistent, Crypto, Db (MySQL, Sqlite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
+Captcha, Consistent, Crypto, Db (MySQL, SQLite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
 
 ## Features
 

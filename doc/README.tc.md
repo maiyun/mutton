@@ -1,9 +1,9 @@
 <p align="center"><img src="[2022-03-29]logo.png" width="260" height="80" alt="Mutton"></p>
 
-[![License](https://img.shields.io/github/license/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/blob/master/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/issues)
-[![GitHub Releases](https://img.shields.io/github/release/maiyun/Mutton.svg)](https://github.com/maiyun/Mutton/releases "Stable Release")
-[![GitHub Pre-Releases](https://img.shields.io/github/release/maiyun/Mutton/all.svg)](https://github.com/maiyun/Mutton/releases "Pre-Release")
+[![License](https://img.shields.io/github/license/maiyun/mutton.svg)](https://github.com/maiyun/mutton/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/maiyun/mutton.svg)](https://github.com/maiyun/mutton/issues)
+[![GitHub Releases](https://img.shields.io/github/release/maiyun/mutton.svg)](https://github.com/maiyun/mutton/releases "Stable Release")
+[![GitHub Pre-Releases](https://img.shields.io/github/release/maiyun/mutton/all.svg)](https://github.com/maiyun/mutton/releases "Pre-Release")
 
 簡單、易用且功能完整的 PHP 框架。
 
@@ -13,8 +13,7 @@
 
 ## 環境
 
-PHP 8.0+  
-Nginx/Apache
+PHP 8.0 +
 
 ## 安裝
 
@@ -30,13 +29,13 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## 庫
 
-Captcha, Consistent, Crypto, Db (MySQL, Sqlite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
+Captcha, Consistent, Crypto, Db (MySQL, SQLite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Sql, Text.
 
 ## 特性
 
 ### 開袋即食
 
-秉持開袋即食的原則，封裝了大量介面，簡約而不簡單，並且擁有豐富的代碼提示（基於 PHPDoc）。
+秉承開袋即食的原則，封裝統一風格的常用類庫。
 
 ### 自動載入
 
