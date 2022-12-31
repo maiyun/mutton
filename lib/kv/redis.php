@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/01/31 10:30
- * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08, 2022-3-24 22:46:41, 2022-08-31 15:20:41, 2022-09-21 10:47:41
+ * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08, 2022-3-24 22:46:41, 2022-08-31 15:20:41, 2022-09-21 10:47:41, 2022-12-31 12:12:53
  */
 declare(strict_types = 1);
 
@@ -41,7 +41,7 @@ class Redis implements IKv {
         catch (RedisException $e) {
             return false;
         }
-        if (($user !== '' || $pwd !== '') && !$this->_link->auth($user . ':' . $pwd)) {
+        if (($user || $pwd) && !$this->_link->auth($user . $pwd)) {
             return false;
         }
         $this->_link->select($index);
