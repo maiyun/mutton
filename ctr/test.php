@@ -66,6 +66,9 @@ class Test extends Ctr {
             '<br><br><b>Query string:</b>',
             '<br><br><a href="' . URL_BASE . 'test/qs?a=1&b=2">View "test/qs?a=1&b=2"</a>',
 
+            '<br><br><b>View:</b>',
+            '<br><br><a href="' . URL_BASE . 'test/view">View "test/view"</a>',
+
             '<br><br><b>Return json:</b>',
             '<br><br><a href="' . URL_BASE . 'test/json?type=1">View "test/json?type=1"</a>',
             '<br><a href="' . URL_BASE . 'test/json?type=2">View "test/json?type=2"</a>',
@@ -165,6 +168,12 @@ class Test extends Ctr {
 
     public function qs() {
         return 'json_encode($_GET):<br><br>' . htmlspecialchars(json_encode($_GET)) . '<br><br>' . $this->_getEnd();
+    }
+
+    public function view() {
+        return $this->_loadView('test', [
+            'test' => 'ok'
+        ]);
     }
 
     public function json() {
