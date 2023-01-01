@@ -28,7 +28,7 @@ class Test extends Ctr {
 
     public function onLoad() {
         if (HOSTNAME !== '127.0.0.1' && HOSTNAME !== '172.17.0.1' && HOSTNAME !== 'local-test.brc-app.com' && substr(HOSTNAME, 0, 8) !== '192.168.') {
-            return [0, 'Please use 127.0.0.1 to access the file.'];
+            return [0, 'Please use 127.0.0.1 to access the file (' . HOST . ').'];
         }
         $realIp = Core::realIP();
         if ((HOSTNAME === '127.0.0.1' || HOSTNAME === 'localhost') && ($realIp === '172.17.0.1')) {
@@ -43,6 +43,7 @@ class Test extends Ctr {
             '<br><br>PHP version: ' . PHP_VERSION,
             '<br>HOST: ' . HOST,
             '<br>HOSTNAME: ' . HOSTNAME,
+            '<br>HOSTPORT: ' . HOSTPORT,
             '<br>PATH: ' . PATH,
             '<br>HTTPS: ' . (HTTPS ? 'true' : 'false'),
 
@@ -128,6 +129,7 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/net-follow">View "test/net-follow"</a>',
             '<br><a href="' . URL_BASE . 'test/net-reuse">View "test/net-reuse"</a>',
             '<br><a href="' . URL_BASE . 'test/net-error">View "test/net-error"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-hosts">View "test/net-hosts"</a>',
 
             '<br><br><b>Scan</b>',
             '<br><br><a href="' . URL_BASE . 'test/scan?s=db">View "test/scan?s=db"</a>',
@@ -1292,6 +1294,28 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $echo[] = "<pre>Net::get('https://192.111.000.222/xxx.zzz');</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+
+    public function netHosts() {
+        $echo = [];
+
+        $res = Net::get('http://nodejs.org:' . HOSTPORT . URL_BASE . 'test', [
+            'hosts' => [
+                'nodejs.org' => Core::ip()
+            ]
+        ]);
+        $echo[] = "<pre>Net::get('http://nodejs.org:" . HOSTPORT . URL_BASE . "test', [
+    'hosts' => [
+        'nodejs.org' => '" . Core::ip() . "'
+    ]
+]);</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . htmlspecialchars($res->content) . "</pre>
 error: " . json_encode($res->error) . "<br>
 errno: " . json_encode($res->errno) . "<br>
 info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";

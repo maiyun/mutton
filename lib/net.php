@@ -217,7 +217,7 @@ class Net {
         $host = strtolower($uri['host']);
         if (isset($hosts[$host])) {
             $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
-            // curl_setopt($ch, 10243, [$host . ':' . $port . ':' . $hosts[$host]]);                       // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
+            // curl_setopt($ch, 10243, [$host . ':' . $port . ':' . $hosts[$host]]);               // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
             curl_setopt($ch, CURLOPT_RESOLVE, [$host . ':' . $port . ':' . $hosts[$host]]);        // --- CURL 7.21.3 ---
         }
         // --- 设置 expect 防止出现 100 continue ---
