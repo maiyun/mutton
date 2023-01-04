@@ -8,6 +8,6 @@ const CACHE_TTL = 0;
 
 // --- STATIC ---
 
-const STATIC_VER = '2021-9-10 12:07:42';
+const STATIC_VER = '20230104170246';
 const STATIC_PATH = URL_STC;
 

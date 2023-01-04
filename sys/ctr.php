@@ -8,6 +8,7 @@ declare(strict_types = 1);
 
 namespace sys;
 
+use lib\Core;
 use lib\Db;
 use lib\Kv\IKv;
 use lib\Session;
@@ -102,12 +103,14 @@ class Ctr {
      * @return string
      */
     protected function _loadView(string $path_mtmp, $data = []) {
+        $data['_urlBase'] = URL_BASE;
         $data['_staticVer'] = STATIC_VER;
         $data['_staticPath'] = STATIC_PATH;
         extract($data);
         ob_start();
         require VIEW_PATH . $path_mtmp . '.php';
-        return ob_get_clean();
+        $html = ob_get_clean();
+        return Core::purify($html);
     }
 
     /**
