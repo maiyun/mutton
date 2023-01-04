@@ -21,7 +21,7 @@ class Core {
         setcookie($name, $value, time() + $ttl, isset($opt['path']) ? $opt['path'] : "/", isset($opt['domain']) ? $opt['domain'] : "", isset($opt['ssl']) ? $opt['ssl'] : true, isset($opt['httponly']) ? $opt['httponly'] : true);
     }
 
-    /*
+    /**
      * --- 生成范围内的随机数，带小数点 ---
      * @param float $min >= 最小值
      * @param float $max <= 最大值
@@ -103,6 +103,21 @@ class Core {
             $res = bcadd($res, bcmul((string)strpos(self::CONVERT62_CHAR, $n[$i - 1]), bcpow('62', (string)($nl - $i), 0), 0), 0);
         }
         return $res;
+    }
+    
+    /**
+     * --- 去除 html 的空白符、换行以及注释 ---
+     * @param string $text 要纯净的字符串
+     */
+    public static function purify(string $text): string {
+        $text = '>' . $text . '<';
+        $text =  preg_replace('/<!--([\s\S]*?)-->/', '', $text);
+        $text =  preg_replace_callback('/>([\s\S]*?)</', function ($matches) {
+            $t1 = preg_replace('/\t|\r\n| {2}/', '', $matches[1]);
+            $t1 = preg_replace('/\n|\r/', '', $t1);
+            return '>' . $t1 . '<';
+        }, $text);
+        return substr($text, 1, -1);
     }
 
     /**

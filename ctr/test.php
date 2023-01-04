@@ -104,6 +104,7 @@ class Test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'test/core-random">View "test/core-random"</a>',
             '<br><a href="' . URL_BASE . 'test/core-rand">View "test/core-rand"</a>',
             '<br><a href="' . URL_BASE . 'test/core-convert62">View "test/core-convert62"</a>',
+            '<br><a href="' . URL_BASE . 'test/core-purify">View "test/core-purify"</a>',
             '<br><a href="' . URL_BASE . 'test/core-muid">View "test/core-muid"</a>',
 
             '<br><br><b>Crypto:</b>',
@@ -545,6 +546,20 @@ CREATE TABLE `m_test_data_0` (
             '<pre>Core::unconvert62(\'aZl8N0y57gs\');</pre>' . Core::unconvert62('aZl8N0y57gs') .
             '<pre>Core::unconvert62(\'aZl8N0y58M7\');</pre>' . Core::unconvert62('aZl8N0y58M7') .
             '<br><br>' . $this->_getEnd();
+    }
+
+    public function corePurify() {
+        $html = "<html>
+    <head>
+        <title>Title</title>
+    </head>
+    <body>
+        <!-- h1 -->
+        <h1>Hello</h1>
+        <h2>World</h2>
+    </body>
+</html>";
+        return '<pre>Core::purify("' . htmlspecialchars($html) . '");</pre>' . htmlspecialchars(Core::purify($html)) . '<br><br>' . $this->_getEnd();
     }
 
     public function coreMuid() {
