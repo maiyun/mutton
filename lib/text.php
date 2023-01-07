@@ -138,7 +138,7 @@ class Text {
                 break;
             }
         }
-        $url = preg_replace('/\.\.\/', '', $url);
+        $url = preg_replace('/\.\.\//', '', $url);
         return $url;
     }
 
