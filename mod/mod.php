@@ -81,7 +81,8 @@ class Mod {
             if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
                 if (is_string($opt['where'])) {
                     $opt['where'] = '(' . $opt['where'] . ') AND `time_remove` = 0';
-                } else {
+                }
+                else {
                     $opt['where']['time_remove'] = '0';
                 }
             }
@@ -265,7 +266,8 @@ class Mod {
         }
         if ($ps->rowCount() > 0) {
             return true;
-        } else {
+        }
+        else {
             return null;
         }
     }
@@ -399,7 +401,8 @@ class Mod {
                 if ($where !== '') {
                     $where = '(' . $where . ') AND `time_remove` = 0';
                 }
-            } else {
+            }
+            else {
                 $where['time_remove'] = '0';
             }
         }
@@ -433,7 +436,8 @@ class Mod {
                 $this->_data[$k] = $v;
                 $this->$k = $v;
             }
-        } else {
+        }
+        else {
             $this->_updates[$n] = true;
             $this->_data[$n] = $v;
             $this->$n = $v;
@@ -869,7 +873,8 @@ class Mod {
         if (static::$_soft && !$raw) {
             if (is_string($s)) {
                 $s = '(' . $s . ') AND `time_remove` = 0';
-            } else {
+            }
+            else {
                 $s['time_remove'] = '0';
             }
         }
