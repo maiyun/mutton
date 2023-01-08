@@ -123,16 +123,6 @@ class Route {
 
         // --- Cookie ---
         $middle->setPrototypeRef('_cookie', $_COOKIE);
-        // --- 设置 XSRF 值 ---
-        if (!isset($_COOKIE['XSRF-TOKEN'])) {
-            $xsrf = Core::random(16, Core::RANDOM_LUN);
-            $middle->setPrototype('_xsrf', $xsrf);
-            setcookie('XSRF-TOKEN', $xsrf, 0, '/', '', false, true);
-            $_COOKIE['XSRF-TOKEN'] = $xsrf;
-        }
-        else {
-            $middle->setPrototype('_xsrf', $_COOKIE['XSRF-TOKEN']);
-        }
 
         // --- 执行中间控制器的 onLoad ---
         $rtn = $middle->onLoad();

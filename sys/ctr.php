@@ -141,7 +141,7 @@ class Ctr {
                 return false;
             }
             for ($k = 0; $k < $lastK; ++$k) {
-                $v = $val[$k];
+                $v = $val[$k] ? $val[$k] : '';
                 if (is_array($v)) {
                     if (count($v) === 0) {
                         $rtn = $val[$lastK];
@@ -261,6 +261,23 @@ class Ctr {
             $rule['_xsrf'] = ['require', $this->_cookie['XSRF-TOKEN'], [0, 'Bad request, no permission.']];
         }
         return $this->_checkInput($input, $rule, $rtn);
+    }
+    
+    /**
+     * --- 当前页面开启 XSRF 支持（主要检测 cookie 是否存在） ---
+     * --- 如果当前页面有 CDN，请不要使用 ---
+     */
+    protected function _enabledXsrf() {
+        // --- 设置 XSRF 值 ---
+        if (!isset($_COOKIE['XSRF-TOKEN'])) {
+            $xsrf = Core::random(16, Core::RANDOM_LUN);
+            $this->_xsrf = $xsrf;
+            setcookie('XSRF-TOKEN', $xsrf, 0, '/', '', false, true);
+            $_COOKIE['XSRF-TOKEN'] = $xsrf;
+        }
+        else {
+            $this->_xsrf = $_COOKIE['XSRF-TOKEN'];
+        }
     }
 
     /**
