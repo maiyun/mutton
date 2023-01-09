@@ -112,10 +112,13 @@ class Core {
     public static function purify(string $text): string {
         $text = '>' . $text . '<';
         $text =  preg_replace('/<!--([\s\S]*?)-->/', '', $text);
-        $text =  preg_replace_callback('/>([\s\S]*?)</', function ($matches) {
+        $text =  preg_replace_callback('/>([\s\S]*?)<(\/?\w+)/', function ($matches) {
+            if (strtolower($matches[2]) === '/script') {
+                return $matches[0];
+            }
             $t1 = preg_replace('/\t|\r\n| {2}/', '', $matches[1]);
             $t1 = preg_replace('/\n|\r/', '', $t1);
-            return '>' . $t1 . '<';
+            return '>' . $t1 . '<' . $matches[2];
         }, $text);
         return substr($text, 1, -1);
     }

@@ -558,6 +558,17 @@ CREATE TABLE `m_test_data_0` (
         <!-- h1 -->
         <h1>Hello</h1>
         <h2>World</h2>
+        <div>// abc</div>
+        <script>
+        // --- test ---
+        if (a) {
+           alert('zzz');
+        }
+        /* --- test 2 --- */
+        if (b) {
+           alert('zzz');
+        }
+        </script>
     </body>
 </html>";
         return '<pre>Core::purify("' . htmlspecialchars($html) . '");</pre>' . htmlspecialchars(Core::purify($html)) . '<br><br>' . $this->_getEnd();
