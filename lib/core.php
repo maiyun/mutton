@@ -111,14 +111,21 @@ class Core {
      */
     public static function purify(string $text): string {
         $text = '>' . $text . '<';
-        $text =  preg_replace('/<!--([\s\S]*?)-->/', '', $text);
-        $text =  preg_replace_callback('/>([\s\S]*?)<(\/?\w+)/', function ($matches) {
-            if (strtolower($matches[2]) === '/script') {
-                return $matches[0];
-            }
+        $scripts = [];
+        $num = -1;
+        $text = preg_replace('/<!--([\s\S]*?)-->/', '', $text);
+        $text = preg_replace_callback('/<script[\s\S]+?<\/script>/', function ($matches) use (&$scripts) {
+            $scripts[] = $matches[0];
+            return '[SCRIPT]';
+        }, $text);
+        $text = preg_replace_callback('/>([\s\S]*?)</', function ($matches) {
             $t1 = preg_replace('/\t|\r\n| {2}/', '', $matches[1]);
             $t1 = preg_replace('/\n|\r/', '', $t1);
-            return '>' . $t1 . '<' . $matches[2];
+            return '>' . $t1 . '<';
+        }, $text);
+        $text = preg_replace_callback('/\[SCRIPT\]/', function() use ($scripts, &$num) {
+            ++$num;
+            return $scripts[$num];
         }, $text);
         return substr($text, 1, -1);
     }
