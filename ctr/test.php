@@ -36,6 +36,12 @@ class Test extends Ctr {
         }
     }
 
+    public function notfound() {
+        // --- Set on route.php ---
+        $this->_httpCode = 404;
+        return 'Custom 404 page.';
+    }
+
     public function index() {
         $echo = [
             'Hello world! Welcome to use <strong>Mutton ' . VER . '</strong>!',
@@ -83,6 +89,8 @@ class Test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'test/ctr-xsrf">View "test/ctr-xsrf"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-checkinput">View "test/ctr-checkinput"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-locale">View "test/ctr-locale"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-cachettl">View "test/ctr-cachettl"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-httpcode">View "test/ctr-httpcode"</a>',
 
             '<br><br><b>Middle:</b>',
             '<br><br><a href="' . URL_BASE . 'test/middle">View "test/middle"</a>',
@@ -326,6 +334,16 @@ function postFd() {
         $echo[] = "<pre>l('test', ['a1', 'a2'])</pre>" . l('test', ['a1', 'a2']);
 
         return join('', $echo) . '<br><br>' . $this->_getEnd();
+    }
+
+    public function ctrCachettl() {
+        $this->_cacheTTL = 60;
+        return 'This page is cache ttl is 60s.';
+    }
+
+    public function ctrHttpcode() {
+        $this->_httpCode = 404;
+        return 'This page is a custom httpcode (404).';
     }
 
     public function modSession() {

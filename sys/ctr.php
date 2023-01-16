@@ -55,6 +55,9 @@ class Ctr {
     /** @var string --- XSRF TOKEN 值 --- */
     protected $_xsrf = '';
 
+    /** @var int --- 自定义 http code --- */
+    protected $_httpCode = 0;
+
     /** --- 获取类内部的 prototype --- */
     public function getPrototype($name) {
         return $this->{$name};

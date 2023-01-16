@@ -2,14 +2,14 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29, 2022-08-30 12:56:07, 2022-09-13 14:40:45
+ * Last: 2020-1-17 01:09:39, 2020-3-22 19:31:51, 2021-8-12 12:36:13, 2022-3-17 15:29:29, 2022-08-30 12:56:07, 2022-09-13 14:40:45, 2023-1-17 02:54:37
  */
 declare(strict_types = 1);
 
 namespace sys;
 
 use ctr\middle;
-use lib\Core;
+use lib\Text;
 
 require ETC_PATH.'route.php';
 
@@ -43,6 +43,11 @@ class Route {
         }
         // --- 若文件名为保留的 middle 将不允许进行 ---
         if (substr($pathLeft, -6) === 'middle') {
+            if (isset(ROUTE['#404'])) {
+                http_response_code(302);
+                header('location: ' . Text::urlResolve(URL_BASE, ROUTE['#404']));
+                return;
+            }
             http_response_code(404);
             echo '[Error] Controller not found, path: ' . PATH . '.';
             return;
@@ -126,12 +131,19 @@ class Route {
 
         // --- 执行中间控制器的 onLoad ---
         $rtn = $middle->onLoad();
+        $cacheTTL = $middle->getPrototype('_cacheTTL');
+        $httpCode = $middle->getPrototype('_httpCode');
         if (!isset($rtn) || $rtn === true) {
             // --- 只有不返回或返回 true 时才加载控制文件 ---
             // --- 判断真实控制器文件是否存在 ---
             $filePath = CTR_PATH . $pathLeft . '.php';
             if (!is_file($filePath)) {
                 // --- 指定的控制器不存在 ---
+                if (isset(ROUTE['#404'])) {
+                    http_response_code(302);
+                    header('location: ' . Text::urlResolve(URL_BASE, ROUTE['#404']));
+                    return;
+                }
                 http_response_code(404);
                 echo '[Error] Controller not found, path: ' . PATH . '.';
                 return;
@@ -166,6 +178,7 @@ class Route {
 
             $ctr->setPrototype('_cacheTTL', $middle->getPrototype('_cacheTTL'));
             $ctr->setPrototype('_xsrf', $middle->getPrototype('_xsrf'));
+            $ctr->setPrototype('_httpCode', $middle->getPrototype('_httpCode'));
             // --- 强制 HTTPS ---
             if (MUST_HTTPS && !HTTPS) {
                 http_response_code(302);
@@ -175,6 +188,11 @@ class Route {
             // --- 检测 action 是否存在，以及排除内部方法 ---
             if ($pathRight[0] === '_' || $pathRight === 'onLoad' || $pathRight === 'setPrototype' || $pathRight === 'getPrototype' || $pathRight === 'getAuthorization') {
                 // --- _ 开头的 action 是内部方法，不允许访问 ---
+                if (isset(ROUTE['#404'])) {
+                    http_response_code(302);
+                    header('location: ' . Text::urlResolve(URL_BASE, ROUTE['#404']));
+                    return;
+                }
                 http_response_code(404);
                 echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
@@ -183,6 +201,11 @@ class Route {
                 return strtoupper($matches[1]);
             }, $pathRight);
             if (!method_exists($ctr, $pathRight)) {
+                if (isset(ROUTE['#404'])) {
+                    http_response_code(302);
+                    header('location: ' . Text::urlResolve(URL_BASE, ROUTE['#404']));
+                    return;
+                }
                 http_response_code(404);
                 echo '[Error] Action not found, path: ' . PATH . '.';
                 return;
@@ -193,12 +216,18 @@ class Route {
             if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
             }
-            // --- 在返回值输出之前，设置缓存 ---
+            // --- 获取 ctr 设置的 cache 和 hcode ---
             $cacheTTL = $ctr->getPrototype('_cacheTTL');
-            if ($cacheTTL > 0) {
-                header('expires: ' . gmdate('D, d M Y H:i:s', $time + $cacheTTL) . ' GMT');
-                header('cache-control: max-age=' . $cacheTTL);
-            }
+            $httpCode = $ctr->getPrototype('_httpCode');
+        }
+        // --- 设置缓存 ---
+        if ($cacheTTL > 0) {
+            header('expires: ' . gmdate('D, d M Y H:i:s', $time + $cacheTTL) . ' GMT');
+            header('cache-control: max-age=' . $cacheTTL);
+        }
+        // --- 设置自定义 hcode ---
+        if ($httpCode > 0) {
+            http_response_code($httpCode);
         }
         // --- 判断返回值 ---
         if (!isset($rtn) || is_bool($rtn) || $rtn === null) {
