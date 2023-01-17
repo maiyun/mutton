@@ -4,6 +4,16 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.2
+
+[+] Add convert62, unconvert62, purify methods of core lib.  
+[+] Add urlAtom method, optimize urlResolve method of text lib.  
+[+] Add migration method of consistent lib.  
+[+] Add HOSTPORT const.  
+[+] Add _urlBase param in _loadView method, add _enabledXsrf method, add custom _httpCode param of ctr class.  
+[+] Add custom 404 location "#404" of route.  
+[\*] Other optimizations.
+
 # 7.2.1
 
 [+] Added getRange method in the Consistent class.  

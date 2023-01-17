@@ -4,6 +4,16 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.sc.md)
 
+# 7.2.2
+
+[+] Core 庫新增 convert62， unconvert62， purify 方法。  
+[+] Text 庫新增 urlAtom 方法，優化了 urlResolve 方法。  
+[+] Consistent 庫新增 migration 方法。  
+[+] 新增 HOSTPORT 常量。  
+[+] Ctr 類的 _loadView 方法新增 _urlBase 變數，新增 _enabledXsrf 方法，新增可自定義的 _httpCode 參數。  
+[+] 路由新增自定義 404 跳轉參數 “#404”。  
+[\*] 其他的一些優化。
+
 # 7.2.1
 
 [+] 新增 getRange 方法在 Consistent 類。  

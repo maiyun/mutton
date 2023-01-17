@@ -4,6 +4,16 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.2
+
+[+] Core 库新增 convert62, unconvert62, purify 方法。  
+[+] Text 库新增 urlAtom 方法，优化了 urlResolve 方法。  
+[+] Consistent 库新增 migration 方法。  
+[+] 新增 HOSTPORT 常量。  
+[+] Ctr 类的 _loadView 方法新增 _urlBase 变量，新增 _enabledXsrf 方法，新增可自定义的 _httpCode 参数。  
+[+] 路由新增自定义 404 跳转参数 "#404"。  
+[\*] 其他的一些优化。
+
 # 7.2.1
 
 [+] 新增 getRange 方法在 Consistent 类。  
@@ -22,7 +32,7 @@
 
 # 7.0.1
 
-[\*] Mutton 7 正式版发布，启用新的 LOGO，[新LOGO]([2022-03-29]logo.png) / [旧LOGO](logo.png)。  
+[\*] Mutton 7 正式版发布，启用新的 LOGO。  
 [\*] 优化 Session 库。
 
 # 7.0.0
