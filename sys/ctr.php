@@ -107,6 +107,7 @@ class Ctr {
      */
     protected function _loadView(string $path_mtmp, $data = []) {
         $data['_urlBase'] = URL_BASE;
+        $data['_urlFull'] = URL_FULL;
         $data['_staticVer'] = STATIC_VER;
         $data['_staticPath'] = STATIC_PATH;
         extract($data);
