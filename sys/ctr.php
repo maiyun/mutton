@@ -178,6 +178,13 @@ class Ctr {
                             }
                             break;
                         }
+                        case 'array': {
+                            if ($input[$key] !== null && !is_array($input[$key])) {
+                                $rtn = $val[$lastK];
+                                return false;
+                            }
+                            break;
+                        }
                         default: {
                             if ($input[$key] !== null) {
                                 if ($v[0] === '/') {
