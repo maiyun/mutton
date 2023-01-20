@@ -4,6 +4,11 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.sc.md)
 
+# 7.2.3
+
+[+] Ctr 類的 _checkInput 方法新增可檢查 array 類型。  
+[+] Ctr 類的 _loadView 方法新增 _urlFull 變數。
+
 # 7.2.2
 
 [+] Core 庫新增 convert62， unconvert62， purify 方法。  

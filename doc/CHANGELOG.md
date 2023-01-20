@@ -4,6 +4,11 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.2.3
+
+[+] Add check array type in _checkInput method of Ctr class.  
+[+] Add _urlFull in _loadView method of Ctr class.
+
 # 7.2.2
 
 [+] Add convert62, unconvert62, purify methods of core lib.  
