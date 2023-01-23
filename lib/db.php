@@ -58,7 +58,10 @@ class Db {
      * @param string $core
      * @return Db
      */
-    public static function get(string $core = self::MYSQL): Db {
+    public static function get(string $core = ''): Db {
+        if ($core === '') {
+            $core = MY_HOST ? self::MYSQL : self::SQLITE;
+        }
         return new Db($core);
     }
 
