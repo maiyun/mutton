@@ -320,6 +320,35 @@ class Net {
             'headers' => $headers
         ], $cookie);
     }
+    
+    /**
+     * --- 对 cookie 对象进行操作 ---
+     * @param array $cookie 要操作的对象
+     * @param string $name 名
+     * @param string $value 值
+     * @param string $domain 应用网址，如 .xxx.com
+     * @param array $opt 选项 ttl, path, domain, ssl, httponly
+     */
+    public static function setCookie(array &$cookie, string $name, string $value, string $domain, array $opt = []): void {
+        $ttl = !isset($opt['ttl']) ? 0 : $opt['ttl'];
+        $domain = explode(':', $domain)[0];
+        $domainN = $domain[0] === '.' ? substr($domain, 1) : $domain;
+        
+        $exp = -1992199400;
+        if ($ttl) {
+            $exp = $_SERVER['REQUEST_TIME'] + $ttl;
+        }
+
+        $cookie[$name . '-' . $domainN] = [
+            'name' => $name,
+            'value' => $value,
+            'exp' => $exp,
+            'path' => isset($opt['path']) ? $opt['path'] : '/',
+            'domain' => $domainN,
+            'secure' => isset($opt['ssl']) ? true : false,
+            'httponly' => isset($opt['httponly']) ? true : false
+        ];
+    }
 
     /**
      * --- 根据 Set-Cookie 头部转换到 cookie 数组（会自动筛掉不能设置的 cookie） ---
@@ -416,7 +445,8 @@ class Net {
                 'exp' => $exp,
                 'path' => $path,
                 'domain' => $domainN,
-                'secure' => isset($cookieTmp['secure']) ? true : false
+                'secure' => isset($cookieTmp['secure']) ? true : false,
+                'httponly' => isset($cookieTmp['httponly']) ? true : false,
             ];
         }
     }
@@ -463,10 +493,10 @@ class Net {
                     continue;
                 }
             }
-            $cookieStr .= $item['name'] . '=' . urlencode($item['value']) . ';';
+            $cookieStr .= $item['name'] . '=' . urlencode($item['value']) . '; ';
         }
         if ($cookieStr !== '') {
-            return substr($cookieStr, 0, -1);
+            return substr($cookieStr, 0, -2);
         }
         else {
             return '';

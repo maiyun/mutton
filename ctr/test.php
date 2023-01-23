@@ -1207,10 +1207,20 @@ cookie: <pre>" . json_encode($cookie, JSON_PRETTY_PRINT) . "</pre><hr>";
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>";
 
+        Net::setCookie($cookie, 'custom1', 'abc1', HOST);
+        Net::setCookie($cookie, 'custom2', 'abc2', '172.17.0.1');
+        $res = Net::get($this->_internalUrl . 'test/net-cookie2', [], $cookie);
+        $echo[] = "<pre>Net::setCookie($cookie, 'custom1', 'abc1', '" . HOST . "');
+Net::setCookie($cookie, 'custom2', 'abc2', '172.17.0.1');
+Net::get('" . $this->_internalUrl . "test/net-cookie2', [], \$cookie);</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . $res->content . "</pre>";
+
         return join('', $echo) . $this->_getEnd();
     }
 
     public function netCookie1() {
+        setcookie('test0', 'session');
         setcookie('test1', 'normal', $_SERVER['REQUEST_TIME'] + 10);
         setcookie('test2', 'baidu.com', $_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
         setcookie('test3', HOSTNAME, $_SERVER['REQUEST_TIME'] + 30, '/', HOSTNAME);
@@ -1221,7 +1231,8 @@ content: <pre>" . $res->content . "</pre>";
         setcookie('test8', 'com', $_SERVER['REQUEST_TIME'] + 20, '/', 'com');
         setcookie('test9', 'com.cn', $_SERVER['REQUEST_TIME'] + 10, '/', 'com.cn');
         setcookie('test10', 'httponly', $_SERVER['REQUEST_TIME'] + 60, '', '', false, true);
-        return "setcookie('test1', 'normal', \$_SERVER['REQUEST_TIME'] + 10);
+        return "setcookie('test0', 'session');
+setcookie('test1', 'normal', \$_SERVER['REQUEST_TIME'] + 10);
 setcookie('test2', 'baidu.com', \$_SERVER['REQUEST_TIME'] + 20, '/', 'baidu.com');
 setcookie('test3', '" . HOSTNAME .  "', \$_SERVER['REQUEST_TIME'] + 30, '/', '" . HOSTNAME . "');
 setcookie('test4', '/ok/', \$_SERVER['REQUEST_TIME'] + 40, '/ok/');
