@@ -172,7 +172,7 @@ class Ctr {
                         }
                         case 'num':
                         case 'number': {
-                            if ($input[$key] !== null && !is_numeric($input[$key])) {
+                            if ($input[$key] && !is_numeric($input[$key])) {
                                 $rtn = $val[$lastK];
                                 return false;
                             }
@@ -186,7 +186,7 @@ class Ctr {
                             break;
                         }
                         default: {
-                            if ($input[$key] !== null) {
+                            if ($input[$key]) {
                                 if ($v[0] === '/') {
                                     // --- 正则 ---
                                     if (!preg_match($v, $input[$key])) {
