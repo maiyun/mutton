@@ -132,7 +132,7 @@ class Core {
 
     /**
      * --- 获取 MUID ---
-     * @param $opt len: 8 - 32, 默认 8; bin: 是否含有大小写, 默认 true; key: 多样性混合, 默认空; insert: 插入指定字符, 不超过 2 字符，默认空
+     * @param $opt len: 8 - 32, 默认 8; bin: 是否含有大小写, 默认 true; key: 多样性混合, 默认空; insert: 插入指定字符, 最好不超过 2 字符，默认空，num: 是否含有数字，默认 true
      * @return string
      */
     public static function muid($opt = []): string {
@@ -140,6 +140,7 @@ class Core {
         $bin = isset($opt['bin']) ? $opt['bin'] : true;
         $key = isset($opt['key']) ? $opt['key'] : '';
         $insert = isset($opt['insert']) ? $opt['insert'] : '';
+        $num = isset($opt['num']) ? $opt['num'] : true;
         $ilen = strlen($insert);
 
         $char = hash_hmac('sha1', (isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '') .
@@ -153,7 +154,7 @@ class Core {
         }
 
         // --- 生成随机数 ---
-        $over = self::random($len - 1 - $ilen, $bin ? self::RANDOM_LUN : self::RANDOM_LN) . $char[20];
+        $over = self::random($len - 1 - $ilen, $bin ? ($num ? self::RANDOM_LUN : self::RANDOM_LU) : ($num ? self::RANDOM_LN : self::RANDOM_L)) . $char[20];
         return $over[0] . $insert . substr($over, 1);
     }
 
