@@ -72,7 +72,7 @@ class Jwt {
     }
 
     /**
-     * --- 将 _jwt 数据封装并返回（创建新的或者续期老的 token），默认会同时设置一个 cookie（data 值会自动设置 token、exp）， ---
+     * --- 将 _jwt 数据封装并返回（创建新的或者续期老的 token），默认会同时设置一个 cookie（data 值会自动设置 token、exp） ---
      */
     public function renew() {
         $time = time();
