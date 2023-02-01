@@ -1637,10 +1637,10 @@ Result:<pre id=\"result\">Nothing.</pre>";
 \$link->connect();\n";
         }
 
-        $orign = Jwt::getOrigin($this);
-        $echo[] = "\$orign = Jwt::getOrigin(\$this);
-json_encode(\$orign);</pre>";
-        $echo[] = json_encode($orign);
+        $origin = Jwt::getOrigin($this);
+        $echo[] = "\$origin = Jwt::getOrigin(\$this);
+json_encode(\$origin);</pre>";
+        $echo[] = json_encode($origin);
 
         // --- 创建 jwt 对象 ---
         $jwt = Jwt::get($this, [], $link);
@@ -1665,15 +1665,15 @@ json_encode(\$rtn);</pre>";
         $echo[] = "<pre>json_encode(\$this->_jwt);</pre>";
         $echo[] = json_encode($this->_jwt);
 
-        $rtn2 = Jwt::decode($orign, $link);
-        $echo[] = "<pre>\$rtn = Jwt::decode(\$orign, " . ($link ? '$link' : 'null') . ");
+        $rtn2 = Jwt::decode($origin, $link);
+        $echo[] = "<pre>\$rtn = Jwt::decode(\$origin, " . ($link ? '$link' : 'null') . ");
 json_encode(\$rtn);</pre>";
         $echo[] = json_encode($rtn2);
 
         if ($_GET['type'] === 'auth') {
             $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/jwt1',{method:'POST',credentials:'omit',headers:{'Authorization':document.getElementById('_auth').innerText,'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/jwt1',{method:'POST',credentials:'omit',headers:{'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>
 Token: <span id=\"token\">" . $token . "</span><br>
-Post Authorization header: <span id=\"_auth\">Bearer " . $orign . "</span><br><br>
+Post Authorization header: <span id=\"_auth\">Bearer " . $origin . "</span><br><br>
 Result:<pre id=\"result\">Nothing.</pre>";
         }
         else {
