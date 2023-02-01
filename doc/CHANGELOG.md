@@ -4,6 +4,10 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.3.0
+
+[+] Add Jwt library.
+
 # 7.2.3
 
 [+] Add check array type in _checkInput method of Ctr class.  

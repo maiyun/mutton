@@ -63,7 +63,7 @@ class Session {
      * Session constructor.
      * @param Ctr $ctr 模型实例
      * @param IKv|Db $link Kv 或 Db 实例
-     * @param bool $auth 设为 true 则优先从头 Authorization 或 post _auth 值读取 token
+     * @param bool $auth 设为 true 则优先从头 Authorization、get 或 post _auth 值读取 token
      * @param array $opt name, ttl, ssl, sqlPre
      */
     public function __construct(Ctr $ctr, $link, bool $auth = false, array $opt = []) {
@@ -74,7 +74,8 @@ class Session {
         $this->_ttl = isset($opt['ttl']) ? $opt['ttl'] : SESSION_TTL;
 
         if ($auth) {
-            if (($a = $ctr->getAuthorization()) && ($a['user'] === 'token')) {
+            $a = $ctr->getAuthorization();
+            if ($a && !is_string($a) && ($a['user'] === 'token')) {
                 $this->_token = $a['pwd'];
             }
         }

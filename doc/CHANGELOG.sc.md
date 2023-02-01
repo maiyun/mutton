@@ -4,6 +4,10 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.3.0
+
+[+] 新增 Jwt 库。
+
 # 7.2.3
 
 [+] Ctr 类的 _checkInput 方法新增可检查 array 类型。  

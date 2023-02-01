@@ -8,6 +8,7 @@ use lib\Captcha;
 use lib\Consistent;
 use lib\Core;
 use lib\Db;
+use lib\Jwt;
 use lib\Kv;
 use lib\Kv\IKv;
 use lib\Net;
@@ -149,6 +150,11 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/session?s=kv">View "test/session?s=kv"</a>',
             '<br><a href="' . URL_BASE . 'test/session?s=db&auth=1">View "test/session?s=db&auth=1" Header Authorization</a>',
             '<br><a href="' . URL_BASE . 'test/session?s=kv&auth=1">View "test/session?s=kv&auth=1" Header Authorization</a>',
+
+            '<br><br><b>Jwt:</b>',
+            '<br><br><a href="' . URL_BASE . 'test/jwt">View "test/jwt"</a>',
+            '<br><a href="' . URL_BASE . 'test/jwt?type=kv">View "test/jwt?type=kv"</a>',
+            '<br><a href="' . URL_BASE . 'test/jwt?type=auth">View "test/jwt?type=auth" Header Authorization</a>',
 
             '<br><br><b>Sql:</b>',
             '<br><br><a href="' . URL_BASE . 'test/sql?type=insert">View "test/sql?type=insert"</a>',
@@ -1611,6 +1617,76 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 return '<a href="' . URL_BASE . 'test">Return</a>' . join('', $echo) . $this->_getEnd();
             }
         }
+    }
+
+    public function jwt() {
+        if (!$this->_checkInput($_GET, [
+            'type' => [['', 'kv', 'auth'], [0, 'Bad request.']]
+        ], $return)) {
+            return $return;
+        }
+
+        $echo = ['<pre>'];
+        $link = null;
+        if ($_GET['type'] === 'kv') {
+            $link = Kv::get();
+            if (!$link->connect()) {
+                return [0, 'Failed, Reids can not be connected.'];
+            }
+            $echo[] = "\$link = Kv::get();
+\$link->connect();\n";
+        }
+
+        $orign = Jwt::getOrigin($this);
+        $echo[] = "\$orign = Jwt::getOrigin(\$this);
+json_encode(\$orign);</pre>";
+        $echo[] = json_encode($orign);
+
+        // --- 创建 jwt 对象 ---
+        $jwt = Jwt::get($this, [], $link);
+        $echo[] = "<pre>\$jwt = Jwt::get(\$this, [], " . ($link ? '$link' : 'null') . ");
+json_encode(\$this->_jwt);</pre>";
+        $echo[] = json_encode($this->_jwt);
+
+        $this->_jwt['test'] = 'a';
+        $jwt->renew();
+        $echo[] = "<pre>\$this->_jwt['test'] = 'a';
+\$jwt->renew();
+json_encode(\$this->_jwt);</pre>";
+        $echo[] = json_encode($this->_jwt);
+
+        $token = $this->_jwt['token'];
+        $rtn = $jwt->destory();
+        $echo[] = "<pre>\$rtn = \$jwt->destory();
+json_encode(\$rtn);</pre>";
+        $echo[] = json_encode($rtn);
+
+        $echo[] = "<pre>json_encode(\$this->_jwt);</pre>";
+        $echo[] = json_encode($this->_jwt);
+
+        $rtn = Jwt::decode($orign, $link);
+        $echo[] = "<pre>\$rtn = Jwt::decode(\$orign, " . ($link ? '$link' : 'null') . ");
+json_encode(\$rtn);</pre>";
+        $echo[] = json_encode($rtn);
+
+        if ($_GET['type'] === 'auth') {
+            $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/jwt1',{method:'POST',credentials:'omit',headers:{'Authorization':document.getElementById('_auth').innerText,'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/jwt1',{method:'POST',credentials:'omit',headers:{'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>
+Token: <span id=\"token\">" . $token . "</span><br>
+Post Authorization header: <span id=\"_auth\">Bearer " . $orign . "</span><br><br>
+Result:<pre id=\"result\">Nothing.</pre>";
+        }
+        else {
+            $echo[] = '<br><br>';
+        }
+
+        return join('', $echo) . $this->_getEnd();
+    }
+
+    public function jwt1() {
+        Jwt::get($this, [
+            'auth' => true
+        ]);
+        return [1, 'txt' => json_encode($this->_jwt)];
     }
 
     public function sql() {

@@ -171,6 +171,8 @@ class Route {
             $ctr->setPrototypeRef('_post', $_POST);
 
             $ctr->setPrototypeRef('_cookie', $_COOKIE);
+            $jwt = &$middle->getPrototype('_jwt');
+            $ctr->setPrototypeRef('_jwt', $jwt);
             if (!$ctr->getPrototype('_sess') && $middle->getPrototype('_sess')) {
                 $ctr->setPrototypeRef('_session', $_SESSION);
                 $ctr->setPrototype('_sess', $middle->getPrototype('_sess'));

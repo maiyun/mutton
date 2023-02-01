@@ -43,6 +43,9 @@ class Ctr {
     /** @var array --- Cookie 数组 --- */
     protected $_cookie;
 
+    /** @var array --- Jwt 数组 --- */
+    protected $_jwt = [];
+
     /** @var array --- Session 数组 --- */
     protected $_session = [];
 
@@ -59,7 +62,7 @@ class Ctr {
     protected $_httpCode = 0;
 
     /** --- 获取类内部的 prototype --- */
-    public function getPrototype($name) {
+    public function &getPrototype($name) {
         return $this->{$name};
     }
 
@@ -305,8 +308,8 @@ class Ctr {
     private $_authorization = null;
 
     /**
-     * --- 通过 header 或 _auth 获取鉴权信息 ---
-     * @return array|false user, pwd
+     * --- 通过 header 或 _auth 获取鉴权信息或 JWT 信息（不解析） ---
+     * @return array|false|string user, pwd
      */
     public function getAuthorization() {
         if ($this->_authorization !== null) {
@@ -325,6 +328,10 @@ class Ctr {
         $authArr = explode(' ', $auth);
         if (!isset($authArr[1])) {
             return false;
+        }
+        if (strpos($authArr[1], '.') !== false) {
+            // --- 不解析，解析使用 JWT 类解析 ---
+            return $authArr[1];
         }
         if (!($auth = base64_decode($authArr[1]))) {
             return false;
