@@ -1657,7 +1657,7 @@ json_encode(\$this->_jwt);</pre>";
 
         $token = $this->_jwt['token'];
         $rtn = $jwt->destory();
-        $echo[] = "<pre>\$rtn = \$jwt->destory();
+        $echo[] = "<pre>\$token = \$this->_jwt['token'];
 \$rtn = \$jwt->destory();
 json_encode(\$rtn);</pre>";
         $echo[] = json_encode($rtn);
