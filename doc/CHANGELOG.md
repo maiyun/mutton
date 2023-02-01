@@ -6,7 +6,9 @@
 
 # 7.3.0
 
-[+] Add Jwt library.
+[+] Add Jwt library.  
+[+] Add setCookie method of Net library.  
+[\*] Some other optimizations.
 
 # 7.2.3
 
