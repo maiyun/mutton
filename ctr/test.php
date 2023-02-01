@@ -1658,16 +1658,17 @@ json_encode(\$this->_jwt);</pre>";
         $token = $this->_jwt['token'];
         $rtn = $jwt->destory();
         $echo[] = "<pre>\$rtn = \$jwt->destory();
+\$rtn = \$jwt->destory();
 json_encode(\$rtn);</pre>";
         $echo[] = json_encode($rtn);
 
         $echo[] = "<pre>json_encode(\$this->_jwt);</pre>";
         $echo[] = json_encode($this->_jwt);
 
-        $rtn = Jwt::decode($orign, $link);
+        $rtn2 = Jwt::decode($orign, $link);
         $echo[] = "<pre>\$rtn = Jwt::decode(\$orign, " . ($link ? '$link' : 'null') . ");
 json_encode(\$rtn);</pre>";
-        $echo[] = json_encode($rtn);
+        $echo[] = json_encode($rtn2);
 
         if ($_GET['type'] === 'auth') {
             $echo[] = "<br><br><input type=\"button\" value=\"Post with header\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/jwt1',{method:'POST',credentials:'omit',headers:{'Authorization':document.getElementById('_auth').innerText,'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><input type='button' value=\"Post without header\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('" . URL_BASE . "test/jwt1',{method:'POST',credentials:'omit',headers:{'content-type':'application/x-www-form-urlencoded'},body:'key=val'}).then(function(r){return r.json();}).then(function(j){document.getElementById('result').innerText=j.txt;});\"><br><br>

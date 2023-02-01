@@ -131,8 +131,13 @@ class Session {
         // --- 如果不存在不允许加新则返回错误 ---
         if ($needInsert) {
             if ($this->_link instanceof IKv) {
+                $count = 0;
                 do {
+                    if ($count === 5) {
+                        return false;
+                    }
                     $this->_token = Core::random(16, Core::RANDOM_LUN);
+                    ++$count;
                 } while (!$this->_link->set('sess-' . $this->_name . '_' . $this->_token, [], $this->_ttl, 'nx'));
             }
             else {
