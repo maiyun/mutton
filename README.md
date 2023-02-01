@@ -1,9 +1,16 @@
 <p align="center"><img src="./doc/icon.svg" width="68" height="68" alt="Mutton"></p>
-
-[![License](https://img.shields.io/github/license/maiyun/mutton.svg)](https://github.com/maiyun/mutton/blob/master/LICENSE)
-[![GitHub issues](https://img.shields.io/github/issues/maiyun/mutton.svg)](https://github.com/maiyun/mutton/issues)
-[![GitHub Releases](https://img.shields.io/github/release/maiyun/mutton.svg)](https://github.com/maiyun/mutton/releases "Stable Release")
-[![GitHub Pre-Releases](https://img.shields.io/github/release/maiyun/mutton/all.svg)](https://github.com/maiyun/mutton/releases "Pre-Release")
+<p align="center">
+    <a href="https://github.com/maiyun/mutton/blob/master/LICENSE">
+        <img alt="License" src="https://img.shields.io/github/license/maiyun/mutton?color=blue" />
+    </a>
+    <a href="https://github.com/maiyun/mutton/releases">
+        <img alt="GitHub releases" src="https://img.shields.io/github/v/release/maiyun/mutton?color=brightgreen&logo=github" />
+        <img alt="GitHub pre-releases" src="https://img.shields.io/github/v/release/maiyun/mutton?color=yellow&logo=github&include_prereleases" />
+    </a>
+    <a href="https://github.com/maiyun/mutton/issues">
+        <img alt="GitHub issues" src="https://img.shields.io/github/issues/maiyun/mutton?color=blue&logo=github" />
+    </a>
+</p>
 
 Simple, easy to use, full functionality of the PHP framework.
 
