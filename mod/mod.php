@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16
  */
 declare(strict_types = 1);
 
@@ -689,7 +689,8 @@ class Mod {
         if ($key) {
             while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
                 $obj = new static([
-                    'row' => $row
+                    'row' => $row,
+                    'index' => $this->_index
                 ]);
                 $list[$row[$key]] = $obj;
             }
@@ -697,7 +698,8 @@ class Mod {
         else {
             while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
                 $obj = new static([
-                    'row' => $row
+                    'row' => $row,
+                    'index' => $this->_index
                 ]);
                 $list[] = $obj;
             }
@@ -743,7 +745,8 @@ class Mod {
         }
         while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
             yield new static([
-                'row' => $row
+                'row' => $row,
+                'index' => $this->_index
             ]);
         }
     }
