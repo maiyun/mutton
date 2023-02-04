@@ -52,6 +52,7 @@ class Test extends Ctr {
             '<br>HOSTNAME: ' . HOSTNAME,
             '<br>HOSTPORT: ' . HOSTPORT,
             '<br>PATH: ' . PATH,
+            '<br>QS: ' . QS,
             '<br>HTTPS: ' . (HTTPS ? 'true' : 'false'),
 
             '<br><br>MOBILE: ' . (MOBILE ? 'true' : 'false'),

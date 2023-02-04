@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015-7-13 14:07
- * Last: 2020-1-17 01:01:20
+ * Last: 2020-1-17 01:01:20, 2023-2-4 13:17:55
  */
 declare(strict_types = 1);
 
@@ -16,6 +16,8 @@ define('START_MEMORY', memory_get_usage());
  */
 define('PATH', isset($_GET['__path']) ? $_GET['__path'] : '');
 unset($_GET['__path']);
+$io = strpos($_SERVER['QUERY_STRING'], '&');
+define('QS', $io === false ? '' : substr($_SERVER['QUERY_STRING'], $io + 1));
 
 // --- 本地化 ---
 
