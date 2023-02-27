@@ -29,4 +29,5 @@ define('DATA_PATH', ROOT_PATH . 'data/');
 define('URL_BASE', substr($_SERVER['SCRIPT_NAME'], 0, strrpos($_SERVER['SCRIPT_NAME'], '/') + 1));
 define('URL_STC', URL_BASE . 'stc/');
 define('URL_FULL', 'http' . (HTTPS ? 's' : '') . '://' . HOST . URL_BASE);
+define('URL_STC_FULL', URL_FULL . 'stc/');
 

@@ -62,6 +62,8 @@ class Test extends Ctr {
             '<br><br>URL_BASE: ' . URL_BASE,
             '<br>URL_STC: ' . URL_STC,
             '<br>URL_FULL: ' . URL_FULL,
+            '<br>STATIC_PATH: ' . STATIC_PATH,
+            '<br>STATIC_PATH_FULL: ' . STATIC_PATH_FULL,
             '<br>$_internalUrl: ' . $this->_internalUrl,
 
             '<br><br>headers: ' . htmlspecialchars(json_encode($this->_headers)),

@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Dat: 2019-12-14 16:10:54
- * Las: 2019-12-14 16:10:58, 2020-3-9 11:29:30
+ * Las: 2019-12-14 16:10:58, 2020-3-9 11:29:30, 2023-02-10 00:07:53
  */
 declare(strict_types = 1);
 
@@ -74,9 +74,11 @@ class Fs {
      */
     public static function isWritable(string $path): bool {
         // If we're on a Unix server with safe_mode off we call is_writable
+        /*
         if (DIRECTORY_SEPARATOR == '/' AND @ini_get("safe_mode") == false) {
             return is_writable($path);
         }
+        */
         // For windows servers and safe_mode "on" installations we'll actually
         // write a file then read it. Bah...
         if (is_dir($path)) {
@@ -88,7 +90,8 @@ class Fs {
             @chmod($file, 0777);
             @unlink($file);
             return true;
-        } else if (!is_file($path) or ($fp = @fopen($path, 'ab')) === false) {
+        }
+        else if (!is_file($path) or ($fp = @fopen($path, 'ab')) === false) {
             return false;
         }
         fclose($fp);
