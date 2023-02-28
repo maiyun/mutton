@@ -188,6 +188,15 @@ class Ctr {
                             }
                             break;
                         }
+                        case 'bool':
+                        case 'boolean': {
+                            if ($input[$key] !== null && !is_bool($input[$key])) {
+                                // --- 如果不是 bool 直接失败，字符串的 true, false 也会失败 ---
+                                $rtn = $val[$lastK];
+                                return false;
+                            }
+                            break;
+                        }
                         default: {
                             if ($input[$key]) {
                                 if ($v[0] === '/') {
