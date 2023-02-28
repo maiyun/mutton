@@ -4,6 +4,12 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.3.1
+
+[+] 新增 QS、URL_STC_FULL、STATIC_PATH_FULL 常量。  
+[+] Ctr 类的 _checkInput 方法新增 boolean 类型判断。  
+[\*] 其他优化。
+
 # 7.3.0
 
 [+] 新增 Jwt 库。  

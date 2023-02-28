@@ -24,9 +24,9 @@ PHP 8.0 +
 
 ## Installation
 
-Download the latest release and put it to directory, then enjoy.
+Download the latest release package and unzip it.
 
-> Note: Under Nginx, you need to manually configure the rewrite rule with the following rewrite rules:
+> Note: In Nginx, you need to add the following rules to the rewrite rule file:
 
 ```
 if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.txt\??.*)$) {
@@ -38,31 +38,31 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 Captcha, Consistent, Crypto, Db (MySQL, SQLite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Jwt, Sql, Text.
 
-## Features
+## Key Features
 
-### No brains
+### Ready-to-Use
 
-Simple and easy-to-use interface with rich code tips (phpDoc-based).
+Following the principle of ready-to-use, it encapsulates commonly used libraries in a uniform style.
 
-### Autoload
+### Automatic Loading
 
-Using the various libraries directly, the system loads them automatically.
+When using various libraries directly, the system will load them automatically.
 
-### Super-friendly Net library
+### Super Useful Net Library
 
-You can use like:
+You can use it like this:
 
 ```php
 $res = Net::open('https://xxx/test')->post()->data(['a' => '1', 'b' => '2'])->request();
 ```
 
-You can also use like:
+You can also use it like this:
 
 ```php
 $res = Net::get('https://xxx/test');
 ```
 
-You can set custom dns results:
+Custom dns results can be set:
 
 ```php
 $res = Net::get('https://xxx/test', [
@@ -72,7 +72,7 @@ $res = Net::get('https://xxx/test', [
 ]);
 ```
 
-You can also select another local network interface card:
+You can also choose other local network cards to access:
 
 ```php
 $res = Net::get('https://xxx/test', [
@@ -80,7 +80,7 @@ $res = Net::get('https://xxx/test', [
 ]);
 ```
 
-You can also possible to reuse links when accessing multiple urls, greatly speeding up access:
+Link reuse can greatly improve access speed when accessing multiple URLs:
 
 ```php
 $res1 = Net::get('https://xxx/test1', [
@@ -94,18 +94,18 @@ Net::closeAll();
 
 [![Net reuse test](doc/test-net-reuse.png)](doc/test-net-reuse.png)
 
-With a complete cookie manager, cookies can be easily obtained and exist anywhere, when a request is sent, the system will also choose to send based on the domain name, path, etc. set by the cookie, and Set-Cookie will be discarded if it is set illegally across domains. Just like a real browser:
+It also has a complete cookie manager that can easily retrieve and store cookies anywhere. When sending requests, the system will select the domain and path to send based on the cookie settings. If there is an illegal cross-domain setting in Set-Cookie, it will be discarded and not recorded, just like a real browser:
 
 ```php
 $res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
 $res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
 ```
 
-> Tip: Net library support both incoming options and open chain operation, such as Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();.
+> Note: The Net library supports both options and open chain operations. For example, Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();.
 
-### Perfect Db library
+### Easy-to-Use Db Library
 
-With a number of useful interfaces, you can easily filter out the required data from the database:
+With a large number of useful interfaces, you can easily filter the data you need from the database:
 
 ```php
 $ls = Order::where([
@@ -124,31 +124,31 @@ $user = User::select(['id', 'user'])->filter([
 ])->first();
 ```
 
-### XSRF
+### XSRF Detection
 
-The checkXInput method enables XSRF detection to prevent malicious access.
+Use the _checkXInput method to perform XSRF detection and prevent malicious access.
 
-### Scan the QRCode to log in
+### Scan Login
 
-The Scan library makes it easy to implement the ability to scan QRCode to log in.
+With the help of the Scan library, it's easy to implement scan login.
 
-#### And more...
+#### There are more features waiting for you to explore
 
-## Demonstrate
+## Examples
 
-### Generate random numbers
+### Creating a 16-bit random number
 
 ```php
 $str = Core::random(16, Core::RANDOM_N);
 ```
 
-### Generate a verification code picture
+### Creating a verification code
 
 ```php
 Captcha::get(400, 100)->getBuffer();
 ```
 
-### Get a list
+### Getting a list
 
 ```php
 $userList = User::where([
@@ -158,21 +158,21 @@ $userList = User::where([
 ])->all();
 ```
 
-Note: All database operations are secure in this framework.
+> Note: All database operations have been protected against injection attacks.
 
-### The Sql library automatically adds table prefixes and wrapped characters '`'
+### Sql Library Automatically Adds Table Prefixes and Wrapping Characters "`"
 
 ```php
 $sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])
 ```
 
-Output:
+The output will be:
 
 ```sql
 SELECT SUM(`test_user`.`age`) AS `age` FROM `test_order` LEFT JOIN `test_user` ON `test_order`.`user_id` = `test_user`.`id`
 ```
 
-Cool!
+It's so easy to write!
 
 ### Localization
 
@@ -181,11 +181,11 @@ $this->_loadLocale($_GET['lang'], 'test');
 echo l('copy');
 ```
 
-Depending on the lang value, the output: Copy、复制、複製、コピー, etc., is configured in the directory /data/locale/.
+Based on the different values of lang, the output will be: Copy, 复制, 複製, コピー, etc., configured in the /data/locale/ directory.
 
-### Data validation
+### Data Validation
 
-Based on strings, numbers, alignment sizes, and even regularities, the submitted data is directly validated, convenient!
+Directly validate submitted data based on strings, numbers, comparisons, and even regular expressions. It's convenient!
 
 ```php
 [
@@ -198,7 +198,7 @@ Based on strings, numbers, alignment sizes, and even regularities, the submitted
 
 See: /test/ctr-checkinput
 
-## Other demos
+## Other Examples
 
 You can visit /test/ to see more examples.
 
@@ -209,10 +209,3 @@ You can visit /test/ to see more examples.
 ## License
 
 This library is published under [Apache-2.0](./LICENSE) license.
-
-## Join the translation team
-
-If you speak multiple languages, join the translation team:
-
-Telegram team: [https://t.me/maiyunlocale](https://t.me/maiyunlocale)  
-QQ team: 24158113

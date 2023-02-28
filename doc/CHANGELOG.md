@@ -4,6 +4,12 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.3.1
+
+[+] Added constants QS, URL_STC_FULL, and STATIC_PATH_FULL.  
+[+] Added boolean type check in the _checkInput method of the Ctr class.  
+[\*] Other optimizations.
+
 # 7.3.0
 
 [+] Add Jwt library.  

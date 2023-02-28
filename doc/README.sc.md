@@ -101,7 +101,7 @@ $res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
 $res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
 ```
 
-> 提示：Net 库同时支持传入 options 和 open 链式操作，如 Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();。
+> 提示：Net 库同时支持传入 options 和 open 链式操作，如 Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();
 
 ### 好用的 Db 库
 
@@ -126,7 +126,7 @@ $user = User::select(['id', 'user'])->filter([
 
 ### XSRF 检测
 
-使用 checkXInput 方法，可以进行 XSRF 检测，防止恶意访问。
+使用 _checkXInput 方法，可以进行 XSRF 检测，防止恶意访问。
 
 ### 扫码登录
 
@@ -158,7 +158,7 @@ $userList = User::where([
 ])->all();
 ```
 
-提示：所有数据库操作都已经做了安全防注入处理。
+> 提示：所有数据库操作都已经做了安全防注入处理。
 
 ### Sql 库自动增加表前缀和包裹字符“`”
 
@@ -209,10 +209,3 @@ echo l('copy');
 ## 许可
 
 基于 [Apache-2.0](../LICENSE) 许可。
-
-## 参与翻译
-
-我们工作基于中文语言环境，若对本项目感兴趣并对除中文简体、中文繁体之外语种熟悉的朋友，欢迎一起参与翻译工作，感兴趣的朋友可以加入以下群组。
-
-Telegram 群：[https://t.me/maiyunlocale](https://t.me/maiyunlocale)  
-QQ 群：24158113

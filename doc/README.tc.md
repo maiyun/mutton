@@ -126,7 +126,7 @@ $user = User::select(['id', 'user'])->filter([
 
 ### XSRF 檢測
 
-使用 checkXInput 方法，可以進行 XSRF 檢測，防止惡意訪問。
+使用 _checkXInput 方法，可以進行 XSRF 檢測，防止惡意訪問。
 
 ### 扫码登录
 
@@ -158,7 +158,7 @@ $userList = User::where([
 ])->all();
 ```
 
-提示：所有資料庫操作都已經做了安全防注入處理。
+> 提示：所有資料庫操作都已經做了安全防注入處理。
 
 ### Sql 庫自動增加表前綴和包裹字元「`」”
 
@@ -209,10 +209,3 @@ echo l('copy');
 ## 許可
 
 基於 [Apache-2.0](../LICENSE) 許可。
-
-## 參與翻譯
-
-我們工作基於中文語言環境，若對本專案感興趣並對除中文簡體、中文繁體之外語種熟悉的朋友，歡迎一起參與翻譯工作，感興趣的朋友可以加入以下群組。
-
-Telegram 群：[https://t.me/maiyunlocale](https://t.me/maiyunlocale)  
-QQ 群：24158113
