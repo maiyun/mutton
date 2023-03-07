@@ -38,7 +38,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 Captcha, Consistent, Crypto, Db (MySQL, SQLite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Jwt, Sql, Text.
 
-## Key Features
+## Partial Features
 
 ### Ready-to-Use
 
@@ -101,7 +101,7 @@ $res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
 $res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
 ```
 
-> Note: The Net library supports both options and open chain operations. For example, Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();.
+> Note: The Net library supports both options and open chain operations. For example, Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();
 
 ### Easy-to-Use Db Library
 

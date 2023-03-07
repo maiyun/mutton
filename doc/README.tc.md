@@ -101,7 +101,7 @@ $res1 = Net::get('https://xxx1.xxx/test1', [], $cookie);
 $res2 = Net::get('https://xxx2.xxx/test2', [], $cookie);
 ```
 
-> 提示：Net 庫同時支援傳入 options 和 open 鏈式操作，如 Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();。
+> 提示：Net 庫同時支援傳入 options 和 open 鏈式操作，如 Net::open('xxx')->follow()->timeout(60)->reuse()->save(ROOT_PATH . 'doc/test.txt')->request();
 
 ### 好用的 Db 庫
 
