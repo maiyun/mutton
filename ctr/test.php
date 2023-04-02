@@ -1652,11 +1652,14 @@ json_encode(\$this->_jwt);</pre>";
         $echo[] = json_encode($this->_jwt);
 
         $this->_jwt['test'] = 'a';
-        $jwt->renew();
+        $value = $jwt->renew();
         $echo[] = "<pre>\$this->_jwt['test'] = 'a';
-\$jwt->renew();
+\$value = \$jwt->renew();
 json_encode(\$this->_jwt);</pre>";
         $echo[] = json_encode($this->_jwt);
+
+        $echo[] = "<pre>json_encode(\$value);</pre>";
+        $echo[] = json_encode($value);
 
         $token = $this->_jwt['token'];
         $rtn = $jwt->destory();
