@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2022-08-27 02:13:04
- * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07
+ * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07, 2023-4-10 17:56:12
  */
 declare(strict_types = 1);
 
@@ -111,21 +111,31 @@ class Core {
      */
     public static function purify(string $text): string {
         $text = '>' . $text . '<';
-        $scripts = [];
-        $num = -1;
+        $keepScripts = [];
+        $keepPres = [];
+        $nums = -1;
+        $nump = -1;
         $text = preg_replace('/<!--([\s\S]*?)-->/', '', $text);
-        $text = preg_replace_callback('/<script[\s\S]+?<\/script>/', function ($matches) use (&$scripts) {
-            $scripts[] = $matches[0];
+        $text = preg_replace_callback('/<script[\s\S]+?<\/script>/', function ($matches) use (&$keepScripts) {
+            $keepScripts[] = $matches[0];
             return '[SCRIPT]';
+        }, $text);
+        $text = preg_replace_callback('/<pre[\s\S]+?<\/pre>/', function ($matches) use (&$keepPres) {
+            $keepPres[] = $matches[0];
+            return '[PRE]';
         }, $text);
         $text = preg_replace_callback('/>([\s\S]*?)</', function ($matches) {
             $t1 = preg_replace('/\t|\r\n| {2}/', '', $matches[1]);
             $t1 = preg_replace('/\n|\r/', '', $t1);
             return '>' . $t1 . '<';
         }, $text);
-        $text = preg_replace_callback('/\[SCRIPT\]/', function() use ($scripts, &$num) {
-            ++$num;
-            return $scripts[$num];
+        $text = preg_replace_callback('/\[SCRIPT\]/', function() use ($keepScripts, &$nums) {
+            ++$nums;
+            return $keepScripts[$nums];
+        }, $text);
+        $text = preg_replace_callback('/\[PRE\]/', function() use ($keepPres, &$nump) {
+            ++$nump;
+            return $keepPres[$nump];
         }, $text);
         return substr($text, 1, -1);
     }
