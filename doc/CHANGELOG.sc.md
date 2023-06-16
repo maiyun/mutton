@@ -4,6 +4,10 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.3.2
+
+[\*] 优化 Mod、Sql 类。
+
 # 7.3.1
 
 [+] 新增 QS、URL_STC_FULL、STATIC_PATH_FULL 常量。  

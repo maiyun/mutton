@@ -4,11 +4,15 @@
 
 [English](./CHANGELOG.md) | [简体中文](./CHANGELOG.sc.md)
 
+# 7.3.2
+
+[\*] 優化 Mod、Sql 類。
+
 # 7.3.1
 
 [+] 新增 QS、URL_STC_FULL、STATIC_PATH_FULL 常量。  
 [+] Ctr 類的 _checkInput 方法新增 boolean 類型判斷。  
-[*] 其他優化。
+[\*] 其他優化。
 
 # 7.3.0
 

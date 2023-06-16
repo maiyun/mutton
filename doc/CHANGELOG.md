@@ -4,6 +4,10 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.3.2
+
+[\*] Optimize Mod, Sql classes.
+
 # 7.3.1
 
 [+] Added constants QS, URL_STC_FULL, and STATIC_PATH_FULL.  
