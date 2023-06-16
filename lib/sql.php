@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53
  */
 declare(strict_types = 1);
 
@@ -147,8 +147,15 @@ class LSql {
             foreach ($vs as $i => $v) {
                 $sql .= '(';
                 foreach ($v as $i1 => $v1) {
-                    $sql .= '?, ';
-                    $this->_data[] = $v1;
+                    if (is_array($v1)) {
+                        // --- v1: ['POINT(?)', ['20']] ---
+                        $sql .= $v1[0] . ', ';
+                        $this->_data = array_merge($this->_data, $v1[1]);
+                    }
+                    else {
+                        $sql .= '?, ';
+                        $this->_data[] = $v1;
+                    }
                 }
                 $sql = substr($sql, 0, -2) . '), ';
             }
@@ -160,8 +167,15 @@ class LSql {
             $values = '';
             foreach ($cs as $k => $v) {
                 $sql .= $this->field($k) . ', ';
-                $this->_data[] = $v;
-                $values .= '?, ';
+                if (is_array($v)) {
+                    // --- v: ['POINT(?)', ['20']] ---
+                    $values .= $v[0] . ', ';
+                    $this->_data = array_merge($this->_data, $v[1]);
+                }
+                else {
+                    $values .= '?, ';
+                    $this->_data[] = $v;
+                }
             }
             $sql = substr($sql, 0, -2) . ') VALUES (' . substr($values, 0, -2) . ')';
         }
@@ -185,8 +199,14 @@ class LSql {
         }
         $sql = substr($sql, 0, -2) . ') SELECT ';
         foreach ($values as $value) {
-            $sql .= '?, ';
-            $this->_data[] = $value;
+            if (is_array($value)) {
+                $sql .= $value[0] . ', ';
+                $this->_data = array_merge($this->_data, $value[1]);
+            }
+            else {
+                $sql .= '?, ';
+                $this->_data[] = $value;
+            }
         }
         $sql = substr($sql, 0, -2) . ' FROM DUAL WHERE NOT EXISTS (SELECT `id` FROM ' . $this->field($table, $this->_pre) . ' WHERE ' . $this->_whereSub($where) . ')';
         $this->_sql[] = $sql;
@@ -208,7 +228,7 @@ class LSql {
 
     /**
      * --- '*', 'xx' ---
-     * @param string|string[] $c 字段字符串或字段数组
+     * @param string|string[]|string[][] $c 字段字符串或字段数组
      * @param string|string[] $f 表，允许多张表
      * @return LSql
      */
@@ -221,7 +241,13 @@ class LSql {
         else {
             // --- $c: ['id', 'name'] ---
             foreach ($c as $i) {
-                $sql .= $this->field($i) . ', ';
+                if (is_array($i)) {
+                    $sql .= $this->field($i[0]) . ', ';
+                    $this->_data = array_merge($this->_data, $i[1]);
+                }
+                else {
+                    $sql .= $this->field($i) . ', ';
+                }
             }
             $sql = substr($sql, 0, -2);
         }

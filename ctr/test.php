@@ -101,9 +101,9 @@ class Test extends Ctr {
 
             '<br><br><b>Model test:</b>',
 
-            '<br><br><b style="color: red;">In a production environment, please delete "mod/session.php", "mod/test.php", "mod/testdata.php" files.</b>',
-            '<br><a href="' . URL_BASE . 'test/mod-session?s=mysql">[MySQL] Click to see an example of a Session model</a>',
-            '<br><a href="' . URL_BASE . 'test/mod-session?s=sqlite">[SQLite] Click to see an example of a Session model</a>',
+            '<br><br><b style="color: red;">In a production environment, please delete "mod/test.php", "mod/testdata.php" files.</b>',
+            '<br><a href="' . URL_BASE . 'test/mod-test?s=mysql">[MySQL] Click to see an example of a Test model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod-test?s=sqlite">[SQLite] Click to see an example of a Test model</a>',
             '<br><a href="' . URL_BASE . 'test/mod-split">View "test/mod-split"</a>',
 
             '<br><br><b>Library test:</b>',
@@ -355,68 +355,65 @@ function postFd() {
         return 'This page is a custom httpcode (404).';
     }
 
-    public function modSession() {
+    public function modTest() {
         if (!($this->_checkInput($_GET, [
             'action' => [['', 'remove'], [0, 'Error']]
         ], $return))) {
             return $return;
         }
 
-        $echo = ['<b style="color: red;">In a production environment, please delete the "mod/session.php" file.</b>'];
+        $echo = ['<b style="color: red;">In a production environment, please delete the "mod/test.php" file.</b>'];
 
         $db = Db::get((isset($this->_get['s']) && $this->_get['s'] === 'mysql') ? Db::MYSQL : Db::SQLITE);
         if (!($rtn = $db->connect())) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
 
-        if (!($stmt = $db->query('SELECT * FROM `m_session` WHERE `token` LIMIT 1;'))) {
-            return [0 ,'Failed("m_session" not found).'];
+        if (!($stmt = $db->query('SELECT * FROM `m_test` WHERE `token` LIMIT 1;'))) {
+            return [0 ,'Failed("m_test" not found).'];
         }
 
         Mod::setDb($db);
 
         if ($_GET['action'] === 'remove') {
-            Session::removeByWhere([
+            ModTest::removeByWhere([
                 ['token', 'LIKE', 'test_%']
             ]);
-            return $this->_location('test/mod-session?s=' . $this->_get['s']);
+            return $this->_location('test/mod-test?s=' . $this->_get['s']);
         }
         else {
-
             $time = time();
-            $session = Session::getCreate();
-            $session->set([
-                'data' => json_encode(['test' => Core::random(4)]),
-                'time_update' => $time,
+            $test = ModTest::getCreate();
+            $test->set([
+                'point' => ['POINT', rand(0, 99) . ' ' . rand(0, 99)],
                 'time_add' => $time
             ]);
-            $result = $session->create();
+            $result = $test->create();
 
             $echo[] = "<pre>Mod::setDb(\$db);
 \$time = time();
-\$session = \mod\Session::getCreate();
-\$session->set([
-    'data' => json_encode(['test' => Core::random(4)]),
-    'time_update' => \$time,
-    'time_add' => \$time
+\$test = ModTest::getCreate();
+\$test->set([
+    'point' => ['POINT', rand(0, 99) . ' ' . rand(0, 99)],
+    'time_add' => $time
 ]);
-\$result = \$session->create();
+\$result = \$test->create();
 json_encode(\$result);</pre>" . json_encode($result);
 
-            $echo[] = "<pre>json_encode(\$session->toArray());</pre>" . htmlspecialchars(json_encode($session->toArray()));
+            $echo[] = "<pre>json_encode(\$test->toArray());</pre>" . htmlspecialchars(json_encode($test->toArray()));
 
-            $echo[] = "<br><br>Session table:";
+            $echo[] = "<br><br>Test table:";
 
-            $stmt = $db->query('SELECT * FROM `m_session` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
+            $stmt = $db->query('SELECT `id`, `token`, ' . ($db->getCore() === Db::MYSQL ? 'ST_ASTEXT(`point`)' : '`point`') . ', `time_add` FROM `m_test` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
             $this->_dbTable($stmt, $echo);
 
             // --- explain ---
 
-            $ls = Session::where([
-                ['time_update', '>', $time - 60 * 5]
+            $ls = ModTest::where([
+                ['time_add', '>', $time - 60 * 5]
             ]);
             $r = $ls->explain();
-            $echo[] = "<pre>\$ls = Session::where([
+            $echo[] = "<pre>\$ls = ModTest::where([
     ['time_add', '>', time() - 60 * 5]
 ]);
 \$ls->explain();</pre>" . htmlspecialchars(json_encode($r));
@@ -434,10 +431,78 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<div>false</div>';
             }
 
-            $echo[] = '<br><a href="' . URL_BASE . 'test/mod-session?s=' . $this->_get['s'] . '&action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
+            $ft = ModTest::one([
+                ['time_add', '>', '0']
+            ]);
+            $echo[] = "<pre>ModTest::one([
+    ['time_add', '>', '0]
+]);</pre>";
+            if ($ft) {
+                $echo[] = '<table style="width: 100%;">';
 
-            return '<a href="' . URL_BASE . 'test/mod?s=mysql">MySQL</a> | ' .
-            '<a href="' . URL_BASE . 'test/mod?s=sqlite">SQLite</a> | ' .
+                $echo[] = '<tr><th>id</th><td>' . $ft->id . '</td></tr>';
+                $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
+                $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
+                $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
+
+                $echo[] = '</table>';
+
+                // --- 修改 point 值 ---
+
+                $ft->set('point', [
+                    'POINT', '20 20'
+                ]);
+                $ft->save();
+                $echo[] = "<pre>\$ft->set('point', [
+    'POINT', '20 20'
+]);
+\$ft->save();</pre>";
+
+                $ft = ModTest::find($ft->id);
+
+                $echo[] = '<table style="width: 100%;">';
+
+                $echo[] = '<tr><th>id</th><td>' . $ft->id . '</td></tr>';
+                $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
+                $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
+                $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
+
+                $echo[] = '</table>';
+
+                // --- 再次修改 ---
+
+                $ft->set([
+                    'point' => [
+                        'POINT', '40 40'
+                    ]
+                ]);
+                $ft->save();
+                $ft->refresh();
+                $echo[] = "<pre>\$ft->set([
+    'point' => [
+        'POINT', '40 40'
+    ]
+]);
+\$ft->save();
+\$ft->refresh();</pre>";
+
+                $echo[] = '<table style="width: 100%;">';
+
+                $echo[] = '<tr><th>id</th><td>' . $ft->id . '</td></tr>';
+                $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
+                $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
+                $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
+
+                $echo[] = '</table>';
+            }
+            else {
+                $echo[] = '<div>false</div>';
+            }
+
+            $echo[] = '<br><a href="' . URL_BASE . 'test/mod-test?s=' . $this->_get['s'] . '&action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
+
+            return '<a href="' . URL_BASE . 'test/mod-test?s=mysql">MySQL</a> | ' .
+            '<a href="' . URL_BASE . 'test/mod-test?s=sqlite">SQLite</a> | ' .
             '<a href="' . URL_BASE . 'test">Return</a><br><br>' . join('', $echo) . '<br><br>' . $this->_getEnd();
         }
     }
@@ -451,11 +516,14 @@ json_encode(\$result);</pre>" . json_encode($result);
         }
 
         $echo[] = "<br><br>Test SQL:<pre>CREATE TABLE `m_test` (
-    `id` bigint NOT NULL AUTO_INCREMENT,
-    `name` varchar(32) COLLATE ascii_bin NOT NULL,
-    `time_add` bigint NOT NULL,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=ascii COLLATE=ascii_bin;
+    `id` INT NOT NULL AUTO_INCREMENT,
+    `token` CHAR(16) NOT NULL COLLATE 'ascii_bin',
+    `point` POINT NOT NULL,
+    `time_add` BIGINT NOT NULL,
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE INDEX `token` (`token`) USING BTREE,
+    INDEX `time_add` (`time_add`) USING BTREE
+) ENGINE=InnoDB COLLATE=utf8mb4_general_ci;
 CREATE TABLE `m_test_data_0` (
     `id` bigint NOT NULL AUTO_INCREMENT,
     `test_id` bigint NOT NULL,
@@ -490,7 +558,10 @@ CREATE TABLE `m_test_data_0` (
 
         $test = ModTest::getCreate();
         $test->set([
-            'name' => Core::random((int)Core::rand(8, 32)),
+            'token' => Core::random((int)Core::rand(8, 32)),
+            'point' => [
+                'POINT', '10 10'
+            ],
             'time_add' => time()
         ]);
         $test->create();
@@ -732,16 +803,17 @@ json_encode(\$orig);</pre>" . json_encode($orig);
         if (!($rtn = $db->connect())) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
-        // --- 先获取 session 表的情况 ---
-        if (!($stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;'))) {
-            return [0 ,'Failed("m_session" not found)'];
+
+        // --- 先获取 test 表的情况 ---
+        if (!($stmt = $db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 10;'))) {
+            return [0 ,'Failed("m_test" not found)'];
         }
 
         $echo[] = "<pre>\$db = Db::get('" . $_GET['s'] . "');
 if (!(\$rtn = \$db->connect())) {
     return [0 ,'Failed('.(\$rtn === null ? 'null' : 'false').').'];
 }
-\$stmt = \$db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');</pre>";
+\$stmt = \$db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 10;</pre>";
 
         $this->_dbTable($stmt, $echo);
 
@@ -749,23 +821,23 @@ if (!(\$rtn = \$db->connect())) {
 
         // --- 插入 test-token 的条目 ---
         $time = (string)time();
-        $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . $time . '\', \'' . $time . '\');');
+        $exec = $db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . ($_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
         $ms = round($this->_getRunTime() * 1000, 4);
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
         if ($errorCode === '23000') {
-            $insertId = $db->query('SELECT * FROM `m_session` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
+            $insertId = $db->query('SELECT * FROM `m_test` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
             $ms .= ', ' . round($this->_getRunTime() * 1000, 4);
         }
         else {
             $insertId = $db->getInsertID();
         }
 
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . (\$_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
 \$errorCode = \$db->getErrorCode();
 \$error = \$db->getErrorInfo();
 if (\$errorCode === '23000') {
-    \$insertId = \$db->query('SELECT * FROM `m_session` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
+    \$insertId = \$db->query('SELECT * FROM `m_test` WHERE `token` = \'test-token\';')->fetch(PDO::FETCH_ASSOC)['id'];
 }
 else {
     \$insertId = \$db->getInsertID();
@@ -777,15 +849,15 @@ error: " . json_encode($error) . "<br>
 ms: " . $ms . "<br><br>";
 
         // --- 获取最近的一条 ---
-        $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 1;');
+        $stmt = $db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 1;');
         $this->_dbTable($stmt, $echo);
 
         // --- 再次插入 test-token 的条目 ---
-        $exec = $db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . ($_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
         $insertId = $db->getInsertID();
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . (\$_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
@@ -794,9 +866,9 @@ error: " . json_encode($error) . "<br>
 ms: " . round($this->_getRunTime() * 1000, 4) . "<br>";
 
         // --- 依据唯一键替换值 ---
-        $exec = $db->exec('REPLACE INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go2' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $exec = $db->exec('REPLACE INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . ($_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(20 20)\')' : '\'POINT\'') . ', \'' . $time . '\');');
         $insertId = $db->getInsertID();
-        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_session` (`token`, `data`, `time_update`, `time_add`) VALUES (\'test-token\', \'' . json_encode(['go' => 'ok2']) . '\', \'' . time() . '\', \'' . time() . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . (\$_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(20 20)\')' : '\'POINT\'') . ', \'' . $time . '\');');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
@@ -805,23 +877,23 @@ error: ".json_encode($db->getErrorInfo())."<br>
 ms: " . round($this->_getRunTime() * 1000, 4) . "<br><br>";
 
         // --- 显示近 10 条 ---
-        $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         // --- explain 开始 ---
         $explain = $_GET['s'] === 'mysql' ? 'EXPLAIN' : 'EXPLAIN QUERY PLAN';
-        $echo[] = "<pre>\$stmt = \$db->query('" . $explain . " SELECT * FROM `m_session` LIMIT 10;');</pre>";
-        $stmt = $db->query($explain . ' SELECT * FROM `m_session` LIMIT 10;');
+        $echo[] = "<pre>\$stmt = \$db->query('" . $explain . " SELECT * FROM `m_test` LIMIT 10;');</pre>";
+        $stmt = $db->query($explain . ' SELECT * FROM `m_test` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         $echo[] = '<br>ms: ' . round($this->_getRunTime() * 1000, 4);
 
         // --- 删除测试添加的 token ---
-        $exec = $db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');
-        $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_session` WHERE `token` = \'test-token\';');</pre>
+        $exec = $db->exec('DELETE FROM `m_test` WHERE `token` = \'test-token\';');
+        $echo[] = "<pre>\$exec = \$db->exec('DELETE FROM `m_test` WHERE `token` = \'test-token\';');</pre>
 exec: " . json_encode($exec) . "<br><br>";
 
-        $stmt = $db->query('SELECT * FROM `m_session` ORDER BY `id` DESC LIMIT 10;');
+        $stmt = $db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         return '<a href="' . URL_BASE . 'test/db?s=mysql">MySQL</a> | ' .
@@ -1735,19 +1807,50 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('order')->notExists('order', ['name' => 'Amy', 'age' => '16', 'time_add' => time()], ['name' => 'Amy'])->getSql();
+                $s = $sql->insert('order')->notExists('order', ['name' => 'Amy', 'age' => '16', 'time_add' => time(), 'point' => ['POINT(?)', ['20']]], ['name' => 'Amy'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('user')->notExists('order', ['name' => 'Amy', 'age' => '16', 'time_add' => time()], ['name' => 'Amy']);</pre>
+                $echo[] = "<pre>\$sql->insert('user')->notExists('order', ['name' => 'Amy', 'age' => '16', 'time_add' => time(), 'point' => ['POINT(?)', ['20']]], ['name' => 'Amy']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
                 $s = $sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => ['CONCAT(`time_update`, ?)', ['01']]])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'})->duplicate(['time_update' => ['CONCAT(`time_update`, ?)', ['01']]]);</pre>
+                $echo[] = "<pre>\$sql->insert('verify')->values(['token' => 'abc', 'time_update' => '10'])->duplicate(['time_update' => ['CONCAT(`time_update`, ?)', ['01']]]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
+
+                // --- insert 中使用函数 ---
+
+                $s = $sql->insert('geo')->values(['point' => ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']]])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->insert('geo')->values(['point' => ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']]]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
+
+                $s = $sql->insert('geo')->values(['name', 'point'], [
+                    [
+                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']]
+                    ],
+                    [
+                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']]
+                    ]
+                ])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point'], [
+    [
+        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']]
+    ],
+    [
+        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']]
+    ]
+]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
+
                 break;
             }
             case 'select': {
@@ -1900,6 +2003,27 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 ])->getSql();
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->select(['id', 'name', '(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`)))) AS distance'], 'location')->having([
+    ['distance', '<', '2']
+]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
+
+                $s = $sql->select(['id', 'name',
+                    [
+                        '(6371 * ACOS(COS(RADIANS(?)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(`lat`)))) AS distance',
+                        ['31.239845', '121.499662', '31.239845']
+                    ]
+                ], 'location')->having([
+                    ['distance', '<', '2']
+                ])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select(['id', 'name',
+    [
+        '(6371 * ACOS(COS(RADIANS(?)) * COS(RADIANS(`lat`)) * COS(RADIANS(`lng`) - RADIANS(?)) + SIN(RADIANS(?)) * SIN(RADIANS(`lat`)))) AS distance',
+        ['31.239845', '121.499662', '31.239845']
+    ]
+], 'location')->having([
     ['distance', '<', '2']
 ]);</pre>
 <b>getSql() :</b> {$s}<br>
