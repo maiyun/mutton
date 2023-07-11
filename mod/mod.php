@@ -99,7 +99,7 @@ class Mod {
             $this->_sql->select($select, static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
             if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
                 if (is_string($opt['where'])) {
-                    $opt['where'] = '(' . $opt['where'] . ') AND `time_remove` = 0';
+                    $opt['where'] = $opt['where'] ? ('(' . $opt['where'] . ') AND ') : '`time_remove` = 0';
                 }
                 else {
                     $opt['where']['time_remove'] = '0';
