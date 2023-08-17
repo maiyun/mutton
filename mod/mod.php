@@ -320,7 +320,7 @@ class Mod {
 
     /**
      * --- select 自定字段 ---
-     * @param string|string[] $c 字段字符串或字段数组
+     * @param string|string[]|string[][] $c 字段字符串或字段数组
      * @param string $index 分表后缀
      * @return static
      */
@@ -390,15 +390,33 @@ class Mod {
      * --- 通过 where 条件筛选单条数据 ---
      * @param array|string $s 筛选条件数组或字符串
      * @param bool|?string $raw 是否包含已被软删除的数据
-     * @param string $index 分表后缀
+     * @param string|string[] $index 分表后缀
      * @return false|null|static
      */
     public static function one($s, $raw = false, $index = null) {
-        return (new static([
-            'where' => $s,
-            'raw' => $raw,
-            'index' => $index
-        ]))->first();
+        if (!$index) {
+            return (new static([
+                'where' => $s,
+                'raw' => $raw
+            ]))->first();
+        }
+        if (is_string($index)) {
+            $index = [$index];
+        }
+        foreach ($index as $item) {
+            $row = (new static([
+                'where' => $s,
+                'raw' => $raw,
+                'index' => $item
+            ]))->first();
+            if ($row) {
+                return $row;
+            }
+            if ($row === false) {
+                return false;
+            }
+        }
+        return null;
     }
 
     /**

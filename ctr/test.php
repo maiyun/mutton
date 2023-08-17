@@ -1994,6 +1994,17 @@ Result:<pre id=\"result\">Nothing.</pre>";
 ]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+
+                $s = $sql->delete('user')->where([
+                    [['MATCH(name_sc, name_tc) AGAINST(?)', ['search']], '>=', '0.9']
+                ])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->delete('user')->where([
+    [['MATCH(name_sc, name_tc) AGAINST(?)', ['search']], '>=', '0.9']
+]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
                 break;
             }
@@ -2067,6 +2078,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $echo[] = "<pre>\$sql->field('SUM(x.`num`) all');</pre>" . $sql->field('SUM(x.`num`) all');
                 $echo[] = "<pre>\$sql->field('FROM_UNIXTIME(time, \'%Y-%m-%d\') time');</pre>" . $sql->field('FROM_UNIXTIME(time, \'%Y-%m-%d\') time');
                 $echo[] = "<pre>\$sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(lat)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))))');</pre>" . $sql->field('(6371 * ACOS(COS(RADIANS(31.239845)) * COS(RADIANS(lat)) * COS(RADIANS(`lng`) - RADIANS(121.499662)) + SIN(RADIANS(31.239845)) * SIN(RADIANS(`lat`))))');
+                $echo[] = "<pre>\$sql->field('MATCH(name_sc, name_tc) AGAINST(\"ok\")');</pre>" . $sql->field('MATCH(name_sc, name_tc) AGAINST("ok") tmp');
                 break;
             }
         }

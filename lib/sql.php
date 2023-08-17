@@ -655,11 +655,15 @@ class LSql {
 
     /**
      * --- 对字段进行包裹 ---
-     * @param string|int|float $str
+     * @param string|int|float|mixed[] $str
      * @param string $pre 表前缀，仅请在 field 表名时倒入前缀
      * @return string
      */
-    public function field(string|int|float $str, string $pre = ''): string {
+    public function field($str, string $pre = ''): string {
+        if (is_array($str)) {
+            $this->_data = array_merge($this->_data, $str[1]);
+            return $this->field($str[0]);
+        }
         $str = trim($str . '');                     // --- 去除前导尾随 ---
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
         $str = preg_replace('/ +([),])/', ' $1', $str);
@@ -719,8 +723,8 @@ class LSql {
             return '`' . $this->_pre . $l[0] . '`.' . $w . $right;
         }
         else {
-            return preg_replace_callback('/([(,])([a-zA-Z`_][\w`_.]*)([),])/', function ($matches) use ($pre) {
-                return $matches[1] . $this->field($matches[2], $pre) . $matches[3];
+            return preg_replace_callback('/([(, ])([a-zA-Z`_][\w`_.]*)(?=[), ])/', function ($matches) use ($pre) {
+                return $matches[1] . $this->field($matches[2], $pre);
             }, $left) . $right;
         }
     }
