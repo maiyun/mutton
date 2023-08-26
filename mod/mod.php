@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21
  */
 declare(strict_types = 1);
 
@@ -30,8 +30,6 @@ class Mod {
     protected static $_key = '';
     /** @var bool 可开启软删软更新软新增 */
     protected static $_soft = false;
-    /** @var string[] 将下列字段代入 ST_ASTEXT 函数在 * 模式下 */
-    protected static $_astext = [];
 
     /** @var array --- 要 update 的内容 --- */
     protected $_updates = [];
@@ -71,15 +69,6 @@ class Mod {
         // --- 第三个参数用于内部数据导入，将 data 数据合并到本实例化类 ---
         if (isset($opt['row'])) {
             foreach ($opt['row'] as $k => $v) {
-                if (is_string($v)) {
-                    if (substr($v, 0, 6) === 'POINT(' || substr($v, 0, 8) === 'POLYGON(') {
-                        if (preg_match('/^([A-Z]+)\((.+)\)$/', $v, $matchs)) {
-                            $this->_data[$k] = [$matchs[1], $matchs[2]];
-                            $this->$k = [$matchs[1], $matchs[2]];
-                            continue;
-                        }
-                    }
-                }
                 $this->_data[$k] = $v;
                 $this->$k = $v;
             }
@@ -88,15 +77,7 @@ class Mod {
             $this->_sql->select($opt['select'], static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
         }
         if (isset($opt['where'])) {
-            $select = ['*'];
-            if ($this->_db->getCore() === Db::MYSQL) {
-                if (count(static::$_astext) > 0) {
-                    foreach (static::$_astext as $item) {
-                        $select[] = 'ST_ASTEXT(`' . $item . '`) AS `' . $item . '`';
-                    }
-                }
-            }
-            $this->_sql->select($select, static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
+            $this->_sql->select('*', static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
             if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
                 if (is_string($opt['where'])) {
                     $opt['where'] = $opt['where'] ? ('(' . $opt['where'] . ') AND ') : '`time_remove` = 0';
@@ -467,14 +448,9 @@ class Mod {
      */
     public function set($n, $v = ''): void {
         if(!is_string($n)) {
-            // --- { x: y } ---
+            // --- [ x => y ] ---
             foreach ($n as $k => $v) {
                 // --- 强制更新，因为有的可能就是要强制更新既然设置了 ---
-                if (is_string($v)) {
-                    if (substr($v, 0, 6) === 'POINT(' || substr($v, 0, 8) === 'POLYGON(') {
-                        continue;
-                    }
-                }
                 $this->_updates[$k] = true;
                 $this->_data[$k] = $v;
                 $this->$k = $v;
@@ -482,10 +458,8 @@ class Mod {
         }
         else {
             // --- x, y ---
-            if (is_string($v)) {
-                if (substr($v, 0, 6) === 'POINT(' || substr($v, 0, 8) === 'POLYGON(') {
-                    return;
-                }
+            if (!is_string($n)) {
+                return;
             }
             $this->_updates[$n] = true;
             $this->_data[$n] = $v;
@@ -510,26 +484,8 @@ class Mod {
      */
     public function create(?array $notWhere = null, ?string $table = null): bool {
         $updates = [];
-        if ($this->_db->getCore() === Db::MYSQL) {
-            foreach ($this->_updates as $k => $v) {
-                $v = $this->_data[$k];
-                if (is_array($v)) {
-                    $updates[$k] = ['ST_GEOMFROMTEXT(?)', [$v[0] . '(' . $v[1] . ')']];
-                }
-                else {
-                    $updates[$k] = $this->_data[$k];
-                }
-            }
-        }
-        else {
-            foreach ($this->_updates as $k => $v) {$v = $this->_data[$k];
-                if (is_array($v)) {
-                    $updates[$k] = $v[0] . '(' . $v[1] . ')';
-                }
-                else {
-                    $updates[$k] = $this->_data[$k];
-                }
-            }
+        foreach ($this->_updates as $k => $v) {
+            $updates[$k] = $this->_data[$k];
         }
         // --- 这个 table 主要给 notWhere 有值时才使用 ---
         if (!$table) {
@@ -599,27 +555,8 @@ class Mod {
      */
     public function replace(): bool {
         $updates = [];
-        if ($this->_db->getCore() === Db::MYSQL) {
-            foreach ($this->_updates as $k => $v) {
-                $v = $this->_data[$k];
-                if (is_array($v)) {
-                    $updates[$k] = ['ST_GEOMFROMTEXT(?)', [$v[0] . '(' . $v[1] . ')']];
-                }
-                else {
-                    $updates[$k] = $this->_data[$k];
-                }
-            }
-        }
-        else {
-            foreach ($this->_updates as $k => $v) {
-                $v = $this->_data[$k];
-                if (is_array($v)) {
-                    $updates[$k] = $v[0] . '(' . $v[1] . ')';
-                }
-                else {
-                    $updates[$k] = $this->_data[$k];
-                }
-            }
+        foreach ($this->_updates as $k => $v) {
+            $updates[$k] = $this->_data[$k];
         }
 
         $this->_sql->replace(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''))->values($updates);
@@ -648,15 +585,7 @@ class Mod {
      * @return bool|null
      */
     public function refresh($lock = false) {
-        $select = ['*'];
-        if ($this->_db->getCore() === Db::MYSQL) {
-            if (count(static::$_astext) > 0) {
-                foreach (static::$_astext as $item) {
-                    $select[] = 'ST_ASTEXT(`' . $item . '`) AS `' . $item . '`';
-                }
-            }
-        }
-        $this->_sql->select($select, static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''))->where([
+        $this->_sql->select('*', static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''))->where([
             static::$_primary => $this->_data[static::$_primary]
         ]);
         if ($lock) {
@@ -673,15 +602,6 @@ class Mod {
             return null;
         }
         foreach ($row as $k => $v) {
-            if (is_string($v)) {
-                if (substr($v, 0, 6) === 'POINT(' || substr($v, 0, 8) === 'POLYGON(') {
-                    if (preg_match('/^([A-Z]+)\((.+)\)$/', $v, $matchs)) {
-                        $this->_data[$k] = [$matchs[1], $matchs[2]];
-                        $this->$k = [$matchs[1], $matchs[2]];
-                        continue;
-                    }
-                }
-            }
             $this->_data[$k] = $v;
             $this->$k = $v;
         }
@@ -694,27 +614,8 @@ class Mod {
      */
     public function save(): bool {
         $updates = [];
-        if ($this->_db->getCore() === Db::MYSQL) {
-            foreach ($this->_updates as $k => $v) {
-                $v = $this->_data[$k];
-                if (is_array($v)) {
-                    $updates[$k] = ['ST_GEOMFROMTEXT(?)', [$v[0] . '(' . $v[1] . ')']];
-                }
-                else {
-                    $updates[$k] = $this->_data[$k];
-                }
-            }
-        }
-        else {
-            foreach ($this->_updates as $k => $v) {
-                $v = $this->_data[$k];
-                if (is_array($v)) {
-                    $updates[$k] = $v[0] . '(' . $v[1] . ')';
-                }
-                else {
-                    $updates[$k] = $this->_data[$k];
-                }
-            }
+        foreach ($this->_updates as $k => $v) {
+            $updates[$k] = $this->_data[$k];
         }
         if(count($updates) === 0) {
             return true;
@@ -788,15 +689,6 @@ class Mod {
             return null;
         }
         foreach ($row as $k => $v) {
-            if (is_string($v)) {
-                if (substr($v, 0, 6) === 'POINT(' || substr($v, 0, 8) === 'POLYGON(') {
-                    if (preg_match('/^([A-Z]+)\((.+)\)$/', $v, $matchs)) {
-                        $this->_data[$k] = [$matchs[1], $matchs[2]];
-                        $this->$k = [$matchs[1], $matchs[2]];
-                        continue;
-                    }
-                }
-            }
             $this->_data[$k] = $v;
             $this->$k = $v;
         }
@@ -844,9 +736,7 @@ class Mod {
      * @return false|array|string
      */
     public function explain($all = false) {
-        $mysql = $this->_db->getCore() === Db::MYSQL;
-        $explain = $mysql ? 'EXPLAIN' : 'EXPLAIN QUERY PLAN';
-        $ps = $this->_db->prepare($explain . ' ' . $this->_sql->getSql());
+        $ps = $this->_db->prepare('EXPLAIN ' . $this->_sql->getSql());
         try {
             $ps->execute($this->_sql->getData());
         }
@@ -857,7 +747,7 @@ class Mod {
             return false;
         }
         if (!$all) {
-            return $mysql ? $row['type'] : $row['detail'];
+            return $row['type'];
         }
         return $row;
     }

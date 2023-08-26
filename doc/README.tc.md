@@ -36,7 +36,7 @@ if ($request_uri !~ ^/(stc/.*|favicon.\w+?\??.*|apple[\w-]+?\.png\??.*|[\w-]+?\.
 
 ## 庫
 
-Captcha, Consistent, Crypto, Db (MySQL, SQLite), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Jwt, Sql, Text.
+Captcha, Consistent, Crypto, Db (MySQL), Fs, Kv (Redis, RedisSimulator), Net, Scan, Session, Jwt, Sql, Text.
 
 ## 特性
 

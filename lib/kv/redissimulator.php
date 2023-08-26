@@ -2,11 +2,10 @@
 /**
  * --- 注意了注意了 ---
  * 本模拟器基于 Db 类，尽量不要用于任何实际运行环境。
- * 效率低意义不大，仅为没有 Redis 环境测试使用，仅支持 MySQL Core。
+ * 效率低意义不大，仅为没有 Redis 环境测试使用。
  */
 
 /*
- * --- Mysql ---
 CREATE TABLE `redis` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `tag` varchar(255) NOT NULL,
@@ -16,8 +15,6 @@ CREATE TABLE `redis` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `tag` (`tag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
- * --- 仅支持 MySQL ---
 */
 
 /**
@@ -70,9 +67,6 @@ class RedisSimulator implements IKv {
         $db = isset($opt['db']) ? $opt['db'] : null;
 
         if (!$db) {
-            return false;
-        }
-        if ($db->getCore() !== Db::MYSQL) {
             return false;
         }
 

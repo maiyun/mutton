@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02
  */
 declare(strict_types = 1);
 
@@ -147,10 +147,29 @@ class LSql {
             foreach ($vs as $i => $v) {
                 $sql .= '(';
                 foreach ($v as $i1 => $v1) {
-                    if (is_array($v1)) {
-                        // --- v1: ['POINT(?)', ['20']] ---
-                        $sql .= $v1[0] . ', ';
-                        $this->_data = array_merge($this->_data, $v1[1]);
+                    // --- v1 是项目值，如 ['x' => 1, 'y' => 2], 'string', 0 ---
+                    if (is_array($v1) && !isset($v1['x'])) {
+                        if (!isset($v1[0][0]) || !isset($v1[0][0]['x'])) {
+                            // --- v1: ['POINT(?)', ['20']] ---
+                            $sql .= $this->field($v1[0]) . ', ';
+                            if (isset($v1[1])) {
+                                $this->_data = array_merge($this->_data, $v1[1]);
+                            }
+                        }
+                        else {
+                            // --- v1: [[['x' => 1, 'y' => 2], [ ... ]], [[ ... ], [ ... ]]] ---
+                            $sql .= 'ST_POLYGONFROMTEXT(?), ';
+                            $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
+                                return '(' . implode(', ', array_map(function ($it) {
+                                    return $it['x'] . ' ' . $it['y'];
+                                }, $item)) . ')';
+                            }, $v1)) . ')';
+                        }
+                    }
+                    else if (is_array($v1) && isset($v1['x'])) {
+                        // --- v1: ['x' => 1, 'y' => 2] ---
+                        $sql .= 'ST_POINTFROMTEXT(?), ';
+                        $this->_data[] = 'POINT(' . $v1['x'] . ' ' . $v1['y'] . ')';
                     }
                     else {
                         $sql .= '?, ';
@@ -167,10 +186,28 @@ class LSql {
             $values = '';
             foreach ($cs as $k => $v) {
                 $sql .= $this->field($k) . ', ';
-                if (is_array($v)) {
-                    // --- v: ['POINT(?)', ['20']] ---
-                    $values .= $v[0] . ', ';
-                    $this->_data = array_merge($this->_data, $v[1]);
+                if (is_array($v) && !isset($v['x'])) {
+                   if (!isset($v[0][0]) || !isset($v[0][0]['x'])) {
+                        // --- v: ['POINT(?)', ['20']] ---
+                        $values .= $this->field($v[0]) . ', ';
+                        if (isset($v[1])) {
+                            $this->_data = array_merge($this->_data, $v[1]);
+                        }
+                    }
+                    else {
+                        // --- v: [[['x' => 1, 'y' => 2], [ ... ]], [[ ... ], [ ... ]]] ---
+                        $values .= 'ST_POLYGONFROMTEXT(?), ';
+                        $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
+                            return '(' . implode(', ', array_map(function ($it) {
+                                return $it['x'] . ' ' . $it['y'];
+                            }, $item)) . ')';
+                        }, $v)) . ')';
+                    }
+                }
+                else if (is_array($v) && isset($v['x'])) {
+                    // --- v: ['x' => 1, 'y' => 2] ---
+                    $values .= 'ST_POINTFROMTEXT(?), ';
+                    $this->_data[] = 'POINT(' . $v['x'] . ' ' . $v['y'] . ')';
                 }
                 else {
                     $values .= '?, ';
@@ -285,7 +322,9 @@ class LSql {
             'type' => '6',              // 2
             'type' => '#type2'          // 3
             'type' => ['type3']         // 4
-            'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']]     // 5
+            'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']],     // 5
+            'point' => [ 'x' => 0, 'y' => 0 ],  // 6
+            'polygon' => [ [ [ 'x' => 0, 'y' => 0 ], [ ... ] ], [ ... ] ]   // 7
         ]
         */
         $sql = '';
@@ -302,24 +341,41 @@ class LSql {
                 }
             }
             else {
-                // --- 2, 3, 4, 5 ---
-                if (!is_string($v) && !is_numeric($v)) {
-                    // --- 4, 5 ---
-                    $sql .= $this->field($k) . ' = ' . $this->field($v[0]) . ', ';
-                    if (isset($v[1]) && is_array($v[1])) {
-                        // --- 5 ---
-                        $this->_data = array_merge($this->_data, $v[1]);
+                // --- 2, 3, 4, 5, 6, 7 ---
+                $sql .= $this->field($k) . ' = ';
+                if (is_array($v) && !isset($v['x'])) {
+                    if (!isset($v[0][0]) || !isset($v[0][0]['x'])) {
+                        // --- 4, 5 ---
+                        $sql .= $this->field($v[0]) . ', ';
+                        if (isset($v[1])) {
+                            $this->_data = array_merge($this->_data, $v[1]);
+                        }
                     }
+                    else {
+                        // --- 7 ---
+                        $sql .= 'ST_POLYGONFROMTEXT(?), ';
+                        $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
+                            return '(' . implode(', ', array_map(function ($it) {
+                                return $it['x'] . ' ' . $it['y'];
+                            }, $item)) . ')';
+                        }, $v)) . ')';
+                    }
+                }
+                else if (is_array($v) && isset($v['x'])) {
+                    // --- v: ['x' => 1, 'y' => 2] ---
+                    $sql .= 'ST_POINTFROMTEXT(?), ';
+                    $this->_data[] = 'POINT(' . $v['x'] . ' ' . $v['y'] . ')';
                 }
                 else {
                     // --- 2, 3 ---
                     $isf = $this->_isField($v);
                     if ($isf[0]) {
-                        // --- field ---
-                        $sql .= $this->field($k) . ' = ' . $this->field($isf[1]) . ', ';
+                        // --- 3: field ---
+                        $sql .= $this->field($isf[1]) . ', ';
                     }
                     else {
-                        $sql .= $this->field($k) . ' = ?, ';
+                        // --- 2 ---
+                        $sql .= '?, ';
                         $this->_data[] = $isf[1];
                     }
                 }

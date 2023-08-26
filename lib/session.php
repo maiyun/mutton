@@ -1,6 +1,5 @@
 <?php
 /*
- * --- mysql ---
 CREATE TABLE `session` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `token` char(16) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
@@ -11,16 +10,6 @@ CREATE TABLE `session` (
   UNIQUE KEY `token` (`token`),
   KEY `time_update` (`time_update`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci
-
- * --- sqlite ---
-CREATE TABLE `session` (
-  `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-  `token` VARCHAR(16) UNIQUE NOT NULL,
-  `data` TEXT NOT NULL,
-  `time_update` INT(10) NOT NULL,
-  `time_add` INT(10) NOT NULL
-);
-CREATE INDEX `time_update` ON `session` (`time_update`);
 */
 
 /**

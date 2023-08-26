@@ -8,6 +8,7 @@ use lib\Captcha;
 use lib\Consistent;
 use lib\Core;
 use lib\Db;
+use lib\Db\Stmt;
 use lib\Jwt;
 use lib\Kv;
 use lib\Kv\IKv;
@@ -16,7 +17,6 @@ use lib\Scan;
 use lib\Sql;
 use lib\Text;
 use mod\Mod;
-use mod\Session;
 use mod\Test as ModTest;
 use mod\TestData;
 use PDO;
@@ -102,8 +102,7 @@ class Test extends Ctr {
             '<br><br><b>Model test:</b>',
 
             '<br><br><b style="color: red;">In a production environment, please delete "mod/test.php", "mod/testdata.php" files.</b>',
-            '<br><a href="' . URL_BASE . 'test/mod-test?s=mysql">[MySQL] Click to see an example of a Test model</a>',
-            '<br><a href="' . URL_BASE . 'test/mod-test?s=sqlite">[SQLite] Click to see an example of a Test model</a>',
+            '<br><a href="' . URL_BASE . 'test/mod-test">Click to see an example of a Test model</a>',
             '<br><a href="' . URL_BASE . 'test/mod-split">View "test/mod-split"</a>',
 
             '<br><br><b>Library test:</b>',
@@ -123,8 +122,7 @@ class Test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'test/crypto">View "test/crypto"</a>',
 
             '<br><br><b>Db:</b>',
-            '<br><br><a href="' . URL_BASE . 'test/db?s=mysql">View "test/db?s=mysql"</a>',
-            '<br><a href="' . URL_BASE . 'test/db?s=sqlite">View "test/db?s=sqlite"</a>',
+            '<br><br><a href="' . URL_BASE . 'test/db">View "test/db"</a>',
 
             '<br><br><b>Kv:</b>',
             '<br><br><a href="' . URL_BASE . 'test/kv?s=redis">View "test/kv?s=redis"</a>',
@@ -364,7 +362,7 @@ function postFd() {
 
         $echo = ['<b style="color: red;">In a production environment, please delete the "mod/test.php" file.</b>'];
 
-        $db = Db::get((isset($this->_get['s']) && $this->_get['s'] === 'mysql') ? Db::MYSQL : Db::SQLITE);
+        $db = Db::get();
         if (!($rtn = $db->connect())) {
             return [0 ,'Failed('.($rtn === null ? 'null' : 'false').').'];
         }
@@ -379,13 +377,21 @@ function postFd() {
             ModTest::removeByWhere([
                 ['token', 'LIKE', 'test_%']
             ]);
-            return $this->_location('test/mod-test?s=' . $this->_get['s']);
+            return $this->_location('test/mod-test');
         }
         else {
             $time = time();
             $test = ModTest::getCreate();
             $test->set([
-                'point' => ['POINT', rand(0, 99) . ' ' . rand(0, 99)],
+                'point' => [ 'x' => rand(0, 99), 'y' => rand(0, 99) ],
+                'polygon' => [
+                    [
+                        [ 'x' => 1, 'y' => 1 ],
+                        [ 'x' => 2, 'y' => 2 ],
+                        [ 'x' => 3, 'y' => 3 ],
+                        [ 'x' => 1, 'y' => 1 ]
+                    ]
+                ],
                 'time_add' => $time
             ]);
             $result = $test->create();
@@ -394,7 +400,15 @@ function postFd() {
 \$time = time();
 \$test = ModTest::getCreate();
 \$test->set([
-    'point' => ['POINT', rand(0, 99) . ' ' . rand(0, 99)],
+    'point' => [ 'x' => rand(0, 99), 'y' => rand(0, 99) ],
+    'polygon' => [
+        [
+            [ 'x' => 1, 'y' => 1 ],
+            [ 'x' => 2, 'y' => 2 ],
+            [ 'x' => 3, 'y' => 3 ],
+            [ 'x' => 1, 'y' => 1 ]
+        ]
+    ],
     'time_add' => $time
 ]);
 \$result = \$test->create();
@@ -404,7 +418,7 @@ json_encode(\$result);</pre>" . json_encode($result);
 
             $echo[] = "<br><br>Test table:";
 
-            $stmt = $db->query('SELECT `id`, `token`, ' . ($db->getCore() === Db::MYSQL ? 'ST_ASTEXT(`point`)' : '`point`') . ', `time_add` FROM `m_test` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
+            $stmt = $db->query('SELECT * FROM `m_test` WHERE `token` LIKE \'test_%\' ORDER BY `id` ASC;');
             $this->_dbTable($stmt, $echo);
 
             // --- explain ---
@@ -443,6 +457,7 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<tr><th>id</th><td>' . $ft->id . '</td></tr>';
                 $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
                 $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
+                $echo[] = '<tr><th>polygon</th><td>' . json_encode($ft->polygon) . '</td></tr>';
                 $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
 
                 $echo[] = '</table>';
@@ -450,11 +465,13 @@ json_encode(\$result);</pre>" . json_encode($result);
                 // --- 修改 point 值 ---
 
                 $ft->set('point', [
-                    'POINT', '20 20'
+                    'x' => 20,
+                    'y' => 20
                 ]);
                 $ft->save();
                 $echo[] = "<pre>\$ft->set('point', [
-    'POINT', '20 20'
+    'x' => 20,
+    'y' => 20
 ]);
 \$ft->save();</pre>";
 
@@ -465,6 +482,7 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<tr><th>id</th><td>' . $ft->id . '</td></tr>';
                 $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
                 $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
+                $echo[] = '<tr><th>polygon</th><td>' . json_encode($ft->polygon) . '</td></tr>';
                 $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
 
                 $echo[] = '</table>';
@@ -473,14 +491,32 @@ json_encode(\$result);</pre>" . json_encode($result);
 
                 $ft->set([
                     'point' => [
-                        'POINT', '40 40'
+                        'x' => 40,
+                        'y' => 40
+                    ],
+                    'polygon' => [
+                        [
+                            [ 'x' => 5, 'y' => 1 ],
+                            [ 'x' => 6, 'y' => 2 ],
+                            [ 'x' => 7, 'y' => 3 ],
+                            [ 'x' => 5, 'y' => 1 ]
+                        ]
                     ]
                 ]);
                 $ft->save();
                 $ft->refresh();
                 $echo[] = "<pre>\$ft->set([
     'point' => [
-        'POINT', '40 40'
+        'x' => 40,
+        'y' => 40
+    ],
+    'polygon' => [
+        [
+            [ 'x' => 5, 'y' => 1 ],
+            [ 'x' => 6, 'y' => 2 ],
+            [ 'x' => 7, 'y' => 3 ],
+            [ 'x' => 5, 'y' => 1 ]
+        ]
     ]
 ]);
 \$ft->save();
@@ -491,6 +527,7 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<tr><th>id</th><td>' . $ft->id . '</td></tr>';
                 $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
                 $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
+                $echo[] = '<tr><th>polygon</th><td>' . json_encode($ft->polygon) . '</td></tr>';
                 $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
 
                 $echo[] = '</table>';
@@ -499,11 +536,9 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<div>false</div>';
             }
 
-            $echo[] = '<br><a href="' . URL_BASE . 'test/mod-test?s=' . $this->_get['s'] . '&action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
+            $echo[] = '<br><a href="' . URL_BASE . 'test/mod-test?action=remove">Remove all test data</a> | <a href="' . URL_BASE . 'test">Return</a>';
 
-            return '<a href="' . URL_BASE . 'test/mod-test?s=mysql">MySQL</a> | ' .
-            '<a href="' . URL_BASE . 'test/mod-test?s=sqlite">SQLite</a> | ' .
-            '<a href="' . URL_BASE . 'test">Return</a><br><br>' . join('', $echo) . '<br><br>' . $this->_getEnd();
+            return join('', $echo) . '<br><br>' . $this->_getEnd();
         }
     }
 
@@ -560,7 +595,8 @@ CREATE TABLE `m_test_data_0` (
         $test->set([
             'token' => Core::random((int)Core::rand(8, 32)),
             'point' => [
-                'POINT', '10 10'
+                'x' => 10,
+                'y' => 10
             ],
             'time_add' => time()
         ]);
@@ -791,12 +827,6 @@ json_encode(\$orig);</pre>" . json_encode($orig);
     }
 
     public function db() {
-        if (!$this->_checkInput($_GET, [
-            's' => ['require', ['mysql', 'sqlite'], [0, 'Object not found.']]
-        ], $return)) {
-            return $return;
-        }
-
         $echo = ["<br><br>ms: " . round($this->_getRunTime() * 1000, 4)];
 
         $db = Db::get($_GET['s']);
@@ -821,7 +851,7 @@ if (!(\$rtn = \$db->connect())) {
 
         // --- 插入 test-token 的条目 ---
         $time = (string)time();
-        $exec = $db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . ($_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
+        $exec = $db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ST_POINTFROMTEXT(\'POINT(10 10)\'), \'' . $time . '\');');
         $ms = round($this->_getRunTime() * 1000, 4);
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
@@ -833,7 +863,7 @@ if (!(\$rtn = \$db->connect())) {
             $insertId = $db->getInsertID();
         }
 
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . (\$_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ST_POINTFROMTEXT(\'POINT(10 10)\'), \'' . $time . '\');');
 \$errorCode = \$db->getErrorCode();
 \$error = \$db->getErrorInfo();
 if (\$errorCode === '23000') {
@@ -853,11 +883,11 @@ ms: " . $ms . "<br><br>";
         $this->_dbTable($stmt, $echo);
 
         // --- 再次插入 test-token 的条目 ---
-        $exec = $db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . ($_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
+        $exec = $db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ST_POINTFROMTEXT(\'POINT(10 10)\'), \'' . $time . '\');');
         $errorCode = $db->getErrorCode();
         $error = $db->getErrorInfo();
         $insertId = $db->getInsertID();
-        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . (\$_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(10 10)\')' : '\'POINT\'') . ', \'' . $time . '\');');
+        $echo[] = "<pre>\$exec = \$db->exec('INSERT INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ST_POINTFROMTEXT(\'POINT(10 10)\'), \'' . $time . '\');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
@@ -866,9 +896,9 @@ error: " . json_encode($error) . "<br>
 ms: " . round($this->_getRunTime() * 1000, 4) . "<br>";
 
         // --- 依据唯一键替换值 ---
-        $exec = $db->exec('REPLACE INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . ($_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(20 20)\')' : '\'POINT\'') . ', \'' . $time . '\');');
+        $exec = $db->exec('REPLACE INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ST_POINTFROMTEXT(\'POINT(20 20)\'), \'' . $time . '\');');
         $insertId = $db->getInsertID();
-        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ' . (\$_GET['s'] === 'mysql' ? 'ST_POINTFROMTEXT(\'POINT(20 20)\')' : '\'POINT\'') . ', \'' . $time . '\');');');
+        $echo[] = "<pre>\$exec = \$db->exec('REPLACE INTO `m_test` (`token`, `point`, `time_add`) VALUES (\'test-token\', ST_POINTFROMTEXT(\'POINT(20 20)\'), \'' . $time . '\');');');
 \$insertId = \$db->getInsertID();</pre>
 exec: " . json_encode($exec) . "<br>
 insertId: " . json_encode($insertId) . "<br>
@@ -881,9 +911,8 @@ ms: " . round($this->_getRunTime() * 1000, 4) . "<br><br>";
         $this->_dbTable($stmt, $echo);
 
         // --- explain 开始 ---
-        $explain = $_GET['s'] === 'mysql' ? 'EXPLAIN' : 'EXPLAIN QUERY PLAN';
-        $echo[] = "<pre>\$stmt = \$db->query('" . $explain . " SELECT * FROM `m_test` LIMIT 10;');</pre>";
-        $stmt = $db->query($explain . ' SELECT * FROM `m_test` LIMIT 10;');
+        $echo[] = "<pre>\$stmt = \$db->query('EXPLAIN SELECT * FROM `m_test` LIMIT 10;');</pre>";
+        $stmt = $db->query('EXPLAIN SELECT * FROM `m_test` LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
         $echo[] = '<br>ms: ' . round($this->_getRunTime() * 1000, 4);
@@ -896,14 +925,12 @@ exec: " . json_encode($exec) . "<br><br>";
         $stmt = $db->query('SELECT * FROM `m_test` ORDER BY `id` DESC LIMIT 10;');
         $this->_dbTable($stmt, $echo);
 
-        return '<a href="' . URL_BASE . 'test/db?s=mysql">MySQL</a> | ' .
-        '<a href="' . URL_BASE.'test/db?s=sqlite">SQLite</a> | ' .
-        '<a href="' . URL_BASE.'test">Return</a>' . join('', $echo) . '<br>queries: ' . $db->getQueries() . '<br>' . $this->_getEnd();
+        return join('', $echo) . '<br>queries: ' . $db->getQueries() . '<br>' . $this->_getEnd();
     }
 
-    private function _dbTable(PDOStatement $stmt, &$echo) {
+    private function _dbTable(Stmt|bool $stmt, &$echo) {
         $echo[] = '<table style="width: 100%;"><tr>';
-        if ($stmt->getColumnMeta(0)) {
+        if ($stmt && $stmt->getColumnMeta(0)) {
             $cc = $stmt->columnCount();
             for ($i = 0; $i < $cc; ++$i) {
                 $echo[] = '<th>' . htmlspecialchars($stmt->getColumnMeta($i)['name']) . '</th>';
@@ -913,7 +940,7 @@ exec: " . json_encode($exec) . "<br><br>";
             while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                 $echo[] = '<tr>';
                 foreach ($row as $key => $val) {
-                    $echo[] = '<td>' . ($val === null ? 'null' : htmlspecialchars($val . '')) . '</td>';
+                    $echo[] = '<td>' . ($val === null ? 'null' : htmlspecialchars(json_encode($val))) . '</td>';
                 }
                 $echo[] = '</tr>';
             }
@@ -934,7 +961,7 @@ exec: " . json_encode($exec) . "<br><br>";
         $kv = Kv::get($_GET['s']);
         $db = null;
         if ($_GET['s'] === 'redis-simulator') {
-            $db = Db::get(Db::MYSQL);
+            $db = Db::get();
             if (!$db->connect()) {
                 return [0, 'Failed, MySQL can not be connected.'];
             }
@@ -1607,7 +1634,7 @@ function confirm() {
     private function _scanLink(): Db|IKv|false {
         $s = isset($this->_get['s']) ? $this->_get['s'] : 'db';
         if ($s === 'db') {
-            $db = Db::get(Db::MYSQL);
+            $db = Db::get();
             if (!$db->connect()) {
                 return false;
             }
@@ -1636,11 +1663,11 @@ function confirm() {
 
         $link = null;
         if ($_GET['s'] === 'db') {
-            $link = Db::get(Db::MYSQL);
+            $link = Db::get();
             if (!$link->connect()) {
                 return [0, 'Failed, MySQL can not be connected.'];
             }
-            $echo[] = "\$link = Db::get(Db::MYSQL);\n";
+            $echo[] = "\$link = Db::get();\n";
         }
         else {
             $link = Kv::get();
@@ -1830,21 +1857,21 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('geo')->values(['name', 'point'], [
+                $s = $sql->insert('geo')->values(['name', 'point', 'point2'], [
                     [
-                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']]
+                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
                     ],
                     [
-                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']]
+                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
                     ]
                 ])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point'], [
+                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point', 'point2'], [
     [
-        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']]
+        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
     ],
     [
-        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']]
+        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
     ]
 ]);</pre>
 <b>getSql() :</b> {$s}<br>

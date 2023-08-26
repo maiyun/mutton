@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/7/7 17:59
- * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04, 2020-2-17 23:26:01
+ * Last: 2018-12-8 22:39:24, 2020-01-03 17:25:04, 2020-2-17 23:26:01, 2023-8-25 15:40:29
  */
 
 declare(strict_types = 1);
@@ -10,48 +10,26 @@ declare(strict_types = 1);
 namespace lib;
 
 use Exception;
+use lib\Db\Stmt;
 use PDO;
 use PDOException;
-use PDOStatement;
 use function sys\log;
 
 require ETC_PATH . 'db.php';
 
 class Db {
 
-    // --- 核心类型 ---
-    const MYSQL = 'mysql';
-    const SQLITE = 'sqlite';
-
     /** @var int SQL 执行次数 */
     private $_queries = 0;
 
-    /* @var PDO */
+    /** @var PDO 原生连接对象 */
     private $_link;
-    /** @var string 当前核心 */
-    private $_core = '';
-
-    public function __construct(string $core) {
-        $this->_core = $core;
-    }
 
     /**
-     * @param string $core
      * @return Db
      */
-    public static function get(string $core = ''): Db {
-        if ($core === '') {
-            $core = MY_HOST ? self::MYSQL : self::SQLITE;
-        }
-        return new Db($core);
-    }
-
-    /**
-     * --- 获取当前核心是什么 ---
-     * @return string
-     */
-    public function getCore(): string {
-        return $this->_core;
+    public static function get(): Db {
+        return new Db();
     }
 
     /**
@@ -75,16 +53,15 @@ class Db {
     /**
      * --- 执行一个 query，有返回列表 ---
      * @param string $sql
-     * @return false|PDOStatement
+     * @return false|Stmt
      */
     public function query(string $sql) {
         ++$this->_queries;
-        try {
-            return $this->_link->query($sql);
-        }
-        catch (PDOException $e) {
+        $stmt = $this->_link->query($sql);
+        if (!$stmt) {
             return false;
         }
+        return new Stmt($stmt);
     }
 
     /**
@@ -125,34 +102,18 @@ class Db {
      */
     public function connect(array $opt = []) {
         try {
-            switch ($this->_core) {
-                case 'mysql': {
-                    $host = isset($opt['host']) ? $opt['host'] : MY_HOST;
-                    $port = isset($opt['port']) ? $opt['port'] : MY_PORT;
-                    $user = isset($opt['user']) ? $opt['user'] : MY_USER;
-                    $pwd = isset($opt['pwd']) ? $opt['pwd'] : MY_PWD;
-                    $name = isset($opt['name']) ? $opt['name'] : MY_NAME;
-                    $charset = isset($opt['charset']) ? $opt['charset'] : MY_CHARSET;
+            $host = isset($opt['host']) ? $opt['host'] : MY_HOST;
+            $port = isset($opt['port']) ? $opt['port'] : MY_PORT;
+            $user = isset($opt['user']) ? $opt['user'] : MY_USER;
+            $pwd = isset($opt['pwd']) ? $opt['pwd'] : MY_PWD;
+            $name = isset($opt['name']) ? $opt['name'] : MY_NAME;
+            $charset = isset($opt['charset']) ? $opt['charset'] : MY_CHARSET;
 
-                    if ($this->_link = new PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
-                        return true;
-                    }
-                    else {
-                        return false;
-                    }
-                    break;
-                }
-                case 'sqlite': {
-                    $path = isset($opt['path']) ? $opt['path'] : SL_PATH;
-
-                    if ($this->_link = new PDO('sqlite:' . $path)) {
-                        return true;
-                    }
-                    else {
-                        return false;
-                    }
-                    break;
-                }
+            if ($this->_link = new PDO('mysql:host=' . $host . '; port=' . $port . '; charset=' . $charset . '; dbname=' . $name, $user, $pwd)) {
+                return true;
+            }
+            else {
+                return false;
             }
             return null;
         }
@@ -195,11 +156,15 @@ class Db {
     /**
      * --- PDO 组装与绑定语句 ---
      * @param string $sql
-     * @return PDOStatement
+     * @return Stmt|false
      */
-    public function prepare(string $sql): PDOStatement {
+    public function prepare(string $sql): Stmt | false {
         ++$this->_queries;
-        return $this->_link->prepare($sql);
+        $stmt = $this->_link->prepare($sql);
+        if (!$stmt) {
+            return false;
+        }
+        return new Stmt($stmt);
     }
 
 }

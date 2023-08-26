@@ -1,6 +1,5 @@
 <?php
 /*
-// --- MySQL ---
 CREATE TABLE `m_test_data_0` (
     `id` bigint NOT NULL AUTO_INCREMENT,
     `test_id` bigint NOT NULL,
