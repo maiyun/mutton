@@ -724,6 +724,7 @@ class LSql {
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
         $str = preg_replace('/ +([),])/', ' $1', $str);
         $str = preg_replace('/([(,]) +/', '$1 ', $str);
+        $str = preg_replace('/["\']/', '', $str);
         // --- 先判断有没有别名（也就是 as） ---
         $loStr = strtolower($str);
         $asPos = strpos($loStr, ' as ');
