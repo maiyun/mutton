@@ -656,6 +656,8 @@ CREATE TABLE `m_test_data_0` (
         return '<pre>Core::random(16, Core::RANDOM_LUNS);</pre>' . htmlspecialchars(Core::random(16, Core::RANDOM_LUNS)) .
             '<pre>Core::random(4, Core::RANDOM_V);</pre>' . htmlspecialchars(Core::random(4, Core::RANDOM_V)) .
             '<pre>Core::random(8, Core::RANDOM_N, \'0349\');</pre>' . htmlspecialchars(Core::random(8, Core::RANDOM_N, '0349')) .
+            '<pre>Core::random(8, Core::RANDOM_LNU);</pre>' . htmlspecialchars(Core::random(8, Core::RANDOM_LUN)) .
+            '<pre>Core::random(16, Core::RANDOM_LNU);</pre>' . htmlspecialchars(Core::random(16, Core::RANDOM_LUN)) .
             '<br><br>' . $this->_getEnd();
     }
 

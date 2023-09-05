@@ -197,6 +197,14 @@ class Ctr {
                             }
                             break;
                         }
+                        case 'string': {
+                            if ($input[$key] !== null && !is_string($input[$key])) {
+                                // --- 如果不是 string 直接失败 ---
+                                $rtn = $val[$lastK];
+                                return false;
+                            }
+                            break;
+                        }
                         default: {
                             if ($input[$key]) {
                                 if ($v[0] === '/') {
