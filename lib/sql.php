@@ -725,7 +725,7 @@ class LSql {
         $str = preg_replace('/ +([),])/', ' $1', $str);
         $str = preg_replace('/([(,]) +/', '$1 ', $str);
         $str = preg_replace('/["\']/', '', $str);   // --- 去除引号 ---
-        $str = preg_replace('/(\W)(JOIN|WHERE|OR|AND|UNION)(\W)/i', '$1$2', $str);
+        $str = preg_replace('/(\W)(JOIN|WHERE|OR|AND|UNION)(\W)/i', '$1$3', $str);
         // --- 先判断有没有别名（也就是 as） ---
         $loStr = strtolower($str);
         $asPos = strpos($loStr, ' as ');
