@@ -171,6 +171,7 @@ class Test extends Ctr {
             '<br><br><a href="' . URL_BASE . 'test/consistent-hash">View "test/consistent-hash"</a>',
             '<br><a href="' . URL_BASE . 'test/consistent-distributed">View "test/consistent-distributed"</a>',
             '<br><a href="' . URL_BASE . 'test/consistent-migration">View "test/consistent-migration"</a>',
+            '<br><a href="' . URL_BASE . 'test/consistent-fast">View "test/consistent-fast"</a>',
 
             '<br><br><b>Text:</b>',
             '<br><br><a href="' . URL_BASE . 'test/text">View "test/text"</a>'
@@ -2212,6 +2213,20 @@ foreach (\$files as \$file) {
         $echo[] = '</table>';
 
         return join('', $echo) . '... More ' . ($count - 200) . ' ...<br><br>' . $this->_getEnd();
+    }
+
+    public function consistentFast(): string {
+        $echo = [];
+
+        $rtn = Consistent::fast('a', Consistent::getRange(0, 30));
+        $echo[] = "<pre>Consistent::fast('a', Consistent::getRange(0, 30))</pre>";
+        $echo[] = json_encode($rtn);
+
+        $rtn = Consistent::fast('b', Consistent::getRange(0, 30));
+        $echo[] = "<pre>Consistent::fast('b', Consistent::getRange(0, 30))</pre>";
+        $echo[] = json_encode($rtn);
+
+        return join('', $echo) . '<br><br>' . $this->_getEnd();
     }
 
     public function text() {

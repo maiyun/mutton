@@ -252,7 +252,7 @@ class Route {
                         echo json_encode(array_merge($json, $rtn[1]));
                     }
                     else {
-                        // --- [0, 'xxx'] ---
+                        // --- [0, 'xxx'], [0, 'xxx', ['xx' => 'xx']] ---
                         $json['msg'] = $rtn[1];
                         if (isset($rtn[2])) {
                             echo json_encode(array_merge($json, $rtn[2]));

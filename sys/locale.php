@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2019-3-26 23:31
- * Last: 2020-1-17 01:09:14, 2020-3-23 17:40:54
+ * Last: 2020-1-17 01:09:14, 2020-3-23 17:40:54, 2023-11-25 01:07:25
  */
 declare(strict_types = 1);
 
@@ -23,10 +23,10 @@ $_localeFiles = [];
 function l(string $key, ?array $data = null): string {
     global $_localeData, $_locale;
     if (!isset($_localeData[$_locale])) {
-        return 'LocaleError';
+        return '[LocaleError]' . $key;
     }
     if (!isset($_localeData[$_locale][$key])) {
-        return 'LocaleError';
+        return '[LocaleError]' . $key;
     }
     if ($data) {
         $i = -1;

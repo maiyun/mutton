@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2022-09-01 21:56:06
- * Last: 2022-09-01 21:56:06, 2022-09-03 00:56:29
+ * Last: 2022-09-01 21:56:06, 2022-09-03 00:56:29, 2023-11-15 11:45:34
  */
 declare(strict_types = 1);
 
@@ -15,6 +15,7 @@ class Consistent {
 
     /** --- hash 环 --- */
     private $_circle = [];
+
     /** --- circle 的 keys --- */
     private $_keys = [];
 
@@ -31,14 +32,14 @@ class Consistent {
 
     /**
      * --- 快速查找一个 key 属于哪个 node ---
-     * @param string $key 要查找的key
+     * @param string|int|float $key 要查找的key
      * @param array $nodes node 列表
      * @param int $vcount 虚拟节点数量
      */
-    public static function fast($key, $nodes, $vcount = 300) {
-        $cons = new Consistent($vcount);
-        $cons->add($nodes);
-        return $cons->find($key);
+    public static function fast(string|int|float $key, array $nodes, int $vcount = 300) {
+        $circle = [];
+        self::addToCircle($circle, $nodes, $vcount);
+        return self::findInCircle($circle, $key);
     }
 
     /**
@@ -73,6 +74,68 @@ class Consistent {
     }
 
     /**
+     * --- 添加到圆环 ---
+     * @param array $circle 圆环
+     * @param string|array $node node 节点名一个或多个
+     * @param int $vcount 虚拟节点数量
+     */
+    public static function addToCircle(
+        array &$circle,
+        string|array $node,
+        int $vcount = 300
+    ) {
+        if (is_string($node)) {
+            $node = [$node];
+        }
+        foreach ($node as $v) {
+            for ($i = 0; $i < $vcount; $i++) {
+                $circle[self::hash($v . $i)] = $v;
+            }
+        }
+    }
+
+    /**
+     * --- 获得一个最近的顺时针节点 ---
+     * @param array $circle 圆环
+     * @param string|int|float $key 为给定键取 Hash，取得顺时针方向上最近的一个虚拟节点对应的实际节点
+     * @param array $keys keys，留空则自动从 circle 上取
+     */
+    public static function findInCircle(
+        array &$circle,
+        string|int|float $key,
+        array $keys = []
+    ): string | null {
+        $count = count($keys);
+        if ($count === 0) {
+            $keys = array_keys($circle);
+            $count = count($keys);
+            sort($keys);
+        }
+        if ($count === 0) {
+            return null;
+        }
+        if ($count === 1) {
+            return $circle[$keys[0]];
+        }
+        $hashv = self::hash($key);
+        if (isset($circle[$hashv])) {
+            return $circle[$hashv];
+        }
+        /*
+        SortedMap<Long, T> tailMap = circle.tailMap(hash); 
+        hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
+        */
+        foreach ($keys as $v) {
+            if ((float)$v < $hashv) {
+                continue;
+            }
+            return $circle[$v];
+        }
+        // --- 没找到 ---
+        return $circle[$keys[0]];
+    }
+
+    /**
      * --- 获取当前的虚拟节点数量 ---
      */
     public function getVcount(): int {
@@ -83,15 +146,8 @@ class Consistent {
      * --- 添加节点 ---
      * @param string|string[] $node 节点名一个或多个
      */
-    public function add($node) {
-        if (is_string($node)) {
-            $node = [$node];
-        }
-        foreach ($node as $v) {
-            for ($i = 0; $i < $this->_vcount; $i++) {
-                $this->_circle[self::hash($v . $i)] = $v;
-            }
-        }
+    public function add(string|array $node) {
+        self::addToCircle($this->_circle, $node, $this->_vcount);
         $this->_keys = [];
     }
 
@@ -113,36 +169,14 @@ class Consistent {
 
     /**
      * --- 获得一个最近的顺时针节点 ---
-     * @param string|int|float $key 为给定键取Hash，取得顺时针方向上最近的一个虚拟节点对应的实际节点
+     * @param string|int|float $key 为给定键取 Hash，取得顺时针方向上最近的一个虚拟节点对应的实际节点
      */
-    public function find($key) {
+    public function find(string|int|float $key) {
         if (count($this->_keys) === 0) {
             $this->_keys = array_keys($this->_circle);
             sort($this->_keys);
         }
-        $count = count($this->_keys);
-        if ($count === 0) {
-            return null;
-        }
-        if ($count === 1) {
-            return $this->_circle[$this->_keys[0]];
-        }
-        $hashv = self::hash($key);
-        if (isset($this->_circle[$hashv])) {
-            return $this->_circle[$hashv];
-        }
-        /*
-        SortedMap<Long, T> tailMap = circle.tailMap(hash); 
-        hash = tailMap.isEmpty() ? circle.firstKey() : tailMap.firstKey();
-        */
-        foreach ($this->_keys as $v) {
-            if ((float)$v < $hashv) {
-                continue;
-            }
-            return $this->_circle[$v];
-        }
-        // --- 没找到 ---
-        return $this->_circle[$this->_keys[0]];
+        return self::findInCircle($this->_circle, $key, $this->_keys);
     }
 
     /**
