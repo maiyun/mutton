@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11
  */
 declare(strict_types = 1);
 
@@ -14,6 +14,38 @@ use lib\LSql;
 use lib\Sql;
 use PDO;
 use PDOException;
+
+class Rows implements \Iterator {
+
+    private $_position = 0;
+
+    private readonly array $_items;
+
+    public function __construct($initialItems) {
+        $this->_position = 0;
+        $this->_items = $initialItems;
+    }
+
+    public function rewind(): void {
+        $this->_position = 0;
+    }
+
+    public function current() {
+        return $this->_items[$this->_position];
+    }
+
+    public function key() {
+        return $this->_position;
+    }
+
+    public function next(): void {
+        ++$this->_position;
+    }
+
+    public function valid(): bool {
+        return isset($this->_items[$this->_position]);
+    }
+}
 
 /**
  * Class Mod
@@ -56,7 +88,7 @@ class Mod {
 
     /**
      * 构造函数
-     * @param array $opt index, row, select, where, raw
+     * @param array $opt index, alias, row, select, where, raw
      */
     public function __construct(array $opt = []) {
         // --- 导入数据库连接 ---
@@ -74,11 +106,16 @@ class Mod {
             }
         }
         if (isset($opt['select'])) {
-            $this->_sql->select($opt['select'], static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
+            $this->_sql->select(
+                $opt['select'],
+                static::$_table .
+                ($this->_index !== null ? ('_' . $this->_index) : '') .
+                (isset($opt['alias']) ? ' ' . $opt['alias'] : '')
+            ); 
         }
         if (isset($opt['where'])) {
             $this->_sql->select('*', static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
-            if (static::$_soft && (!isset($opt['raw']) || $opt['raw'] === false)) {
+            if (static::$_soft && (!isset($opt['raw']) || !$opt['raw'])) {
                 if (is_string($opt['where'])) {
                     $opt['where'] = $opt['where'] ? ('(' . $opt['where'] . ') AND ') : '`time_remove` = 0';
                 }
@@ -191,19 +228,14 @@ class Mod {
     /**
      * --- 根据条件移除条目 ---
      * @param string|array $where 筛选条件
-     * @param bool|?string $raw 是否真实，或 index 分表后缀
-     * @param string $index 分表后缀
+     * @param array $opt index, raw, by, limit
      * @return bool|null
      */
-    public static function removeByWhere($where, bool $raw = false, $index = null) {
-        if (!is_bool($raw)) {
-            $index = $raw;
-            $raw = false;
-        }
+    public static function removeByWhere($where, array $opt = []) {
         $sql = Sql::get(Mod::$__pre);
-        if (static::$_soft && !$raw) {
+        if (static::$_soft && (!isset($opt['raw']) || !$opt['raw'])) {
             // --- 软删除 ---
-            $sql->update(static::$_table . ($index !== null ? ('_' . $index) : ''), [
+            $sql->update(static::$_table . (isset($opt['index']) ? ('_' . $opt['index']) : ''), [
                 'time_remove' => time()
             ]);
             if (is_string($where)) {
@@ -215,9 +247,15 @@ class Mod {
         }
         else {
             // --- 真删除 ---
-            $sql->delete(static::$_table . ($index !== null ? ('_' . $index) : ''));
+            $sql->delete(static::$_table . (isset($opt['index']) ? ('_' . $opt['index']) : ''));
         }
         $sql->where($where);
+        if ($opt['by']) {
+            $sql->by($opt['by'][0], isset($opt['by'][1]) ? $opt['by'][1] : 'DESC');
+        }
+        if ($opt['limit']) {
+            $sql->limit($opt['limit'][0], isset($opt['limit'][1]) ? $opt['limit'][1] : 0);
+        }
         $ps = self::$__db->prepare($sql->getSql());
         try {
             $ps->execute($sql->getData());
@@ -225,30 +263,24 @@ class Mod {
         catch (PDOException $e) {
             return false;
         }
-        if ($ps->rowCount() > 0) {
-            return true;
+        $rc = $ps->rowCount();
+        if ($rc > 0) {
+            return $rc;
         }
-        else {
-            return null;
-        }
+        return null;
     }
 
     /**
      * --- 根据条件更新数据 ---
      * @param array $data 要更新的数据
      * @param array|string $where 筛选条件，或 index 分表后缀
-     * @param bool|?string $raw 是否真实
-     * @param string $index 分表后缀
+     * @param array $opt index, raw, by, limit
      * @return bool|null
      */
-    public static function updateByWhere(array $data, $where, bool $raw = false, $index = null) {
-        if (!is_bool($raw)) {
-            $index = $raw;
-            $raw = false;
-        }
+    public static function updateByWhere(array $data, $where, array $opt = []) {
         $sql = Sql::get(Mod::$__pre);
-        $sql->update(static::$_table . ($index !== null ? ('_' . $index) : ''), $data);
-        if (static::$_soft && ($raw === false)) {
+        $sql->update(static::$_table . (isset($opt['index']) ? ('_' . $opt['index']) : ''), $data);
+        if (static::$_soft && (!isset($opt['raw']) || !$opt['raw'])) {
             if (is_string($where)) {
                 $where = '(' . $where . ') AND `time_remove` = 0';
             }
@@ -257,6 +289,12 @@ class Mod {
             }
         }
         $sql->where($where);
+        if (isset($opt['by'])) {
+            $sql->by($opt['by'][0], isset($opt['by'][1]) ? $opt['by'][1] : 'DESC');
+        }
+        if (isset($opt['limit'])) {
+            $sql->limit($opt['limit'][0], isset($opt['limit'][1]) ? $opt['limit'][1] : 0);
+        }
         $ps = self::$__db->prepare($sql->getSql());
         try {
             $ps->execute($sql->getData());
@@ -264,30 +302,24 @@ class Mod {
         catch (PDOException $e) {
             return false;
         }
-        if ($ps->rowCount() > 0) {
-            return true;
+        $rc = $ps->rowCount();
+        if ($rc > 0) {
+            return $rc;
         }
-        else {
-            return null;
-        }
+        return null;
     }
 
     /**
      * --- 根据条件更新数据（仅获取 SQL 对象） ---
      * @param array $data 要更新的数据
      * @param array|string $where 筛选条件
-     * @param bool|?string $raw 是否真实
-     * @param string $index 分表后缀
+     * @param array $opt index, raw, by, limit
      * @return LSql
      */
-    public static function updateByWhereSql(array $data, $where, bool $raw = false, $index = null): LSql {
-        if (!is_bool($raw)) {
-            $index = $raw;
-            $raw = false;
-        }
+    public static function updateByWhereSql(array $data, $where, array $opt = []): LSql {
         $sql = Sql::get(Mod::$__pre);
-        $sql->update(static::$_table . ($index !== null ? ('_' . $index) : ''), $data);
-        if (static::$_soft && ($raw === false)) {
+        $sql->update(static::$_table . (isset($opt['index']) ? ('_' . $opt['index']) : ''), $data);
+        if (static::$_soft && (!isset($opt['raw']) || !$opt['raw'])) {
             if (is_string($where)) {
                 $where = '(' . $where . ') AND `time_remove` = 0';
             }
@@ -296,20 +328,24 @@ class Mod {
             }
         }
         $sql->where($where);
+        if (isset($opt['by'])) {
+            $sql->by($opt['by'][0], isset($opt['by'][1]) ? $opt['by'][1] : 'DESC');
+        }
+        if (isset($opt['limit'])) {
+            $sql->limit($opt['limit'][0], isset($opt['limit'][1]) ? $opt['limit'][1] : 0);
+        }
         return $sql;
     }
 
     /**
      * --- select 自定字段 ---
      * @param string|string[]|string[][] $c 字段字符串或字段数组
-     * @param string $index 分表后缀
+     * @param array $opt index alias
      * @return static
      */
-    public static function select($c, $index = null) {
-        return new static([
-            'select' => $c,
-            'index' => $index
-        ]);
+    public static function select($c, $opt = []) {
+        $opt['select'] = $c;
+        return new static($opt);
     }
 
     /**
@@ -370,34 +406,42 @@ class Mod {
     /**
      * --- 通过 where 条件筛选单条数据 ---
      * @param array|string $s 筛选条件数组或字符串
-     * @param bool|?string $raw 是否包含已被软删除的数据
-     * @param string|string[] $index 分表后缀
-     * @return false|null|static
+     * @param array $opt raw, index, select, array
+     * @return false|null|static|array
      */
-    public static function one($s, $raw = false, $index = null) {
-        if (!$index) {
-            return (new static([
-                'where' => $s,
-                'raw' => $raw
-            ]))->first();
+    public static function one($s, $opt = []) {
+        $opt['where'] = $s;
+        if (!isset($opt['index'])) {
+            $o = new static($opt);
+            return (isset($opt['array']) && $opt['array']) ? $o->firstArray() : $o->first();
         }
-        if (is_string($index)) {
-            $index = [$index];
+        if (is_string($opt['index'])) {
+            $opt['index'] = [$opt['index']];
         }
-        foreach ($index as $item) {
-            $row = (new static([
-                'where' => $s,
-                'raw' => $raw,
-                'index' => $item
-            ]))->first();
-            if ($row) {
-                return $row;
+        foreach ($opt['index'] as $item) {
+            $opt['index'] = $item;
+            $row = (new static($opt));
+            $rowr = (isset($opt['array']) && $opt['array']) ? $row->firstArray() : $row->first();
+            if ($rowr) {
+                return $rowr;
             }
-            if ($row === false) {
+            if ($rowr === false) {
                 return false;
             }
+            // --- 如果是 null 再去下个 index 找一下 ---
         }
         return null;
+    }
+
+    /**
+     * --- 通过 where 条件筛选单条数据返回原生对象 ---
+     * @param array|string $s 筛选条件数组或字符串
+     * @param array $opt raw, index, select
+     * @return false|null|array
+     */
+    public static function oneArray($s, $opt = []) {
+        $opt['array'] = true;
+        return self::one($s, $opt);
     }
 
     /**
@@ -437,6 +481,18 @@ class Mod {
             $primarys[] = $row[self::$_primary];
         }
         return $primarys;
+    }
+
+    /**
+     * --- 将 key val 组成的数据列表转换为原生对象模式 ---
+     * @param this[] $obj 要转换的 kv 数据列表
+     */
+    public static function toArrayByRecord(array $obj): array {
+        $rtn = [];
+        foreach ($obj as $key => $val) {
+            $rtn[$key] = $val->toArray();
+        }
+        return $rtn;
     }
 
     // --- 动态方法 ---
@@ -671,9 +727,10 @@ class Mod {
     /**
      * --- 获取数据库第一个对象 ---
      * @param bool $lock 是否加锁
+     * @param bool $array 是否返回原生对象
      * @return static|false|null
      */
-    public function first($lock = false) {
+    public function first(bool $lock = false, bool $array = false) {
         $this->_sql->limit(1);
         if ($lock) {
             $this->_sql->lock();
@@ -688,6 +745,9 @@ class Mod {
         if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
             return null;
         }
+        if ($array) {
+            return $row;
+        }
         foreach ($row as $k => $v) {
             $this->_data[$k] = $v;
             $this->$k = $v;
@@ -696,9 +756,18 @@ class Mod {
     }
 
     /**
+     * --- 获取数据库第一个原生对象 ---
+     * @param bool $lock 是否加锁
+     * @return array|false|null
+     */
+    public function firstArray(bool $lock = false) {
+        return $this->first($lock, true);
+    }
+
+    /**
      * --- 获取列表 ---
      * @param string|null $key 是否以某个字段为主键
-     * @return false|array
+     * @return false|Rows
      */
     public function all(?string $key = null) {
         $ps = $this->_db->prepare($this->_sql->getSql());
@@ -717,15 +786,40 @@ class Mod {
                 ]);
                 $list[$row[$key]] = $obj;
             }
+            return $list;
         }
-        else {
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            $obj = new static([
+                'row' => $row,
+                'index' => $this->_index
+            ]);
+            $list[] = $obj;
+        }
+        return $list;
+    }
+
+    /**
+     * --- 获取列表（得到的为原生对象或数组，不是模型） ---
+     * @param string|null $key 是否以某个字段为主键
+     * @return false|array
+     */
+    public function allArray(?string $key = null) {
+        $ps = $this->_db->prepare($this->_sql->getSql());
+        try {
+            $ps->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            return false;
+        }
+        $list = [];
+        if ($key) {
             while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-                $obj = new static([
-                    'row' => $row,
-                    'index' => $this->_index
-                ]);
-                $list[] = $obj;
+                $list[$row[$key]] = $row;
             }
+            return $list;
+        }
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            $list[] = $row;
         }
         return $list;
     }

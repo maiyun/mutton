@@ -1,5 +1,8 @@
 {
     "hello": "Hello",
     "copy": "Copy",
-    "test": "The ? test ?."
+    "test": "The ? test ?.",
+    "test2": {
+        "test3": "test4"
+    }
 }

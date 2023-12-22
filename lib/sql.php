@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02, 2023-12-21 13:04:41
  */
 declare(strict_types = 1);
 
@@ -148,7 +148,14 @@ class LSql {
                 $sql .= '(';
                 foreach ($v as $i1 => $v1) {
                     // --- v1 是项目值，如 ['x' => 1, 'y' => 2], 'string', 0 ---
-                    if (is_array($v1) && !isset($v1['x'])) {
+                    if ($v1 === NULL) {
+                        $sql .= 'NULL, ';
+                    }
+                    else if (is_string($v1) || is_int($v1) || is_float($v1)) {
+                        $sql .= '?. ';
+                        $this->_data[] = $v1;
+                    }
+                    else if (is_array($v1) && !isset($v1['x'])) {
                         if (!isset($v1[0][0]) || !isset($v1[0][0]['x'])) {
                             // --- v1: ['POINT(?)', ['20']] ---
                             $sql .= $this->field($v1[0]) . ', ';
@@ -186,7 +193,14 @@ class LSql {
             $values = '';
             foreach ($cs as $k => $v) {
                 $sql .= $this->field($k) . ', ';
-                if (is_array($v) && !isset($v['x'])) {
+                if ($v === NULL) {
+                    $values .= 'NULL, ';
+                }
+                else if (is_string($v) || is_int($v) || is_float($v)) {
+                    $values .= '?, ';
+                    $this->_data[] = $v;
+                }
+                else if (is_array($v) && !isset($v['x'])) {
                    if (!isset($v[0][0]) || !isset($v[0][0]['x'])) {
                         // --- v: ['POINT(?)', ['20']] ---
                         $values .= $this->field($v[0]) . ', ';
@@ -279,6 +293,7 @@ class LSql {
             // --- $c: ['id', 'name'] ---
             foreach ($c as $i) {
                 if (is_array($i)) {
+                    // --- i: ['xx', ['x']] ---
                     $sql .= $this->field($i[0]) . ', ';
                     $this->_data = array_merge($this->_data, $i[1]);
                 }
@@ -519,7 +534,20 @@ class LSql {
         foreach ($s as $k => $v) {
             if (is_int($k) || is_numeric($k)) {
                 // --- 2, 3 ---
-                if (is_array($v[2])) {
+                if ($v[2] === NULL) {
+                    $opera = $v[1];
+                    if ($opera === '!=' || $opera === '!==' || $opera === '<>') {
+                        $opera = 'IS NOT';
+                    }
+                    else if ($opera === '=' || $opera === '==' || $opera === '===') {
+                        $opera = 'IS';
+                    }
+                    else {
+                        $opera = strtoupper($opera);
+                    }
+                    $sql .= $this->field($v[0]) + ' ' . $opera . ' NULL AND ';
+                }
+                else if (is_array($v[2])) {
                     // --- 3 ---
                     $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
                     foreach ($v[2] as $k1 => $v1) {
@@ -560,7 +588,10 @@ class LSql {
                 }
                 else {
                     // --- 1, 4, 6 ---
-                    if (is_string($v) || is_numeric($v)) {
+                    if ($v === NULL) {
+                        $sql .= $this->field($k) + ' IS NULL AND ';
+                    }
+                    else if (is_string($v) || is_numeric($v)) {
                         // --- 1, 6 ---
                         // --- 'city' => 'bj', 'city_in' => '#city_out' ---
                         $isf = $this->_isField($v);

@@ -35,6 +35,7 @@ class Test extends Ctr {
         if ((HOSTNAME === '127.0.0.1' || HOSTNAME === 'localhost') && ($realIp === '172.17.0.1')) {
             $this->_internalUrl = 'http' . (HTTPS ? 's' : '') . '://' . $realIp . URL_BASE;
         }
+        return true;
     }
 
     public function notfound() {
@@ -334,8 +335,8 @@ function postFd() {
             '<a href="' . URL_BASE . 'test">Return</a>'
         ];
 
-        $rtn = $this->_loadLocale($_GET['lang'], 'test');
-        $echo[] = "<pre>\$this->_loadLocale(\$_GET['lang'], 'test');</pre>" . ($rtn ? 'true' : 'false');
+        $r = $this->_loadLocale($_GET['lang'], 'test');
+        $echo[] = "<pre>\$this->_loadLocale(\$_GET['lang'], 'test');</pre>" . ($r ? 'true' : 'false');
 
         $echo[] = "<pre>l('hello')</pre>" . l('hello');
         $echo[] = "<pre>l('copy')</pre>" . l('copy');
@@ -477,6 +478,9 @@ json_encode(\$result);</pre>" . json_encode($result);
 \$ft->save();</pre>";
 
                 $ft = ModTest::find($ft->id);
+                if (!$ft) {
+                    return '';
+                }
 
                 $echo[] = '<table style="width: 100%;">';
 
@@ -587,6 +591,7 @@ CREATE TABLE `m_test_data_0` (
 
         return join('', $echo) . '<br>' . $this->_getEnd();
     }
+
     public function modSplit1() {
         $db = Db::get();
         $db->connect();
@@ -603,6 +608,7 @@ CREATE TABLE `m_test_data_0` (
         ]);
         $test->create();
     }
+
     public function modSplit2() {
         $db = Db::get();
         $db->connect();
@@ -1502,17 +1508,17 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $token = $scan->getToken();
         $echo[] = "<pre>\$scan = Scan::get(\$link, null, [ 'ttl' => 30 ]);
 \$token = \$scan->getToken();</pre>
-token: " . $token . "<br><br>
+token: " . ($token ? $token : 'null') . "<br><br>
 Scan status: <b id=\"status\" style=\"color: red;\">Waiting...</b><br>
 Poll count: <span id=\"count\">0</span>, expiration date: <span id=\"exp\"></span><br><br>
-Simulated scan URL: http://www.test.simu/scan?token=" . $token . " (QR Code can be generated)<br><br>
-<input type=\"button\" value=\"Visit the simulated URL\" onclick=\"this.disabled=true;document.getElementById('url').innerText='http://www.test.simu/scan?token=" . $token . "';visit();\"><br><br>
+Simulated scan URL: http://www.test.simu/scan?token=" . ($token ? $token : 'null') . " (QR Code can be generated)<br><br>
+<input type=\"button\" value=\"Visit the simulated URL\" onclick=\"this.disabled=true;document.getElementById('url').innerText='http://www.test.simu/scan?token=" . ($token ? $token : 'null') . "';visit();\"><br><br>
 <div style=\"border: solid 1px rgba(0,0,0,.3); box-shadow: 0 5px 20px rgba(0, 0, 0, .25); width: 90%; margin: auto;\">
     <div id=\"url\" style=\"background: rgba(0,0,0,.07); border-bottom: solid 1px rgba(0,0,0,.3); padding: 10px;\">about:blank</div>
     <div id=\"content\" style=\"height: 200px; font-size: 16px; display: flex; justify-content: center; align-items: center; flex-direction: column;\"></div>
 </div>
 <script>
-var token = '" . $token . "';
+var token = '" . ($token ? $token : 'null') . "';
 var count = 0;
 function poll() {
     fetch('" . URL_BASE . "test/scan1?s=" . $s . "', {
@@ -1520,7 +1526,7 @@ function poll() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'token=" . $token . "'
+        body: 'token=" . ($token ? $token : 'null') . "'
     }).then(function(r) {
         return r.json();
     }).then(function(j) {
@@ -1547,7 +1553,7 @@ function visit() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'token=" . $token . "'
+        body: 'token=" . ($token ? $token : 'null') . "'
     }).then(function(r) {
         return r.json();
     }).then(function(j) {
@@ -1566,7 +1572,7 @@ function confirm() {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         },
-        body: 'token=" . $token . "'
+        body: 'token=" . ($token ? $token : 'null') . "'
     }).then(function(r) {
         return r.json();
     }).then(function(j) {
@@ -1860,21 +1866,47 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('geo')->values(['name', 'point', 'point2'], [
+                $s = $sql->insert('geo')->values(['name', 'point', 'point2', 'polygon'], [
                     [
-                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
+                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], [
+                            [
+                                [ 'x' => 1, 'y' => 1 ],
+                                [ 'x' => 2, 'y' => 2 ],
+                                [ 'x' => 3, 'y' => 3 ],
+                                [ 'x' => 1, 'y' => 1 ]
+                            ],
+                            [
+                                [ 'x' => 6, 'y' => 1 ],
+                                [ 'x' => 7, 'y' => 2 ],
+                                [ 'x' => 8, 'y' => 3 ],
+                                [ 'x' => 6, 'y' => 1 ]
+                            ]
+                        ]
                     ],
                     [
-                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
+                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], NULL
                     ]
                 ])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point', 'point2'], [
+                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point', 'point2', 'polygon'], [
     [
-        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
+        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], [
+            [
+                [ 'x' => 1, 'y' => 1 ],
+                [ 'x' => 2, 'y' => 2 ],
+                [ 'x' => 3, 'y' => 3 ],
+                [ 'x' => 1, 'y' => 1 ]
+            ],
+            [
+                [ 'x' => 6, 'y' => 1 ],
+                [ 'x' => 7, 'y' => 2 ],
+                [ 'x' => 8, 'y' => 3 ],
+                [ 'x' => 6, 'y' => 1 ]
+            ]
+        ]
     ],
     [
-        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ]
+        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], NULL
     ]
 ]);</pre>
 <b>getSql() :</b> {$s}<br>
@@ -1962,6 +1994,15 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
 
+                // --- update order limit ---
+
+                $s = $sql->update('user', [ 'he' => 'he2' ])->where([ ['birth', '>', '2001'] ])->by('birth')->limit(0, 10)->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->update('user', [ 'he' => 'he2' ])->where([ ['birth', '>', '2001'] ])->by('birth')->limit(0, 10);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd);
+
                 break;
             }
             case 'delete': {
@@ -2033,6 +2074,13 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $echo[] = "<pre>\$sql->delete('user')->where([
     [['MATCH(name_sc, name_tc) AGAINST(?)', ['search']], '>=', '0.9']
 ]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+
+                $s = $sql->select('*', 'user')->where(['city' => 'la', 'area' => null, ['age', '>', '10'], ['soft', '<>', null], ['ware', 'IS', null]])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->select('*', 'user')->where(['city' => 'la', 'area' => null, ['age', '>', '10'], ['soft', '<>', null], ['ware', 'IS', null]]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
@@ -2163,8 +2211,8 @@ foreach (\$files as \$file) {
 \$newSrv = \$cons->find(\$file);</pre>";
         $echo[] = "<table style=\"width: 100%;\">
     <tr><th>File</th><td>$file</td></tr>
-    <tr><th>Old</th><td>$oldSrv</td></tr>
-    <tr><th>New</th><td>$newSrv</td></tr>
+    <tr><th>Old</th><td>" . ($oldSrv ? $oldSrv : 'null') .  "</td></tr>
+    <tr><th>New</th><td>" . ($newSrv ? $newSrv : 'null') . "</td></tr>
     <tr><th>State</th><td>" . (($oldSrv === $newSrv) ? '<b>Hit</b>' : 'Miss') . "</td></tr>
 </table>";
 
