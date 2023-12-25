@@ -152,7 +152,7 @@ class LSql {
                         $sql .= 'NULL, ';
                     }
                     else if (is_string($v1) || is_int($v1) || is_float($v1)) {
-                        $sql .= '?. ';
+                        $sql .= '?, ';
                         $this->_data[] = $v1;
                     }
                     else if (is_array($v1) && !isset($v1['x'])) {
@@ -163,7 +163,7 @@ class LSql {
                                 $this->_data = array_merge($this->_data, $v1[1]);
                             }
                         }
-                        else {
+                        else if (isset($v1[0][0]['y'])) {
                             // --- v1: [[['x' => 1, 'y' => 2], [ ... ]], [[ ... ], [ ... ]]] ---
                             $sql .= 'ST_POLYGONFROMTEXT(?), ';
                             $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
@@ -172,11 +172,23 @@ class LSql {
                                 }, $item)) . ')';
                             }, $v1)) . ')';
                         }
+                        else {
+                            // --- v1: json ---
+                            $sql .= '?, ';
+                            $this->_data[] = json_encode($v1);
+                        }
                     }
                     else if (is_array($v1) && isset($v1['x'])) {
-                        // --- v1: ['x' => 1, 'y' => 2] ---
-                        $sql .= 'ST_POINTFROMTEXT(?), ';
-                        $this->_data[] = 'POINT(' . $v1['x'] . ' ' . $v1['y'] . ')';
+                        if (isset($v1['y'])) {
+                            // --- v1: ['x' => 1, 'y' => 2] ---
+                            $sql .= 'ST_POINTFROMTEXT(?), ';
+                            $this->_data[] = 'POINT(' . $v1['x'] . ' ' . $v1['y'] . ')';
+                        }
+                        else {
+                            // --- v1: json ---
+                            $sql .= '?, ';
+                            $this->_data[] = json_encode($v1);
+                        }
                     }
                     else {
                         $sql .= '?, ';
@@ -208,7 +220,7 @@ class LSql {
                             $this->_data = array_merge($this->_data, $v[1]);
                         }
                     }
-                    else {
+                    else if (isset($v[0][0]['y'])) {
                         // --- v: [[['x' => 1, 'y' => 2], [ ... ]], [[ ... ], [ ... ]]] ---
                         $values .= 'ST_POLYGONFROMTEXT(?), ';
                         $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
@@ -217,11 +229,23 @@ class LSql {
                             }, $item)) . ')';
                         }, $v)) . ')';
                     }
+                    else {
+                        // --- v: json ---
+                        $values .= '?, ';
+                        $this->_data[] = json_encode($v);
+                    }
                 }
                 else if (is_array($v) && isset($v['x'])) {
-                    // --- v: ['x' => 1, 'y' => 2] ---
-                    $values .= 'ST_POINTFROMTEXT(?), ';
-                    $this->_data[] = 'POINT(' . $v['x'] . ' ' . $v['y'] . ')';
+                    if (isset($v['y'])) {
+                        // --- v: ['x' => 1, 'y' => 2] ---
+                        $values .= 'ST_POINTFROMTEXT(?), ';
+                        $this->_data[] = 'POINT(' . $v['x'] . ' ' . $v['y'] . ')';
+                    }
+                    else {
+                        // --- v: json ---
+                        $values .= '?,';
+                        $this->_data[] = json_encode($v);
+                    }
                 }
                 else {
                     $values .= '?, ';
@@ -339,7 +363,8 @@ class LSql {
             'type' => ['type3']         // 4
             'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']],     // 5
             'point' => [ 'x' => 0, 'y' => 0 ],  // 6
-            'polygon' => [ [ [ 'x' => 0, 'y' => 0 ], [ ... ] ], [ ... ] ]   // 7
+            'polygon' => [ [ [ 'x' => 0, 'y' => 0 ], [ ... ] ], [ ... ] ],   // 7
+            'json' => [ 'a' => 1, 'b' => [ 'c' => 2 ] ]        // 8
         ]
         */
         $sql = '';
@@ -366,7 +391,7 @@ class LSql {
                             $this->_data = array_merge($this->_data, $v[1]);
                         }
                     }
-                    else {
+                    else if (isset($v[0][0]['y'])) {
                         // --- 7 ---
                         $sql .= 'ST_POLYGONFROMTEXT(?), ';
                         $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
@@ -375,11 +400,23 @@ class LSql {
                             }, $item)) . ')';
                         }, $v)) . ')';
                     }
+                    else {
+                        // --- 8: json ---
+                        $sql .= '?, ';
+                        $this->_data[] = json_encode($v);
+                    }
                 }
                 else if (is_array($v) && isset($v['x'])) {
-                    // --- v: ['x' => 1, 'y' => 2] ---
-                    $sql .= 'ST_POINTFROMTEXT(?), ';
-                    $this->_data[] = 'POINT(' . $v['x'] . ' ' . $v['y'] . ')';
+                    if (isset($v['y'])) {
+                        // --- 6: v: ['x' => 1, 'y' => 2] ---
+                        $sql .= 'ST_POINTFROMTEXT(?), ';
+                        $this->_data[] = 'POINT(' . $v['x'] . ' ' . $v['y'] . ')';
+                    }
+                    else {
+                        // --- v: json ---
+                        $sql .= '?, ';
+                        $this->_data[] = json_encode($v);
+                    }
                 }
                 else {
                     // --- 2, 3 ---

@@ -30,11 +30,11 @@ class Rows implements \Iterator {
         $this->_position = 0;
     }
 
-    public function current() {
+    public function current(): mixed {
         return $this->_items[$this->_position];
     }
 
-    public function key() {
+    public function key(): int {
         return $this->_position;
     }
 

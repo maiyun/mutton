@@ -394,6 +394,7 @@ function postFd() {
                         [ 'x' => 1, 'y' => 1 ]
                     ]
                 ],
+                'json' => [ 'x' => [ 'y' => 'abc' ] ],
                 'time_add' => $time
             ]);
             $result = $test->create();
@@ -411,6 +412,7 @@ function postFd() {
             [ 'x' => 1, 'y' => 1 ]
         ]
     ],
+    'json' => [ 'x' => [ 'y' => 'abc' ] ],
     'time_add' => $time
 ]);
 \$result = \$test->create();
@@ -460,6 +462,7 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
                 $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
                 $echo[] = '<tr><th>polygon</th><td>' . json_encode($ft->polygon) . '</td></tr>';
+                $echo[] = '<tr><th>json</th><td>' . json_encode($ft->json) . '</td></tr>';
                 $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
 
                 $echo[] = '</table>';
@@ -488,6 +491,7 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
                 $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
                 $echo[] = '<tr><th>polygon</th><td>' . json_encode($ft->polygon) . '</td></tr>';
+                $echo[] = '<tr><th>json</th><td>' . json_encode($ft->json) . '</td></tr>';
                 $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
 
                 $echo[] = '</table>';
@@ -506,7 +510,8 @@ json_encode(\$result);</pre>" . json_encode($result);
                             [ 'x' => 7, 'y' => 3 ],
                             [ 'x' => 5, 'y' => 1 ]
                         ]
-                    ]
+                    ],
+                    'json' => [ 'x' => [ 'y' => 'def' ] ]
                 ]);
                 $ft->save();
                 $ft->refresh();
@@ -522,7 +527,8 @@ json_encode(\$result);</pre>" . json_encode($result);
             [ 'x' => 7, 'y' => 3 ],
             [ 'x' => 5, 'y' => 1 ]
         ]
-    ]
+    ],
+    'json' => [ 'x' => [ 'y' => 'def' ] ]
 ]);
 \$ft->save();
 \$ft->refresh();</pre>";
@@ -533,6 +539,7 @@ json_encode(\$result);</pre>" . json_encode($result);
                 $echo[] = '<tr><th>token</th><td>' . $ft->token . '</td></tr>';
                 $echo[] = '<tr><th>point</th><td>' . json_encode($ft->point) . '</td></tr>';
                 $echo[] = '<tr><th>polygon</th><td>' . json_encode($ft->polygon) . '</td></tr>';
+                $echo[] = '<tr><th>json</th><td>' . json_encode($ft->json) . '</td></tr>';
                 $echo[] = '<tr><th>time_add</th><td>' . $ft->time_add . '</td></tr>';
 
                 $echo[] = '</table>';
@@ -1866,9 +1873,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . '<hr>';
 
-                $s = $sql->insert('geo')->values(['name', 'point', 'point2', 'polygon'], [
+                $s = $sql->insert('geo')->values(['name', 'point', 'point2', 'polygon', 'json'], [
                     [
-                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], [
+                        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625015)']], [ 'x' => 1, 'y' => 1 ], [
                             [
                                 [ 'x' => 1, 'y' => 1 ],
                                 [ 'x' => 2, 'y' => 2 ],
@@ -1881,16 +1888,17 @@ Result:<pre id=\"result\">Nothing.</pre>";
                                 [ 'x' => 8, 'y' => 3 ],
                                 [ 'x' => 6, 'y' => 1 ]
                             ]
-                        ]
+                        ],
+                        [ 'x' => [ 'y' => 'ghi' ] ]
                     ],
                     [
-                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], NULL
+                        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625016)']], [ 'x' => 1, 'y' => 1 ], NULL, NULL
                     ]
                 ])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point', 'point2', 'polygon'], [
+                $echo[] = "<pre>\$sql->insert('geo')->values(['name', 'point', 'point2', 'polygon', 'json'], [
     [
-        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], [
+        'POINT A', ['ST_POINTFROMTEXT(?)', ['POINT(122.147775 30.625015)']], [ 'x' => 1, 'y' => 1 ], [
             [
                 [ 'x' => 1, 'y' => 1 ],
                 [ 'x' => 2, 'y' => 2 ],
@@ -1903,10 +1911,11 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 [ 'x' => 8, 'y' => 3 ],
                 [ 'x' => 6, 'y' => 1 ]
             ]
-        ]
+        ],
+        [ 'x' => [ 'y' => 'ghi' ] ]
     ],
     [
-        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625014)']], [ 'x' => 1, 'y' => 1 ], NULL
+        'POINT B', ['ST_POINTFROMTEXT(?)', ['POINT(123.147775 30.625016)']], [ 'x' => 1, 'y' => 1 ], NULL, NULL
     ]
 ]);</pre>
 <b>getSql() :</b> {$s}<br>

@@ -28,6 +28,14 @@ class Stmt {
         if (!is_string($val)) {
             return;
         }
+        if ($val[0] === '{' && $val[strlen($val) - 1] === '}') {
+            // --- 可能是 json ---
+            $v = json_decode($val);
+            if ($v) {
+                $row[$key] = $v;
+                return;
+            }
+        }
         $is = substr($val, 3, 3);
         if (!$is) {
             return;
@@ -86,6 +94,7 @@ class Stmt {
             return null;
         }
         foreach ($obj as $key => $val) {
+            var_dump('x2', $this->_stmt->getColumnMeta($key));
             $this->_parseVal($obj, $key);
         }
         return $obj;
