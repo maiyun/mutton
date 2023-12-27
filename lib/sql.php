@@ -582,7 +582,7 @@ class LSql {
                     else {
                         $opera = strtoupper($opera);
                     }
-                    $sql .= $this->field($v[0]) + ' ' . $opera . ' NULL AND ';
+                    $sql .= $this->field($v[0]) . ' ' . $opera . ' NULL AND ';
                 }
                 else if (is_array($v[2])) {
                     // --- 3 ---
@@ -626,7 +626,7 @@ class LSql {
                 else {
                     // --- 1, 4, 6 ---
                     if ($v === NULL) {
-                        $sql .= $this->field($k) + ' IS NULL AND ';
+                        $sql .= $this->field($k) . ' IS NULL AND ';
                     }
                     else if (is_string($v) || is_numeric($v)) {
                         // --- 1, 6 ---
