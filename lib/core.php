@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2022-08-27 02:13:04
- * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07, 2023-4-10 17:56:12
+ * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07, 2023-4-10 17:56:12, 2023-12-27 15:50:38
  */
 declare(strict_types = 1);
 
@@ -14,11 +14,19 @@ class Core {
      * --- 设置 cookie ---
      * @param string $name 名
      * @param string $value 值
-     * @param array $opt 选项 ttl, path, domain, ssl, httponly
+     * @param array $opt 选项 ttl, path, domain, ssl, httponly, 'samesite'
      */
     public static function setCookie(string $name, string $value, array $opt = []): void {
         $ttl = !isset($opt['ttl']) ? 0 : $opt['ttl'];
-        setcookie($name, $value, time() + $ttl, isset($opt['path']) ? $opt['path'] : "/", isset($opt['domain']) ? $opt['domain'] : "", isset($opt['ssl']) ? $opt['ssl'] : true, isset($opt['httponly']) ? $opt['httponly'] : true);
+        $opt = [
+            'expires' => time() + $ttl,
+            'path' => isset($opt['path']) ? $opt['path'] : '/',
+            'domain' => isset($opt['domain']) ? $opt['domain'] : '',
+            'secure' => isset($opt['ssl']) ? $opt['ssl'] : true,
+            'httponly' => isset($opt['httponly']) ? $opt['httponly'] : true,
+            'samesite' => isset($opt['samesite']) ? $opt['samesite'] : 'None'
+        ];
+        setcookie($name, $value, $opt);
     }
 
     /**

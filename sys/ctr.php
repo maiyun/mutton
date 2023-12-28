@@ -303,7 +303,14 @@ class Ctr {
         if (!isset($_COOKIE['XSRF-TOKEN'])) {
             $xsrf = Core::random(16, Core::RANDOM_LUN);
             $this->_xsrf = $xsrf;
-            setcookie('XSRF-TOKEN', $xsrf, 0, '/', '', false, true);
+            setcookie('XSRF-TOKEN', $xsrf, [
+                'expires' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => false,
+                'httponly' => true,
+                'samesite' => 'None'
+            ]);
             $_COOKIE['XSRF-TOKEN'] = $xsrf;
         }
         else {
@@ -465,6 +472,20 @@ class Ctr {
     protected function _getLocale(): string {
         global $_locale;
         return $_locale;
+    }
+
+    /**
+     * --- 开启跨域请求 ---
+     * 返回 true 接续执行，返回 false 需要中断用户本次访问（options请求）
+     */
+    protected function _cross(): bool {
+        header('access-control-allow-origin: *');
+        header('access-control-allow-headers: *');
+        if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+            header('access-control-max-age: 3600');
+            return false;
+        }
+        return true;
     }
 
     /**
