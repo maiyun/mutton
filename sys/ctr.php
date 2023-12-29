@@ -481,6 +481,7 @@ class Ctr {
     protected function _cross(): bool {
         header('access-control-allow-origin: *');
         header('access-control-allow-headers: *');
+        header('access-control-allow-methods: *');
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
             header('access-control-max-age: 3600');
             return false;

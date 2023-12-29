@@ -20,7 +20,6 @@ use mod\Mod;
 use mod\Test as ModTest;
 use mod\TestData;
 use PDO;
-use PDOStatement;
 use sys\Ctr;
 
 class Test extends Ctr {
@@ -28,7 +27,7 @@ class Test extends Ctr {
     private $_internalUrl = URL_FULL;
 
     public function onLoad() {
-        if (HOSTNAME !== '127.0.0.1' && HOSTNAME !== '172.17.0.1' && HOSTNAME !== 'local-test.brc-app.com' && substr(HOSTNAME, 0, 8) !== '192.168.') {
+        if (HOSTNAME !== '127.0.0.1' && HOSTNAME !== '172.17.0.1' && HOSTNAME !== 'localhost' && HOSTNAME !== 'local-test.brc-app.com' && substr(HOSTNAME, 0, 8) !== '192.168.') {
             return [0, 'Please use 127.0.0.1 to access the file (' . HOST . ').'];
         }
         $realIp = Core::realIP();
@@ -96,6 +95,7 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/ctr-locale">View "test/ctr-locale"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-cachettl">View "test/ctr-cachettl"</a>',
             '<br><a href="' . URL_BASE . 'test/ctr-httpcode">View "test/ctr-httpcode"</a>',
+            '<br><a href="' . URL_BASE . 'test/ctr-cross">View "test/ctr-cross"</a>',
 
             '<br><br><b>Middle:</b>',
             '<br><br><a href="' . URL_BASE . 'test/middle">View "test/middle"</a>',
@@ -353,6 +353,22 @@ function postFd() {
     public function ctrHttpcode() {
         $this->_httpCode = 404;
         return 'This page is a custom httpcode (404).';
+    }
+
+    public function ctrCross() {
+        return "<input type=\"button\" value=\"Fetch localhost\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('http://localhost" . URL_BASE . "test/ctr-cross1').then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;}).catch(()=>{document.getElementById('result').innerText='Failed.';});\">
+<input type='button' value=\"Fetch localhost with cross\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('http://localhost" . URL_BASE . "test/ctr-cross2').then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\">
+<input type='button' value=\"Fetch local-test.brc-app.com with cross\" style=\"margin-left: 10px;\" onclick=\"document.getElementById('result').innerText='Waiting...';fetch('http://local-test.brc-app.com" . URL_BASE . "test/ctr-cross2').then(function(r){return r.text();}).then(function(t){document.getElementById('result').innerText=t;});\"><br><br>
+Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
+    }
+    public function ctrCross1() {
+        return [1, 'value' => 'done'];
+    }
+    public function ctrCross2() {
+        if (!$this->_cross()) {
+            return [0];
+        }
+        return [1, 'value' => 'done'];
     }
 
     public function modTest() {
