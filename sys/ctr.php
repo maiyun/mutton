@@ -308,8 +308,7 @@ class Ctr {
                 'path' => '/',
                 'domain' => '',
                 'secure' => false,
-                'httponly' => true,
-                'samesite' => 'None'
+                'httponly' => true
             ]);
             $_COOKIE['XSRF-TOKEN'] = $xsrf;
         }

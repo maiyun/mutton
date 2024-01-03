@@ -14,7 +14,7 @@ class Core {
      * --- 设置 cookie ---
      * @param string $name 名
      * @param string $value 值
-     * @param array $opt 选项 ttl, path, domain, ssl, httponly, 'samesite'
+     * @param array $opt 选项 ttl, path, domain, ssl, httponly, samesite
      */
     public static function setCookie(string $name, string $value, array $opt = []): void {
         $ttl = !isset($opt['ttl']) ? 0 : $opt['ttl'];
@@ -23,9 +23,11 @@ class Core {
             'path' => isset($opt['path']) ? $opt['path'] : '/',
             'domain' => isset($opt['domain']) ? $opt['domain'] : '',
             'secure' => isset($opt['ssl']) ? $opt['ssl'] : true,
-            'httponly' => isset($opt['httponly']) ? $opt['httponly'] : true,
-            'samesite' => isset($opt['samesite']) ? $opt['samesite'] : 'None'
+            'httponly' => isset($opt['httponly']) ? $opt['httponly'] : true
         ];
+        if (isset($opt['samesite'])) {
+            $opt['samesite'] = $opt['samesite'];
+        }
         setcookie($name, $value, $opt);
     }
 

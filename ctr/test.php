@@ -142,6 +142,7 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/net-reuse">View "test/net-reuse"</a>',
             '<br><a href="' . URL_BASE . 'test/net-error">View "test/net-error"</a>',
             '<br><a href="' . URL_BASE . 'test/net-hosts">View "test/net-hosts"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-rproxy/dist/core.js">View "test/net-rproxy/dist/core.js"</a> <a href="' . URL_BASE . 'test/net-rproxy/package.json">View "package.json"</a>',
 
             '<br><br><b>Scan</b>',
             '<br><br><a href="' . URL_BASE . 'test/scan?s=db">View "test/scan?s=db"</a>',
@@ -1210,8 +1211,8 @@ while (true) {
     public function net() {
         $echo = [];
 
-        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');
-        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json');</pre>
+        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json');
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json');</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
 content: <pre>" . $res->content . "</pre>
 error: " . json_encode($res->error) . "<br>
@@ -1391,11 +1392,11 @@ setcookie('test10', 'httponly', \$_SERVER['REQUEST_TIME'] + 60, '', '', false, t
     public function netSave() {
         $echo = [];
 
-        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json', [
+        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', [
             'follow' => 5,
             'save' => LOG_PATH . 'test-must-remove.json'
         ]);
-        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt/package.json', [
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', [
     'follow' => 5,
     'save' => LOG_PATH . 'test-must-remove.json'
 ]);</pre>
@@ -1517,6 +1518,15 @@ errno: " . json_encode($res->errno) . "<br>
 info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
 
         return join('', $echo) . $this->_getEnd();
+    }
+
+    public function netRproxy() {
+        if (Net::rproxy($this, [
+            'test/net-rproxy/' => 'https://cdn.jsdelivr.net/npm/deskrt@2.0.10/'
+        ])) {
+            return true;
+        }
+        return 'Nothing';
     }
 
     public function scan() {

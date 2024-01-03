@@ -3,7 +3,7 @@
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/10/26 14:23
  * CA: https://curl.haxx.se/ca/cacert.pem
- * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-25 20:30:12, 2022-08-29 21:12:09
+ * Last: 2019-3-13 17:33:39, 2019-12-28 23:48:06, 2020-3-15 16:07:08, 2020-4-11 22:57:46, 2022-3-25 20:30:12, 2022-08-29 21:12:09, 2024-1-1 22:33:24
  */
 declare(strict_types = 1);
 
@@ -12,6 +12,7 @@ namespace lib;
 use CURLFile;
 use lib\Net\Request;
 use lib\Net\Response;
+use sys\Ctr;
 
 use function sys\log;
 
@@ -564,6 +565,95 @@ class Net {
                 unset($cookie[$key]);
             }
         }
+    }
+
+    /**
+     * --- 发起反向代理转发 ---
+     * @param array $route 路由映射（不以 / 开头）
+     * @param array $opt 配置
+     */
+    public static function rproxy(
+        Ctr $ctr,
+        array $route,
+        array $opt = []
+    ): bool {
+        $path = PATH . (QS ? '?' . QS : '');
+        foreach ($route as $key => $routev) {
+            if (substr($path, 0, strlen($key)) !== $key) {
+                continue;
+            }
+            // --- 找到了，做转发 ---
+            $lpath = substr($path, strlen($key));
+            $opt['method'] = $_SERVER['REQUEST_METHOD'];
+            /** --- 不代理的 header  --- */
+            $continueHeaders = ['host', 'connection', 'http-version', 'http-code', 'http-url'];
+            if (!isset($opt['headers'])) {
+                $opt['headers'] = [];
+            }
+            $rawheaders = getallheaders();
+            $headers = [];
+            foreach ($rawheaders as $h => $header) {
+                $headers[strtolower($h)] = $header;
+            }
+            foreach ($headers as $h => $header) {
+                if (in_array($h, $continueHeaders)) {
+                    continue;
+                }
+                if (strpos($h, ':') !== false || strpos($h, '(') !== false) {
+                    continue;
+                }
+                $opt['headers'][$h] = $header;
+            }
+            // --- 发起请求 ---
+            $data = $ctr->getPrototype('_input');
+            if (strpos($headers['content-type'], 'form-data') !== false) {
+                $data = [];
+                // --- 字符串 ---
+                foreach ($_POST as $key => $val) {
+                    if (is_string($val)) {
+                        $data[$key] = $val;
+                    }
+                    else if (is_array($val)) {
+                        $data[$key] = [];
+                        foreach ($val as $key1 => $val1) {
+                            $data[$key][$key1] = $val1;
+                        }
+                    }
+                }
+                // --- 文件 ---
+                foreach ($_FILES as $key => $val) {
+                    if (isset($val['name'])) {
+                        $data[$key] = new CURLFile($val['tmp_name'], $val['type'], $val['name']);
+                    }
+                    else {
+                        $data[$key] = [];
+                        foreach ($val as $key1 => $val1) {
+                            $data[$key][$key1] = new CURLFile($val1['tmp_name'], $val1['type'], $val1['name']);
+                        }
+                    }
+                }
+            }
+            $rres = self::request($routev . $lpath, $data, $opt);
+            if ($rres->error) {
+                return false;
+            }
+            foreach ($rres->headers as $h => $v) {
+                if (in_array($h, $continueHeaders)) {
+                    continue;
+                }
+                if (strpos($h, ':') !== false || strpos($h, '(') !== false) {
+                    continue;
+                }
+                if ($h === 'content-encoding') {
+                    continue;
+                }
+                header($h . ': ' . $v);
+            }
+            http_response_code($rres->headers['http-code']);
+            echo $rres->content;
+            return true;
+        }
+        return false;
     }
 
 }
