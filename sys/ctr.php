@@ -85,6 +85,15 @@ class Ctr {
     }
 
     /**
+     * --- 整个结束前会执行本方法，可重写此方法对输出结果再处理一次 ---
+     * @param $rtn 之前用户的输出结果
+     * @return bool|array|string|null
+     */
+    public function onUnload($rtn) {
+        return $rtn;
+    }
+
+    /**
      * --- 获取截止当前时间的总运行时间 ---
      * @param bool $ms 为 true 为毫秒，否则为秒
      * @return float

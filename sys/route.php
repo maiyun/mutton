@@ -217,6 +217,8 @@ class Route {
             // --- 执行 action ---
             if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
+                $rtn = $ctr->onUnload($rtn);
+                $rtn = $middle->onUnload($rtn);
             }
             // --- 获取 ctr 设置的 cache 和 hcode ---
             $cacheTTL = $ctr->getPrototype('_cacheTTL');

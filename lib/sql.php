@@ -453,10 +453,11 @@ class LSql {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $type 类型
+     * @param string $suf 表后缀
      * @return LSql
      */
-    public function join(string $f, array $s = [], $type = 'INNER'): LSql {
-        $sql = ' ' . $type . ' JOIN ' . $this->field($f, $this->_pre);
+    public function join(string $f, array $s = [], string $type = 'INNER', string $suf = ''): LSql {
+        $sql = ' ' . $type . ' JOIN ' . $this->field($f, $this->_pre, $suf ? ('#' . $suf) : '');
         if (count($s)) {
             $sql .= ' ON ' . $this->_whereSub($s);
         }
@@ -468,50 +469,55 @@ class LSql {
      * --- left join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $suf 表后缀
      * @return LSql
      */
-    public function leftJoin(string $f, array $s = []): LSql {
-        return $this->join($f, $s, 'LEFT');
+    public function leftJoin(string $f, array $s = [], string $suf = ''): LSql {
+        return $this->join($f, $s, 'LEFT', $suf);
     }
 
     /**
      * --- right join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $suf 表后缀
      * @return LSql
      */
-    public function rightJoin(string $f, array $s = []): LSql {
-        return $this->join($f, $s, 'RIGHT');
+    public function rightJoin(string $f, array $s = [], string $suf = ''): LSql {
+        return $this->join($f, $s, 'RIGHT', $suf);
     }
 
     /**
      * --- inner join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $suf 表后缀
      * @return LSql
      */
-    public function innerJoin(string $f, array $s = []): LSql {
-        return $this->join($f, $s);
+    public function innerJoin(string $f, array $s = [], string $suf = ''): LSql {
+        return $this->join($f, $s, $suf);
     }
 
     /**
      * --- full join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $suf 表后缀
      * @return LSql
      */
-    public function fullJoin(string $f, array $s = []): LSql {
-        return $this->join($f, $s, 'FULL');
+    public function fullJoin(string $f, array $s = [], string $suf = ''): LSql {
+        return $this->join($f, $s, 'FULL', $suf);
     }
 
     /**
      * --- cross join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $suf 表后缀
      * @return LSql
      */
-    public function crossJoin(string $f, array $s = []): LSql {
-        return $this->join($f, $s, 'CROSS');
+    public function crossJoin(string $f, array $s = [], string $suf = ''): LSql {
+        return $this->join($f, $s, 'CROSS', $suf);
     }
 
     /**
@@ -781,9 +787,10 @@ class LSql {
      * --- 对字段进行包裹 ---
      * @param string|int|float|mixed[] $str
      * @param string $pre 表前缀，仅请在 field 表名时倒入前缀
+     * @param string $suf 表后缀，仅请在 field 表名时倒入后缀，前面加 # 代表要强制 AS
      * @return string
      */
-    public function field($str, string $pre = ''): string {
+    public function field($str, string $pre = '', string $suf = ''): string {
         if (is_array($str)) {
             $this->_data = array_merge($this->_data, $str[1]);
             return $this->field($str[0]);
@@ -794,6 +801,13 @@ class LSql {
         $str = preg_replace('/([(,]) +/', '$1 ', $str);
         $str = preg_replace('/["\']/', '', $str);   // --- 去除引号 ---
         $str = preg_replace('/(\W)(JOIN|WHERE|OR|AND|UNION)(\W)/i', '$1$3', $str);
+        // --- 先判断 suf 强制性 AS ---
+        $sufAs = false;
+        if ($suf && ($suf[0] === '#')) {
+            // --- 强制 AS ---
+            $suf = substr($suf, 1);
+            $sufAs = true;
+        }
         // --- 先判断有没有别名（也就是 as） ---
         $loStr = strtolower($str);
         $asPos = strpos($loStr, ' as ');
@@ -821,7 +835,7 @@ class LSql {
             $left = substr($str, 0, $asPos);
             $right = substr($str, $asPos + 4);
         }
-        if ($right !== '') {
+        if ($right) {
             // --- 处理右侧 ---
             if ($right[0] === '`') {
                 $right = '`' . $pre . substr($right, 1);
@@ -830,6 +844,13 @@ class LSql {
                 $right = '`' . $pre . $right . '`';
             }
             $right = ' AS ' . $right;
+        }
+        else {
+            // --- 没有右侧 ---
+            if ($sufAs) {
+                // --- 强制 AS ---
+                $right = ' AS ' . $this->field($left, $pre);
+            }
         }
         // --- 处理 left ---
         if (preg_match('/^[\w`_.*]+$/', $left)) {
@@ -842,15 +863,16 @@ class LSql {
             }
             if (!isset($l[1])) {
                 // --- xxx ---
-                return '`' . $pre . $l[0] . '`' . $right;
+                return '`' . $pre . $l[0] . $suf . '`' . $right;
             }
             // --- x.xxx ---
+            // --- 只有在此模式才知道 . 前面的一定是表名，因此自动加 sql 级的 _pre ---
             $w = $l[1] === '*' ? '*' : ($l[1][0] === '`' ? $l[1] : ('`' . $l[1] . '`'));
-            return '`' . $this->_pre . $l[0] . '`.' . $w . $right;
+            return '`' . $this->_pre . $l[0] . $suf . '`.' . $w . $right;
         }
         else {
-            return preg_replace_callback('/([(, ])([a-zA-Z`_][\w`_.]*)(?=[), ])/', function ($matches) use ($pre) {
-                return $matches[1] . $this->field($matches[2], $pre);
+            return preg_replace_callback('/([(, ])([a-zA-Z`_][\w`_.]*)(?=[), ])/', function ($matches) use ($pre, $suf) {
+                return $matches[1] . $this->field($matches[2], $pre, $suf);
             }, $left) . $right;
         }
     }

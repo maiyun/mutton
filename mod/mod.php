@@ -271,6 +271,39 @@ class Mod {
     }
 
     /**
+     * --- 根据条件移除条目（仅获取 SQL 对象） ---
+     * @param string|array $where 筛选条件
+     * @param array $opt index, raw, by, limit
+     */
+    public static function removeByWhereSql($where, array $opt = []): LSql {
+        $sql = Sql::get(Mod::$__pre);
+        if (static::$_soft && (!isset($opt['raw']) || !$opt['raw'])) {
+            // --- 软删除 ---
+            $sql->update(static::$_table . (isset($opt['index']) ? ('_' . $opt['index']) : ''), [
+                'time_remove' => time()
+            ]);
+            if (is_string($where)) {
+                $where = '(' . $where . ') AND `time_remove` = 0';
+            }
+            else {
+                $where['time_remove'] = '0';
+            }
+        }
+        else {
+            // --- 真删除 ---
+            $sql->delete(static::$_table . (isset($opt['index']) ? ('_' . $opt['index']) : ''));
+        }
+        $sql->where($where);
+        if ($opt['by']) {
+            $sql->by($opt['by'][0], isset($opt['by'][1]) ? $opt['by'][1] : 'DESC');
+        }
+        if ($opt['limit']) {
+            $sql->limit($opt['limit'][0], isset($opt['limit'][1]) ? $opt['limit'][1] : 0);
+        }
+        return $sql;
+    }
+
+    /**
      * --- 根据条件更新数据 ---
      * @param array $data 要更新的数据
      * @param array|string $where 筛选条件，或 index 分表后缀
@@ -314,7 +347,6 @@ class Mod {
      * @param array $data 要更新的数据
      * @param array|string $where 筛选条件
      * @param array $opt index, raw, by, limit
-     * @return LSql
      */
     public static function updateByWhereSql(array $data, $where, array $opt = []): LSql {
         $sql = Sql::get(Mod::$__pre);
@@ -909,10 +941,11 @@ class Mod {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $type 类型
+     * @param string $index 给本表增加 index 分表项
      * @return static
      */
-    public function join(string $f, array $s = [], $type = 'INNER') {
-        $this->_sql->join($f, $s, $type);
+    public function join(string $f, array $s = [], $type = 'INNER', string $index = '') {
+        $this->_sql->join($f, $s, $type, $index ? '_' + $index : '');
         return $this;
     }
 
@@ -920,10 +953,11 @@ class Mod {
      * --- left join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $index 给本表增加 index 分表项
      * @return static
      */
-    public function leftJoin(string $f, array $s = []) {
-        $this->_sql->leftJoin($f, $s);
+    public function leftJoin(string $f, array $s = [], string $index = '') {
+        $this->_sql->leftJoin($f, $s, $index ? '_' + $index : '');
         return $this;
     }
 
@@ -931,10 +965,11 @@ class Mod {
      * --- right join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $index 给本表增加 index 分表项
      * @return static
      */
-    public function rightJoin(string $f, array $s = []) {
-        $this->_sql->rightJoin($f, $s);
+    public function rightJoin(string $f, array $s = [], string $index = '') {
+        $this->_sql->rightJoin($f, $s, $index ? '_' + $index : '');
         return $this;
     }
 
@@ -942,10 +977,11 @@ class Mod {
      * --- inner join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $index 给本表增加 index 分表项
      * @return static
      */
-    public function innerJoin(string $f, array $s = []) {
-        $this->_sql->innerJoin($f, $s);
+    public function innerJoin(string $f, array $s = [], string $index = '') {
+        $this->_sql->innerJoin($f, $s, $index ? '_' + $index : '');
         return $this;
     }
 
@@ -953,10 +989,11 @@ class Mod {
      * --- full join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $index 给本表增加 index 分表项
      * @return static
      */
-    public function fullJoin(string $f, array $s = []) {
-        $this->_sql->fullJoin($f, $s);
+    public function fullJoin(string $f, array $s = [], string $index = '') {
+        $this->_sql->fullJoin($f, $s, $index ? '_' + $index : '');
         return $this;
     }
 
@@ -964,10 +1001,11 @@ class Mod {
      * --- cross join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
+     * @param string $index 给本表增加 index 分表项
      * @return static
      */
-    public function crossJoin(string $f, array $s = []) {
-        $this->_sql->crossJoin($f, $s);
+    public function crossJoin(string $f, array $s = [], string $index = '') {
+        $this->_sql->crossJoin($f, $s, $index ? '_' + $index : '');
         return $this;
     }
 
