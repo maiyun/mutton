@@ -105,16 +105,17 @@ class Mod {
                 $this->$k = $v;
             }
         }
-        if (isset($opt['select'])) {
+        /** --- 是否有 select --- */
+        $select = isset($opt['select']) ? $opt['select'] : (isset($opt['where']) ? '*' : '');
+        if ($select) {
             $this->_sql->select(
-                $opt['select'],
+                $select,
                 static::$_table .
                 ($this->_index !== null ? ('_' . $this->_index) : '') .
                 (isset($opt['alias']) ? ' ' . $opt['alias'] : '')
             ); 
         }
         if (isset($opt['where'])) {
-            $this->_sql->select('*', static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
             if (static::$_soft && (!isset($opt['raw']) || !$opt['raw'])) {
                 if (is_string($opt['where'])) {
                     $opt['where'] = $opt['where'] ? ('(' . $opt['where'] . ') AND ') : '`time_remove` = 0';
