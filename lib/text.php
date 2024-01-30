@@ -283,7 +283,8 @@ class Text {
     public static function isPhoneCN(string $p): bool {
         if (preg_match('/^1[0-9]{10}$/', $p)) {
             return true;
-        } else {
+        }
+        else {
             return false;
         }
     }

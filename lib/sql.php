@@ -799,7 +799,6 @@ class LSql {
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
         $str = preg_replace('/ +([),])/', ' $1', $str);
         $str = preg_replace('/([(,]) +/', '$1 ', $str);
-        $str = preg_replace('/["\']/', '', $str);   // --- 去除引号 ---
         $str = preg_replace('/(\W)(JOIN|WHERE|OR|AND|UNION)(\W)/i', '$1$3', $str);
         // --- 先判断 suf 强制性 AS ---
         $sufAs = false;
@@ -863,6 +862,10 @@ class LSql {
             }
             if (!isset($l[1])) {
                 // --- xxx ---
+                if (preg_match('/^[A-Z0-9_]+$/', $l[0])) {
+                    // --- 纯大写是内置函数，不能加 ` --- 
+                    return $l[0] . $right;
+                }
                 return '`' . $pre . $l[0] . $suf . '`' . $right;
             }
             // --- x.xxx ---

@@ -2010,9 +2010,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
-                $s = $sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])->getSql();
+                $s = $sql->select(['SUM(user.age) age', 'UTC_TIMESTAMP', 'FROM_UNIXTIME(user.time, \'%Y-%m\') as time'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id']);</pre>
+                $echo[] = "<pre>\$sql->select(['SUM(user.age) age', 'UTC_TIMESTAMP', 'FROM_UNIXTIME(user.time, \'%Y-%m\') as time'], 'order')->leftJoin('user', ['order.user_id' => '#user.id']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
@@ -2218,6 +2218,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $echo[] = "<pre>\$sql->field('MATCH(name_sc, name_tc) AGAINST(\"ok\") tmp');</pre>" . $sql->field('MATCH(name_sc, name_tc) AGAINST("ok") tmp');
                 $echo[] = "<pre>\$sql->field('a\'bc');</pre>" . $sql->field('a\'bc');
                 $echo[] = "<pre>\$sql->field('`a`WHERE`q` = SUM(0) AND `b` = \"abc\" LEFT JOIN `abc`');</pre>" . $sql->field('`a`WHERE`q` = SUM(0) AND `b` = "abc" LEFT JOIN `abc`');
+                $echo[] = "<pre>\$sql->field('TEST(UTC_TIMESTAMP)');</pre>" . $sql->field('TEST(UTC_TIMESTAMP)');
                 break;
             }
         }
