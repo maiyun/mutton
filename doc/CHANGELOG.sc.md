@@ -4,6 +4,19 @@
 
 [English](./CHANGELOG.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.4.0
+
+[+] Db 库新增 GIS、JSON 类型的存取。  
+[+] Mod 新增 oneArray、toArrayByRecord、firstArray、allArray 方法。  
+[+] Ctr 新增 _cross 方法，可放开跨域限制。  
+[+] 新增反代特性，使用 Net 库的 rproxy 方法轻松实现反代。  
+[+] 生命周期新增 onUnload 事件，在页面结束时会执行。  
+[+] Sql 库部分方法新增 suf 表后缀参数。  
+[+] Mod 类新增 removeByWhereSql 方法。  
+[+] Mod 的各种 join 方法新增 index 参数。  
+[\*] 优化重写规则，html 类型也将直接显示。  
+[\*] 其他大量优化。
+
 # 7.3.2
 
 [\*] 优化 Mod、Sql 类。

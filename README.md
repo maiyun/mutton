@@ -132,6 +132,10 @@ Use the _checkXInput method to perform XSRF detection and prevent malicious acce
 
 With the help of the Scan library, it's easy to implement scan login.
 
+### Reverse Proxy
+
+Achieve reverse proxy functionality effortlessly by utilizing the rproxy method from the Net library, combined with route parameters.
+
 #### There are more features waiting for you to explore
 
 ## Examples

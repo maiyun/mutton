@@ -4,6 +4,19 @@
 
 [简体中文](./CHANGELOG.sc.md) | [繁體中文](./CHANGELOG.tc.md)
 
+# 7.4.0
+
+[+] Added support for GIS and JSON types in the Db library.  
+[+] Introduced new methods in the Mod library: oneArray, toArrayByRecord, firstArray, and allArray.  
+[+] Added the _cross method to the Ctr library, allowing for cross-origin requests.  
+[+] Implemented a reverse proxy feature using the rproxy method from the Net library.  
+[+] Added the onUnload event to the lifecycle, which executes when the page is unloaded.  
+[+] Added the suf suffix parameter to some methods in the Sql library.  
+[+] Introduced the removeByWhereSql method in the Mod class.  
+[+] New index parameter in various join methods of the Mod library.  
+[\*] Optimized rewrite rules to directly display HTML content.  
+[\*] Numerous other optimizations.
+
 # 7.3.2
 
 [\*] Optimize Mod, Sql classes.
