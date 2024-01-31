@@ -799,7 +799,7 @@ class LSql {
         $str = preg_replace('/ {2,}/', ' ', $str);  // --- 去除多余的空格 ---
         $str = preg_replace('/ +([),])/', ' $1', $str);
         $str = preg_replace('/([(,]) +/', '$1 ', $str);
-        $str = preg_replace('/(\W)(JOIN|WHERE|OR|AND|UNION)(\W)/i', '$1$3', $str);
+        $str = preg_replace('/(\W)(JOIN|WHERE|UNION)(\W)/i', '$1$3', $str);
         // --- 先判断 suf 强制性 AS ---
         $sufAs = false;
         if ($suf && ($suf[0] === '#')) {
