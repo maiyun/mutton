@@ -1541,7 +1541,7 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         if (Net::rproxy($this, [
             'test/net-rproxy/' => 'https://cdn.jsdelivr.net/npm/deskrt@2.0.10/'
         ])) {
-            return true;
+            return false;
         }
         return 'Nothing';
     }

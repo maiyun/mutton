@@ -228,7 +228,7 @@ class Net {
         curl_setopt($ch, CURLOPT_HTTPHEADER, self::_formatHeaderSender($headers));
         // --- cookie 托管 ---
         if ($cookie !== null) {
-            curl_setopt($ch, CURLOPT_COOKIE, self::_buildCookieQuery($cookie, $uri));
+            curl_setopt($ch, CURLOPT_COOKIE, self::buildCookieQuery($cookie, $uri));
         }
         // --- 直接下载到文件 ---
         /** @var resource $fh */
@@ -458,7 +458,7 @@ class Net {
      * @param array $uri 请求的 URI 数组
      * @return string
      */
-    private static function _buildCookieQuery(array &$cookie, array $uri): string {
+    public static function buildCookieQuery(array &$cookie, array $uri): string {
         $cookieStr = '';
         foreach ($cookie as $key => $item) {
             if (($item['exp'] < $_SERVER['REQUEST_TIME']) && ($item['exp'] !== -1992199400)) {
@@ -583,6 +583,9 @@ class Net {
                 continue;
             }
             // --- 找到了，做转发 ---
+            // --- $key 类似：test/net-rproxy/ ---
+            // --- 值类似：https://cdn.jsdelivr.net/npm/deskrt@2.0.10/ ---
+            /** --- 要拼接的地址 --- */
             $lpath = substr($path, strlen($key));
             $opt['method'] = $_SERVER['REQUEST_METHOD'];
             /** --- 不代理的 header  --- */
