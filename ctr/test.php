@@ -156,6 +156,7 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/net-error">View "test/net-error"</a>',
             '<br><a href="' . URL_BASE . 'test/net-hosts">View "test/net-hosts"</a>',
             '<br><a href="' . URL_BASE . 'test/net-rproxy/dist/core.js">View "test/net-rproxy/dist/core.js"</a> <a href="' . URL_BASE . 'test/net-rproxy/package.json">View "package.json"</a>',
+            '<br><a href="' . URL_BASE . 'test/net-mproxy">View "test/net-mproxy"</a>',
 
             '<br><br><b>Scan</b>',
             '<br><br><a href="' . URL_BASE . 'test/scan?s=db">View "test/scan?s=db"</a>',
@@ -1544,6 +1545,37 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
             return false;
         }
         return 'Nothing';
+    }
+
+    public function netMproxy() {
+        $echo = [];
+        $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', [
+            'mproxy' => [
+                'url' => $this->_internalUrl . 'test/net-mproxy1',
+                'auth' => '123456'
+            ]
+        ]);
+        $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', [
+    'mproxy' => [
+        'url' => '" . $this->_internalUrl . "test/net-mproxy1',
+        'auth' => '123456'
+    ]
+]);</pre>
+headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
+content: <pre>" . htmlspecialchars($res->content) . "</pre>
+error: " . json_encode($res->error) . "<br>
+errno: " . json_encode($res->errno) . "<br>
+info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
+
+        return join('', $echo) . $this->_getEnd();
+    }
+
+    public function netMproxy1() {
+        $rtn = Net::mproxy($this, '123456');
+        if ($rtn > 0) {
+            return false;
+        }
+        return 'Nothing(' . $rtn . ')';
     }
 
     public function scan() {

@@ -77,7 +77,7 @@ class Net {
     /**
      * --- 发起 GET 请求 ---
      * @param string $u 请求的 URL
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth), reuse
      * @param array|null $cookie
      * @return Response
      */
@@ -89,7 +89,7 @@ class Net {
      * --- 发起 POST 请求 ---
      * @param string $u 请求的 URL
      * @param array|string $data 要发送的数据（值由 @ 开头则是上传文件）
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth), reuse
      * @param array|null $cookie
      * @return Response
      */
@@ -102,7 +102,7 @@ class Net {
      * --- 发起 JSON 请求 ---
      * @param string $u
      * @param array $data
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, reuse, headers
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth), reuse
      * @param array|null $cookie
      * @return Response
      */
@@ -116,7 +116,7 @@ class Net {
      * --- 发起请求 ---
      * @param string $u 提交的 url
      * @param array|string|null $data 提交的 data 数据
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, reuse
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth), reuse
      * @param array|null $cookie
      * @return Response
      */
@@ -143,18 +143,25 @@ class Net {
         }
         // --- reuse: Mutton: true, Kebab: false ---
         if ($reuse) {
-            $ch = self::getLink($uri['host'] . (isset($uri['port']) ? ':' . $uri['port'] : ''), $local);
+            $cu = $uri;
+            if (isset($opt['mproxy'])) {
+                $cu = parse_url($opt['mproxy']['url']);
+            }
+            $ch = self::getLink($cu['host'] . ':' . (isset($cu['port']) ? $cu['port'] : (strtolower($cu['scheme']) === 'https' ? '443' : '80')), $local);
         }
         else {
             $ch = curl_init();
         }
         // --- DATA ---
         if ($method === 'GET') {
-            curl_setopt($ch, CURLOPT_URL, $u . ($data !== null ? '?' . (is_string($data) ? $data : http_build_query($data)) : ''));
+            if ($data) {
+                $u .= (strpos($u, '?') !== false ? '&' : '?') .
+                    (is_string($data) ? $data : http_build_query($data));
+                $data = null;
+            }
         }
         else {
             // --- POST ---
-            curl_setopt($ch, CURLOPT_URL, $u);
             curl_setopt($ch, CURLOPT_POST, true);
             $upload = false;
             if ($data !== null) {
@@ -267,7 +274,11 @@ class Net {
                 return $len;
             });
         }
-        // --- 执行 ---
+        // --- 发起请求 ---
+        curl_setopt($ch, CURLOPT_URL, isset($opt['mproxy']) ? $opt['mproxy']['url'] . (strpos($opt['mproxy']['url'], '?') !== false ? '&' : '?') . http_build_query([
+            'url' => $u,
+            'auth' => $opt['mproxy']['auth']
+        ]) : $u);
         $output = curl_exec($ch);
         // --- 如果下载文件了，则关闭 ---
         if ($fh) {
@@ -299,7 +310,7 @@ class Net {
         // --- 是否追踪 cookie ---
         if ($cookie !== null) {
             // --- 提取 cookie ---
-            self::_buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $uri);
+            self::buildCookieObject($cookie, isset($res->headers['set-cookie']) ? $res->headers['set-cookie'] : [], $uri);
         }
         // --- 判断 follow 追踪 ---
         if ($follow === 0) {
@@ -310,16 +321,21 @@ class Net {
         }
         // --- 哦，要追踪 ---
         $headers['referer'] = $u;
-        return self::request(Text::urlResolve($u, $res->headers['location']), $data, [
+        $inopt = [
             'method' => $method,
             'type' => $type,
             'timeout' => $timeout,
             'follow' => $follow - 1,
             'hosts' => $hosts,
             'save' => $save,
-            'reuse' => $reuse,
-            'headers' => $headers
-        ], $cookie);
+            'local' => $local,
+            'headers' => $headers,
+            'reuse' => $reuse
+        ];
+        if (isset($opt['mproxy'])) {
+            $inopt['mproxy'] = $opt['mproxy'];
+        }
+        return self::request(Text::urlResolve($u, $res->headers['location']), $data, $inopt, $cookie);
     }
     
     /**
@@ -328,7 +344,7 @@ class Net {
      * @param string $name 名
      * @param string $value 值
      * @param string $domain 应用网址，如 .xxx.com
-     * @param array $opt 选项 ttl, path, domain, ssl, httponly
+     * @param array $opt 选项 ttl, path, ssl, httponly
      */
     public static function setCookie(array &$cookie, string $name, string $value, string $domain, array $opt = []): void {
         $ttl = !isset($opt['ttl']) ? 0 : $opt['ttl'];
@@ -357,7 +373,11 @@ class Net {
      * @param array $setCookies 头部的 set-cookie 数组
      * @param array $uri 请求的 URI 对象
      */
-    private static function _buildCookieObject(array &$cookie, array $setCookies, array $uri) {
+    private static function buildCookieObject(
+        array &$cookie,
+        array $setCookies,
+        array $uri
+    ) {
         if (!isset($uri['path'])) {
             $uri['path'] = '/';
         }
@@ -567,8 +587,111 @@ class Net {
         }
     }
 
+    /** --- 不代理的 header  --- */
+    private static $_proxyContinueHeaders = ['host', 'connection', 'http-version', 'http-code', 'http-url', 'content-encoding', 'content-length'];
+
+    /**
+     * --- 剔除不代理的 header ---
+     * @param array $headers 剔除前的 header
+     * @param bool $res 直接设置头部而不返回，可置空
+     */
+    private static function _filterProxyHeaders(array $headers, bool $res = false): array {
+        $heads = [];
+        foreach ($headers as $h => $v) {
+            $h = strtolower($h);
+            if (in_array($h, self::$_proxyContinueHeaders)) {
+                continue;
+            }
+            if (strpos($h, ':') !== false || strpos($h, '(') !== false) {
+                continue;
+            }
+            if (!$v) {
+                continue;
+            }
+            if ($res) {
+                header($h . ': ' . $v);
+                continue;
+            }
+            $heads[$h] = $v;
+        }
+        return $heads;
+    }
+
+    /**
+     * --- 获取要 post 的 form data 对象 ---
+     * --- Kebab: false, Mutton: true ---
+     */
+    private static function _getPostFormData(): array {
+        $data = [];
+        // --- 字符串 ---
+        foreach ($_POST as $key => $val) {
+            if (is_string($val)) {
+                $data[$key] = $val;
+            }
+            else if (is_array($val)) {
+                $data[$key] = [];
+                foreach ($val as $key1 => $val1) {
+                    $data[$key][$key1] = $val1;
+                }
+            }
+        }
+        // --- 文件 ---
+        foreach ($_FILES as $key => $val) {
+            if (isset($val['name'])) {
+                $data[$key] = new CURLFile($val['tmp_name'], $val['type'], $val['name']);
+            }
+            else {
+                $data[$key] = [];
+                foreach ($val as $key1 => $val1) {
+                    $data[$key][$key1] = new CURLFile($val1['tmp_name'], $val1['type'], $val1['name']);
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * --- 正向 mproxy 代理，读取 get 的 url 为实际请求地址 ---
+     * --- get: url, auth ---
+     * @param Ctr 当前控制器
+     * @param $auth 校验字符串，读取 get 的 auth 和本参数做比对
+     * @param $opt 参数
+     */
+    public static function mproxy(
+        Ctr $ctr,
+        string $auth,
+        array $opt = []
+    ): int {
+        $input = $ctr->getPrototype('_input');
+        if (!isset($_GET['auth']) || $_GET['auth'] !== $auth) {
+            return 0;
+        }
+        if (!isset($_GET['url'])) {
+            return -1;
+        }
+        $opt['method'] = $_SERVER['REQUEST_METHOD'];
+        if (!isset($opt['headers'])) {
+            $opt['headers'] = [];
+        }
+        $headers = getallheaders();
+        $headers = $headers ? $headers : [];
+        $after = self::_filterProxyHeaders($headers);
+        $opt['headers'] = array_merge($opt['headers'], $after);
+        // --- 发起请求 ---
+        $rres = self::request($_GET['url'], isset($after['content-type']) && strpos($after['content-type'], 'form-data') !== false ? self::_getPostFormData() : $input, $opt);
+        if ($rres->error) {
+            return -2;
+        }
+        self::_filterProxyHeaders($rres->headers, true);
+        header('content-length: ' . strlen($rres->content));
+        http_response_code($rres->headers['http-code']);
+        echo $rres->content;
+        return 1;
+    }
+
     /**
      * --- 发起反向代理转发 ---
+     * @param Ctr $ctr 当前控制器
      * @param array $route 路由映射（不以 / 开头）
      * @param array $opt 配置
      */
@@ -577,6 +700,7 @@ class Net {
         array $route,
         array $opt = []
     ): bool {
+        $input = $ctr->getPrototype('_input');
         $path = PATH . (QS ? '?' . QS : '');
         foreach ($route as $key => $routev) {
             if (substr($path, 0, strlen($key)) !== $key) {
@@ -589,69 +713,20 @@ class Net {
             $lpath = substr($path, strlen($key));
             $opt['method'] = $_SERVER['REQUEST_METHOD'];
             /** --- 不代理的 header  --- */
-            $continueHeaders = ['host', 'connection', 'http-version', 'http-code', 'http-url'];
             if (!isset($opt['headers'])) {
                 $opt['headers'] = [];
             }
-            $rawheaders = getallheaders();
-            $headers = [];
-            foreach ($rawheaders as $h => $header) {
-                $headers[strtolower($h)] = $header;
-            }
-            foreach ($headers as $h => $header) {
-                if (in_array($h, $continueHeaders)) {
-                    continue;
-                }
-                if (strpos($h, ':') !== false || strpos($h, '(') !== false) {
-                    continue;
-                }
-                $opt['headers'][$h] = $header;
-            }
+            $headers = getallheaders();
+            $headers = $headers ? $headers : [];
+            $after = self::_filterProxyHeaders($headers);
+            $opt['headers'] = array_merge($opt['headers'], $after);
             // --- 发起请求 ---
-            $data = $ctr->getPrototype('_input');
-            if (strpos($headers['content-type'], 'form-data') !== false) {
-                $data = [];
-                // --- 字符串 ---
-                foreach ($_POST as $key => $val) {
-                    if (is_string($val)) {
-                        $data[$key] = $val;
-                    }
-                    else if (is_array($val)) {
-                        $data[$key] = [];
-                        foreach ($val as $key1 => $val1) {
-                            $data[$key][$key1] = $val1;
-                        }
-                    }
-                }
-                // --- 文件 ---
-                foreach ($_FILES as $key => $val) {
-                    if (isset($val['name'])) {
-                        $data[$key] = new CURLFile($val['tmp_name'], $val['type'], $val['name']);
-                    }
-                    else {
-                        $data[$key] = [];
-                        foreach ($val as $key1 => $val1) {
-                            $data[$key][$key1] = new CURLFile($val1['tmp_name'], $val1['type'], $val1['name']);
-                        }
-                    }
-                }
-            }
-            $rres = self::request($routev . $lpath, $data, $opt);
+            $rres = self::request($routev . $lpath, isset($after['content-type']) && strpos($after['content-type'], 'form-data') !== false ? self::_getPostFormData() : $input, $opt);
             if ($rres->error) {
                 return false;
             }
-            foreach ($rres->headers as $h => $v) {
-                if (in_array($h, $continueHeaders)) {
-                    continue;
-                }
-                if (strpos($h, ':') !== false || strpos($h, '(') !== false) {
-                    continue;
-                }
-                if ($h === 'content-encoding') {
-                    continue;
-                }
-                header($h . ': ' . $v);
-            }
+            self::_filterProxyHeaders($rres->headers, true);
+            header('content-length: ' . strlen($rres->content));
             http_response_code($rres->headers['http-code']);
             echo $rres->content;
             return true;
