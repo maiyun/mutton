@@ -122,7 +122,8 @@ class Net {
      */
     public static function request(string $u, $data = null, array $opt = [], ?array &$cookie = null): Response {
         $uri = parse_url($u);
-        $isSsl = false;
+        /** --- 正向代理的地址 --- */
+        $puri = isset($opt['mproxy']) ? parse_url($opt['mproxy']['url']) : null;
         $method = isset($opt['method']) ? strtoupper($opt['method']) : 'GET';
         $type = isset($opt['type']) ? strtolower($opt['type']) : 'form';
         $timeout = isset($opt['timeout']) ? $opt['timeout'] : 10;
@@ -215,6 +216,7 @@ class Net {
             curl_setopt($ch, CURLOPT_INTERFACE, $local);
         }
         // --- ssl ---
+        $isSsl = false;
         if (strtolower($uri['scheme']) === 'https') {
             $isSsl = true;
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
@@ -222,9 +224,15 @@ class Net {
             curl_setopt($ch, CURLOPT_CAINFO, LIB_PATH . 'net/cacert.pem');
         }
         // --- 重定义 IP ---
-        $host = strtolower($uri['host']);
+        $host = $puri ? strtolower($puri['host']) : strtolower($uri['host']);
         if (isset($hosts[$host])) {
-            $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
+            if ($puri) {
+                $isSsl = strtolower($puri['scheme']) === 'https' ? true : false;
+                $port = (isset($puri['port']) ? $puri['port'] : ($isSsl ? '443' : '80'));
+            }
+            else {
+                $port = (isset($uri['port']) ? $uri['port'] : ($isSsl ? '443' : '80'));
+            }
             // curl_setopt($ch, 10243, [$host . ':' . $port . ':' . $hosts[$host]]);               // --- CURLOPT_CONNECT_TO, CURL 7.49.0 --- 有点问题
             curl_setopt($ch, CURLOPT_RESOLVE, [$host . ':' . $port . ':' . $hosts[$host]]);        // --- CURL 7.21.3 ---
         }
