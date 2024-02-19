@@ -11,6 +11,7 @@ namespace sys;
 use ctr\middle;
 use lib\Text;
 
+require ETC_PATH.'lang.php';
 require ETC_PATH.'route.php';
 
 class Route {
@@ -25,21 +26,76 @@ class Route {
         if ($path === '') {
             $path = "@";
         }
-        // --- 检查路由表 ---
+        // --- 检测是否托管语言页面 ---
         $param = [];
+        if (LANG_LIST) {
+            // --- 仅仅 res 模式支持 config.lang ---
+            if (!isset($path[2]) || $path[2] !== '/') {
+                // --- 不管是首页还是 @ 页，都会到此处 ---
+                $isDirect = false;
+                if (!$path) {
+                    if (in_array('@', LANG_DIRECT)) {
+                        $isDirect = true;
+                    }
+                }
+                else {
+                    foreach (LANG_DIRECT as $ditem) {
+                        if (strpos($path, $ditem) !== 0) {
+                            continue;
+                        }
+                        // --- 放行 ---
+                        $isDirect = true;
+                        break;
+                    }
+                }
+                if (!$isDirect) {
+                    // --- 不放行 ---
+                    $alang = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE']) : LANG_LIST[0];
+                    $apath = PATH . (QS ? '?' + QS : '');
+                    foreach (LANG_LIST as $lang) {
+                        if ($lang === 'sc') {
+                            $lang = 'cn';
+                        }
+                        else if ($lang === 'tc') {
+                            $lang = 'zh';
+                        }
+                        if (strpos($alang, $lang) === false) {
+                            continue;
+                        }
+                        http_response_code(302);
+                        header('location: ' . URL_BASE . $lang . '/'. $apath);
+                        return;
+                    }
+                    http_response_code(302);
+                    header('location: ' . URL_BASE . LANG_LIST . '/'. $apath);
+                    return;
+                }
+            }
+            else {
+                // --- 已经是含语言的路径了 --
+                $param[] = substr($path, 0, 2);
+                $path = substr($path, 3);
+                if (!$path) {
+                    $path = '@';
+                }
+            }
+        }
+        // --- 检查路由表 ---
         $match = null;
         $pathLeft = ''; $pathRight = '';
         foreach (ROUTE as $rule => $ruleVal) {
             preg_match('/^' . $rule . '$/', $path, $match);
             if (!empty($match)) {
                 list($pathLeft, $pathRight) = self::_getPathLeftRight($ruleVal);
-                $param = $match;
-                array_splice($param, 0, 1);
+                $length = count($match);
+                for ($i = 1; $i < $length; ++$i) {
+                    $param[] = $match[$i];
+                }
                 break;
             }
         }
         if (!$match) {
-            list($pathLeft, $pathRight) = self::_getPathLeftRight(PATH);
+            list($pathLeft, $pathRight) = self::_getPathLeftRight($path);
         }
         // --- 若文件名为保留的 middle 将不允许进行 ---
         if (substr($pathLeft, -6) === 'middle') {
@@ -49,7 +105,7 @@ class Route {
                 return;
             }
             http_response_code(404);
-            echo '[Error] Controller not found, path: ' . PATH . '.';
+            echo '[Error] Controller not found, path: ' . $path . '.';
             return;
         }
         // --- 加载中间控制器 ---
@@ -145,7 +201,7 @@ class Route {
                     return;
                 }
                 http_response_code(404);
-                echo '[Error] Controller not found, path: ' . PATH . '.';
+                echo '[Error] Controller not found, path: ' . $path . '.';
                 return;
             }
             // --- 加载控制器文件 ---
@@ -196,7 +252,7 @@ class Route {
                     return;
                 }
                 http_response_code(404);
-                echo '[Error] Action not found, path: ' . PATH . '.';
+                echo '[Error] Action not found, path: ' . $path . '.';
                 return;
             }
             $pathRight = preg_replace_callback('/-([a-zA-Z0-9])/', function ($matches) {
@@ -209,7 +265,7 @@ class Route {
                     return;
                 }
                 http_response_code(404);
-                echo '[Error] Action not found, path: ' . PATH . '.';
+                echo '[Error] Action not found, path: ' . $path . '.';
                 return;
             }
             // --- 执行 onLoad 方法 ---
