@@ -1552,13 +1552,15 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
         $res = Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', [
             'mproxy' => [
                 'url' => $this->_internalUrl . 'test/net-mproxy1',
-                'auth' => '123456'
+                'auth' => '123456',
+                'data' => [ 'test' => '123' ]
             ]
         ]);
         $echo[] = "<pre>Net::get('https://cdn.jsdelivr.net/npm/deskrt@2.0.10/package.json', [
     'mproxy' => [
         'url' => '" . $this->_internalUrl . "test/net-mproxy1',
-        'auth' => '123456'
+        'auth' => '123456',
+        'data' => [ 'test' => '123' ]
     ]
 ]);</pre>
 headers: <pre>" . json_encode($res->headers, JSON_PRETTY_PRINT) . "</pre>
@@ -1571,6 +1573,8 @@ info: <pre>" . json_encode($res->info, JSON_PRETTY_PRINT) . "</pre>";
     }
 
     public function netMproxy1() {
+        $data = Net::mproxyData();
+        // --- data 是用户追加的额外数据，不要太长 ---
         $rtn = Net::mproxy($this, '123456');
         if ($rtn > 0) {
             return false;

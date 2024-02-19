@@ -102,7 +102,7 @@ class Net {
      * --- 发起 JSON 请求 ---
      * @param string $u
      * @param array $data
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth), reuse
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth, data可选), reuse
      * @param array|null $cookie
      * @return Response
      */
@@ -116,7 +116,7 @@ class Net {
      * --- 发起请求 ---
      * @param string $u 提交的 url
      * @param array|string|null $data 提交的 data 数据
-     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth), reuse
+     * @param array $opt 参数 method, type, timeout, follow, hosts, save, local, headers, mproxy(url, auth, data可选), reuse
      * @param array|null $cookie
      * @return Response
      */
@@ -285,7 +285,8 @@ class Net {
         // --- 发起请求 ---
         curl_setopt($ch, CURLOPT_URL, isset($opt['mproxy']) ? $opt['mproxy']['url'] . (strpos($opt['mproxy']['url'], '?') !== false ? '&' : '?') . http_build_query([
             'url' => $u,
-            'auth' => $opt['mproxy']['auth']
+            'auth' => $opt['mproxy']['auth'],
+            'data' => isset($opt['mproxy']['data']) ? json_encode($opt['mproxy']['data']) : '{}'
         ]) : $u);
         $output = curl_exec($ch);
         // --- 如果下载文件了，则关闭 ---
@@ -695,6 +696,20 @@ class Net {
         http_response_code($rres->headers['http-code']);
         echo $rres->content;
         return 1;
+    }
+
+    /**
+     * --- 获取 mproxy 的附加数据 ---
+     */
+    public static function mproxyData(): array {
+        if (!isset($_GET['data'])) {
+            return [];
+        }
+        $data = json_decode($_GET['data'], true);
+        if (!$data) {
+            return [];
+        }
+        return $data;
     }
 
     /**
