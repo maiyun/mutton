@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2017/01/31 10:30
- * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08, 2022-3-24 22:46:41, 2022-08-31 15:20:41, 2022-09-21 10:47:41, 2022-12-31 12:12:53
+ * Last: 2018-12-12 12:29:14, 2019-12-18 17:17:49, 2020-3-28 13:21:02, 2020-4-5 22:05:08, 2022-3-24 22:46:41, 2022-08-31 15:20:41, 2022-09-21 10:47:41, 2022-12-31 12:12:53, 2024-2-20 11:37:48
  */
 declare(strict_types = 1);
 
@@ -496,6 +496,74 @@ SCRIPT;
      */
     public function hKeys(string $key) {
         return $this->_link->hKeys($this->_pre . $key);
+    }
+
+    public function lPush(string $key, array $values): int {
+        $r = $this->_link->lPush($this->_pre . $key, ...$values);
+        if ($r === false) {
+            return 0;
+        }
+        return $r;
+    }
+
+    public function rPush(string $key, array $values): int {
+        $r = $this->_link->rPush($this->_pre . $key, ...$values);
+        if ($r === false) {
+            return 0;
+        }
+        return $r;
+    }
+
+    public function bLMove(string $src, string $dst, string $wherefrom, string $whereto, float $timeout): string | null {
+        $r = $this->_link->bLMove($this->_pre . $src, $this->_pre . $dst, $wherefrom, $whereto, $timeout);
+        if ($r === false) {
+            return null;
+        }
+        return $r;
+    }
+
+    public function lPop(string $key): string {
+        $r = $this->_link->lPop($this->_pre . $key);
+        if ($r === false) {
+            return 0;
+        }
+        return $r;
+    }
+
+    public function rPop(string $key): string {
+        $r = $this->_link->lPop($this->_pre . $key);
+        if ($r === false) {
+            return 0;
+        }
+        return $r;
+    }
+    
+    public function bRPop(string | array $key, string | float | int $timeout): array {
+        if (is_string($key)) {
+            $key = [$key];
+        }
+        $r = $this->_link->bRPop(array_map(function($item) {
+            return $this->_pre . $item;
+        }, $key), $timeout);
+        if (!is_array($r)) {
+            return [];
+        }
+        return [
+            [$r[0]] => $r[1]
+        ];
+    }
+
+
+    public function lRange(string $key, int $start, int $end): array {
+        return $this->_link->lRange($this->_pre . $key, $start, $end);
+    }
+
+    public function lLen(string $key): int {
+        $r = $this->_link->lLen($this->_pre . $key);
+        if ($r === false) {
+            return 0;
+        }
+        return $r;
     }
 
 }

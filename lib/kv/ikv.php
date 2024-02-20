@@ -2,7 +2,7 @@
 /**
  * User: JianSuoQiYue
  * Date: 2019-12-21 11:56:27
- * Last: 2019-12-21 11:56:30, 2020-3-29 21:29:53, 2022-08-31 15:20:29
+ * Last: 2019-12-21 11:56:30, 2020-3-29 21:29:53, 2022-08-31 15:20:29, 2024-2-20 11:50:09
  */
 declare(strict_types = 1);
 
@@ -247,6 +247,22 @@ interface IKv {
      * @return array
      */
     public function hKeys(string $key);
+
+    public function lPush(string $key, array $values): int;
+
+    public function rPush(string $key, array $values): int;
+
+    public function bLMove(string $src, string $dst, string $wherefrom, string $whereto, float $timeout): string | null;
+
+    public function lPop(string $key): string;
+
+    public function rPop(string $key): string;
+    
+    public function bRPop(string | array $key, string | float | int $timeout): array;
+
+    public function lRange(string $key, int $start, int $end): array;
+
+    public function lLen(string $key): int;
 
 }
 

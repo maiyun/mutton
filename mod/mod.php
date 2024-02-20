@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11, 2024-2-20 11:50:00
  */
 declare(strict_types = 1);
 
@@ -14,6 +14,8 @@ use lib\LSql;
 use lib\Sql;
 use PDO;
 use PDOException;
+
+use function sys\log;
 
 class Rows implements \Iterator {
 
@@ -606,6 +608,7 @@ class Mod {
                 }
                 catch (PDOException $e) {
                     if ($e->errorInfo[0] !== '23000') {
+                        log('[create0, mod]' . $e->getMessage(), '-error');
                         return false;
                     }
                 }
@@ -624,6 +627,7 @@ class Mod {
                 $ps->execute($this->_sql->getData());
             }
             catch (PDOException $e) {
+                log('[create1, mod]' . $e->getMessage(), '-error');
                 return false;
             }
         }
