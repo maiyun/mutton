@@ -140,7 +140,6 @@ class Test extends Ctr {
 
             '<br><br><b>Kv:</b>',
             '<br><br><a href="' . URL_BASE . 'test/kv?s=redis">View "test/kv?s=redis"</a>',
-            '<br><a href="' . URL_BASE . 'test/kv?s=redis-simulator">View "test/kv?s=redis-simulator"</a>',
 
             '<br><br><b>Net:</b>',
             '<br><br><a href="' . URL_BASE . 'test/net">View "test/net"</a>',
@@ -1004,19 +1003,13 @@ exec: " . json_encode($exec) . "<br><br>";
 
     public function kv() {
         if (!$this->_checkInput($_GET, [
-            's' => ['require', ['redis', 'redis-simulator'], [0, 'Object not found.']]
+            's' => ['require', ['redis'], [0, 'Object not found.']]
         ], $return)) {
             return $return;
         }
 
         $kv = Kv::get($_GET['s']);
         $db = null;
-        if ($_GET['s'] === 'redis-simulator') {
-            $db = Db::get();
-            if (!$db->connect()) {
-                return [0, 'Failed, MySQL can not be connected.'];
-            }
-        }
         if (!($rtn = $kv->connect([
             'binary' => false,
             'db' => $db
