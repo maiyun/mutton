@@ -306,14 +306,22 @@ class Route {
                 $json = ['result' => $rtn[0]];
                 if (isset($rtn[1])) {
                     if (is_array($rtn[1])) {
-                        // --- [0, ['xx' => 'xx']] ---
-                        echo json_encode(array_merge($json, $rtn[1]));
+                        // --- [0, ...['xx' => 'xx']] ---
+                        $rtnLength = count($rtn);
+                        for ($i = 1; $i < $rtnLength; ++$i) {
+                            $json = array_merge($json, $rtn[$i]);
+                        }
+                        echo json_encode($json);
                     }
                     else {
-                        // --- [0, 'xxx'], [0, 'xxx', ['xx' => 'xx']] ---
+                        // --- [0, 'xxx'], [0, 'xxx', ...['xx' => 'xx']] ---
                         $json['msg'] = $rtn[1];
                         if (isset($rtn[2])) {
-                            echo json_encode(array_merge($json, $rtn[2]));
+                            $rtnLength = count($rtn);
+                            for ($i = 2; $i < $rtnLength; ++$i) {
+                                $json = array_merge($json, $rtn[$i]);
+                            }
+                            echo json_encode($json);
                         }
                         else {
                             // --- Kebab 不会有这种情况 ---

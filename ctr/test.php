@@ -41,7 +41,7 @@ class Test extends Ctr {
         if (!is_array($rtn)) {
             return $rtn;
         }
-        if ($rtn[0] !== -102) {
+        if (!isset($rtn[0]) || $rtn[0] !== -102) {
             return $rtn;
         }
         $rtn['test'] = 'unload';
