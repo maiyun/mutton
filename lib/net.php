@@ -225,7 +225,7 @@ class Net {
         }
         // --- 重定义 IP ---
         $host = $puri ? strtolower($puri['host']) : strtolower($uri['host']);
-        if (isset($hosts[$host])) {
+        if (isset($hosts[$host]) && $hosts[$host]) {
             if ($puri) {
                 $isSsl = strtolower($puri['scheme']) === 'https' ? true : false;
                 $port = (isset($puri['port']) ? $puri['port'] : ($isSsl ? '443' : '80'));
