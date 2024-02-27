@@ -53,13 +53,14 @@ class Route {
                     $alang = isset($_SERVER['HTTP_ACCEPT_LANGUAGE']) ? strtolower($_SERVER['HTTP_ACCEPT_LANGUAGE']) : LANG_LIST[0];
                     $apath = PATH . (QS ? '?' + QS : '');
                     foreach (LANG_LIST as $lang) {
+                        $checkLang = $lang;
                         if ($lang === 'sc') {
-                            $lang = 'cn';
+                            $checkLang = 'cn';
                         }
                         else if ($lang === 'tc') {
-                            $lang = 'zh';
+                            $checkLang = 'zh';
                         }
-                        if (strpos($alang, $lang) === false) {
+                        if (strpos($alang, $checkLang) === false) {
                             continue;
                         }
                         http_response_code(302);
