@@ -336,6 +336,24 @@ class Ctr {
         return 'Basic ' . base64_encode($user . ':' . $pwd);
     }
 
+    /**
+     * --- 根据用户 ua 获取当前用户的设备类型 ---
+     */
+    protected function _device(): string {
+        $ua = isset($_SERVER['HTTP_USER_AGENT']) ? strtolower($_SERVER['HTTP_USER_AGENT']) : '';
+        if (!$ua) {
+            return 'unknown';
+        }
+        $list = ['android', 'windows', 'linux', 'macintosh', 'ipad', 'unknown'];
+        foreach ($list as $item) {
+            if (!in_array($item, $list)) {
+                continue;
+            }
+            return $item;
+        }
+        return 'unknown';
+    }
+
     /** @var array --- auth 对象，user, pwd --- */
     private $_authorization = null;
 
