@@ -138,7 +138,7 @@ class Session {
                     $this->_token = Core::random(16, Core::RANDOM_LUN);
                     $this->_sql->insert('session')->values([
                         'token' => $this->_token,
-                        'data' => json_encode([]),
+                        'data' => '{}',
                         'time_update' => $time,
                         'time_add' => $time
                     ]);
