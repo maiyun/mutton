@@ -180,6 +180,7 @@ class Mod {
             $ps->execute($sql->getData());
         }
         catch (PDOException $e) {
+            log('[insert, mod]' . $e->getMessage(), '-error');
             return false;
         }
         if ($ps->rowCount() > 0) {
@@ -218,6 +219,7 @@ class Mod {
             $ps->execute($sql->getData());
         }
         catch (PDOException $e) {
+            log('[insertDuplicate, mod]' . $e->getMessage(), '-error');
             return false;
         }
         if ($ps->rowCount() > 0) {
@@ -264,6 +266,7 @@ class Mod {
             $ps->execute($sql->getData());
         }
         catch (PDOException $e) {
+            log('[removeByWhere, mod]' . $e->getMessage(), '-error');
             return false;
         }
         $rc = $ps->rowCount();
@@ -336,6 +339,7 @@ class Mod {
             $ps->execute($sql->getData());
         }
         catch (PDOException $e) {
+            log('[updateByWhere, mod]' . $e->getMessage(), '-error');
             return false;
         }
         $rc = $ps->rowCount();
@@ -509,6 +513,7 @@ class Mod {
             $ps->execute($sql->getData());
         }
         catch (PDOException $e) {
+            log('[primarys, mod]' . $e->getMessage(), '-error');
             return false;
         }
         $primarys = [];
@@ -658,6 +663,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[replace, mod]' . $e->getMessage(), '-error');
             return false;
         }
 
@@ -689,6 +695,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[refresh, mod]' . $e->getMessage(), '-error');
             return false;
         }
         if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
@@ -710,7 +717,7 @@ class Mod {
         foreach ($this->_updates as $k => $v) {
             $updates[$k] = $this->_data[$k];
         }
-        if(count($updates) === 0) {
+        if (count($updates) === 0) {
             return true;
         }
         $this->_sql->update(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''), $updates)->where([
@@ -723,6 +730,7 @@ class Mod {
             return true;
         }
         catch (PDOException $e) {
+            log('[save, mod]' . $e->getMessage(), '-error');
             return false;
         }
     }
@@ -751,6 +759,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[remove, mod]' . $e->getMessage(), '-error');
             return false;
         }
         if ($ps->rowCount() > 0) {
@@ -777,6 +786,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[first, mod]' . $e->getMessage(), '-error');
             return false;
         }
         if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
@@ -812,6 +822,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[all, mod]' . $e->getMessage(), '-error');
             return false;
         }
         $list = [];
@@ -846,6 +857,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[allArray, mod]' . $e->getMessage(), '-error');
             return false;
         }
         $list = [];
@@ -872,6 +884,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[explain, mod]' . $e->getMessage(), '-error');
             return false;
         }
         if (!($row = $ps->fetch(PDO::FETCH_ASSOC))) {
@@ -893,6 +906,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[cursor, mod]' . $e->getMessage(), '-error');
             return false;
         }
         while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
@@ -915,6 +929,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[total, mod]' . $e->getMessage(), '-error');
             return 0;
         }
         if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
@@ -934,6 +949,7 @@ class Mod {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
+            log('[count, mod]' . $e->getMessage(), '-error');
             return 0;
         }
         if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
