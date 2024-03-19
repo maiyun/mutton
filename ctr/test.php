@@ -2091,6 +2091,15 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
 
+                // --- json ---
+
+                $s = $sql->update('json', [ 'json1' => [ 'key' => 'val', 'key2' => 'val2' ], 'json2' => [ [ 'k1' => 'v1' ], [ 'k2' => 'v2' ] ], 'json3' => [ 'x' => 1, 'y' => 2 ] ])->where([ 'id' => 1 ])->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->update('json', [ 'json1' => [ 'key' => 'val', 'key2' => 'val2' ], 'json2' => [ [ 'k1' => 'v1' ], [ 'k2' => 'v2' ] ], 'json3' => [ 'x' => 1, 'y' => 2 ] ])->where([ 'id' => 1 ]);</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd);
+
                 break;
             }
             case 'delete': {
