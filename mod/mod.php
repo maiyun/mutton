@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11, 2024-2-20 11:50:00
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11, 2024-2-20 11:50:00, 2024-4-1 19:27:18
  */
 declare(strict_types = 1);
 
@@ -812,6 +812,20 @@ class Mod {
     }
 
     /**
+     * --- 联合查询表数据 ---
+     * @param $f 要联合查询的表列表，或单个表
+     */
+    public function unionAll(array|string $f) {
+        if (is_string($f)) {
+            $f = [$f];
+        }
+        foreach ($f as $item) {
+            $this->_sql->unionAll($this->_sql->copy($item));
+        }
+        return $this;
+    }
+
+    /**
      * --- 获取列表 ---
      * @param string|null $key 是否以某个字段为主键
      * @return false|Rows
@@ -932,10 +946,11 @@ class Mod {
             log('[total, mod]' . $e->getMessage(), '-error');
             return 0;
         }
-        if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-            return (int)$row['count'];
+        $count = 0;
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            $count += (int)$row['count'];
         }
-        return 0;
+        return $count;
     }
 
     /**
@@ -952,10 +967,11 @@ class Mod {
             log('[count, mod]' . $e->getMessage(), '-error');
             return 0;
         }
-        if ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-            return (int)$row['count'];
+        $count = 0;
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            $count += (int)$row['count'];
         }
-        return 0;
+        return $count;
     }
 
     /**

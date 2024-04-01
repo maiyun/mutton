@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02, 2023-12-21 13:04:41, 2024-3-19 16:17:42
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02, 2023-12-21 13:04:41, 2024-3-19 16:17:42, 2024-4-1 18:49:59
  */
 declare(strict_types = 1);
 
@@ -15,10 +15,11 @@ class Sql {
     /**
      * --- 获取 Sql 实例 ---
      * @param string|null $pre
+     * @param $opt array? data, string? sql
      * @return LSql
      */
-    public static function get(?string $pre = null): LSql {
-        return new LSql($pre);
+    public static function get(?string $pre = null, $opt = []): LSql {
+        return new LSql($pre, $opt);
     }
 
     /**
@@ -93,9 +94,16 @@ class LSql {
      * --- 实例化 ---
      * LSql constructor.
      * @param string|null $pre
+     * @param $opt array? data, string? sql
      */
-    public function __construct(?string $pre = null) {
+    public function __construct(?string $pre = null, $opt = []) {
         $this->_pre = $pre !== null ? $pre : SQL_PRE;
+        if (isset($opt['data'])) {
+            $this->_data = $opt['data'];
+        }
+        if (isset($opt['sql'])) {
+            $this->_sql = [$opt['sql']];
+        }
     }
 
     // --- 前导 ---
@@ -457,6 +465,17 @@ class LSql {
     }
 
     /**
+     * --- 联查另一个 sql 对象 ---
+     * @param $sql sql 对象
+     */
+    public function unionAll(LSql $lsql): LSql {
+        $this->_data = array_merge($this->_data, $lsql->getData());
+        $this->_sql[] = ' UNION ALL ';
+        $this->_sql[] = $lsql->getSql();
+        return $this;
+    }
+
+    /**
      * --- join 方法 ---
      * @param string $f 表名
      * @param array $s ON 信息
@@ -742,6 +761,32 @@ class LSql {
     public function lock(): LSql {
         $this->_sql[] = ' FOR UPDATE';
         return $this;
+    }
+
+    /**
+     * --- 创建一个本对象的一个新的 sql 对象拷贝 ---
+     * @param string|array $table 可为空，可设置新对象的 table 名变化
+     */
+    public function copy(string|array $f = null): LSql {
+        $sql = implode('', $this->_sql);
+        if ($f && isset($this->_sql[0])) {
+            $table = '';
+            if (is_string($f)) {
+                $table = $this->field($f, $this->_pre);
+            }
+            else {
+                // --- $f: ['user', 'order'] ---
+                foreach ($f as $i) {
+                    $table .= $this->field($i, $this->_pre) . ', ';
+                }
+                $table = substr($table, 0, -2);
+            }
+            $sql = preg_replace('/FROM [`\w, ]+/', 'FROM ' . $table, $this->_sql[0]) . implode('', array_slice($this->_sql, 1));
+        }
+        return Sql::get($this->getPre(), [
+            'data' => $this->_data,
+            'sql' => $sql
+        ]);
     }
 
     // --- 操作 ---
