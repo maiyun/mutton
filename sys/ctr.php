@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-25 17:05:01, 2023-12-21 13:26:06
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-25 17:05:01, 2023-12-21 13:26:06, 2024-5-1 19:54:45
  */
 declare(strict_types = 1);
 
@@ -374,6 +374,9 @@ class Ctr {
         }
         else if (isset($this->_post['_auth'])) {
             $auth = $this->_post['_auth'];
+        }
+        if (!is_string($auth)) {
+            return false;
         }
         $authArr = explode(' ', $auth);
         if (!isset($authArr[1])) {
