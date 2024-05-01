@@ -15,7 +15,7 @@ class Sql {
     /**
      * --- 获取 Sql 实例 ---
      * @param string|null $pre
-     * @param $opt array? data, string? sql
+     * @param $opt array? data, array? sql
      * @return LSql
      */
     public static function get(?string $pre = null, $opt = []): LSql {
@@ -94,7 +94,7 @@ class LSql {
      * --- 实例化 ---
      * LSql constructor.
      * @param string|null $pre
-     * @param $opt array? data, string? sql
+     * @param $opt array? data, array? sql
      */
     public function __construct(?string $pre = null, $opt = []) {
         $this->_pre = $pre !== null ? $pre : SQL_PRE;
@@ -102,7 +102,7 @@ class LSql {
             $this->_data = $opt['data'];
         }
         if (isset($opt['sql'])) {
-            $this->_sql = [$opt['sql']];
+            $this->_sql = $opt['sql'];
         }
     }
 
@@ -570,6 +570,9 @@ class LSql {
         return $this;
     }
 
+    /** --- where 的 data 的开始处和结束处 --- */
+    private $_whereDataPosition = [0, 0];
+
     /**
      * --- 筛选器 ---
      * --- 1. 'city' => 'bj', 'type' => '2' ---
@@ -583,10 +586,12 @@ class LSql {
      * @return LSql
      */
     public function where($s = ''): LSql {
+        $this->_whereDataPosition[0] = count($this->_data);
         if (is_string($s)) {
             // --- string ---
             if ($s !== '') {
                 $this->_sql[] = ' WHERE ' . $s;
+                $this->_whereDataPosition[1] = count($this->_data);
             }
         }
         else {
@@ -597,20 +602,24 @@ class LSql {
                     $this->_sql[] = ' WHERE ' . $whereSub;
                 }
             }
+            $this->_whereDataPosition[1] = count($this->_data);
         }
         return $this;
     }
 
-    private function _whereSub(array $s): string {
+    private function _whereSub(array $s, array &$data = NULL): string {
+        if ($data === NULL) {
+            $data = &$this->_data;
+        }
         $sql = '';
         foreach ($s as $k => $v) {
             if (is_int($k) || is_numeric($k)) {
                 // --- 2, 3, 7 ---
                 if (!isset($v[2])) {
                     // --- 7 ---
-                    $sql .= $this->field($v[0]) . ', ';
+                    $sql .= $this->field($v[0]) . ' AND ';
                     if (isset($v[1])) {
-                        $this->_data = array_merge($this->_data, $v[1]);
+                        $data = array_merge($data, $v[1]);
                     }
                 }
                 else if ($v[2] === NULL) {
@@ -632,7 +641,7 @@ class LSql {
                     $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
                     foreach ($v[2] as $k1 => $v1) {
                         $sql .= '?, ';
-                        $this->_data[] = $v1;
+                        $data[] = $v1;
                     }
                     $sql = substr($sql, 0, -2) . ') AND ';
                 }
@@ -645,7 +654,7 @@ class LSql {
                     }
                     else {
                         $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
-                        $this->_data[] = $v[2];
+                        $data[] = $v[2];
                     }
                 }
             }
@@ -658,10 +667,10 @@ class LSql {
                     foreach ($v as $v1) {
                         // --- v1 是 ['city' => 'bj'] ---
                         if (count($v1) > 1) {
-                            $sql .= '(' . $this->_whereSub($v1) . ')' . $sp;
+                            $sql .= '(' . $this->_whereSub($v1, $data) . ')' . $sp;
                         }
                         else {
-                            $sql .= $this->_whereSub($v1) . $sp;
+                            $sql .= $this->_whereSub($v1, $data) . $sp;
                         }
                     }
                     $sql = substr($sql, 0, -strlen($sp)) . ') AND ';
@@ -681,7 +690,7 @@ class LSql {
                         }
                         else {
                             $sql .= $this->field($k) . ' = ? AND ';
-                            $this->_data[] = $isf[1];
+                            $data[] = $isf[1];
                         }
                     }
                     else {
@@ -690,7 +699,7 @@ class LSql {
                             $sql .= $this->field($k) . ' IN (';
                             foreach ($v as $k1 => $v1) {
                                 $sql .= '?, ';
-                                $this->_data[] = $v1;
+                                $data[] = $v1;
                             }
                             $sql = substr($sql, 0, -2) . ') AND ';
                         }
@@ -775,10 +784,55 @@ class LSql {
 
     /**
      * --- 创建一个本对象的一个新的 sql 对象拷贝 ---
-     * @param string|array $table 可为空，可设置新对象的 table 名变化
+     * @param string|array $f 可为空，可设置新对象的 table 名变化
      */
-    public function copy(string|array $f = null): LSql {
-        $sql = implode('', $this->_sql);
+    public function copy(string|array $f = null, ?array $opt = []): LSql {
+        $sql = $this->_sql;
+        $data = $this->_data;
+        if (isset($opt['where'])) {
+            $sqlLength = count($sql);
+            if (is_string($opt['where'])) {
+                // --- string ---
+                for ($i = 0; $i < $sqlLength; ++$i) {
+                    if (strpos($sql[$i], ' WHERE ') !== 0) {
+                        continue;
+                    }
+                    $sql[$i] = $opt['where'] ? (' WHERE ' . $opt['where']) : '';
+                    array_splice($data,
+                        $this->_whereDataPosition[0],
+                        $this->_whereDataPosition[1] - $this->_whereDataPosition[0]
+                    );
+                    break;
+                }
+            }
+            else {
+                // --- array ---
+                for ($i = 0; $i < $sqlLength; ++$i) {
+                    if (strpos($sql[$i], ' WHERE ') !== 0) {
+                        continue;
+                    }
+                    if (count($opt['where'])) {
+                        // --- 修改 where ---
+                        $d = [];
+                        $sql[$i] = ' WHERE ' . $this->_whereSub($opt['where'], $d);
+                        array_splice($data,
+                            $this->_whereDataPosition[0],
+                            $this->_whereDataPosition[1] - $this->_whereDataPosition[0],
+                            $d
+                        );
+                    }
+                    else {
+                        // --- 清除 where ---
+                        array_splice($sql, $i, 1);
+                        array_splice($data,
+                            $this->_whereDataPosition[0],
+                            $this->_whereDataPosition[1] - $this->_whereDataPosition[0]
+                        );
+                    }
+                    break;
+                }
+            }
+        }
         if ($f && isset($this->_sql[0])) {
             $table = '';
             if (is_string($f)) {
@@ -791,10 +845,10 @@ class LSql {
                 }
                 $table = substr($table, 0, -2);
             }
-            $sql = preg_replace('/FROM [`\w, ]+/', 'FROM ' . $table, $this->_sql[0]) . implode('', array_slice($this->_sql, 1));
+            $sql[0] = preg_replace('/FROM [`\w, ]+/', 'FROM ' . $table, $sql[0]);
         }
         return Sql::get($this->getPre(), [
-            'data' => $this->_data,
+            'data' => $data,
             'sql' => $sql
         ]);
     }

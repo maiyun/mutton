@@ -2048,14 +2048,22 @@ Result:<pre id=\"result\">Nothing.</pre>";
 
                 $s = $sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => '#user.id' ], '_0')->leftJoin('group a', [ 'order.group_id' => '#a.id' ], '_0')->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => '#user.id' ], '_0')->leftJoin('group a', [ 'order.group_id' => '#a.id' ], '_0')->getSql();</pre>
+                $echo[] = "<pre>\$sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => '#user.id' ], '_0')->leftJoin('group a', [ 'order.group_id' => '#a.id' ], '_0');</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 $s = $sql->select('*', 'order')->where([ 'a' => 1, 'b' => 2 ])->unionAll($sql->copy('abc'))->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select('*', 'order')->where([ 'a' => 1, 'b' => 2 ])->unionAll(\$sql->copy('abc'))->getSql();</pre>
+                $echo[] = "<pre>\$sql->select('*', 'order')->where([ 'a' => 1, 'b' => 2 ])->unionAll(\$sql->copy('abc'));</pre>
+<b>getSql() :</b> {$s}<br>
+<b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
+<b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
+
+                $sql = $sql->copy('abcd', [ 'where' => [ 'c' => 2 ] ]);
+                $s = $sql->getSql();
+                $sd = $sql->getData();
+                $echo[] = "<pre>\$sql->copy('abcd', [ 'where' => [ 'c' => 2 ] ]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
