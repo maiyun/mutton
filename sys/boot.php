@@ -2,7 +2,7 @@
 /**
  * Project: Mutton (#f49292), User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:00:43, 2022-3-22 23:31:04, 2022-9-28 15:44:54
+ * Last: 2020-1-17 01:00:43, 2022-3-22 23:31:04, 2022-9-28 15:44:54, 2024-5-27 15:11:10
  */
 declare(strict_types = 1);
 
@@ -70,7 +70,7 @@ function log(string $msg, string $fend = ''): void {
     $path .= $h . $fend . '.csv';
 
     if(!is_file($path)) {
-        if (!@file_put_contents($path, 'TIME,UNIX,URL,RAWPOST,POST,COOKIE,USER_AGENT,REALIP,CLIENTIP,MESSAGE'."\n")) {
+        if (!@file_put_contents($path, 'TIME,UNIX,URL,COOKIE,USER_AGENT,REALIP,CLIENTIP,MESSAGE'."\n")) {
             return;
         }
         @chmod($path, 0777);
@@ -79,8 +79,6 @@ function log(string $msg, string $fend = ''): void {
         date('H:i:s') . '","' .
         time() . '","' .
         URL_FULL . PATH . (count($_GET) ? '?' . str_replace('"', '""', http_build_query($_GET)) : '') . '","' .
-        str_replace('"', '""', file_get_contents('php://input')) . '","' .
-        str_replace('"', '""', json_encode($_POST)) . '","' .
         str_replace('"', '""', http_build_query($_COOKIE)) . '","' .
         str_replace('"', '""', (isset($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : 'No HTTP_USER_AGENT') . '","' .
         str_replace('"', '""', $realIp) . '","' .

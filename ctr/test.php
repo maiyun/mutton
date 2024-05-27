@@ -2272,6 +2272,7 @@ Result:<pre id=\"result\">Nothing.</pre>";
                 $echo[] = "<pre>\$sql->field('a\'bc');</pre>" . $sql->field('a\'bc');
                 $echo[] = "<pre>\$sql->field('`a`WHERE`q` = SUM(0) AND `b` = \"abc\" LEFT JOIN `abc`');</pre>" . $sql->field('`a`WHERE`q` = SUM(0) AND `b` = "abc" LEFT JOIN `abc`');
                 $echo[] = "<pre>\$sql->field('TEST(UTC_TIMESTAMP)');</pre>" . $sql->field('TEST(UTC_TIMESTAMP)');
+                $echo[] = "<pre>\$sql.field('*');</pre>" . $sql->field('*');
                 break;
             }
         }

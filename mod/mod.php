@@ -810,6 +810,33 @@ class Mod {
     public function firstArray(bool $lock = false) {
         return $this->first($lock, true);
     }
+    
+    /**
+     * --- 联合查询表数据 ---
+     * @param $f 要联合查询的表列表，或单个表
+     * @param $type 类型
+     */
+    public function union($f, string $type = '') {
+        if (is_string($f)) {
+            $f = [
+                'field' => $f
+            ];
+        }
+        if (!is_string($f[0])) {
+            $f = [$f];
+        }
+        foreach ($f as $item) {
+            if (is_string($item)) {
+                $item = [
+                    'field' => $item
+                ];
+            }
+            $this->_sql->union($this->_sql->copy($item['field'], [
+                'where' => $item['where']
+            ]), $type);
+        }
+        return $this;
+    }
 
     /**
      * --- 联合查询表数据 ---
@@ -817,10 +844,22 @@ class Mod {
      */
     public function unionAll(array|string $f) {
         if (is_string($f)) {
+            $f = [
+                'field' => $f
+            ];
+        }
+        if (!is_string($f[0])) {
             $f = [$f];
         }
         foreach ($f as $item) {
-            $this->_sql->unionAll($this->_sql->copy($item));
+            if (is_string($item)) {
+                $item = [
+                    'field' => $item
+                ];
+            }
+            $this->_sql->unionAll($this->_sql->copy($item['field'], [
+                'where' => $item['where']
+            ]));
         }
         return $this;
     }
@@ -935,8 +974,8 @@ class Mod {
      * --- 获取总条数，自动抛弃 LIMIT，仅用于获取数据的情况（select） ---
      * @return int
      */
-    public function total(): int {
-        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
+    public function total(string $f = '*'): int {
+        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(' . $this->_sql->field($f) . ') AS `count` FROM', $this->_sql->getSql());
         $sql = preg_replace('/ LIMIT [0-9 ,]+/', '', $sql);
         $ps = $this->_db->prepare($sql);
         try {
