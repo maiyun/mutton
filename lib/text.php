@@ -316,7 +316,8 @@ class Text {
         // --- 比较校验码 ---
         if ($verifyCode == $verifyCodeList[$mod]) {
             return true;
-        } else {
+        }
+        else {
             return false;
         }
     }

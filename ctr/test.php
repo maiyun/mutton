@@ -2467,7 +2467,9 @@ foreach (\$files as \$file) {
 <pre>Text::parseDomain('js.cn');</pre>
 " . json_encode(Text::parseDomain('js.cn')) . "
 <pre>Text::parseDomain('xxx.cn');</pre>
-" . json_encode(Text::parseDomain('xxx.cn'));
+" . json_encode(Text::parseDomain('xxx.cn')) . "
+<pre>Text::isIdCardCN('110101200007284901')</pre>
+" . json_encode(Text::isIdCardCN('110101200007284901'));
         return $echo . '<br><br>' . $this->_getEnd();
     }
 
