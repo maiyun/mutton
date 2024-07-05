@@ -56,7 +56,7 @@ class Core {
     const RANDOM_LU = self::RANDOM_L . self::RANDOM_U;
     const RANDOM_LUN = self::RANDOM_L . self::RANDOM_U . self::RANDOM_N;
     const RANDOM_V = 'ACEFGHJKLMNPRSTWXY34567';
-    const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]';
+    const RANDOM_LUNS = self::RANDOM_LUN . '()`~!@#$%^&*-+=_|{}[]:;\'<>,.?/]"';
 
     /**
      * --- 生成随机字符串 ---

@@ -366,14 +366,15 @@ class LSql {
     private function _updateSub(array $s): string {
         /*
         [
-            ['total', '+', '1'],        // 1, '1' 可能也是 1 数字类型
-            'type' => '6',              // 2
-            'type' => '#type2'          // 3
-            'type' => ['type3']         // 4
+            ['total', '+', '1'],    // 1, '1' 可能也是 1 数字类型
+            'type' => '6',          // 2
+            'type' => '#type2'      // 3
+            'type' => ['type3']     // 4
             'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']],     // 5
             'point' => [ 'x' => 0, 'y' => 0 ],  // 6
-            'polygon' => [ [ [ 'x' => 0, 'y' => 0 ], [ ... ] ], [ ... ] ],   // 7
-            'json' => [ 'a' => 1, 'b' => [ 'c' => 2 ], 'c'=> [ [ 'c' => 2 ] ] ]        // 8
+            'polygon' => [ [ [ 'x' => 0, 'y' => 0 ], [ ... ] ], [ ... ] ],              // 7
+            'json' => [ 'a' => 1, 'b' => [ 'c' => 2 ], 'c'=> [ [ 'c' => 2 ] ] ],        // 8
+            'json2 => [],           // 9
         ]
         */
         $sql = '';
@@ -408,7 +409,7 @@ class LSql {
                             }
                         }
                     }
-                    else if (isset($v[0][0]['y'])) {
+                    else if (isset($v[0]) && isset($v[0][0]) && isset($v[0][0]['y'])) {
                         // --- 7 ---
                         $sql .= 'ST_POLYGONFROMTEXT(?), ';
                         $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
