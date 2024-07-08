@@ -153,7 +153,7 @@ class Ctr {
             // --- ['require', '> 6', [0, 'xx 必须大于 6']] ---
             $lastK = $c - 1;
             if (!isset($val[$lastK][0]) || !isset($val[$lastK][1]) || !is_int($val[$lastK][0]) || !is_string($val[$lastK][1])) {
-                $rtn = [0, 'Param error'];
+                $rtn = [0, 'Param error(' . $key . ')'];
                 return false;
             }
             for ($k = 0; $k < $lastK; ++$k) {
