@@ -181,7 +181,7 @@ class Ctr {
                         if ($r) {
                             $rtn = $val[$lastK];
                             if (gettype($rtn[1]) === 'string') {
-                                $rtn[1] .= '(' + $r + ')';
+                                $rtn[1] .= '('. $r . ')';
                             }
                             return false;
                         }
