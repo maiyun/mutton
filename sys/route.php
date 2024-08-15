@@ -190,7 +190,7 @@ class Route {
         $rtn = $middle->onLoad();
         $cacheTTL = $middle->getPrototype('_cacheTTL');
         $httpCode = $middle->getPrototype('_httpCode');
-        if (!isset($rtn) || $rtn !== false) {
+        if (!isset($rtn) || $rtn === true) {
             // --- 只有不返回或返回 true 时才加载控制文件 ---
             // --- 判断真实控制器文件是否存在 ---
             $filePath = CTR_PATH . $pathLeft . '.php';
@@ -272,7 +272,7 @@ class Route {
             // --- 执行 onLoad 方法 ---
             $rtn = $ctr->onLoad();
             // --- 执行 action ---
-            if (!isset($rtn) || $rtn !== false) {
+            if (!isset($rtn) || $rtn === true) {
                 $rtn = $ctr->$pathRight();
                 $rtn = $ctr->onUnload($rtn);
                 $rtn = $middle->onUnload($rtn);

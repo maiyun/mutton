@@ -142,14 +142,18 @@ class Text {
         return $url;
     }
 
+    const REGEXP_EMAIL = '/^[-_\w.]+@[-_\w.]+\.([a-zA-Z]+)$/i';
+
     /**
      * --- 是否是邮件地址 ---
      * @param string $email
      * @return bool
      */
     public static function isEMail(string $email): bool {
-        return preg_match('/^[-_\w.]+@[-_\w.]+\.([a-zA-Z]+)$/i', $email) ? true : false;
+        return preg_match(self::REGEXP_EMAIL, $email) ? true : false;
     }
+
+    const REGEXP_IPV4 = '/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/';
 
     /**
      * --- 是否是 IPv4 ---
@@ -157,8 +161,10 @@ class Text {
      * @return bool
      */
     public static function isIPv4(string $ip): bool {
-        return preg_match('/^[0-9]{1,3}(\.[0-9]{1,3}){3}$/', $ip) ? true : false;
+        return preg_match(self::REGEXP_IPV4, $ip) ? true : false;
     }
+
+    const REGEXP_IPV6 = '/^(\w*?:){2,7}[\w.]*$/';
 
     /**
      * --- 是否是 IPv6 ---
@@ -166,8 +172,10 @@ class Text {
      * @return bool
      */
     public static function isIPv6(string $ip): bool {
-        return preg_match('/^(\w*?:){2,7}[\w.]*$/', $ip) ? true : false;
+        return preg_match(self::REGEXP_IPV6, $ip) ? true : false;
     }
+
+    const REGEXP_DOMAIN = '/^.+?\.((?![0-9]).)+$/i';
 
     /**
      * --- 判断是否是域名 ---
@@ -175,7 +183,18 @@ class Text {
      * @return bool
      */
     public static function isDomain(string $domain): bool {
-        return preg_match('/^.+?\.((?![0-9]).)+$/i', $domain) ? true : false;
+        return preg_match(self::REGEXP_DOMAIN, $domain) ? true : false;
+    }
+
+    const REGEXP_ASCII = '/^[\x20-\x7E]*$/';
+
+    /**
+     * --- 判断是否在 ascii 字符集内，仅可输入部分 ---
+     * @param string $text 要判断的文本
+     * @return bool
+     */
+    public static function isAscii(string $text): bool {
+        return preg_match(self::REGEXP_ASCII, $text) ? true : false;
     }
 
     /**

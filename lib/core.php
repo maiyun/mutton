@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2022-08-27 02:13:04
- * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07, 2023-4-10 17:56:12, 2023-12-27 15:50:38
+ * Last: 2022-08-27 02:13:08, 2022-09-02 13:11:07, 2023-4-10 17:56:12, 2023-12-27 15:50:38, 2024-8-15 18:36:11
  */
 declare(strict_types = 1);
 
@@ -148,6 +148,68 @@ class Core {
             return $keepPres[$nump];
         }, $text);
         return substr($text, 1, -1);
+    }
+
+    /**
+     * --- 判断一个对象是否符合示例组，返回空字符串代表校验通过，返回：应该的类型:位置:传入的类型 ---
+     * @param $val 对象
+     * @param $type 示例组
+     * @param $tree 当前树，无需传入
+     */
+    public static function checkType($val, $type, string $tree = 'root'): string {
+        /** --- 要校验的对象 --- */
+        $vtype = strtolower(gettype($val));
+        if (is_array($type) && isset($type[0])) {
+            // --- 数组的话 ---
+            if (!is_array($val) || !isset($val[0])) {
+                return 'array:' . $tree . ':' . (!is_array($val) ? $vtype : 'object');
+            }
+            $length = count($val);
+            for ($i = 0; $i < $length; ++$i) {
+                $res = self::checkType($val[$i], $type[0], $tree . '.' . $i);
+                if ($res) {
+                    return $res;
+                }
+            }
+            return '';
+        }
+        /** --- 要符合的类型 --- */
+        $ttype = strtolower(gettype($type));
+        if ($ttype === 'string' && isset($type[0]) && $type[0] === '/') {
+            // --- 正则 ---
+            if ($vtype !== 'string') {
+                return 'regexp:' . $tree . ':' . $vtype;
+            }
+            return preg_match($type, $val) ? '' : 'regexp:' . $tree . ':' . $vtype;
+        }
+        if ($val === null) {
+            return $ttype . ':' . $tree . ':null';
+        }
+        if ($ttype === 'string') {
+            if ($vtype !== 'string') {
+                return 'string:' + $tree + ':' + $vtype;
+            }
+            if ($type) {
+                return $val ? '' : 'require:' . $tree . ':' . $vtype;
+            }
+            return '';
+        }
+        if (is_array($type) && !isset($type[0])) {
+            if (!is_array($val) || isset($val[0])) {
+                return 'object:' . $tree . ':' . (!is_array($val) ? $vtype : 'array');
+            }
+            foreach ($type as $key => $typeKey) {
+                if (!isset($val[$key])) {
+                    $val[$key] = null;
+                }
+                $res = self::checkType($val[$key], $typeKey, $tree . '.' . $key);
+                if ($res) {
+                    return $res;
+                }
+            }
+            return '';
+        }
+        return $vtype === $ttype ? '' : $ttype . ':' . $tree . ':' . $vtype;
     }
 
     /**

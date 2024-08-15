@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2018-6-17 23:29
- * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-25 17:05:01, 2023-12-21 13:26:06, 2024-5-1 19:54:45
+ * Last: 2020-1-17 01:05:14, 2020-2-12 13:02:35, 2020-3-30 15:31:48, 2022-3-25 17:05:01, 2023-12-21 13:26:06, 2024-5-1 19:54:45, 2024-8-15 19:02:50
  */
 declare(strict_types = 1);
 
@@ -163,14 +163,28 @@ class Ctr {
                         $rtn = $val[$lastK];
                         return false;
                     }
-                    // --- 判断提交的数据是否在此 array 之内，若没有提交数据，则自动设置为第一个项 ---
-                    if ($input[$key] === null) {
-                        $input[$key] = $v[0];
+                    if (isset($v[0])) {
+                        // --- array ---
+                        // --- 判断提交的数据是否在此 array 之内，若没有提交数据，则自动设置为第一个项 ---
+                        if ($input[$key] === null) {
+                            $input[$key] = $v[0];
+                        }
+                        else if (!in_array($input[$key], $v)) {
+                            // --- 不在 ---
+                            $rtn = $val[$lastK];
+                            return false;
+                        }
                     }
-                    else if (!in_array($input[$key], $v)) {
-                        // --- 不在 ---
-                        $rtn = $val[$lastK];
-                        return false;
+                    else if (isset($v['type'])) {
+                        // --- core.checkType ---
+                        $r = Core::checkType($input[$key], $v['type']);
+                        if ($r) {
+                            $rtn = $val[$lastK];
+                            if (gettype($rtn[1]) === 'string') {
+                                $rtn[1] .= '(' + $r + ')';
+                            }
+                            return false;
+                        }
                     }
                 }
                 else {
@@ -512,7 +526,7 @@ class Ctr {
         header('access-control-allow-headers: *');
         header('access-control-allow-methods: *');
         if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-            header('access-control-max-age: 3600');
+            header('access-control-max-age: 600');
             return false;
         }
         return true;

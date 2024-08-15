@@ -130,6 +130,7 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/core-rand">View "test/core-rand"</a>',
             '<br><a href="' . URL_BASE . 'test/core-convert62">View "test/core-convert62"</a>',
             '<br><a href="' . URL_BASE . 'test/core-purify">View "test/core-purify"</a>',
+            '<br><a href="' . URL_BASE . 'test/core-checktype">View "test/core-checktype"</a>',
             '<br><a href="' . URL_BASE . 'test/core-muid">View "test/core-muid"</a>',
 
             '<br><br><b>Crypto:</b>',
@@ -255,7 +256,8 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
     'he' => ['require', [0, 'The he param does not exist.']],
     'num' => ['> 10', [0, 'The num param must > 10.']],
     'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
-    'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+    'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']],
+    'type' => [[ 'type' => [ 'a' => 1, 'b' => '' ] ], [0, 'The reg param is incorrect']]
 ]</pre>"];
 
         $post = [
@@ -283,9 +285,26 @@ Result:<pre id=\"result\">Nothing.</pre>" . $this->_getEnd();
                 'num' => '12',
                 'reg' => 'BBB6YYY6',
                 'arr' => 'hehe'
+            ],
+            [
+                'he' => 'ok',
+                'num' => '12',
+                'reg' => 'BBB6YYY6',
+                'arr' => 'hehe',
+                'type' => [ 'a' => false, 'b' => '1' ]
+            ],
+            [
+                'he' => 'ok',
+                'num' => '12',
+                'reg' => 'BBB6YYY6',
+                'arr' => 'hehe',
+                'type' => [ 'a' => 0, 'b' => 'ok' ]
             ]
         ];
-        foreach ($post as $item) {
+        foreach ($post as &$item) {
+            if (isset($item['type'])) {
+                $item['type'] = json_encode($item['type']);
+            }
             $p = http_build_query($item);
             $echo[] = "<input type=\"button\" value=\"Post '" . $p . "'\" onclick=\"post('" . $p . "')\"><br>";
         }
@@ -327,11 +346,15 @@ function postFd() {
         return join('', $echo) . $this->_getEnd();
     }
     public function ctrCheckinput1() {
+        if (isset($_POST['type'])) {
+            $_POST['type'] = json_decode($_POST['type'], true);
+        }
         if (!$this->_checkInput($_POST, [
             'he' => ['require', [0, 'The he param does not exist.']],
             'num' => ['> 10', [0, 'The num param must > 10.']],
             'reg' => ['/^[A-CX-Z5-7]+$/', [0, 'The reg param is incorrect.']],
-            'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']]
+            'arr' => [['a', 'x', 'hehe'], [0, 'The arr param is incorrect.']],
+            'type' => [[ 'type' => [ 'a' => 1, 'b' => '' ] ], [0, 'The type param is incorrect']]
         ], $return)) {
             return $return;
         }
@@ -756,6 +779,124 @@ CREATE TABLE `m_test_data_0` (
     </body>
 </html>";
         return '<pre>Core::purify("' . htmlspecialchars($html) . '");</pre>' . htmlspecialchars(Core::purify($html)) . '<br><br>' . $this->_getEnd();
+    }
+
+    public function coreChecktype() {
+        $type1 = [
+            'a' => '1',
+            'b' => 0,
+            'c' => false,
+            'd' => [
+                'e' => 0,
+                'f' => false,
+                'g' => [
+                    [
+                        'h' => 0
+                    ]
+                ]
+            ]
+        ];
+        $type2 = [
+            [
+                'a' => '',
+                'b' => '1',
+                'c' => '/^a.c$/'
+            ]
+        ];
+        $o1 = 0;
+        $o2 = [
+            'a' => '',
+            'b' => ''
+        ];
+        $o3 = [[
+            'a' => '',
+            'b' => 'ok',
+            'c' => 'acd'
+        ]];
+        $o4 = [
+            'a' => 'aaa',
+            'b' => 21424,
+            'c' => true,
+            'd' => [
+                'e' => 0,
+                'f' => false,
+                'g' => 'ok'
+            ]
+        ];
+        $o5 = [
+            'a' => 'aaa',
+            'b' => 21424,
+            'c' => true,
+            'd' => [
+                'e' => 0,
+                'f' => false,
+                'g' => [
+                    [
+                        'x' => 'ok'
+                    ]
+                ]
+            ]
+        ];
+        $o6 = [
+            'a' => 'aaa',
+            'b' => 21424,
+            'c' => true,
+            'd' => [
+                'e' => 0,
+                'f' => false,
+                'g' => [
+                    [
+                        'h' => 138
+                    ]
+                ]
+            ]
+        ];
+        $o7 = [
+            [
+                'a' => '',
+                'b' => 'ok'
+            ],
+            [
+                'a' => '',
+                'b' => 'ok2'
+            ],
+            [
+                'a' => '',
+                'b' => 0
+            ]
+        ];
+        $o8 = [[
+            'a' => '',
+            'b' => 'ok',
+            'c' => 'abc'
+        ]];
+        return "type1:<pre>" . json_encode($type1) . "</pre>
+type2:<pre>" . json_encode($type2) . "</pre>
+o1:<pre>" . json_encode($o1) . "</pre>
+Core::checkType(\$o1, \$type1): " . Core::checkType($o1, $type1) . "<br>
+Core::checkType(\$o1, \$type2): " . Core::checkType($o1, $type2) . "<br><br>
+o2:<pre>" . json_encode($o2) . "</pre>
+Core::checkType(\$o2, \$type1): " . Core::checkType($o2, $type1) . "<br>
+Core::checkType(\$o2, \$type2): " . Core::checkType($o2, $type2) . "<br><br>
+o3:<pre>" . json_encode($o3) . "</pre>
+Core::checkType(\$o3, \$type1): " . Core::checkType($o3, $type1) . "<br>
+Core::checkType(\$o3, \$type2): " . Core::checkType($o3, $type2) . "<br><br>
+o4:<pre>" . json_encode($o4) . "</pre>
+Core::checkType(\$o4, \$type1): " . Core::checkType($o4, $type1) . "<br>
+Core::checkType(\$o4, \$type2): " . Core::checkType($o4, $type2) . "<br><br>
+o5:<pre>" . json_encode($o5) ."</pre>
+Core::checkType(\$o5, \$type1): " . Core::checkType($o5, $type1) . "<br>
+Core::checkType(\$o5, \$type2): " . Core::checkType($o5, $type2) . "<br><br>
+o6:<pre>" . json_encode($o6) . "</pre>
+Core::checkType(\$o6, \$type1): " . Core::checkType($o6, $type1) . "<br>
+Core::checkType(\$o6, \$type2): " . Core::checkType($o6, $type2) . "<br><br>
+o7:<pre>" . json_encode($o7) ."</pre>
+Core::checkType(\$o7, \$type1): " . Core::checkType($o7, $type1) . "<br>
+Core::checkType(\$o7, \$type2): " . Core::checkType($o7, $type2) . "<br><br>
+o8:<pre>" . json_encode($o8) ."</pre>
+Core::checkType(\$o8, \$type1: " . Core::checkType($o8, $type1) . "<br>
+Core::checkType(\$o8, \$type2): " . Core::checkType($o8, $type2) . "
+<br><br>" . $this->_getEnd();
     }
 
     public function coreMuid() {

@@ -813,10 +813,14 @@ class Mod {
     
     /**
      * --- 联合查询表数据 ---
-     * @param $f 要联合查询的表列表，或单个表
+     * @param $f 要联合查询的表列表、单个表、sql 对象
      * @param $type 类型
      */
     public function union($f, string $type = '') {
+        if ($f instanceof LSql) {
+            $this->_sql->union($f, $type);
+            return $this;
+        }
         if (is_string($f)) {
             $f = [
                 'field' => $f
@@ -840,9 +844,13 @@ class Mod {
 
     /**
      * --- 联合查询表数据 ---
-     * @param $f 要联合查询的表列表，或单个表
+     * @param $f 要联合查询的表列表、单个表、sql 对象
      */
-    public function unionAll(array|string $f) {
+    public function unionAll(array|string|LSql $f) {
+        if ($f instanceof LSql) {
+            $this->_sql->unionAll($f);
+            return $this;
+        }
         if (is_string($f)) {
             $f = [
                 'field' => $f
