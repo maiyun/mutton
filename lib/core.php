@@ -272,5 +272,96 @@ class Core {
         return isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
     }
 
+    /**
+     * --- 获取日志内容为一个数组 ---
+     * @param array $opt path(2024/08/01/22), fend(可选，-error), search(可选), offset(可选，默认0), limit(可选，默认100)
+     */
+    public static function getLog(array $opt): array | null | false {
+        $path = LOG_PATH . $opt['path'] . (isset($opt['fend']) ? $opt['fend'] : '') . '.csv';
+        if (!is_file($path)) {
+            return null;
+        }
+        /** --- 剩余 limit --- */
+        $limit = isset($opt['limit']) ? $opt['limit'] : 100;
+        /** --- 剩余 offset --- */
+        $offset = isset($opt['offset']) ? $opt['offset'] : 0;
+
+        $list = [];
+        /** --- 当前行号 --- */
+        $line = 0;
+        /** --- 当前行数据 --- */
+        $packet = '';
+        $fh = fopen($path, 'r');
+        if (!$fh) {
+            return false;
+        }
+        while (!feof($fh)) {
+            $buf = fread($fh, 32768);
+            if ($buf === false) {
+                return false;
+            }
+            while (true) {
+                // --- 分包 ---
+                $index = strpos($buf, "\n");
+                if ($index === false) {
+                    // --- 本次包还没有结束 ---
+                    $packet .= $buf;
+                    break;
+                }
+                // --- 本次行结束了 ---
+                if ($limit === 0) {
+                    break;
+                }
+                $packet .= substr($buf, 0, $index);
+                $buf = substr($buf, $index + 1);
+                ++$line;
+                // --- 先执行下本次完成的 ---
+                if ($line > 1) {
+                    if ($offset === 0) {
+                        $result = [];
+                        $currentField = '';
+                        $inQuotes = false;
+                        $packetLength = strlen($packet);
+                        for ($i = 0; $i < $packetLength; ++$i) {
+                            $char = $packet[$i];
+                            if ($char === '"') {
+                                if ($inQuotes && isset($packet[$i + 1]) && $packet[$i + 1] === '"') {
+                                    $currentField .= '"';
+                                    ++$i;
+                                }
+                                else {
+                                    $inQuotes = !$inQuotes;
+                                }
+                            }
+                            else if ($char === ',' && !$inQuotes) {
+                                $result[] = $currentField;
+                                $currentField = '';
+                            }
+                            else {
+                                $currentField .= $char;
+                            }
+                        }
+                        $result[] = $currentField;
+                        $list[] = $result;
+                        --$limit;
+                    }
+                    else {
+                        --$offset;
+                    }
+                }
+                // --- 处理结束 ---
+                $packet = '';
+                // --- 看看还有没有后面的粘连包 ---
+                if (!strlen($buf)) {
+                    // --- 没粘连包 ---
+                    break;
+                }
+                // --- 有粘连包 ---
+            }
+        }
+        fclose($fh);
+        return $list;
+    }
+
 }
 

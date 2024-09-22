@@ -132,6 +132,7 @@ class Test extends Ctr {
             '<br><a href="' . URL_BASE . 'test/core-purify">View "test/core-purify"</a>',
             '<br><a href="' . URL_BASE . 'test/core-checktype">View "test/core-checktype"</a>',
             '<br><a href="' . URL_BASE . 'test/core-muid">View "test/core-muid"</a>',
+            '<br><a href="' . URL_BASE . 'test/core-getlog">View "test/core-getlog"</a>',
 
             '<br><br><b>Crypto:</b>',
             '<br><br><a href="' . URL_BASE . 'test/crypto">View "test/crypto"</a>',
@@ -959,6 +960,30 @@ for (\$i = 0; \$i < 30000; ++\$i) {
         }
 
         return join('', $echo) . $this->_getEnd();
+    }
+
+    public function coreGetlog(): string {
+        $path = date('Y/m/d/H');
+        $list = Core::getLog(([
+            'path' => $path,
+            'fend' => '-visit'
+        ]));
+        $echo = [];
+        $echo[] = '<table style="width: 100%;"><tr>';
+        if ($list) {
+            foreach ($list as $row) {
+                $echo[] = '<tr>';
+                foreach ($row as $item) {
+                    $echo[] = '<td>' . htmlspecialchars($item) . '</td>';
+                }
+                $echo[] = '</tr>';
+            }
+        }
+        else {
+            $echo[] = '<th>' . json_encode($list) . '</th></tr>';
+        }
+        $echo[] = '</table>';
+        return join('', $echo) . '<br>' . $this->_getEnd();
     }
 
     public function crypto() {
@@ -2166,30 +2191,30 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
-                $s = $sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => '#user.id', 'state' => '1'])->getSql();
+                $s = $sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => Sql::column('user.id'), 'state' => '1'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => '#user.id', 'state' => '1']);</pre>
+                $echo[] = "<pre>\$sql->select(['order.no', 'user.nick'], ['order'])->leftJoin('user', ['order.user_id' => Sql::column('user.id'), 'state' => '1']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
-                $s = $sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => '#u.id', 'state' => '1'])->getSql();
+                $s = $sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('`user` AS u', ['o.user_id' => Sql::column('u.id'), 'state' => '1'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => '#u.id', 'state' => '1']);</pre>
+                $echo[] = "<pre>\$sql->select(['o.*', 'u.nick as unick'], ['order o'])->leftJoin('user AS u', ['o.user_id' => Sql::column('u.id'), 'state' => '1']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
-                $s = $sql->select(['SUM(user.age) age', 'UTC_TIMESTAMP', 'FROM_UNIXTIME(user.time, \'%Y-%m\') as time'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])->getSql();
+                $s = $sql->select(['SUM(user.age) age', 'UTC_TIMESTAMP', 'FROM_UNIXTIME(user.time, \'%Y-%m\') as time'], 'order')->leftJoin('user', ['order.user_id' => Sql::column('user.id')])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select(['SUM(user.age) age', 'UTC_TIMESTAMP', 'FROM_UNIXTIME(user.time, \'%Y-%m\') as time'], 'order')->leftJoin('user', ['order.user_id' => '#user.id']);</pre>
+                $echo[] = "<pre>\$sql->select(['SUM(user.age) age', 'UTC_TIMESTAMP', 'FROM_UNIXTIME(user.time, \'%Y-%m\') as time'], 'order')->leftJoin('user', ['order.user_id' => Sql::column('user.id')]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
-                $s = $sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => '#user.id' ], '_0')->leftJoin('group a', [ 'order.group_id' => '#a.id' ], '_0')->getSql();
+                $s = $sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => Sql::column('user.id') ], '_0')->leftJoin('group a', [ 'order.group_id' => Sql::column('a.id') ], '_0')->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => '#user.id' ], '_0')->leftJoin('group a', [ 'order.group_id' => '#a.id' ], '_0');</pre>
+                $echo[] = "<pre>\$sql->select('*', 'order')->leftJoin('user', [ 'order.user_id' => Sql::column('user.id') ], '_0')->leftJoin('group a', [ 'order.group_id' => Sql::column('a.id') ], '_0');</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
@@ -2213,9 +2238,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
             case 'update': {
                 // --- 1, 2 ---
 
-                $s = $sql->update('user', [['age', '+', '1'], 'name' => 'Serene', 'nick' => '#name', ['year', '+', '#age']])->where(['name' => 'Ah'])->getSql();
+                $s = $sql->update('user', [['age', '+', '1'], 'name' => 'Serene', 'nick' => Sql::column('name'), ['year', '+', Sql::column('age')]])->where(['name' => 'Ah'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->update('user', [['age', '+', '1'], 'name' => 'Serene', 'nick' => '#name', ['year', '+', '#age']]).where(['name' => 'Ah']);</pre>
+                $echo[] = "<pre>\$sql->update('user', [['age', '+', '1'], 'name' => 'Serene', 'nick' => Sql::column('name'), ['year', '+', Sql::column('age')]]).where(['name' => 'Ah']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
@@ -2231,9 +2256,9 @@ Result:<pre id=\"result\">Nothing.</pre>";
 
                 // --- # ---
 
-                $s = $sql->update('user', ['age' => '#age_verify', 'date' => '##', 'he' => ['he2']])->where(['date_birth' => '2001'])->getSql();
+                $s = $sql->update('user', ['age' => Sql::column('age_verify'), 'date' => '#12', 'he' => ['he2']])->where(['date_birth' => '2001'])->getSql();
                 $sd = $sql->getData();
-                $echo[] = "<pre>\$sql->update('user', ['age' => '#age_verify', 'date' => '##', 'he' => ['he2']])->where(['date_birth' => '2001']);</pre>
+                $echo[] = "<pre>\$sql->update('user', ['age' => Sql::column('age_verify'), 'date' => '#12', 'he' => ['he2']])->where(['date_birth' => '2001']);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>
 <b>format() :</b> " . $sql->format($s, $sd);
@@ -2310,11 +2335,11 @@ Result:<pre id=\"result\">Nothing.</pre>";
 <b>format() :</b> " . $sql->format($s, $sd) . "<hr>";
 
                 $s = $sql->select('*', 'user')->where([
-                    'time_verify' => '#time_add'
+                    'time_verify' => Sql::column('time_add')
                 ])->getSql();
                 $sd = $sql->getData();
                 $echo[] = "<pre>\$sql->update('*', 'user')->where([
-    'time_verify' => '#time_add'
+    'time_verify' => Sql::column('time_add')
 ]);</pre>
 <b>getSql() :</b> {$s}<br>
 <b>getData():</b> <pre>" . json_encode($sd, JSON_PRETTY_PRINT) . "</pre>

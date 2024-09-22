@@ -82,8 +82,8 @@ function log(string $msg, string $fend = ''): void {
         str_replace('"', '""', http_build_query($_COOKIE)) . '","' .
         str_replace('"', '""', (isset($_SERVER['HTTP_USER_AGENT'])) ? $_SERVER['HTTP_USER_AGENT'] : 'No HTTP_USER_AGENT') . '","' .
         str_replace('"', '""', $realIp) . '","' .
-        str_replace('"', '""', $clientIp) . '","' .
-        str_replace('"', '""', $msg) . "\"\n", FILE_APPEND);
+        str_replace('"', '""', $clientIp) . '",' .
+        json_encode(str_replace('"', '""', $msg)) . "\n", FILE_APPEND);
 }
 log('', '-visit');
 

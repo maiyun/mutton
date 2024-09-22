@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015/6/24 18:55
- * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02, 2023-12-21 13:04:41, 2024-3-19 16:17:42, 2024-4-1 18:49:59, 2024-5-1 19:31:01, 2024-5-27 16:48:39
+ * Last: 2019-7-21 00:17:32, 2019-09-17, 2019-12-27 17:11:57, 2020-1-31 20:42:08, 2020-10-16 15:59:57, 2021-9-21 18:39:55, 2021-9-29 18:55:42, 2021-10-4 02:15:54, 2021-11-30 11:02:39, 2021-12-7 16:16:27, 2022-07-24 15:14:17, 2022-08-29 21:10:03, 2022-09-07 01:24:22, 2023-6-9 22:17:53, 2023-8-24 22:43:02, 2023-12-21 13:04:41, 2024-3-19 16:17:42, 2024-4-1 18:49:59, 2024-5-1 19:31:01, 2024-5-27 16:48:39, 2024-9-20 19:51:14
  */
 declare(strict_types = 1);
 
@@ -11,6 +11,9 @@ namespace lib;
 require ETC_PATH . 'sql.php';
 
 class Sql {
+
+    /** --- filed 用 token --- */
+    public static $columnToken = '';
 
     /**
      * --- 获取 Sql 实例 ---
@@ -72,6 +75,18 @@ class Sql {
             }
         }
         return "'" . join('', $rStr) . "'";
+    }
+
+    /** --- 创建字段对象 --- */
+    public static function column(string $field): array {
+        if (!self::$columnToken) {
+            self::$columnToken = Core::random(8, Core::RANDOM_LUNS);
+        }
+        return [
+            'token' => self::$columnToken,
+            'type' => 'column',
+            'value' => $field
+        ];
     }
 
 }
@@ -164,14 +179,14 @@ class LSql {
                         $this->_data[] = $v1;
                     }
                     else if (is_array($v1) && !isset($v1['x'])) {
-                        if (!isset($v1[0][0]) || !isset($v1[0][0]['x'])) {
+                        if (!isset($v1[0]) || ((!isset($v1[0][0]) || !isset($v1[0][0]['x'])) && is_string($v1[0]) && (strpos($v1[0], '(') !== false) && (strpos($v1[0], ')') !== false))) {
                             // --- v1: ['POINT(?)', ['20']] ---
                             $sql .= $this->field($v1[0]) . ', ';
                             if (isset($v1[1])) {
                                 $this->_data = array_merge($this->_data, $v1[1]);
                             }
                         }
-                        else if (isset($v1[0][0]['y'])) {
+                        else if (isset($v1[0]) && isset($v1[0][0]) && isset($v1[0][0]['y'])) {
                             // --- v1: [[['x' => 1, 'y' => 2], [ ... ]], [[ ... ], [ ... ]]] ---
                             $sql .= 'ST_POLYGONFROMTEXT(?), ';
                             $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
@@ -198,9 +213,14 @@ class LSql {
                             $this->_data[] = json_encode($v1);
                         }
                     }
+                    else if ($this->_isField($v1)) {
+                        // --- 3 ---
+                        $sql .= $this->field($v1['value']) . ', ';
+                    }
                     else {
+                        // --- json ---
                         $sql .= '?, ';
-                        $this->_data[] = $v1;
+                        $this->_data[] = json_encode($v1);
                     }
                 }
                 $sql = substr($sql, 0, -2) . '), ';
@@ -221,14 +241,14 @@ class LSql {
                     $this->_data[] = $v;
                 }
                 else if (is_array($v) && !isset($v['x'])) {
-                   if (!isset($v[0][0]) || !isset($v[0][0]['x'])) {
+                    if (!isset($v[0]) || ((!isset($v[0][0]) || !isset($v[0][0]['x'])) && is_string($v[0]) && (strpos($v[0], '(') !== false) && (strpos($v[0], ')') !== false))) {
                         // --- v: ['POINT(?)', ['20']] ---
                         $values .= $this->field($v[0]) . ', ';
                         if (isset($v[1])) {
                             $this->_data = array_merge($this->_data, $v[1]);
                         }
                     }
-                    else if (isset($v[0][0]['y'])) {
+                    else if (isset($v[0]) && isset($v[0][0]) && isset($v[0][0]['y'])) {
                         // --- v: [[['x' => 1, 'y' => 2], [ ... ]], [[ ... ], [ ... ]]] ---
                         $values .= 'ST_POLYGONFROMTEXT(?), ';
                         $this->_data[] = 'POLYGON(' . implode(', ', array_map(function ($item) {
@@ -251,13 +271,18 @@ class LSql {
                     }
                     else {
                         // --- v: json ---
-                        $values .= '?,';
+                        $values .= '?, ';
                         $this->_data[] = json_encode($v);
                     }
                 }
+                else if ($this->_isField($v)) {
+                    // --- 3 ---
+                    $sql .= $this->field($v['value']) . ', ';
+                }
                 else {
+                    // --- json ---
                     $values .= '?, ';
-                    $this->_data[] = $v;
+                    $this->_data[] = json_encode($v);
                 }
             }
             $sql = substr($sql, 0, -2) . ') VALUES (' . substr($values, 0, -2) . ')';
@@ -368,45 +393,45 @@ class LSql {
         [
             ['total', '+', '1'],    // 1, '1' 可能也是 1 数字类型
             'type' => '6',          // 2
-            'type' => '#type2'      // 3
-            'type' => ['type3']     // 4
+            'type' => column('type2')   // 3
+            'type' => ['type3']         // 4 - 此写法已被禁止，请用 (3) 代替
             'type' => ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']],     // 5
             'point' => [ 'x' => 0, 'y' => 0 ],  // 6
             'polygon' => [ [ [ 'x' => 0, 'y' => 0 ], [ ... ] ], [ ... ] ],              // 7
-            'json' => [ 'a' => 1, 'b' => [ 'c' => 2 ], 'c'=> [ [ 'c' => 2 ] ] ],        // 8
-            'json2 => [],           // 9
+            'json' => [ 'a' => 1, 'b' => [ 'c' => 2 ], 'c'=> [ [ 'c' => 2 ] ] ],        // 8 - 对象类 json，可能为空对象
+            'json2 => ['abc'],           // 9 - 数组类 json，可能为空数组
         ]
         */
         $sql = '';
         foreach ($s as $k => $v) {
             if (is_int($k) || is_numeric($k)) {
                 // --- 1 ---
-                $isf = $this->_isField($v[2]);
-                if ($isf[0]) {
-                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($isf[1]) . ', ';
+                $nv = $v[2];
+                $isf = $this->_isField($nv);
+                if ($isf) {
+                    $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($nv['value']) . ', ';
                 }
                 else {
                     $sql .= $this->field($v[0]) . ' = ' . $this->field($v[0]) . ' ' . $v[1] . ' ?, ';
-                    $this->_data[] = $isf[1];
+                    $this->_data[] = $nv;
                 }
             }
             else {
-                // --- 2, 3, 4, 5, 6, 7, 8(2) ---
+                // --- 2, 3, 4, 5, 6, 7, 8 ---
                 $sql .= $this->field($k) . ' = ';
-                if (is_array($v) && !isset($v['x'])) {
-                    if (!isset($v[0]) || !isset($v[0][0]) || !isset($v[0][0]['x'])) {
-                        // --- 4, 5, 8(2) ---
-                        if (!isset($v[0]) || is_array($v[0])) {
-                            // --- 8(2), v: json ---
-                            $sql .= '?, ';
-                            $this->_data[] = json_encode($v);
-                        }
-                        else {
-                            // --- 4, 5 ---
-                            $sql .= $this->field($v[0]) . ', ';
-                            if (isset($v[1])) {
-                                $this->_data = array_merge($this->_data, $v[1]);
-                            }
+                if ($v === NULL) {
+                    $sql .= 'NULL, ';
+                }
+                else if (is_string($v) || is_int($v) || is_float($v)) {
+                    $sql .= '?, ';
+                    $this->_data[] = $v;
+                }
+                else if (is_array($v) && !isset($v['x'])) {
+                    if (!isset($v[0]) || ((!isset($v[0][0]) || !isset($v[0][0]['x'])) && is_string($v[0]) && (strpos($v[0], '(') !== false) && (strpos($v[0], ')') !== false))) {
+                        // --- 4, 5: ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']] ---
+                        $sql .= '?, ';
+                        if (isset($v[1])) {
+                            $this->_data = array_merge($this->_data, $v[1]);
                         }
                     }
                     else if (isset($v[0]) && isset($v[0][0]) && isset($v[0][0]['y'])) {
@@ -419,7 +444,7 @@ class LSql {
                         }, $v)) . ')';
                     }
                     else {
-                        // --- 8: json ---
+                        // --- v: json ---
                         $sql .= '?, ';
                         $this->_data[] = json_encode($v);
                     }
@@ -432,22 +457,25 @@ class LSql {
                     }
                     else {
                         // --- v: json ---
-                        $sql .= '?, ';
-                        $this->_data[] = json_encode($v);
+                        if ($this->_isField($v)) {
+                            // --- 3 ---
+                            $sql .= $this->field($v['value']) . ', ';
+                        }
+                        else {
+                            // --- 8 ---
+                            $sql .= '?, ';
+                            $this->_data[] = json_encode($v);
+                        }
                     }
                 }
+                else if ($this->_isField($v)) {
+                    // --- 3 ---
+                    $sql .= $this->field($v['value']) . ', ';
+                }
                 else {
-                    // --- 2, 3 ---
-                    $isf = $this->_isField($v);
-                    if ($isf[0]) {
-                        // --- 3: field ---
-                        $sql .= $this->field($isf[1]) . ', ';
-                    }
-                    else {
-                        // --- 2 ---
-                        $sql .= '?, ';
-                        $this->_data[] = $isf[1];
-                    }
+                    // --- json ---
+                    $sql .= '?, ';
+                    $this->_data[] = json_encode($v);
                 }
             }
         }
@@ -473,7 +501,7 @@ class LSql {
      */
     public function union(LSql $lsql, string $type = ''): LSql {
         $this->_data = array_merge($this->_data, $lsql->getData());
-        $this->_sql[] = ' UNION ' . ($type ? $type + ' ' : '');
+        $this->_sql[] = ' UNION ' . ($type ? $type . ' ' : '');
         $this->_sql[] = $lsql->getSql();
         return $this;
     }
@@ -492,10 +520,16 @@ class LSql {
      * @param array $s ON 信息
      * @param string $type 类型
      * @param string $suf 表后缀
+     * @param string $pre 表前缀，仅在 join 非默认表前缀时填写
      * @return LSql
      */
-    public function join(string $f, array $s = [], string $type = 'INNER', string $suf = ''): LSql {
-        $sql = ' ' . $type . ' JOIN ' . $this->field($f, $this->_pre, $suf ? ('#' . $suf) : '');
+    public function join(string $f, array $s = [], string $type = 'INNER', string $suf = '', string $pre = ''): LSql {
+        $field = $this->field($f, $pre ? $pre : $this->_pre, $suf ? ('#' . $suf) : '');
+        if ($pre) {
+            // --- 处理不同 pre 的 as 前缀问题 ---
+            $field = preg_replace('/AS `' . $pre . '(.+?)`/', 'AS `' . $this->_pre .'$1`', $field);
+        }
+        $sql = ' ' . $type . ' JOIN ' . $field;
         if (count($s)) {
             $sql .= ' ON ' . $this->_whereSub($s);
         }
@@ -508,10 +542,11 @@ class LSql {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $suf 表后缀
+     * @param string $pre 表前缀，仅在 join 非默认表前缀时填写
      * @return LSql
      */
-    public function leftJoin(string $f, array $s = [], string $suf = ''): LSql {
-        return $this->join($f, $s, 'LEFT', $suf);
+    public function leftJoin(string $f, array $s = [], string $suf = '', string $pre = ''): LSql {
+        return $this->join($f, $s, 'LEFT', $suf, $pre);
     }
 
     /**
@@ -519,10 +554,11 @@ class LSql {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $suf 表后缀
+     * @param string $pre 表前缀，仅在 join 非默认表前缀时填写
      * @return LSql
      */
-    public function rightJoin(string $f, array $s = [], string $suf = ''): LSql {
-        return $this->join($f, $s, 'RIGHT', $suf);
+    public function rightJoin(string $f, array $s = [], string $suf = '', string $pre = ''): LSql {
+        return $this->join($f, $s, 'RIGHT', $suf, $pre);
     }
 
     /**
@@ -530,10 +566,11 @@ class LSql {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $suf 表后缀
+     * @param string $pre 表前缀，仅在 join 非默认表前缀时填写
      * @return LSql
      */
-    public function innerJoin(string $f, array $s = [], string $suf = ''): LSql {
-        return $this->join($f, $s, $suf);
+    public function innerJoin(string $f, array $s = [], string $suf = '', string $pre = ''): LSql {
+        return $this->join($f, $s, $suf, $pre);
     }
 
     /**
@@ -541,10 +578,11 @@ class LSql {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $suf 表后缀
+     * @param string $pre 表前缀，仅在 join 非默认表前缀时填写
      * @return LSql
      */
-    public function fullJoin(string $f, array $s = [], string $suf = ''): LSql {
-        return $this->join($f, $s, 'FULL', $suf);
+    public function fullJoin(string $f, array $s = [], string $suf = '', string $pre = ''): LSql {
+        return $this->join($f, $s, 'FULL', $suf, $pre);
     }
 
     /**
@@ -552,10 +590,11 @@ class LSql {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $suf 表后缀
+     * @param string $pre 表前缀，仅在 join 非默认表前缀时填写
      * @return LSql
      */
-    public function crossJoin(string $f, array $s = [], string $suf = ''): LSql {
-        return $this->join($f, $s, 'CROSS', $suf);
+    public function crossJoin(string $f, array $s = [], string $suf = '', string $pre = ''): LSql {
+        return $this->join($f, $s, 'CROSS', $suf, $pre);
     }
 
     /**
@@ -590,7 +629,7 @@ class LSql {
      * --- 3. ['type', 'in', ['1', '2']] ---
      * --- 4. 'type' => ['1', '2'] ---
      * --- 5. '$or' => [['city' => 'bj'], ['city' => 'sh'], [['age', '>', '10']]], 'type' => '2' ---
-     * --- 6. 'city_in' => '#city_out' ---
+     * --- 6. 'city_in' => column('city_out') ---
      * --- 7. ['JSON_CONTAINS(`uid`, ?)', ['hello']] ---
      * @param array|string $s 筛选数据
      * @return LSql
@@ -625,7 +664,7 @@ class LSql {
         foreach ($s as $k => $v) {
             if (is_int($k) || is_numeric($k)) {
                 // --- 2, 3, 7 ---
-                if (!isset($v[2])) {
+                if (!isset($v[2]) && $v[2] !== NULL) {
                     // --- 7 ---
                     $sql .= $this->field($v[0]) . ' AND ';
                     if (isset($v[1])) {
@@ -647,25 +686,26 @@ class LSql {
                     $sql .= $this->field($v[0]) . ' ' . $opera . ' NULL AND ';
                 }
                 else if (is_array($v[2])) {
-                    // --- 3 ---
-                    $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
-                    foreach ($v[2] as $k1 => $v1) {
-                        $sql .= '?, ';
-                        $data[] = $v1;
+                    // --- 3, 6 ---
+                    $nv = $v[2];
+                    $isf = $this->_isField($nv);
+                    if ($isf) {
+                        // --- 6. field ---
+                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($nv['value']) . ' AND ';
                     }
-                    $sql = substr($sql, 0, -2) . ') AND ';
+                    else {
+                        $sql .= $this->field($v[0]) . ' ' . strtoupper($v[1]) . ' (';
+                        foreach ($nv as $k1 => $v1) {
+                            $sql .= '?, ';
+                            $data[] = $v1;
+                        }
+                        $sql = substr($sql, 0, -2) . ') AND ';
+                    }
                 }
                 else {
                     // --- 2 ---
-                    $isf = $this->_isField($v[2]);
-                    if ($isf[0]) {
-                        // --- field ---
-                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ' . $this->field($isf[1])  . ' AND ';
-                    }
-                    else {
-                        $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
-                        $data[] = $v[2];
-                    }
+                    $sql .= $this->field($v[0]) . ' ' . $v[1] . ' ? AND ';
+                    $data[] = $v[2];
                 }
             }
             else {
@@ -691,17 +731,13 @@ class LSql {
                         $sql .= $this->field($k) . ' IS NULL AND ';
                     }
                     else if (is_string($v) || is_numeric($v)) {
-                        // --- 1, 6 ---
-                        // --- 'city' => 'bj', 'city_in' => '#city_out' ---
-                        $isf = $this->_isField($v);
-                        if ($isf[0]) {
-                            // --- 6 ---
-                            $sql .= $this->field($k) . ' = ' . $this->field($isf[1]) . ' AND ';
-                        }
-                        else {
-                            $sql .= $this->field($k) . ' = ? AND ';
-                            $data[] = $isf[1];
-                        }
+                        // --- 1 ---
+                        $sql .= $this->field($k) . ' = ? AND ';
+                        $data[] = $v;
+                    }
+                    else if ($this->_isField($v)) {
+                        // --- 6 ---
+                        $sql .= $this->field($k) . ' = ' . $this->field($v['value']) . ' AND ';
                     }
                     else {
                         // --- 4 - 'type' => ['1', '2'] ---
@@ -1008,26 +1044,16 @@ class LSql {
     }
 
     /**
-     * --- 判断用户输入值是否是 field 还是普通字符串 ---
-     * @param string|int|float $str
-     * @return array
+     * --- 判断传入值是否是 field，还是别的对象 ---
      */
-    private function _isField($str): array {
-        if (is_string($str) && isset($str[0]) && ($str[0] === '#') && isset($str[1])) {
-            if ($str[1] === '#') {
-                // --- 不是 field ---
-                return [false, substr($str, 1)];
-            }
-            else {
-                // --- 是 field ---
-                $str = substr($str, 1);
-                return [true, $str];
-            }
+    private function _isField($arg): bool {
+        if (!is_array($arg)) {
+            return false;
         }
-        else {
-            // --- 肯定不是 field ---
-            return [false, $str];
+        if (!isset($arg['type']) ||$arg['type'] !== 'column' || !isset($arg['token']) || $arg['token'] !== Sql::$columnToken || !isset($arg['value'])) {
+            return false;
         }
+        return true;
     }
 
 }

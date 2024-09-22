@@ -167,7 +167,7 @@ $userList = User::where([
 ### Sql Library Automatically Adds Table Prefixes and Wrapping Characters "`"
 
 ```php
-$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id'])
+$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => Sql::column('user.id')])
 ```
 
 The output will be:

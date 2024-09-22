@@ -165,6 +165,11 @@ class Mod {
 
     // --- 静态方法 ---
 
+    /** --- 创建字段对象 --- */
+    public static function column(string $field): array {
+        return Sql::column($field);
+    }
+
     /**
      * --- 添加一个序列 ---
      * @param array $cs 字段列表
@@ -985,6 +990,7 @@ class Mod {
     public function total(string $f = '*'): int {
         $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(' . $this->_sql->field($f) . ') AS `count` FROM', $this->_sql->getSql());
         $sql = preg_replace('/ LIMIT [0-9 ,]+/', '', $sql);
+        $sql = preg_replace('/ ORDER BY [\w`,. ]+(DESC|ASC)?/', '', $sql);
         $ps = $this->_db->prepare($sql);
         try {
             $ps->execute($this->_sql->getData());
@@ -1026,10 +1032,11 @@ class Mod {
      * @param array $s ON 信息
      * @param string $type 类型
      * @param string $index 给本表增加 index 分表项
+     * @param string $pre 前缀
      * @return static
      */
-    public function join(string $f, array $s = [], $type = 'INNER', string $index = '') {
-        $this->_sql->join($f, $s, $type, $index ? '_' + $index : '');
+    public function join(string $f, array $s = [], $type = 'INNER', string $index = '', string $pre = '') {
+        $this->_sql->join($f, $s, $type, $index ? '_' + $index : '', $pre);
         return $this;
     }
 
@@ -1038,10 +1045,11 @@ class Mod {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $index 给本表增加 index 分表项
+     * @param string $pre 前缀
      * @return static
      */
-    public function leftJoin(string $f, array $s = [], string $index = '') {
-        $this->_sql->leftJoin($f, $s, $index ? '_' + $index : '');
+    public function leftJoin(string $f, array $s = [], string $index = '', string $pre = '') {
+        $this->_sql->leftJoin($f, $s, $index ? '_' + $index : '', $pre);
         return $this;
     }
 
@@ -1050,10 +1058,11 @@ class Mod {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $index 给本表增加 index 分表项
+     * @param string $pre 前缀
      * @return static
      */
-    public function rightJoin(string $f, array $s = [], string $index = '') {
-        $this->_sql->rightJoin($f, $s, $index ? '_' + $index : '');
+    public function rightJoin(string $f, array $s = [], string $index = '', string $pre = '') {
+        $this->_sql->rightJoin($f, $s, $index ? '_' + $index : '', $pre);
         return $this;
     }
 
@@ -1062,10 +1071,11 @@ class Mod {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $index 给本表增加 index 分表项
+     * @param string $pre 前缀
      * @return static
      */
-    public function innerJoin(string $f, array $s = [], string $index = '') {
-        $this->_sql->innerJoin($f, $s, $index ? '_' + $index : '');
+    public function innerJoin(string $f, array $s = [], string $index = '', string $pre = '') {
+        $this->_sql->innerJoin($f, $s, $index ? '_' + $index : '', $pre);
         return $this;
     }
 
@@ -1074,10 +1084,11 @@ class Mod {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $index 给本表增加 index 分表项
+     * @param string $pre 前缀
      * @return static
      */
-    public function fullJoin(string $f, array $s = [], string $index = '') {
-        $this->_sql->fullJoin($f, $s, $index ? '_' + $index : '');
+    public function fullJoin(string $f, array $s = [], string $index = '', string $pre = '') {
+        $this->_sql->fullJoin($f, $s, $index ? '_' + $index : '', $pre);
         return $this;
     }
 
@@ -1086,9 +1097,10 @@ class Mod {
      * @param string $f 表名
      * @param array $s ON 信息
      * @param string $index 给本表增加 index 分表项
+     * @param string $pre 前缀
      * @return static
      */
-    public function crossJoin(string $f, array $s = [], string $index = '') {
+    public function crossJoin(string $f, array $s = [], string $index = '', string $pre = '') {
         $this->_sql->crossJoin($f, $s, $index ? '_' + $index : '');
         return $this;
     }

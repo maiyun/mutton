@@ -205,9 +205,25 @@ class Ctr {
                             break;
                         }
                         case 'array': {
-                            if ($input[$key] !== null && !is_array($input[$key])) {
-                                $rtn = $val[$lastK];
-                                return false;
+                            if (isset($v['type'])) {
+                                // --- 相当于 kebab 的里面的 core.checkType ---
+                                if ($input[$key] !== null) {
+                                    $r = Core::checkType($input[$key], $v['type']);
+                                    if ($r) {
+                                        $rtn[0] = $val[$lastK][0];
+                                        $rtn[1] = is_string($val[$lastK][1]) ? $val[$lastK][1] . '(' + $r . ')' : $val[$lastK][1];
+                                        if (isset($val[$lastK][2])) {
+                                            $rtn[2] = $val[$lastK][2];
+                                        }
+                                        return false;
+                                    }
+                                }
+                            }
+                            else {
+                                if ($input[$key] !== null && !is_array($input[$key])) {
+                                    $rtn = $val[$lastK];
+                                    return false;
+                                }
                             }
                             break;
                         }

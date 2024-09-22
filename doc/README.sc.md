@@ -167,7 +167,7 @@ $userList = User::where([
 ### Sql 库自动增加表前缀和包裹字符“`”
 
 ```php
-$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => '#user.id']);
+$sql->select(['SUM(user.age) age'], 'order')->leftJoin('user', ['order.user_id' => Sql::column('user.id')]);
 ```
 
 将输出：
