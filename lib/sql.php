@@ -277,7 +277,7 @@ class LSql {
                 }
                 else if ($this->_isField($v)) {
                     // --- 3 ---
-                    $sql .= $this->field($v['value']) . ', ';
+                    $values .= $this->field($v['value']) . ', ';
                 }
                 else {
                     // --- json ---

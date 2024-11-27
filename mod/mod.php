@@ -2,7 +2,7 @@
 /**
  * Project: Mutton, User: JianSuoQiYue
  * Date: 2015
- * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11, 2024-2-20 11:50:00, 2024-4-1 19:27:18
+ * Last: 2018-12-15 23:08:01, 2019-10-2, 2020-2-20 19:34:14, 2020-4-14 13:22:29, 2021-11-30 12:17:21, 2022-3-24 21:57:53, 2022-09-02 23:52:52, 2023-2-3 00:29:16, 2023-6-13 21:47:55, 2023-8-25 15:38:21, 2023-12-21 16:10:11, 2024-2-20 11:50:00, 2024-4-1 19:27:18, 2024-11-27 17:43:43
  */
 declare(strict_types = 1);
 
@@ -69,8 +69,14 @@ class Mod {
     protected $_updates = [];
     /** @var array --- 模型获取的属性 --- */
     protected $_data = [];
-    /** @var ?string --- 当前选择的分表 _ 后缀 --- */
-    protected ?string $_index = null;
+    /** @var ?array --- 当前选择的分表 _ 后缀 --- */
+    protected ?array $_index = null;
+
+    /** --- 必须追加的数据筛选 key 与 values，仅单表模式有效 --- */
+    protected ?mixed $_contain = null;
+
+    /** --- 已算出的 total --- */
+    protected array $_total = [];
 
     /** @var Db $_db --- 数据库连接对象 --- */
     protected ?Db $_db = null;
@@ -90,7 +96,7 @@ class Mod {
 
     /**
      * 构造函数
-     * @param array $opt index, alias, row, select, where, raw
+     * @param array $opt index, alias, row, select, where, contain, raw
      */
     public function __construct(array $opt = []) {
         // --- 导入数据库连接 ---
@@ -98,7 +104,10 @@ class Mod {
         // --- 新建 sql 对象 ---
         $this->_sql = Sql::get(Mod::$__pre);
         if (isset($opt['index'])) {
-            $this->_index = $opt['index'];
+            $this->_index = is_string($opt['index']) ? [$opt['index']] : array_values(array_unique($opt['index']));
+        }
+        if (isset($opt['contain'])) {
+            $this->_contain = $opt['contain'];
         }
         // --- 第三个参数用于内部数据导入，将 data 数据合并到本实例化类 ---
         if (isset($opt['row'])) {
@@ -113,7 +122,7 @@ class Mod {
             $this->_sql->select(
                 $select,
                 static::$_table .
-                ($this->_index !== null ? ('_' . $this->_index) : '') .
+                ($this->_index !== null ? ('_' . $this->_index[0]) : '') .
                 (isset($opt['alias']) ? ' ' . $opt['alias'] : '')
             ); 
         }
@@ -384,7 +393,7 @@ class Mod {
     /**
      * --- select 自定字段 ---
      * @param string|string[]|string[][] $c 字段字符串或字段数组
-     * @param array $opt index alias
+     * @param array $opt index alias contain
      * @return static
      */
     public static function select($c, $opt = []) {
@@ -395,20 +404,12 @@ class Mod {
     /**
      * --- 通过 where 条件获取模型 ---
      * @param array|string $s 筛选条件数组或字符串
-     * @param bool|?string $raw 是否包含已被软删除的数据
-     * @param string $index 分表后缀
+     * @param array $opt raw index contain
      * @return static
      */
-    public static function where($s = '', $raw = false, $index = null) {
-        if (!is_bool($raw)) {
-            $index = $raw;
-            $raw = false;
-        }
-        return new static([
-            'where' => $s,
-            'raw' => $raw,
-            'index' => $index
-        ]);
+    public static function where($s = '', $opt = []) {
+        $opt['where'] = $s;
+        return new static($opt);
     }
 
     /**
@@ -450,21 +451,25 @@ class Mod {
     /**
      * --- 通过 where 条件筛选单条数据 ---
      * @param array|string $s 筛选条件数组或字符串
-     * @param array $opt raw, index, select, array
+     * @param array $opt raw, index, select, by, array
      * @return false|null|static|array
      */
     public static function one($s, $opt = []) {
         $opt['where'] = $s;
         if (!isset($opt['index'])) {
             $o = new static($opt);
+            if (isset($opt['by'])) {
+                $o->by($opt['by'][0], $opt['by'][1]);
+            }
             return (isset($opt['array']) && $opt['array']) ? $o->firstArray() : $o->first();
         }
-        if (is_string($opt['index'])) {
-            $opt['index'] = [$opt['index']];
-        }
+        $opt['index'] = is_string($opt['index']) ? [$opt['index']] : array_values(array_unique($opt['index']));
         foreach ($opt['index'] as $item) {
             $opt['index'] = $item;
             $row = (new static($opt));
+            if (isset($opt['by'])) {
+                $row->by($opt['by'][0], $opt['by'][1]);
+            }
             $rowr = (isset($opt['array']) && $opt['array']) ? $row->firstArray() : $row->first();
             if ($rowr) {
                 return $rowr;
@@ -590,7 +595,7 @@ class Mod {
         }
         // --- 这个 table 主要给 notWhere 有值时才使用 ---
         if (!$table) {
-            $table = static::$_table . ($this->_index !== null ? ('_' . $this->_index) : '');
+            $table = static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : '');
         }
 
         $ps = null;
@@ -603,7 +608,7 @@ class Mod {
                 $updates[static::$_key] = $this->_keyGenerator();
                 $this->_data[static::$_key] = $updates[static::$_key];
                 $this->{static::$_key} = $updates[static::$_key];
-                $this->_sql->insert(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
+                $this->_sql->insert(static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''));
                 if ($notWhere) {
                     $this->_sql->notExists($table, $updates, $notWhere);
                 }
@@ -625,7 +630,7 @@ class Mod {
             }
         }
         else {
-            $this->_sql->insert(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''));
+            $this->_sql->insert(static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''));
             if ($notWhere) {
                 $this->_sql->notExists($table, $updates, $notWhere);
             }
@@ -637,7 +642,9 @@ class Mod {
                 $ps->execute($this->_sql->getData());
             }
             catch (PDOException $e) {
-                log('[create1, mod]' . $e->getMessage(), '-error');
+                if ($e->errorInfo[0] !== '23000') {
+                    log('[create1, mod]' . $e->getMessage(), '-error');
+                }
                 return false;
             }
         }
@@ -662,7 +669,7 @@ class Mod {
             $updates[$k] = $this->_data[$k];
         }
 
-        $this->_sql->replace(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''))->values($updates);
+        $this->_sql->replace(static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''))->values($updates);
         $ps = $this->_db->prepare($this->_sql->getSql());
         try {
             $ps->execute($this->_sql->getData());
@@ -689,7 +696,7 @@ class Mod {
      * @return bool|null
      */
     public function refresh($lock = false) {
-        $this->_sql->select('*', static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''))->where([
+        $this->_sql->select('*', static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''))->where([
             static::$_primary => $this->_data[static::$_primary]
         ]);
         if ($lock) {
@@ -725,7 +732,7 @@ class Mod {
         if (count($updates) === 0) {
             return true;
         }
-        $this->_sql->update(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''), $updates)->where([
+        $this->_sql->update(static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''), $updates)->where([
             static::$_primary => $this->_data[static::$_primary]
         ]);
         $ps = $this->_db->prepare($this->_sql->getSql());
@@ -747,7 +754,7 @@ class Mod {
      */
     public function remove($raw = false): bool {
         if (static::$_soft && !$raw) {
-            $this->_sql->update(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''), [
+            $this->_sql->update(static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''), [
                 'time_remove' => $_SERVER['REQUEST_TIME']
             ])->where([
                 static::$_primary => $this->_data[static::$_primary],
@@ -755,7 +762,7 @@ class Mod {
             ]);
         }
         else {
-            $this->_sql->delete(static::$_table . ($this->_index !== null ? ('_' . $this->_index) : ''))->where([
+            $this->_sql->delete(static::$_table . ($this->_index !== null ? ('_' . $this->_index[0]) : ''))->where([
                 static::$_primary => $this->_data[static::$_primary]
             ]);
         }
@@ -883,16 +890,118 @@ class Mod {
      * @return false|Rows
      */
     public function all(?string $key = null) {
+        $this->_total = [];
+        if ($this->_index && count($this->_index) > 1) {
+            // --- 多表 ---
+            $sql = $this->_sql->getSql();
+            /** --- 返回的最终 list --- */
+            $list = [];
+            /** --- 用户传输的起始值 --- */
+            $limit = [isset($this->_limit[0]) ? $this->_limit[0] : 0, isset($this->_limit[1]) ? $this->_limit[1] : 200];
+            /** --- 已过的 offset，-1 代表不再计算 offset 了 --- */
+            $offset = 0;
+            /** --- 剩余条数 --- */
+            $remain = $limit[1];
+            for ($i = 0; $i < count($this->_index); ++$i) {
+                // --- 先计算 total ---
+                $tsql = $this->_formatTotal($sql);
+                if ($i > 0) {
+                    $tsql = preg_replace('/(FROM [a-zA-Z0-9`_.]+?_)[0-9_]+/', '$1' + $this->_index[$i], $tsql, 1);
+                }
+                $tr = $this->_db->prepare($tsql);
+                try {
+                    $tr->execute($this->_sql->getData());
+                }
+                catch (PDOException $e) {
+                    return false;
+                }
+                $count = 0;
+                while ($item = $tr->fetch(PDO::FETCH_ASSOC)) {
+                    $count += $item['count'];
+                }
+                $this->_total[] = $count;
+                if ($remain === 0) {
+                    // --- 下一个表需要接着执行 total 计算，所以不能 break ---
+                    continue;
+                }
+                // --- 开始查数据 ---
+                /** --- 差值 --- */
+                $cz = 0;
+                if ($offset > -1) {
+                    $cz = $limit[0] - $offset;
+                    if ($cz >= $count) {
+                        $offset += $count;
+                        continue;
+                    }
+                }
+                $lsql = preg_replace('/ LIMIT [0-9 ,]/', " LIMIT $cz, $remain", $sql);
+                $r = $this->_db->prepare($lsql);
+                try {
+                    $r->execute($this->_sql->getData());
+                }
+                catch (PDOException $e) {
+                    log('[all, mod] ' . $e->getMessage(), '-error');
+                    return false;
+                }
+                if ($key) {
+                    while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+                        $obj = new static([
+                            'row' => $row,
+                            'index' => $this->_index
+                        ]);
+                        $list[$row[$key]] = $obj;
+                        --$remain;
+                    }
+                    continue;
+                }
+                while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+                    $obj = new static([
+                        'row' => $row,
+                        'index' => $this->_index
+                    ]);
+                    $list[] = $obj;
+                    --$remain;
+                }
+                continue;
+            }
+            return $list;
+        }
+        // --- 单表 ---
+        $contain = $this->_contain ? $this->_contain['list'] : null;
         $ps = $this->_db->prepare($this->_sql->getSql());
         try {
             $ps->execute($this->_sql->getData());
         }
         catch (PDOException $e) {
-            log('[all, mod]' . $e->getMessage(), '-error');
+            log('[all, mod] ' . $e->getMessage(), '-error');
             return false;
         }
-        $list = [];
+        // --- 检查没被查到的必包含项 ---
+        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+            if ($this->_contain && $contain) {
+                $io = strpos($contain, $row[$this->_contain['key']]);
+                if ($io !== false) {
+                    array_splice($contain, $io, 1);
+                }
+            }
+        }
+        $cr = null;
+        if ($this->_contain && $contain && count($contain)) {
+            $csql = $this->_sql->copy(null, [
+                'where' => [
+                    $this->_contain['key'] => $this->_contain['list']
+                ]
+            ]);
+            $cr = $this->_db->prepare($csql->getSql());
+            try {
+                $cr->execute($csql->getData());
+            }
+            catch (PDOException $e) {
+                $cr = null;
+            }
+        }
         if ($key) {
+            $list = [];
             while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
                 $obj = new static([
                     'row' => $row,
@@ -900,14 +1009,35 @@ class Mod {
                 ]);
                 $list[$row[$key]] = $obj;
             }
+            // --- 有没有必须包含的项 ---
+            if ($cr) {
+                while ($crow = $cr->fetch(PDO::FETCH_ASSOC)) {
+                    $obj = new static([
+                        'row' => $row,
+                        'index' => $this->_index
+                    ]);
+                    $list[$crow[$key]] = $obj;
+                }
+            }
             return $list;
         }
+        $list = [];
         while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
             $obj = new static([
                 'row' => $row,
                 'index' => $this->_index
             ]);
             $list[] = $obj;
+        }
+        // --- 有没有必须包含的项 ---
+        if ($cr) {
+            while ($crow = $cr->fetch(PDO::FETCH_ASSOC)) {
+                $obj = new static([
+                    'row' => $row,
+                    'index' => $this->_index
+                ]);
+                $list[] = $obj;
+            }
         }
         return $list;
     }
@@ -918,23 +1048,132 @@ class Mod {
      * @return false|array
      */
     public function allArray(?string $key = null) {
-        $ps = $this->_db->prepare($this->_sql->getSql());
-        try {
-            $ps->execute($this->_sql->getData());
-        }
-        catch (PDOException $e) {
-            log('[allArray, mod]' . $e->getMessage(), '-error');
-            return false;
-        }
-        $list = [];
-        if ($key) {
-            while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
-                $list[$row[$key]] = $row;
+        $this->_total = [];
+        if ($this->_index && count($this->_index) > 1) {
+            // --- 多表 ---
+            $sql = $this->_sql->getSql();
+            /** --- 返回的最终 list --- */
+            $list = [];
+            /** --- 用户传输的起始值 --- */
+            $limit = [isset($this->_limit[0]) ? $this->_limit[0] : 0, isset($this->_limit[1]) ? $this->_limit[1] : 200];
+            /** --- 已过的 offset，-1 代表不再计算 offset 了 --- */
+            $offset = 0;
+            /** --- 剩余条数 --- */
+            $remain = $limit[1];
+            for ($i = 0; $i < count($this->_index); ++$i) {
+                // --- 先计算 total ---
+                if ($i > 0) {
+                    $sql = preg_replace('/(FROM [a-zA-Z0-9`_.]+?_)[0-9_]+/', '$1' . $this->_index[$i], $sql, 1);
+                }
+                $tsql = $this->_formatTotal($sql);
+                $tr = $this->_db->prepare($tsql);
+                try {
+                    $tr->execute($this->_sql->getData());
+                }
+                catch (PDOException $e) {
+                    return false;
+                }
+                $count = 0;
+                while ($item = $tr->fetch(PDO::FETCH_ASSOC)) {
+                    $count += $item['count'];
+                }
+                $this->_total[] = $count;
+                if ($remain === 0) {
+                    // --- 下一个表需要接着执行 total 计算，所以不能 break ---
+                    continue;
+                }
+                // --- 开始查数据 ---
+                /** --- 差值 --- */
+                $cz = 0;
+                if ($offset > -1) {
+                    $cz = $limit[0] - $offset;
+                    if ($cz >= $count) {
+                        $offset += $count;
+                        continue;
+                    }
+                    // --- 在本表开始找之后，后面表无需再跳过 ---
+                    $offset = -1;
+                }
+                $lsql = preg_replace('/ LIMIT [0-9 ,]/', " LIMIT $cz, $remain", $sql);
+                $r = $this->_db->prepare($lsql);
+                try {
+                    $r->execute($this->_sql->getData());
+                }
+                catch (PDOException $e) {
+                    log('[allArray, mod] ' . $e->getMessage(), '-error');
+                    return false;
+                }
+                if ($key) {
+                    while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+                        $list[$row[$key]] = $row;
+                        --$remain;
+                    }
+                    continue;
+                }
+                while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+                    $list[] = $row;
+                    --$remain;
+                }
+                continue;
             }
             return $list;
         }
-        while ($row = $ps->fetch(PDO::FETCH_ASSOC)) {
+        // --- 单表 ---
+        $contain = $this->_contain ? $this->_contain['list'] : null;
+        $r = $this->_db->prepare($this->_sql->getSql());
+        try {
+            $r->execute($this->_sql->getData());
+        }
+        catch (PDOException $e) {
+            log('[allArray, mod] ' . $e->getMessage(), '-error');
+            return false;
+        }
+        // --- 检查没被查到的必包含项 ---
+        while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+            if ($this->_contain && $contain) {
+                $io = strpos($contain, $row[$this->_contain['key']]);
+                if ($io !== false) {
+                    array_splice($contain, $io, 1);
+                }
+            }
+        }
+        $cr = null;
+        if ($this->_contain && $contain && count($contain)) {
+            $csql = $this->_sql->copy(null, [
+                'where' => [
+                    $this->_contain['key'] => $this->_contain['list']
+                ]
+            ]);
+            $cr = $this->_db->prepare($csql->getSql());
+            try {
+                $cr->execute($csql->getData());
+            }
+            catch (PDOException $e) {
+                $cr = null;
+            }
+        }
+        if ($key) {
+            $list = [];
+            while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
+                $list[$row[$key]] = $row;
+            }
+            // --- 有没有必须包含的项 ---
+            if ($cr) {
+                while ($crow = $cr->fetch(PDO::FETCH_ASSOC)) {
+                    $list[$crow[$key]] = $crow;
+                }
+            }
+            return $list;
+        }
+        $list = [];
+        while ($row = $r->fetch(PDO::FETCH_ASSOC)) {
             $list[] = $row;
+        }
+        // --- 有没有必须包含的项 ---
+        if ($cr) {
+            while ($crow = $cr->fetch(PDO::FETCH_ASSOC)) {
+                $list[] = $crow;
+            }
         }
         return $list;
     }
@@ -960,6 +1199,13 @@ class Mod {
             return $row['type'];
         }
         return $row;
+    }
+
+    private function _formatTotal(string $sql, string $f = '*'): string {
+        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(' . $this->_sql->field($f) . ') AS `count` FROM', $sql);
+        $sql = preg_replace('/ LIMIT [0-9 ,]+/', '', $sql);
+        $sql = preg_replace('/ ORDER BY [\w`,. ]+(DESC|ASC)?/', '', $sql);
+        return $sql;
     }
 
     /**
@@ -988,9 +1234,14 @@ class Mod {
      * @return int
      */
     public function total(string $f = '*'): int {
-        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(' . $this->_sql->field($f) . ') AS `count` FROM', $this->_sql->getSql());
-        $sql = preg_replace('/ LIMIT [0-9 ,]+/', '', $sql);
-        $sql = preg_replace('/ ORDER BY [\w`,. ]+(DESC|ASC)?/', '', $sql);
+        if (count($this->_total)) {
+            $count = 0;
+            foreach ($this->_total as $item) {
+                $count += $item;
+            }
+            return $count;
+        }
+        $sql = $this->_formatTotal($this->_sql->getSql(), $f);
         $ps = $this->_db->prepare($sql);
         try {
             $ps->execute($this->_sql->getData());
@@ -1010,8 +1261,8 @@ class Mod {
      * --- 根据当前条件，筛选出当前条目该有的数据条数 ---
      * @return int
      */
-    public function count(): int{
-        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql());
+    public function count(): int {
+        $sql = preg_replace('/SELECT .+? FROM/', 'SELECT COUNT(*) AS `count` FROM', $this->_sql->getSql(), 1);
         $ps = $this->_db->prepare($sql);
         try {
             $ps->execute($this->_sql->getData());
@@ -1155,6 +1406,9 @@ class Mod {
         return $this;
     }
 
+    /** --- 设置的 limit --- */
+    private array $_limit = [0, 0];
+
     /**
      * --- LIMIT ---
      * @param int $a 起始
@@ -1163,6 +1417,7 @@ class Mod {
      */
     public function limit(int $a, int $b = 0) {
         $this->_sql->limit($a, $b);
+        $this->_limit = [$a, $b];
         return $this;
     }
 
@@ -1173,7 +1428,9 @@ class Mod {
      * @return static
      */
     public function page(int $count, int $page = 1) {
-        $this->_sql->limit($count * ($page - 1), $count);
+        $a = $count * ($page - 1);
+        $this->_sql->limit($a, $count);
+        $this->_limit = [$a, $count];
         return $this;
     }
 
@@ -1184,6 +1441,16 @@ class Mod {
      */
     public function append(string $sql) {
         $this->_sql->append($sql);
+        return $this;
+    }
+
+    /**
+     * --- 设置闭包含数据 ---
+     * @param mixed $contain 设置项
+     * @return static
+     */
+    public function contain(mixed $contain ) {
+        $this->_contain = $contain;
         return $this;
     }
 
