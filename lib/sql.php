@@ -426,7 +426,7 @@ class LSql {
                     $sql .= '?, ';
                     $this->_data[] = $v;
                 }
-                else if (is_array($v) && !isset($v['x'])) {
+                else if (is_array($v) && !isset($v['x']) && !$this->_isField($v)) {
                     if (!isset($v[0]) || ((!isset($v[0][0]) || !isset($v[0][0]['x'])) && is_string($v[0]) && (strpos($v[0], '(') !== false) && (strpos($v[0], ')') !== false))) {
                         // --- 4, 5: ['(CASE `id` WHEN 1 THEN ? WHEN 2 THEN ? END)', ['val1', 'val2']] ---
                         $sql .= '?, ';
